@@ -88,6 +88,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7502",          post(section_7502_route))
+        .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -2651,6 +2652,26 @@ async fn section_7502_route(
     Json(b): Json<traderview_expense::section_7502::Section7502Input>,
 ) -> Result<Json<traderview_expense::section_7502::Section7502Result>, ApiError> {
     Ok(Json(traderview_expense::section_7502::compute(&b)))
+}
+
+// ── §7811 Taxpayer Assistance Orders (TAOs) ─────────────────────────
+// Mounted at /api/calc/section-7811. § 7811(a)(1) National Taxpayer
+// Advocate may issue TAO on Form 911 application if taxpayer suffering
+// or about to suffer significant hardship. § 7811(a)(2) four enumerated
+// hardship categories: (A) immediate adverse action, (B) delay > 30
+// days, (C) significant costs, (D) irreparable injury. § 7811(b) TAO
+// may order IRS to release levied property OR cease/take/refrain from
+// action. § 7811(c) modification or rescission limited to NTA /
+// Commissioner / Deputy Commissioner. § 7811(d) statute of limitations
+// suspended during application + decision period. § 7811(e) TAO
+// INDEPENDENT of other remedies (CDP, Tax Court, refund litigation).
+// Trader-relevant for IRS administrative actions causing hardship.
+
+async fn section_7811_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7811::Section7811Input>,
+) -> Result<Json<traderview_expense::section_7811::Section7811Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7811::compute(&b)))
 }
 
 // ── §7430 awarding of costs and certain fees ────────────────────────

@@ -4687,6 +4687,39 @@ Mounted at `POST /api/calc/section-7502`. Twenty-five tests pin: **USPS Certifie
 
 Mounted at `POST /api/calc/section-7430`. Twenty-seven tests pin: **substantively prevailed individual within net worth awards fees** (2026 $260/hr × 100 hrs = $26K); **IRS position substantially justified defeats prevailing party**; **individual net worth above $2M disqualifies**; **individual net worth at $2M boundary satisfied**; **business entity net worth $7M ceiling uniquely higher** ($5M qualifies); **business entity net worth above $7M disqualifies**; **employee count above 500 disqualifies regardless of net worth**; **employee count at 500 satisfied** (boundary); **administrative remedies not exhausted zeros fee award**; **qualified offer engages when QO liability ≥ judgment**; **qualified offer does not engage when QO liability < judgment**; **qualified offer rule bypasses substantial justification defense**; **hourly cap 2026 is $260**; **hourly cap 2025 is $250**; **hourly cap pre-1996 falls back to $125 base**; **max fees calculation = hourly cap × hours**; **citation pins all subsections + 28 U.S.C. § 2412(d)(2)(B) + § 301.7430-2 + Rev. Proc. 2025-32 + IRM 35.10.1**; **business entity $7M uniquely higher than individual $2M invariant** ($3M test); **note describes 2026 $260/hour cap**; **substantively prevailed but not exhausted zeros fees**; **qualified offer rule only engaged when offer made**; **employee count at 501 uniquely disqualifies**; **negative net worth satisfies test** (defensive); **qualified offer exactly at judgment engages rule** (≥ boundary); **qualified offer one cent below judgment does not engage** (< boundary); **not prevailing zeros fee award**; **three gating tests all must pass for fee award invariant** (net worth + employee count + exhaustion).
 
+`traderview-expense::section_7811` is the **IRC § 7811 Taxpayer Assistance Orders (TAOs)** module — administrative equitable remedy available when an IRS action or inaction is causing or about to cause "significant hardship" to the taxpayer. The National Taxpayer Advocate (NTA) has independent statutory authority under § 7811 to order the IRS to release property, take action, or refrain from taking action. Distinct from `section_6330`/`section_6320` (CDP — pre-action 30-day notice + Tax Court review), `section_7430` (attorney fees against IRS), and `section_6402` (refund offsets) — TAO is a parallel administrative pathway available alongside these judicial remedies.
+
+**Five-input compliance framework**:
+
+| Input | § 7811 mechanic |
+|-------|------------------|
+| Hardship category | § 7811(a)(2)(A)/(B)/(C)/(D) four enumerated examples (non-exclusive list) |
+| Form 911 submitted | 26 CFR § 301.7811-1 prescribes Form 911 application |
+| Requested action | § 7811(b)(1) release property OR § 7811(b)(2) cease/take/refrain |
+| TAO issued | NTA decision triggers § 7811(d) statute-of-limitations suspension |
+| Modifying official | § 7811(c) limits authority to NTA / Commissioner / Deputy Commissioner |
+
+**Four enumerated significant-hardship categories (non-exclusive)** under § 7811(a)(2):
+
+| Subsection | Category |
+|------------|----------|
+| § 7811(a)(2)(A) | Immediate threat of adverse action |
+| § 7811(a)(2)(B) | Delay of more than 30 days in resolving account problems |
+| § 7811(a)(2)(C) | Significant costs (including professional representation fees) |
+| § 7811(a)(2)(D) | Irreparable injury or long-term adverse impact |
+
+The list uses "includes" language — NTA retains authority to find significant hardship in categories not enumerated. Pinned by `other_hardship_category_still_engages_nta_authority`, `other_hardship_non_exclusive_list_note`, and `five_hardship_categories_all_engage_tao_pathway` (5-category sweep).
+
+**§ 7811(c) modification authority limited to three officials.** Only the National Taxpayer Advocate, Commissioner of Internal Revenue, or Deputy Commissioner may modify or rescind a TAO. No other IRS official has this authority — load-bearing independence-from-IRS feature. Pinned by `modification_by_nta_valid`, `modification_by_commissioner_valid`, `modification_by_deputy_commissioner_valid`, `modification_by_other_official_invalid`, `only_three_officials_uniquely_have_modification_authority_invariant` (4-official sweep: 3 valid + 1 invalid).
+
+**§ 7811(d) statute of limitations suspension is automatic upon application.** The clock on any action described in § 7811(b) is suspended from the date of the taxpayer's Form 911 application through the date of the NTA's decision PLUS any period specified in the TAO itself. Pinned by `statute_of_limitations_suspension_engaged_with_tao_pathway` and `statute_suspension_note_includes_application_through_decision_period`.
+
+**§ 7811(e) TAO is INDEPENDENT of other administrative or judicial remedies.** A taxpayer pursuing CDP under § 6320/§ 6330, Tax Court petition under § 6213, refund litigation, or § 7430 fee shifting may simultaneously seek a TAO without waiver. Pinned by `parallel_cdp_triggers_independence_note` and `parallel_cdp_with_release_property_action_combines_correctly`.
+
+**Form 911 is the prescribed application form.** No alternative submission method qualifies under 26 CFR § 301.7811-1 (except written statement providing sufficient information). Without Form 911, all pathway outputs are zero. Pinned by `no_form_911_no_tao_pathway`, `no_form_911_suspends_all_pathway_outputs`.
+
+Mounted at `POST /api/calc/section-7811`. Twenty-eight tests pin: **Form 911 with significant hardship opens TAO pathway**; **no Form 911 no TAO pathway**; **immediate adverse action hardship note present** (§ 7811(a)(2)(A)); **delay 30+ days hardship note present** (§ 7811(a)(2)(B)); **significant costs hardship note present** (§ 7811(a)(2)(C)); **irreparable injury hardship note present** (§ 7811(a)(2)(D)); **other hardship category still engages NTA authority**; **release levied property action note** (§ 7811(b)(1)); **cease action note**; **take action note**; **refrain from action note**; **statute of limitations suspension engaged with TAO pathway** (§ 7811(d)); **parallel CDP triggers independence note** (§ 7811(e)); **no parallel CDP no independence note**; **modification by NTA valid** (§ 7811(c)(1)); **modification by Commissioner valid** (§ 7811(c)(2)); **modification by Deputy Commissioner valid** (§ 7811(c)(3)); **modification by other official invalid**; **no modification attempt no modification note**; **citation pins all subsections + 26 CFR § 301.7811-1 + IRM 13.1.20 + Form 911**; **only three officials uniquely have modification authority invariant** (4-official sweep); **no Form 911 suspends all pathway outputs**; **five hardship categories all engage TAO pathway** (5-category sweep); **four requested actions all engage action note** (4-action sweep); **other hardship non-exclusive list note**; **parallel CDP with release property action combines correctly**; **statute suspension note includes application through decision period**; **modification by other when attempted falsifies validity** (underlying TAO pathway remains valid).
+
 `traderview-expense::section_6320` is the **IRC § 6320 Collection Due Process (CDP) for LIENS** module — parallel framework to `section_6330` (CDP for levies, built iter 280) with lien-specific mechanics. Trader-critical when the IRS files a Notice of Federal Tax Lien (NFTL) — a public record asserting the government's claim against all of the taxpayer's property — and the taxpayer receives the CDP notice (Letter 3172) signaling their right to a hearing.
 
 **Six statutory subsections compose the lien CDP framework**:
