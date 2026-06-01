@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-461l",          post(section_461l_route))
         .route("/calc/section-465",           post(section_465_route))
+        .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
@@ -865,6 +866,28 @@ async fn section_461l_route(
         ));
     }
     Ok(Json(traderview_expense::section_461l::compute(&b)))
+}
+
+// ── §691 income in respect of decedent (IRD) ─────────────────────────
+// Mounted at /api/calc/section-691. §691(a) IRD includible in heir's
+// gross income (character preserved); §691(c) deduction = heir's
+// pro-rata share of federal estate tax attributable to total IRD per
+// Treas. Reg. § 1.691(c)-1(a)(2) two-step. Pairs with §1014(c) IRD
+// exception (no step-up on IRD assets).
+
+async fn section_691_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_691::Section691Input>,
+) -> Result<Json<traderview_expense::section_691::Section691Result>, ApiError> {
+    if b.ird_received_by_heir < Decimal::ZERO
+        || b.total_ird_in_estate < Decimal::ZERO
+        || b.federal_estate_tax_attributable_to_total_ird < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_691::compute(&b)))
 }
 
 // ── §704(d) partner basis limitation ─────────────────────────────────

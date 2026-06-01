@@ -1268,6 +1268,46 @@ Each limit applies to the loss SURVIVING the prior limit. §461(l) is the final 
 
 Mounted at `POST /api/calc/section-461l`. Twenty-two tests pin: 2026 single $256k threshold + MFJ $512k; **load-bearing $400k single → $144k EBL + $700k MFJ → $188k EBL** dollar-figure math; OBBBA re-indexing 2025 vs 2026 delta ($57k single / $114k MFJ); loss below threshold no binding; **threshold exact-boundary no binding + one-dollar-over binds**; net gain no excess; C-corp not subject; pre-2021 CARES suspended; pre-2018 no limitation; **CARES 3-year suspension sweep**; first effective year 2021; **all six historical thresholds individually pinned**; HOH/MFS uses single; excess becomes §172 NOL (note pin); $1B precision case ($300M net loss, $299.488M EBL); future year 2027 uses 2026 fallback; loss just below MFJ threshold full allowance; note describes binding path with dollar figures; note describes satisfied path.
 
+`traderview-expense::section_691` is the **IRC §691 Income in Respect of Decedent (IRD) module** — pairs directly with `section_1014` (stepped-up basis at death). Where §1014(a) wipes out embedded gains at death, **§1014(c) explicitly denies the step-up for IRD assets** — and §691 governs the income-tax consequences for the heir who receives that IRD.
+
+**§691(a)** — IRD is included in the gross income of the recipient (heir / estate / beneficiary) in the year received. **Character is preserved** — IRA distributions are ordinary income, installment-sale gain is capital, accrued bond interest is ordinary, etc.
+
+**§691(c)** — to mitigate the "double tax" of estate tax PLUS income tax on the same dollar, the recipient gets an itemized deduction (above the 2% AGI floor) equal to the federal estate tax attributable to the IRD share. Two-step computation per Treas. Reg. § 1.691(c)-1(a)(2):
+
+1. Compute the decedent's federal estate tax twice — once INCLUDING the IRD assets (actual), once EXCLUDING them
+2. The difference is the estate tax attributable to IRD
+3. Each recipient's deduction = their share of total IRD × estate tax attributable to total IRD
+
+**Pro-rata allocation** is load-bearing. If two beneficiaries each receive half a $1M IRA with $400k attributable estate tax → each gets $200k §691(c) deduction (per Kitces canonical example). Pinned by `canonical_kitces_example_pro_rata_deduction`.
+
+**IRD type catalog** (character preservation):
+
+| Type                                    | Character | Common scenario                                     |
+|-----------------------------------------|-----------|------------------------------------------------------|
+| `TraditionalIraDistribution`            | Ordinary  | Inherited traditional IRA distribution               |
+| `QualifiedPlanDistribution`             | Ordinary  | Inherited 401(k) distribution                        |
+| `AccruedBondInterest`                   | Ordinary  | Accrued but unpaid bond interest at death            |
+| `AccruedRoyalties`                      | Ordinary  | Royalties earned but not received                    |
+| **`InstallmentSaleGainNotYetRecognized`** | **Capital** | Open installment-sale gain — only capital IRD type |
+| `DeferredCompensation`                  | Ordinary  | NQDC / pension payouts                              |
+| `AccruedSalaryOrCommissions`            | Ordinary  | Earned but unpaid salary / commissions               |
+| `RenewalCommissionsLifeInsurance`       | Ordinary  | Life insurance agent's recurring commissions        |
+| `Other`                                 | Ordinary  | Catch-all                                            |
+
+**Installment-sale gain is the only capital-character IRD type.** Pinned by `installment_sale_gain_preserves_capital_character` + `traditional_ira_is_ordinary_character` + `deferred_comp_is_ordinary_character` + `accrued_bond_interest_is_ordinary` + `renewal_commissions_is_ordinary` + `ird_type_method_classifies_correctly` (5-type sweep).
+
+**Deduction never exceeds includible income**. Net taxable clamps at zero even with pathological inputs (huge estate tax, tiny IRD). Pinned by `deduction_never_exceeds_includible` ($100 IRD with $1M attributable → $1M deduction capped, $0 net taxable).
+
+**Zero estate tax → no deduction.** When estate is below filing threshold (no federal estate tax due), §691(c) deduction is zero — all IRD is fully taxable. Pinned by `zero_estate_tax_attributable_no_deduction` (note explicitly mentions "no §691(c) deduction").
+
+**Division-by-zero guard** for pathological total_IRD = 0 input. Pinned by `zero_total_ird_no_deduction_no_panic`.
+
+**Effective relief ratio** = §691(c) deduction / IRD received. Demonstrates the proportion of "estate tax money" that comes back via the income-tax deduction. The 40% Kitces example yields `relief_ratio = 0.4`. Pinned by `canonical_kitces_example_pro_rata_deduction` + `effective_relief_ratio_50_percent_example`.
+
+**Pro-rata math sweep**: three-beneficiary equal split (each gets 1/3 of $1.2M = $400k), unequal split (70% gets 70% × $400k = $280k). Pinned by `three_beneficiary_equal_split_each_gets_one_third_deduction` + `unequal_beneficiary_share_proportional`.
+
+Mounted at `POST /api/calc/section-691`. Nineteen tests pin: canonical Kitces $1M IRA / 2 beneficiaries / $400k estate tax / $200k each deduction example; full-IRD recipient gets full deduction; partial share proportional; **zero estate tax no deduction** (estate-below-threshold case); zero total IRD no panic; **traditional IRA ordinary character** + 4 other ordinary types pinned; **installment sale capital character preserved** (only non-ordinary type); deduction never exceeds includible (clamping); 50% effective relief ratio example; zero IRD no-op; **$50M IRA precision case**; three-beneficiary equal 1/3 split with Decimal rounding; unequal 70/30 split proportional math; note describes pro-rata with dollar figures; note for zero-deduction path explains; **IrdType::is_ordinary_character() 4-type sweep** distinguishing capital-only installment-sale path.
+
 `traderview-expense::section_704d` is the **IRC §704(d) partner basis limitation module** — completes the partner loss-limitation trio with `section_465` (at-risk) and `section_469` (passive activity losses). Sequential application order for partnership losses:
 
 | Order | Section          | Limit                                | Module                |

@@ -101,6 +101,7 @@ pub mod section_453;
 pub mod section_461l;
 pub mod section_465;
 pub mod section_469;
+pub mod section_691;
 pub mod section_704d;
 pub mod section_7872;
 pub mod section_864b2;
