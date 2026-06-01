@@ -2970,6 +2970,44 @@ Mounted at `POST /api/calc/section-6038d`. Twenty-seven tests pin: **single dome
 
 Mounted at `POST /api/calc/section-6011`. Twenty-six tests pin: **listed transaction disclosure required**; **listed transaction not filed max individual $100k penalty**; **listed transaction not filed max entity $200k penalty**; **listed transaction low tax reduction min $5k individual penalty**; **listed transaction low tax reduction min $10k entity penalty**; **confidential corporate below $250k threshold no disclosure**; **confidential corporate at $250k threshold disclosure required**; **confidential individual at $50k threshold disclosure required**; **confidential individual below $50k no disclosure**; **contractual protection disclosure required**; **loss individual $2M single-year at threshold disclosure required**; **loss individual $1.99M single-year below threshold no disclosure**; **loss individual $4M multi-year disclosure required**; **loss corporation $10M single-year threshold**; **loss corporation $5M below threshold**; **transactions of interest disclosure required**; **not reportable no disclosure no penalty**; **non-listed individual max $50k cap**; **penalty minimum floors below 75 percent**; **penalty 75 percent calculation between min and max**; **corporate thresholds higher than individual invariant** (5-cell comparison); **listed max higher than other max invariant**; **always-required categories invariant** (3 unconditional + 1 not-reportable); **citation pins all subsections** (§ 6011 + § 1.6011-4(b)(2)/(3)/(4)/(5)/(6) + § 6707A + § 6111 + § 6112 + § 6662A); **material advisor sibling note present** (UX-text regression for § 6111 + Form 8918 + § 6112 + § 6662A trio); **defensive negative tax reduction clamps at zero**.
 
+`traderview-expense::section_6111` is the **IRC § 6111 material advisor disclosure module (Form 8918)** — the ADVISOR-SIDE counterpart to `section_6011` (taxpayer side). § 6111 governs the disclosure obligation imposed on tax-shelter advisors who provide material aid, assistance, or advice for a reportable transaction AND derive gross income above the statutory threshold. Form 8918 is filed with the IRS Office of Tax Shelter Analysis (OTSA). Direct sibling to `section_6011` (Form 8886 taxpayer disclosure), `section_6038d` (Form 8938 foreign financial assets), and conceptual companion to forthcoming § 6112 advisor list maintenance, § 6707A taxpayer penalty, and § 6662A reportable-transaction-understatement accuracy penalty.
+
+**§ 6111(b)(1) two-prong material advisor test** — BOTH prongs required:
+
+| Prong | Statute | Test |
+|-------|---------|------|
+| (A) | § 6111(b)(1)(A) | **Material aid, assistance, or advice** — provides aid with respect to organizing, managing, promoting, selling, implementing, insuring, or carrying out any reportable transaction |
+| (B) | § 6111(b)(1)(B) | **Gross-income threshold** — derives directly or indirectly gross income exceeding the threshold ($50,000 if substantially all tax benefits flow to natural persons; $250,000 for all other transactions, per Treas. Reg. § 301.6111-3(b)(3)) |
+
+**Both-prongs-required invariant**: pinned by `both_prongs_required_invariant` (4-cell truth table — only A+B=true produces MaterialAdvisor classification) and `prong_a_failed_no_material_aid_not_advisor_regardless_of_income` (advisor with $1M gross income but no material aid → NOT material advisor).
+
+**Gross-income threshold tiers**:
+
+| Tier | Statute | Threshold | Trigger |
+|------|---------|-----------|---------|
+| Natural-person | Treas. Reg. § 301.6111-3(b)(3)(i) | $50,000 | Substantially all tax benefits flow to individuals (looking through partnerships, S-corps, trusts) |
+| Other transactions | Treas. Reg. § 301.6111-3(b)(3)(ii) | $250,000 | All non-natural-person beneficiary transactions |
+
+Tier-tier 5× ratio invariant (natural-person $50K vs other $250K). Pinned by `natural_person_threshold_lower_than_other_invariant`, `natural_person_threshold_at_50k_engaged`, `natural_person_below_50k_not_material_advisor`, `other_threshold_at_250k_engaged`, `other_below_250k_not_material_advisor`, `threshold_boundary_natural_person_exact_50k`, `threshold_boundary_natural_person_one_cent_below`, `threshold_boundary_other_exact_250k`, `threshold_boundary_other_one_cent_below`, and `natural_person_uses_lower_threshold_invariant` (same gross income → individual path engages, other path doesn't).
+
+**Filing deadline (Treas. Reg. § 301.6111-3(e))**: Form 8918 must be filed with OTSA by the **last day of the month following the end of the calendar quarter** in which the advisor became a material advisor with respect to the reportable transaction.
+
+**§ 6707 penalty tiers**:
+
+| Transaction type | Statute | Penalty |
+|------------------|---------|---------|
+| Non-listed reportable | § 6707(a) | **Flat $50,000** per failure |
+| Listed (intentional) | § 6707(b)(1)(A) | **Greater of $200,000 OR 50% of gross income** from the transaction |
+| Listed (unintentional) | § 6707(b)(1) flush | Reduced to **$50,000** non-listed amount; subsequent true return prior to IRS contact or taxpayer Form 8886 filing establishes unintentionality |
+
+Listed-floor-vs-50%-gross truth table pinned by `listed_50_percent_gross_floor_truth_table` (5-cell sweep — $100K gross → floor wins at $200K; $400K gross → ties; $500K gross → 50% wins at $250K; $1M gross → 50% wins at $500K; $2M gross → $1M). `listed_not_filed_intentional_200k_floor`, `listed_not_filed_50_percent_gross_exceeds_200k_floor`, and `listed_not_filed_unintentional_reduced_to_50k` pin the three penalty branches. `unintentional_only_affects_listed_transactions` pins that unintentionality is irrelevant for non-listed (already at $50K) but reduces listed from $200K+ to $50K.
+
+**§ 6707 statute of limitations**: 3 years from Form 8918 filing per Treas. Reg. § 301.6707-1; UNLIMITED if no return filed.
+
+**Sibling-modules trio note** — every result references § 6011 (taxpayer-side disclosure / Form 8886), § 6707A (taxpayer-side penalty — 75% of tax reduction capped), § 6112 (advisor list maintenance via § 6111(b)(2) cross-reference), and § 6662A (reportable-transaction-understatement accuracy penalty on underlying tax). Pinned by `sibling_modules_note_present` (UX-text regression).
+
+Mounted at `POST /api/calc/section-6111`. Twenty-five tests pin: **natural-person threshold at $50K engaged**; **natural-person below $50K not material advisor**; **other threshold at $250K engaged**; **other below $250K not material advisor**; **prong (A) failed no material aid not advisor regardless of income**; **non-listed not filed $50K penalty**; **non-listed filed late $50K penalty**; **non-listed filed on time compliant**; **listed not filed intentional $200K floor**; **listed not filed 50% gross exceeds $200K floor**; **listed not filed unintentional reduced to $50K**; **listed filed on time compliant**; **natural-person threshold lower than other invariant** (5× ratio); **listed penalty floor above non-listed penalty invariant** (4× ratio); **listed 50% gross floor truth table** (5-cell sweep); **both prongs required invariant** (4-cell truth table); **citation pins all subsections** (§ 6111 + § 6111(b)(1)(A) + § 6111(b)(2) + § 301.6111-3(b)(3) + § 301.6111-3(e) + § 6707(a) + § 6707(b)(1)(A) + § 6707(b)(1) flush + § 301.6707-1 + Notice 2004-80 + Form 8918); **sibling modules note present** (UX-text regression for § 6011 + § 6707A + § 6112 + § 6662A trio); **defensive negative gross income clamped**; **threshold boundary natural-person exact $50K** (≥); **threshold boundary natural-person one cent below**; **threshold boundary other exact $250K**; **threshold boundary other one cent below**; **natural-person uses lower threshold invariant** (same gross income compared); **unintentional only affects listed transactions** (4-cell — non-listed unchanged, listed reduced).
+
 `traderview-expense::section_1298` is the **IRC §1298 PFIC attribution + special rules + annual reporting module** — direct companion to `section_1297` (PFIC classification — which cross-references § 1298(b)(1) purging election in § 1297(d)). Where § 1297 defines what makes a foreign corporation a PFIC, § 1298 governs WHEN a U.S. person is treated as OWNING PFIC stock indirectly (through corporations, partnerships, trusts, estates, or options), the PURGING ELECTION mechanism, the pledge-as-security deemed-disposition trap, and Form 8621 annual reporting.
 
 **§ 1298(a) — three attribution rules**:

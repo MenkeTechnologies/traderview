@@ -107,6 +107,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1298",          post(section_1298_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
+        .route("/calc/section-6111",          post(section_6111_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -3010,6 +3011,39 @@ async fn section_6011_route(
         ));
     }
     Ok(Json(traderview_expense::section_6011::compute(&b)))
+}
+
+// ── § 6111 material advisor disclosure (Form 8918) ──────────────────
+// Mounted at /api/calc/section-6111. Direct sibling to § 6011
+// (taxpayer-side Form 8886). § 6111(b)(1) two-prong test: (A)
+// provided material aid/assistance/advice for reportable
+// transaction AND (B) gross income exceeds threshold ($50K
+// natural-person / $250K other under Treas. Reg.
+// § 301.6111-3(b)(3)). Filing deadline: last day of month
+// following calendar-quarter-end (§ 301.6111-3(e)). § 6707
+// penalties: $50K non-listed; greater of $200K or 50% of gross
+// income for listed transactions, reduced to $50K for
+// unintentional failures per § 6707(b)(1) flush. Statute of
+// limitations: 3 years from Form 8918 filing; unlimited if no
+// return filed. Companion to § 6112 (advisor list maintenance),
+// § 6707A (taxpayer penalty), § 6662A (reportable-transaction-
+// understatement accuracy penalty on underlying tax).
+
+async fn section_6111_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6111::Section6111Input>,
+) -> Result<Json<traderview_expense::section_6111::Section6111Result>, ApiError> {
+    if b.gross_income_from_transaction_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "gross_income_from_transaction_cents must be non-negative".into(),
+        ));
+    }
+    if b.days_late_after_quarter_end < 0 || b.days_late_after_quarter_end > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_late_after_quarter_end out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6111::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
