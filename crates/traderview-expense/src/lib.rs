@@ -54,6 +54,7 @@ pub mod lease_translation;
 pub mod lockout_penalties;
 pub mod manual_entry;
 pub mod meals_50;
+pub mod meth_contamination_disclosure;
 pub mod mileage;
 pub mod mobile_home_park;
 pub mod military_termination;

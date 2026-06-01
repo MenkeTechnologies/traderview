@@ -180,6 +180,9 @@ use traderview_expense::tenant_relocation_assistance::{
 use traderview_expense::fair_chance_housing::{
     check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
 };
+use traderview_expense::meth_contamination_disclosure::{
+    check as check_meth_contamination_disclosure, MethDisclosureInput, MethDisclosureResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -377,6 +380,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
+        .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -2898,6 +2902,29 @@ async fn fair_chance_housing_route(
         ));
     }
     Ok(Json(check_fair_chance_housing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Methamphetamine contamination landlord disclosure compliance check.
+//
+// Mounted at POST /api/rental/meth-contamination-disclosure. Four regimes:
+// Colorado (Colo. Rev. Stat. § 38-35.7-103 + 6 CCR 1014-3 — 0.5 ug/100cm²
+// standard; remediation EXTINGUISHES disclosure obligation when certified
+// to state); Arizona (Ariz. Rev. Stat. § 32-1166.04 — 0.1 ug/100cm² standard
+// STRICTEST; remediation extinguishes disclosure; entry by non-owners
+// barred until cleaned to state standard); Montana (Mont. Code Ann. §
+// 75-10-1301 et seq. — 1.5 ug/100cm² standard; remediation does NOT
+// extinguish disclosure obligation — landlord MUST disclose knowledge +
+// remediation status even after cleanup); Default (no statewide statute;
+// 42 U.S.C. § 3604 FHA material-defect doctrine may impose duty).
+// ---------------------------------------------------------------------------
+
+async fn meth_contamination_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MethDisclosureInput>,
+) -> Result<Json<MethDisclosureResult>, ApiError> {
+    Ok(Json(check_meth_contamination_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
