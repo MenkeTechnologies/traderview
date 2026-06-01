@@ -373,6 +373,11 @@ use traderview_expense::last_month_rent_offset::{
     CheckResult as LastMonthRentOffsetResult,
     Input as LastMonthRentOffsetInput,
 };
+use traderview_expense::emotional_support_animal_documentation::{
+    check as check_esa_documentation,
+    CheckResult as EsaDocumentationResult,
+    Input as EsaDocumentationInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -620,6 +625,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
+        .route("/emotional-support-animal-documentation", axum::routing::post(emotional_support_animal_documentation_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4810,6 +4816,41 @@ async fn last_month_rent_offset_route(
         ));
     }
     Ok(Json(check_last_month_rent_offset(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Emotional Support Animal (ESA) documentation requirements.
+//
+// Mounted at POST /api/rental/emotional-support-animal-documentation.
+// Three regimes for ESA documentation reliability: (1) California
+// — Cal. Health & Safety Code § 122318 (AB 468, eff. Jan 1, 2022)
+// imposes 5-element practitioner test: valid license + licensed
+// in jurisdiction + ≥ 30-day prior therapeutic relationship +
+// clinical evaluation + misdemeanor warning. Practitioner subject
+// to discipline for violation; (2) Florida — Fla. Stat. § 760.27
+// (eff. July 1, 2020) requires personal knowledge of disability
+// + telehealth FL-licensed (or out-of-state in-person visit);
+// internet-only registrations EXPLICITLY UNRELIABLE; knowingly
+// fraudulent documentation is second-degree misdemeanor; (3)
+// Default — Federal FHA + HUD Notice FHEO-2020-01: reasonable-
+// accommodation analysis; internet-only relationships disfavored
+// but not categorically rejected. Readily-apparent disability
+// bypasses documentation entirely in all regimes. Distinct from
+// service_animal (ADA-covered trained service animals receive
+// broader protection).
+// ---------------------------------------------------------------------------
+
+async fn emotional_support_animal_documentation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<EsaDocumentationInput>,
+) -> Result<Json<EsaDocumentationResult>, ApiError> {
+    if b.therapeutic_relationship_days > 50 * 365 {
+        return Err(ApiError::BadRequest(
+            "therapeutic_relationship_days out of range".into(),
+        ));
+    }
+    Ok(Json(check_esa_documentation(&b)))
 }
 
 // ---------------------------------------------------------------------------
