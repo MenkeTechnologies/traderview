@@ -92,6 +92,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7521",          post(section_7521_route))
         .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6501",          post(section_6501_route))
+        .route("/calc/section-6502",          post(section_6502_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -2852,6 +2853,30 @@ async fn section_6501_route(
     Json(b): Json<traderview_expense::section_6501::Section6501Input>,
 ) -> Result<Json<traderview_expense::section_6501::Section6501Result>, ApiError> {
     Ok(Json(traderview_expense::section_6501::check(&b)))
+}
+
+// ── §6502 collection after assessment (CSED) ────────────────────────
+// Mounted at /api/calc/section-6502. § 6502(a)(1) 10-year base CSED
+// from date of assessment — after CSED, IRS BARRED from collecting
+// via levy (§ 6331), lien (§ 6321), or court proceeding. Six
+// independent suspension triggers each extend CSED: § 6502(a)(2)
+// installment agreement + 90 days post-expiration; § 6331(k)(1) OIC
+// suspended from submission through accept/reject/withdraw/return
+// + ADDITIONAL 30 days if rejected; § 6330(e)(1) CDP hearing
+// request suspends through conclusion + 90-day floor if < 90 days
+// remain on CSED; § 6503(h) bankruptcy automatic stay + 6 months
+// after stay terminates; § 7508(a) military combat zone + 180 days;
+// § 6503(c) taxpayer continuously absent from US 6+ months +
+// absence period + return + 6 months. Overlapping suspensions run
+// CONCURRENTLY not cumulatively per IRM 5.1.19.3.4. Natural sibling
+// to section_6501 (ASED — 3/6/unlimited assessment statute) and
+// section_7811 (TAOs).
+
+async fn section_6502_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6502::Section6502Input>,
+) -> Result<Json<traderview_expense::section_6502::Section6502Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6502::check(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────
