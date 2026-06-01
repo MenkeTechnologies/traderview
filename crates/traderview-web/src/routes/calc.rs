@@ -76,6 +76,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
@@ -2045,6 +2046,39 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §6045 broker information reporting (Form 1099-B / 1099-DA) ───────
+// Mounted at /api/calc/section-6045. §6045(a) requires brokers (anyone
+// in ordinary-course-of-business standing ready to effect sales for
+// others) to file Form 1099-B (securities + barter) or new Form 1099-DA
+// (digital assets, eff. 2025-01-01). §6045(g) bifurcates into COVERED
+// (broker required to report adjusted basis) vs NON-COVERED (gross
+// proceeds only). Acquisition cutoffs per Treas. Reg. § 1.6045-1(a)(15):
+// stock 2011-01-01 + mutual fund/DRIP 2012-01-01 + less-complex debt
+// 2014-01-01 + more-complex debt 2016-01-01 + digital asset 2026-01-01
+// (NEW under IIJA § 80603 amending § 6045; requires continuous broker-
+// account holding). NO DE MINIMIS — even one cent triggers reporting.
+
+async fn section_6045_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6045::Section6045Input>,
+) -> Result<Json<traderview_expense::section_6045::Section6045Result>, ApiError> {
+    if b.proceeds_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "proceeds_cents must be non-negative".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.acquisition_year)
+        || !(1..=12).contains(&b.acquisition_month)
+        || !(1..=31).contains(&b.acquisition_day)
+        || !(1990..=2100).contains(&b.transaction_year)
+    {
+        return Err(ApiError::BadRequest(
+            "acquisition + transaction dates must be valid".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6045::compute(&b)))
 }
 
 // ── §6050W payment-settlement-entity 1099-K reporting threshold ──────
