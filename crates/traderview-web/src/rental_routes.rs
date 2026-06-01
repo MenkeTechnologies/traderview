@@ -353,6 +353,11 @@ use traderview_expense::landlord_harassment::{
     check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
     Input as LandlordHarassmentInput,
 };
+use traderview_expense::landlord_possession_delivery::{
+    check as check_landlord_possession_delivery,
+    CheckResult as LandlordPossessionDeliveryResult,
+    Input as LandlordPossessionDeliveryInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -596,6 +601,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
+        .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4644,6 +4650,42 @@ async fn landlord_harassment_route(
         ));
     }
     Ok(Json(check_landlord_harassment(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord's duty to deliver possession at lease commencement.
+//
+// Mounted at POST /api/rental/landlord-possession-delivery. Three
+// regimes for when a landlord must deliver ACTUAL possession (not
+// just legal right) to the tenant: (1) URLTA states (~20
+// jurisdictions including AK, AZ, FL, IA, KS, KY, MS, MT, NE, NM,
+// OR, RI, SC, TN, VA, WA) — § 2.103 statutory duty + § 4.102
+// remedies (greater of 3 months' rent OR threefold actual damages
+// + reasonable attorney's fees + injunctive relief); (2) English
+// Rule (modern majority + Restatement (Second) of Property § 6.2)
+// — landlord must deliver actual possession; tenant may cancel
+// lease + recover actual damages with rent abatement for delay
+// period; no statutory multiplier; (3) American Rule (minority,
+// Hannan v. Dusch, 153 S.E. 824 (Va. 1930)) — landlord delivers
+// only LEGAL POSSESSION; tenant must evict holdover party
+// directly + recover damages from THAT party; lease remains in
+// force, rent continues to accrue.
+// ---------------------------------------------------------------------------
+
+async fn landlord_possession_delivery_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordPossessionDeliveryInput>,
+) -> Result<Json<LandlordPossessionDeliveryResult>, ApiError> {
+    if b.days_delayed_possession > 50 * 365
+        || b.monthly_rent_cents > 100_000_000_000
+        || b.tenant_actual_damages_cents > 100_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "input value out of range".into(),
+        ));
+    }
+    Ok(Json(check_landlord_possession_delivery(&b)))
 }
 
 // ---------------------------------------------------------------------------
