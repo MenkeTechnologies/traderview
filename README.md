@@ -3256,6 +3256,33 @@ For domestic 5-year: 6 calendar years touched. For foreign 15-year: 16 calendar 
 
 Mounted at `POST /api/calc/section-174`. Sixteen tests pin: domestic 5-year year 1 half-year convention ($100k → $10k year 1); domestic year 2 full year ($20k); domestic year 6 stub half ($10k, total cumulative $100k, fully amortized); domestic year 7 post-recovery zero; schedule has 6 entries for 5-year recovery (years 2024-2029); schedule amounts correctly distributed (10/20/20/20/20/10 sum to 100); foreign 15-year year 1 half-year convention ($3,333.34); foreign schedule has 16 entries; pre-2022 flags expensing available; post-2022 no expensing option; zero amount no-op; before expenditure year zero deduction; cumulative grows predictably (10/30/50/70/90/100); RDLocation helper returns 5 / 15; **algorithmic trader software dev $100k year 1 only $10k deductible** (the load-bearing TCJA-hit scenario); 5-year recovery sum ties to full amount under arbitrary $250k input.
 
+`traderview-expense::section_183` is the **IRC §183 hobby loss module** — trader-critical because a trader who loses money for years risks IRS recharacterization of the activity as a hobby rather than a §162 trade or business. For post-2017 tax years (made permanent by OBBBA 2025), the §67(g) suspension of miscellaneous itemized deductions effectively zeroes §183(b)(2) deductions — the taxpayer recognizes the income but receives NO offsetting deductions on the hobby path.
+
+**Three profit-motive determination paths**:
+
+| Determination | Trigger | Outcome |
+|---------------|---------|---------|
+| `PresumptionMet` | §183(d) profit in 3 of 5 years (standard) / 2 of 7 (horse) | §162 trade/business; all expenses deductible |
+| `NineFactorEstablished` | Reg. § 1.183-2(b) ≥ 5 of 9 factors favor profit motive | §162 trade/business; all expenses deductible |
+| `HobbyTreatment` | Neither path supports profit motive | §183 hobby; only §183(b)(1) always-allowed (taxes / interest) deductible; §183(b)(2) ZEROED by §67(g) post-2017 |
+
+**§183(b) deduction hierarchy**:
+- **§183(b)(1)** — deductions allowable regardless of profit motive (property tax, mortgage interest, casualty losses): ALWAYS allowed up to otherwise-allowable amount.
+- **§183(b)(2)** — other deductions: capped at gross income − §183(b)(1) amount; further ZEROED for post-2017 years via §67(g) misc-itemized-deduction suspension.
+
+**§183(d) presumption windows**:
+- Standard activities: 3 profit years out of any 5-consecutive-year period.
+- Horse breeding / training / showing / racing: 2 profit years out of any 7-consecutive-year period (the most-litigated carve-out — IRS routinely challenges horse activities).
+
+**§183(e) deferral election** allows the taxpayer to defer the §183(d) presumption determination until after the first 5 (or 7) consecutive years of the activity. Useful for new ventures that expect early losses.
+
+**Reg. § 1.183-2(b) 9-factor test** is the backup when §183(d) presumption is not met:
+1. Manner activity is carried on  2. Expertise of taxpayer or advisors  3. Time and effort expended  4. Expectation assets may appreciate  5. Success in similar activities  6. History of income or losses  7. Amount of occasional profits  8. Financial status of taxpayer  9. Personal pleasure or recreation elements
+
+No single factor controls; courts weigh all 9 together. Module uses a 5-of-9 threshold as a simplified proxy for "majority favor profit motive."
+
+Mounted at `POST /api/calc/section-183`. Nineteen tests pin: **standard 3-of-5 presumption met**; **standard 4-of-5 presumption met**; **standard 2-of-5 presumption NOT met** → hobby; **horse 2-of-7 presumption met**; **horse 1-of-7 not met**; **§183(e) deferral election suppresses presumption** (regression — even 5 profit years out of 5 with deferral elected → no presumption); **9-factor 5-of-9 establishes profit motive** when §183(d) fails; **9-factor 4-of-9 falls to hobby**; **hobby + §67(g) suspension only §183(b)(1) allowed** ($10k income − $2k b1 = $8k net taxable; b2 ZEROED); **hobby pre-2018 b2 allowed up to income cap** ($8k cap binding when other deductions $15k); **hobby pre-2018 b1 below income** lets b2 = $3k actually deductible without cap binding ($5k net taxable); **presumption met all expenses allowed no cap** ($10k − $2k − $15k = −$7k NOL territory); **9-factor established all expenses allowed** (no §183 cap); **§183(b)(1) always allowed even for hobby** ($2k taxes/interest); **citation mentions all 9 relevant authorities** (§183(a) + (b)(1) + (b)(2) + (c) + (d) + (e) + § 1.183-2(b) + §67(g) + OBBBA 2025); note for presumption mentions §162 trade/business; note for §67(g) hobby says "ZEROED by §67(g)"; note for 9-factor says "analysis establishes profit motive"; **$1B precision case** ($1B income − $100M b1 − $500M other = $400M net).
+
 `traderview-expense::section_168_e6` is the **IRC §168(e)(6) Qualified Improvement Property module** — the 15-year MACRS class for interior improvements to nonresidential buildings made by the taxpayer after the building was originally placed in service. Critical for commercial landlords planning tenant build-out allowances.
 
 **Drafting-error saga** worth modeling because it changed the recovery period mid-history:

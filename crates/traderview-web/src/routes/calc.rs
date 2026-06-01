@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
+        .route("/calc/section-183",           post(section_183_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-108",           post(section_108_route))
@@ -608,6 +609,30 @@ async fn section_174_route(
         ));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
+}
+
+// ── §183 hobby loss rules ────────────────────────────────────────────
+// Mounted at /api/calc/section-183. §183(a) general rule; §183(b)(1)
+// always-allowed deductions (taxes, interest); §183(b)(2) capped at
+// gross income − (b)(1) — effectively ZERO post-TCJA via §67(g)
+// misc-itemized-deduction suspension made permanent by OBBBA 2025;
+// §183(d) profit-motive presumption (3-of-5 standard / 2-of-7 horse);
+// §183(e) deferral election; Reg. § 1.183-2(b) 9-factor backup test.
+
+async fn section_183_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_183::Section183Input>,
+) -> Result<Json<traderview_expense::section_183::Section183Result>, ApiError> {
+    if b.nine_factors_favoring_profit > 9
+        || b.gross_income_from_activity_dollars < 0
+        || b.section_183b1_deductions_dollars < 0
+        || b.other_activity_deductions_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "nine_factors_favoring_profit must be ≤ 9 and dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_183::compute(&b)))
 }
 
 // ── §1234 options character + holding-period rules ──────────────────
