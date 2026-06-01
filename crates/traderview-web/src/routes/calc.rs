@@ -99,6 +99,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-7704",          post(section_7704_route))
+        .route("/calc/section-6045b",         post(section_6045b_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2756,6 +2757,33 @@ async fn section_7704_route(
         ));
     }
     Ok(Json(traderview_expense::section_7704::compute(&b)))
+}
+
+// ── §6045B issuer Form 8937 organizational action basis reporting ─
+// Mounted at /api/calc/section-6045b. § 6045B requires issuers of
+// specified securities to report organizational actions affecting
+// basis to the IRS via Form 8937 within fixed deadline. § 6045B(a)
+// return must describe the action AND include quantitative effect
+// on basis. § 6045B(b) deadline = earlier of (1) 45 days after
+// action OR (2) January 15 of year following calendar year of
+// action. § 6045B(c) issuer must furnish written statement to
+// nominees and holders by January 15 of following year. § 6045B(d)
+// specified security defined by § 6045(g)(3). § 6045B(e) PUBLIC
+// WEBSITE WAIVER via Treas. Reg. § 1.6045B-1(a)(3) — issuer is
+// deemed to satisfy IRS filing duty by posting completed signed
+// Form 8937 on public website for at least 10 YEARS. Companion to
+// section_6045 (broker Form 1099-B downstream reporting).
+
+async fn section_6045b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6045b::Section6045BInput>,
+) -> Result<Json<traderview_expense::section_6045b::Section6045BResult>, ApiError> {
+    if b.days_since_action > 100_000 || b.website_posting_duration_years > 100 {
+        return Err(ApiError::BadRequest(
+            "counters look invalid (>threshold)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6045b::check(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

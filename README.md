@@ -3142,6 +3142,40 @@ Mounted at `POST /api/calc/section-530`. Twenty-two tests pin: **single under $9
 
 Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
 
+`traderview-expense::section_6045b` is the **IRC §6045B issuer reporting of organizational actions affecting basis (Form 8937) module** — trader-critical for any holder of stock that undergoes a corporate action (stock split, spin-off, merger, return-of-capital distribution). § 6045B requires the ISSUER of the specified security to report the organizational action AND the quantitative effect on basis to the IRS via Form 8937. Trader uses the issuer's Form 8937 to adjust basis for the post-action holding. Direct upstream feeder to `section_6045` (broker Form 1099-B reporting that consumes issuer's basis adjustments).
+
+**Five operative subsections**:
+
+| Subsection | Statute | Rule |
+|------------|---------|------|
+| § 6045B(a) | 26 U.S.C. § 6045B(a) | **Issuer return** — describe organizational action AND quantitative effect on basis |
+| § 6045B(b)(1) | 26 U.S.C. § 6045B(b)(1) | **45-day deadline** from date of organizational action |
+| § 6045B(b)(2) | 26 U.S.C. § 6045B(b)(2) | **Alternative deadline** — January 15 of year following calendar year of action |
+| § 6045B(c) | 26 U.S.C. § 6045B(c) | **Holder statement** — furnish written statement to nominees and holders by January 15 of following year |
+| § 6045B(d) | 26 U.S.C. § 6045B(d) | **"Specified security"** defined by § 6045(g)(3) cross-reference |
+| § 6045B(e) | Treas. Reg. § 1.6045B-1(a)(3) | **Public website waiver** — posting Form 8937 on public website for **≥ 10 years** waives IRS filing duty |
+
+**§ 6045B(b) deadline = EARLIER of (1) 45 days OR (2) January 15 of following year.** Either trigger requires filing by that earlier date; the 45-day prong drives the immediate compliance, while the Jan-15 prong catches actions taken late in the calendar year. Pinned by `past_45_day_deadline_violation` (day 46), `january_15_passed_triggers_deadline_violation`, and the boundary invariant `deadline_45_days_strict_boundary_truth_table_invariant` (5 cells: 0/44/45/46/100 days).
+
+**Public-website waiver under Treas. Reg. § 1.6045B-1(a)(3) requires ≥ 10 years of posting.** Issuer that posts a completed, signed Form 8937 in readily accessible format on a public website for at least 10 years is DEEMED to satisfy the IRS filing duty. Posting < 10 years does not qualify. Pinned by `public_website_10_year_posting_waives_irs_filing`, `public_website_15_year_posting_satisfies_waiver`, `public_website_9_year_posting_fails_waiver`, and the 6-cell invariant `website_exception_requires_min_10_years_invariant` (0/5/9/10/15/20 years).
+
+**Website waiver overrides filing deadline violation.** Even where the 45-day deadline and the Jan-15 alternative have both passed, a properly satisfied website waiver excuses the IRS filing failure. Pinned by `public_website_waiver_overrides_deadline_violation`.
+
+**§ 6045B(c) holder statement is separately required regardless of filing method.** Whether the issuer files Form 8937 with the IRS or posts on a public website, the issuer must furnish the written statement to nominees and security holders by January 15 of the year following the action. Pinned by `missing_holder_statement_violation`.
+
+**Seven action-type notes** cover the most common organizational actions affecting basis:
+- Stock split (per-share basis ratio adjustment)
+- Stock dividend (§ 305(a) non-recognition)
+- Spin-off / split-off (§ 358 basis allocation)
+- Merger / acquisition (§ 368 reorganization or § 1012 cost basis)
+- Recapitalization (§ 368(a)(1)(E) E-reorganization)
+- Return of capital (basis reduction; excess capital gain)
+- Other (catch-all)
+
+Pinned by `stock_split_action_note_present`, `stock_dividend_action_note_cites_section_305`, `spin_off_action_note_cites_section_358`, `merger_action_note_cites_section_368`, `return_of_capital_action_note_explains_basis_reduction`, and `all_seven_action_types_produce_distinct_notes_invariant`.
+
+Mounted at `POST /api/calc/section-6045b`. Twenty-four tests pin: **within 45 days IRS Form 8937 compliant**; **at 45-day boundary compliant**; **past 45-day deadline violation** (day 46); **January 15 passed triggers deadline violation**; **missing basis adjustment description violation** (§ 6045B(a)(1)); **missing quantitative effect violation** (§ 6045B(a)(2)); **missing holder statement violation** (§ 6045B(c)); **public website 10-year posting waives IRS filing**; **public website 15-year posting satisfies waiver**; **public website 9-year posting fails waiver**; **public website waiver overrides deadline violation**; **stock split action note present**; **stock dividend cites § 305(a)**; **spin-off cites § 358**; **merger cites § 368**; **return of capital explains basis reduction**; **deadline 45 days strict boundary truth table 5-cell invariant** (0/44/45/46/100 days); **website exception only satisfied for public website method invariant**; **website exception requires min 10 years 6-cell invariant** (0/5/9/10/15/20 years); **all 7 action types produce distinct notes invariant**; **citation pins subsections per path** (§ 6045B(a)/(b)(1)/(b)(2)/(c)/(d) + Treas. Reg. § 1.6045B-1(a)(3)); **primary deadline constant 45 days invariant**; **website min 10 years constant invariant**; **sibling-module note across all 7 action types** (UX-text regression for § 6045 + Form 1099-B downstream).
+
 `traderview-expense::section_6045` is the **IRC §6045 broker information reporting module (Form 1099-B + Form 1099-DA)** — affects every trader and crypto investor. §6045(a) requires brokers — defined as anyone in the ordinary course of business standing ready to effect sales for others — to file information returns for customer sales/exchanges. §6045(g) bifurcates securities into COVERED (broker required to report adjusted BASIS) vs NON-COVERED (gross proceeds only). Sibling to `section_6050w` (Form 1099-K payment-settlement-entity threshold).
 
 **Acquisition-date cutoffs** for covered-security status (Treas. Reg. § 1.6045-1(a)(15)):
