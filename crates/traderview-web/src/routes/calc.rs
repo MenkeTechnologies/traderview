@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
+        .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
@@ -1610,6 +1611,29 @@ async fn section_3406_route(
         ));
     }
     Ok(Json(traderview_expense::section_3406::compute(&b)))
+}
+
+// ── §336 gain/loss on property distributed in complete liquidation ─
+// Mounted at /api/calc/section-336. §336(a) FMV sale treatment of
+// distributed property; §336(b) liability ≥ FMV adjustment;
+// §336(d)(1) related-party loss disallowance (>50% ownership);
+// §336(d)(2) 5-year anti-tax-avoidance built-in loss disallowance;
+// §336(d)(3) §332 subsidiary 80%+ parent full nonrecognition.
+
+async fn section_336_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_336::Section336Input>,
+) -> Result<Json<traderview_expense::section_336::Section336Result>, ApiError> {
+    if b.distributed_property_fmv_dollars < 0
+        || b.distributed_property_adjusted_basis_dollars < 0
+        || b.built_in_loss_at_contribution_dollars < 0
+        || b.liability_amount_on_property_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_336::compute(&b)))
 }
 
 // ── §451(b) AFS conformity / all-events test acceleration ───────────
