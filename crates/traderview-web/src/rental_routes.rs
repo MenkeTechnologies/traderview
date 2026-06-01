@@ -280,6 +280,10 @@ use traderview_expense::asbestos_disclosure::{
     check as check_asbestos_disclosure, CheckResult as AsbestosDisclosureResult,
     Input as AsbestosDisclosureInput,
 };
+use traderview_expense::firearms_in_rental_unit::{
+    check as check_firearms_in_rental_unit, CheckResult as FirearmsRentalResult,
+    Input as FirearmsRentalInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -505,6 +509,7 @@ pub fn router() -> Router<AppState> {
         .route("/otard-antenna-installation", axum::routing::post(otard_antenna_installation_route))
         .route("/religious-display-doorpost", axum::routing::post(religious_display_doorpost_route))
         .route("/asbestos-disclosure", axum::routing::post(asbestos_disclosure_route))
+        .route("/firearms-in-rental-unit", axum::routing::post(firearms_in_rental_unit_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3937,6 +3942,39 @@ async fn asbestos_disclosure_route(
         ));
     }
     Ok(Json(check_asbestos_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord firearms-in-rental-unit tenant right compliance
+// check.
+//
+// Mounted at POST /api/rental/firearms-in-rental-unit. Six regimes:
+// Minnesota (Minn. Stat. § 504B.211 + Chapter 624 — strongest pro-
+// tenant statutory protection — landlord cannot restrict lawful
+// possession + carry + transportation of firearms by tenants or
+// guests in rental unit); Virginia (Va. Code § 55.1-1208(A)(15) —
+// PUBLIC HOUSING only prohibition on rental agreement firearms
+// restriction; private landlords may still restrict by lease);
+// Tennessee (current state law permits private landlord to prohibit
+// firearms via lease clause; SB0350 in 2026 session proposes flip
+// to pro-tenant — audit tracks current law); Wisconsin (Wis. Stat.
+// § 175.60 Concealed Carry Licensee Protections — protects all
+// occupants of rented dwelling where concealed-carry licensee
+// lives); NewYork (state silent on private landlord restriction;
+// federal court 2024 permanent injunction (Cortland County public-
+// housing handgun ban) under N.Y. State Rifle & Pistol Ass'n v.
+// Bruen, 597 U.S. 1 (2022) protects public-housing tenants;
+// private landlords may still restrict by lease); Default (state
+// silent; private landlord may restrict via lease; federal Bruen
+// floor applies only to government action = public housing).
+// ---------------------------------------------------------------------------
+
+async fn firearms_in_rental_unit_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FirearmsRentalInput>,
+) -> Result<Json<FirearmsRentalResult>, ApiError> {
+    Ok(Json(check_firearms_in_rental_unit(&b)))
 }
 
 // ---------------------------------------------------------------------------
