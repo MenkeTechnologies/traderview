@@ -182,6 +182,9 @@ use traderview_expense::plain_language_lease::{
 use traderview_expense::roommate_authorization::{
     check as check_roommate_authorization, RoommateAuthorizationInput, RoommateAuthorizationResult,
 };
+use traderview_expense::ev_charger_installation::{
+    check as check_ev_charger, EvChargerInput, EvChargerResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -342,6 +345,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
+        .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2842,6 +2846,37 @@ async fn roommate_authorization_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_roommate_authorization(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant right-to-install EV charging station check
+//
+// Mounted at POST /api/rental/ev-charger-installation-check. Five
+// regimes: CaliforniaInsuranceRequired (Cal. Civ. Code § 1947.6
+// eff. 2015-07-01 — tenant pays + written agreement + $1M
+// liability insurance, all required); HawaiiLeaseProvisionVoid
+// (HRS § 196-7.5 — any lease restriction VOID; extends to
+// common-element parking); IllinoisNewBuildingsOnly (Electric
+// Vehicle Charging Act 765 ILCS eff. 2023 — NEW multi-unit
+// dwellings only with 100% EV-ready parking); NewJerseyMulti-
+// UnitRight (multi-unit residential reasonable-terms review);
+// DefaultLeaseGoverns (46 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn ev_charger_installation_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<EvChargerInput>,
+) -> Result<Json<EvChargerResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.tenant_liability_insurance_amount_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "tenant_liability_insurance_amount_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_ev_charger(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -1237,6 +1237,30 @@ Mounted at `POST /api/rental/plain-language-lease-check`. Thirty-three tests pin
 
 Mounted at `POST /api/rental/roommate-authorization-check`. Twenty-eight tests pin: **3 regime classifications** (NY / CA + default AL/FL/TX/WA/DC/WY/MA/NJ/IL); **NY single-tenant 1 additional adult permitted**; **NY 2 additional adults exceeds per-tenant cap of 1** (regression — RPL § 235-f permits only 1 per tenant); **NY not-primary-residence → no statutory right**; **NY lease restriction VOID when statute permits** (regression target — only NY does this); **NY 30-day notification window** (day 30 within; day 31 without notification non-compliant); **NY multi-tenant 2-on-lease + 2 additional = OK** (cap 2 tenants × 1 additional each = 2); **NY multi-tenant 2-on-lease + 3 additional exceeds cap**; **CA 1-bedroom max 3 occupants** ($N \times 2 + 1 = 3$); **CA 1-bedroom 4 occupants exceeds max**; **CA 2-bedroom max 5**; **CA 3-bedroom max 7**; **CA lease remains enforceable above floor** (regression — CA does NOT void lease restrictions); default-state no-lease-restriction permitted; default-state lease-restriction blocks roommate; **2 citation regression targets** (NY § 235-f + "VOID" + "30 days"; CA "2 plus 1" + "2 per bedroom"); **51-state coverage**; non-empty citations; **3 single-state-uniqueness invariants** (NY-only / CA-only / **NY-only lease-restrictions-void**); NY note describes per-tenant cap arithmetic; CA note describes bedroom formula; lowercase state code normalizes.
 
+`traderview-expense::ev_charger_installation` is the **state tenant right-to-install electric-vehicle charging station compliance table** — modern "right-to-charge" laws addressing demand for at-home EV charging in multi-unit rental housing. Only 4 states grant tenant-specific protections; MD / VA / CO / FL right-to-charge laws cover HOAs and condos but do not extend to standalone rental tenants.
+
+**Five regimes** with sharply different gates:
+
+| Regime | States | Insurance | Building gate | Lease restrictions |
+|--------|--------|-----------|----------------|--------------------|
+| `CaliforniaInsuranceRequired` | CA | **$1,000,000 general liability** | None | Enforceable above 4-prong requirements |
+| `HawaiiLeaseProvisionVoid` | HI | None | Multi-family residential or townhouse | **VOID and unenforceable** under HRS § 196-7.5 |
+| `IllinoisNewBuildingsOnly` | IL | None | **NEW construction only** + multi-unit | Reasonable-terms review |
+| `NewJerseyMultiUnitRight` | NJ | None | Multi-unit residential | Reasonable-terms review |
+| `DefaultLeaseGoverns` | 46 other states + DC | None | None | Enforceable |
+
+**CA 4-prong test** — ALL required for tenant eligibility:
+1. Lease signed / renewed / extended on/after 2015-07-01
+2. Tenant willing to pay charging-station + installation + utility costs
+3. Tenant signs written agreement covering installation, use, maintenance, removal
+4. Tenant maintains **$1,000,000 general-liability insurance** policy
+
+**HI is the strongest tenant-protective regime**: any lease provision purporting to restrict EV charger installation is VOID and unenforceable. Protection extends beyond dedicated parking stalls to common-element parking (first-come, first-served).
+
+**IL applies only to new construction**: the Electric Vehicle Charging Act mandates 100% of parking spaces at new multi-unit dwellings be EV-ready (conduit + reserved capacity). Tenants in older buildings remain lease-governed even in IL.
+
+Mounted at `POST /api/rental/ev-charger-installation-check`. Thirty-one tests pin: **5 regime classifications** (CA / HI / IL / NJ + default AL/FL/TX/WA/DC/WY/NY/MA); **CA all 4 prongs met → eligible** (lease date + pay-costs + written request + agreement + $1M insurance); **CA insurance below $1M not eligible** ($500k → fails); **CA insurance exactly $1M eligible**; CA no-insurance-carried not eligible; CA tenant-unwilling-to-pay not eligible; CA no-written-request not eligible; CA no-written-agreement not eligible; **CA lease pre-effective-date statute inapplicable** (regression — only post-2015-07-01 leases covered); **HI baseline eligible with NO insurance required** (regression — HI does NOT require $1M); **HI lease restriction VOID when statute permits** (lease unenforceable); **IL new construction eligible**; **IL older construction statute inapplicable** (regression — IL only covers NEW buildings); IL not-multi-unit statute inapplicable; **NJ multi-unit eligible**; NJ single-family inapplicable; default state no-lease-restriction eligible; default state lease-restriction blocks install; **3 citation regression targets** (CA § 1947.6 + "$1,000,000"; HI § 196-7.5 + "VOID"; IL 765 ILCS + "NEW"); **51-state coverage**; non-empty citations; **3 single-state-uniqueness invariants** (CA-only insurance-required / HI-only lease-void / IL-only new-construction); lowercase state code normalizes.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
