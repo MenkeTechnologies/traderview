@@ -41,6 +41,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/wash-sale",             post(wash_sale_route))
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
+        .route("/calc/section-1245-1250",     post(section_1245_1250_route))
         .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/section-1045",          post(section_1045_route))
         .route("/calc/section-121",           post(section_121_route))
@@ -402,6 +403,28 @@ async fn section_1244_route(
         ));
     }
     Ok(Json(traderview_expense::section_1244::compute(&b)))
+}
+
+// ── §1245 / §1250 depreciation recapture ───────────────────────────
+// Mounted at /api/calc/section-1245-1250. §1245(a)(1) personal-
+// property recapture = min(gain, accumulated depreciation) ordinary;
+// §1250 real-property: post-1986 MACRS straight-line → zero ordinary
+// + §1(h)(7) unrecaptured §1250 gain taxed at 25% maximum rate for
+// individuals (vs. 20% LTCG); pre-1986 / accelerated → recapture of
+// additional depreciation as ordinary; residual gain flows to §1231.
+
+async fn section_1245_1250_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1245_1250::Section1245_1250Input>,
+) -> Result<Json<traderview_expense::section_1245_1250::Section1245_1250Result>, ApiError> {
+    if b.accumulated_depreciation_dollars < 0
+        || b.additional_depreciation_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative depreciation inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1245_1250::compute(&b)))
 }
 
 // ── §1202 QSBS exclusion ──────────────────────────────────────────────
