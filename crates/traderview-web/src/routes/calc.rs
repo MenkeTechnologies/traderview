@@ -92,6 +92,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1234b",         post(section_1234b_route))
         .route("/calc/section-263g",          post(section_263g_route))
         .route("/calc/section-1276",          post(section_1276_route))
+        .route("/calc/section-1277",          post(section_1277_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2531,6 +2532,40 @@ async fn section_1276_route(
         ));
     }
     Ok(Json(traderview_expense::section_1276::compute(&b)))
+}
+
+// ── §1277 deferral of interest deduction on market-discount bonds ─
+// Mounted at /api/calc/section-1277. Direct companion to §1276.
+// §1277(a) general rule: net direct interest expense (NDIE) on
+// indebtedness to purchase/carry a market discount bond is deductible
+// in the current year ONLY to the extent it exceeds the portion of
+// market discount allocable to the days during the taxable year on
+// which the taxpayer held the bond. §1277(b)(1) net-interest-income
+// carryover recovery: disallowed amount recovered in later year up
+// to net interest income on that bond. §1277(b)(2) disposition
+// terminal recovery: all remaining deferred amount recovered in the
+// disposition year. §1277(c) NDIE definition = excess of interest
+// paid/accrued on indebtedness OVER interest (incl. OID under
+// §1272(a)) includible in gross income on the bond. §1278(b)
+// current-inclusion election exempts taxpayer from §1277 deferral
+// because matching market-discount income is recognized currently.
+// §1277(d) was struck out entirely by Pub. L. 103-66 (1993).
+
+async fn section_1277_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1277::Section1277Input>,
+) -> Result<Json<traderview_expense::section_1277::Section1277Result>, ApiError> {
+    if b.interest_on_indebtedness_cents < 0
+        || b.interest_income_on_bond_cents < 0
+        || b.accrued_market_discount_for_year_cents < 0
+        || b.net_interest_income_for_year_cents < 0
+        || b.prior_year_disallowed_carryover_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1277::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
