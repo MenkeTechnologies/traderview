@@ -368,6 +368,11 @@ use traderview_expense::landlord_retaliation_damages::{
     CheckResult as LandlordRetaliationDamagesResult,
     Input as LandlordRetaliationDamagesInput,
 };
+use traderview_expense::last_month_rent_offset::{
+    check as check_last_month_rent_offset,
+    CheckResult as LastMonthRentOffsetResult,
+    Input as LastMonthRentOffsetInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -614,6 +619,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
+        .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4767,6 +4773,43 @@ async fn landlord_retaliation_damages_route(
         ));
     }
     Ok(Json(check_landlord_retaliation_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant's right to apply security deposit as last month's rent.
+//
+// Mounted at POST /api/rental/last-month-rent-offset. Four
+// regimes for tenant-side offset right: (1) Texas — Tex. Prop.
+// Code § 92.108 STRICT PROHIBITION on tenant withholding last
+// month's rent against deposit; § 92.108(b) bad-faith violation
+// triggers TREBLE DAMAGES + attorney's fees (strongest tenant
+// penalty in U.S.); § 92.056 health/safety repair exception
+// permits offset. (2) California — Cal. Civ. Code § 1950.5
+// LABEL-DEPENDENT TREATMENT: if lease labels payment as "last
+// month's rent" tenant is relieved; if labeled "security" must
+// pay separately. AB 12 (2024) capped deposit at 1 month.
+// (3) New York — N.Y. Gen. Oblig. Law § 7-103 TRUST-FUND
+// PRINCIPLE: landlord may apply at end; tenant may not
+// unilaterally. (4) Default — common-law separation; tenant
+// cannot unilaterally offset absent express lease provision.
+// Distinct from sibling modules security_deposit_caps,
+// deposit_return_windows, damage_deduction_itemization,
+// security_deposit_bank_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn last_month_rent_offset_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LastMonthRentOffsetInput>,
+) -> Result<Json<LastMonthRentOffsetResult>, ApiError> {
+    if b.monthly_rent_cents < 0
+        || b.monthly_rent_cents > 100_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents out of range".into(),
+        ));
+    }
+    Ok(Json(check_last_month_rent_offset(&b)))
 }
 
 // ---------------------------------------------------------------------------
