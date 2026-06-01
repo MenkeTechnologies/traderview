@@ -2374,6 +2374,32 @@ Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no wi
 
 Mounted at `POST /api/calc/section-336`. Twenty-one tests pin: **§336(a) standard gain recognized** ($400k); standard loss recognized ($200k); **§336(b) liability boosts FMV** ($700k liability adjusts $400k FMV upward → $100k gain instead of $200k loss); liability below FMV no adjustment; **§336(d)(1) related-party non-pro-rata loss disallowed** + related-party pro-rata no disallowance if not disqualified + with disqualified property still disallows + **unrelated party no disallowance** (regression); **§336(d)(2) BIL at contribution disallowed** ($150k of $200k loss disallowed) + **capped at realized loss** ($500k BIL > $100k realized → $100k cap) + **not applicable outside 5-year window**; **§336(d)(3) § 332 subsidiary NO gain NO loss** + § 332 overrides all other provisions (even with related-party + BIL + 5-year window); **§336(d)(1) takes precedence over §336(d)(2)** (combined scenario); note describes § 336(a) + § 336(b) + § 336(d)(1) + § 336(d)(2); citation mentions all relevant authorities (§336(a) / (b) / (d)(1) / (d)(2) / (d)(3) / §331 / §334(b)); $10B precision; zero gain zero loss no-op.
 
+`traderview-expense::section_351` is the **IRC §351 corporate formation non-recognition module** — the entry-side counterpart to `section_336` (corporate-liquidation exit-side). Foundational to every trader who forms a trading C-corp, S-corp, or LLC that elects corporate taxation by contributing securities, equipment, or office property in exchange for stock. Stable section since 1954; no material TCJA or OBBBA amendments.
+
+**§368(c) 80% control test** — both prongs independently required immediately after the exchange:
+
+| Prong | Threshold |
+|-------|-----------|
+| Voting power of all voting stock | ≥ 80% |
+| Each non-voting class outstanding | ≥ 80% |
+
+**Recognition rules**:
+- **§351(a)** — general rule: no gain or loss recognized.
+- **§351(b)(1)** — boot gain: recognized to the extent of boot received, capped by realized gain.
+- **§351(b)(2)** — **no loss recognized under §351 even with boot**. Loss is preserved in the substituted stock basis.
+- **§351(d)** — services exclusion: pure-services contributors are disqualified from this transferor's path; their stock is treated as compensation income.
+
+**Liability rules (§357)**:
+- **§357(a)** general — liabilities assumed by the corporation are NOT treated as boot.
+- **§357(b)** — if the principal purpose of any liability assumption is tax avoidance or non-bona-fide business reason, ALL liabilities assumed are treated as boot.
+- **§357(c)** — to the extent sum of liabilities assumed exceeds basis of property transferred, the excess is recognized as gain (independent of actual boot received).
+
+**Basis rules**:
+- **§358(a)** — transferor stock basis = property basis − money received − FMV of non-stock property − liabilities assumed + gain recognized.
+- **§362(a)** — corporation's basis in property = transferor's basis + gain recognized by transferor.
+
+Mounted at `POST /api/calc/section-351`. Twenty-seven tests pin: **baseline full non-recognition** (100% control, no boot, $100k basis / $200k FMV → $100k realized but 0 recognized; stock basis $100k preserves deferred gain; corp basis $100k carryover); **§368(c) 80% boundary** (8000bp exactly meets; 7999bp fails); **voting-prong-only failure** (voting 100%, nonvoting 50% → fails — both prongs independently required); **§351(b)(1) boot recognition** ($180k stock + $20k boot → $20k recognized); **boot CAPPED by realized gain** ($500k basis, $400k stock + $200k boot → realized $100k, boot $200k, recognized = $100k cap, NOT $200k); **§351(b)(2) loss NEVER recognized even with boot** ($200k basis, $100k stock + $50k boot → realized loss $50k, recognized loss 0); **loss preserved in substituted stock basis** ($150k basis after); **§357(a) liabilities within basis NOT boot** ($200k basis, $50k liab → no §357(c), no recognition); **§357(b) tax-avoidance triggers full liability boot** ($200k basis, $100k liab + tax-avoidance flag → recognized $100k); **§357(c) excess-liability gain** ($100k basis + $150k liab → $50k §357(c) gain recognized); **§357(c) combined with actual boot** ($30k boot + $50k §357(c) excess = $80k total); **§357(b)/§357(c) NO double-counting** (when §357(b) treats liab as boot, §357(c) subsumed); **§351(d) pure-services excluded**; **§358 stock basis math** (no-boot-no-liab preserves; boot reduces and gain restores; liab reduces); **§362 corp basis carryover plus boot gain** ($100k + $20k gain = $120k); **citation mentions all 9 relevant authorities** (§351(a) + §351(b) + §351(d) + §368(c) + §357(a) + §357(b) + §357(c) + §358(a) + §362(a)); **5 note path descriptions** (applies / control-failed / services-excluded / §357(b) tax-avoidance / §357(c) excess-liability); **$1B precision** ($500M basis, $700M stock + $300M boot → realized $500M, recognized $300M, stock basis $500M, corp basis $800M); zero-basis zero-consideration no-op.
+
 `traderview-expense::section_451b` is the **IRC §451(b) AFS conformity / all-events test acceleration module** — added by TCJA P.L. 115-97 § 13221, effective for tax years beginning after 2017-12-31. Requires accrual-method taxpayers with an Applicable Financial Statement (AFS) to recognize an item of income in gross income no LATER than when the item is recognized as revenue on the AFS. The rule is **ONE-DIRECTIONAL** — only accelerates timing for tax purposes; never defers ([FEI — Where GAAP and Tax Meet: § 451(b)](https://www.financialexecutives.org/FEI-Daily/October-2019/Where-GAAP-and-Tax-Meet-Understanding-IRC-451b.aspx), [Cornell LII 26 U.S.C. § 451](https://www.law.cornell.edu/uscode/text/26/451)).
 
 **§ 451(b) all-events test** — item of income is recognized at the EARLIEST of when it is:

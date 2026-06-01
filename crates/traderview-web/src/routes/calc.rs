@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
         .route("/calc/section-336",           post(section_336_route))
+        .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
@@ -1710,6 +1711,34 @@ async fn section_336_route(
         ));
     }
     Ok(Json(traderview_expense::section_336::compute(&b)))
+}
+
+// ── §351 corporate formation non-recognition ────────────────────────
+// Mounted at /api/calc/section-351. §351(a) non-recognition when
+// transferors meet §368(c) 80% voting + 80% nonvoting control test
+// immediately after exchange; §351(b)(1) boot gain recognition;
+// §351(b)(2) loss never recognized; §351(d) services exclusion;
+// §357(a) liabilities not boot; §357(b) tax-avoidance full-boot;
+// §357(c) excess-liability-over-basis gain; §358(a) substituted
+// stock basis; §362(a) corp carryover basis + gain.
+
+async fn section_351_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_351::Section351Input>,
+) -> Result<Json<traderview_expense::section_351::Section351Result>, ApiError> {
+    if b.property_adjusted_basis_dollars < 0
+        || b.property_fmv_dollars < 0
+        || b.stock_fmv_received_dollars < 0
+        || b.boot_received_dollars < 0
+        || b.liabilities_assumed_by_corp_dollars < 0
+        || b.control_group_voting_pct_bp > 10_000
+        || b.control_group_nonvoting_pct_bp > 10_000
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs and control percentages ≤ 100% (10,000bp) required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_351::compute(&b)))
 }
 
 // ── §451(b) AFS conformity / all-events test acceleration ───────────
