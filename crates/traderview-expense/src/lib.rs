@@ -99,6 +99,7 @@ pub mod manual_entry;
 pub mod meals_50;
 pub mod meth_contamination_disclosure;
 pub mod mid_tenancy_ownership_change;
+pub mod mid_tenancy_security_deposit_increase;
 pub mod mid_tenancy_temporary_relocation;
 pub mod mid_tenancy_term_modification;
 pub mod military_ordnance_disclosure;

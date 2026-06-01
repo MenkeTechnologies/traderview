@@ -362,6 +362,10 @@ use traderview_expense::mid_tenancy_ownership_change::{
     check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
     Input as MidTenancyOwnershipInput,
 };
+use traderview_expense::mid_tenancy_security_deposit_increase::{
+    check as check_mid_tenancy_security_deposit_increase, MidTenancySecurityDepositInput,
+    MidTenancySecurityDepositResult,
+};
 use traderview_expense::mid_tenancy_temporary_relocation::{
     check as check_mid_tenancy_temporary_relocation, TemporaryRelocationInput,
     TemporaryRelocationResult,
@@ -740,6 +744,7 @@ pub fn router() -> Router<AppState> {
         .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
+        .route("/mid-tenancy-security-deposit-increase", axum::routing::post(mid_tenancy_security_deposit_increase_route))
         .route("/mid-tenancy-term-modification", axum::routing::post(mid_tenancy_term_modification_route))
         .route("/mid-tenancy-temporary-relocation", axum::routing::post(mid_tenancy_temporary_relocation_route))
         .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
@@ -4767,6 +4772,31 @@ async fn mid_tenancy_ownership_change_route(
         ));
     }
     Ok(Json(check_mid_tenancy_ownership_change(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// mid_tenancy_security_deposit_increase: Mandatory landlord-paid
+// prohibition on mid-tenancy security deposit increase. Mounted at POST
+// /api/rental/mid-tenancy-security-deposit-increase. Four regimes:
+// California Cal. Civ. Code § 1950.5(c) + AB 12 (one month unfurnished /
+// two months furnished cap effective July 1, 2024; mid-tenancy increase
+// requires lease modification basis + within cap + tenant written
+// consent); New Jersey N.J.S.A. §§ 46:8-21.2 + 46:8-19 (prohibited absent
+// lease modification or proportional rent increase; 1.5 month cap; bad-
+// faith DOUBLE DAMAGES + attorney fees); New York N.Y. Gen. Oblig. Law
+// § 7-108(1-a)(a) HSTPA 2019 (statewide one-month cap); Default lease
+// controls + common-law contract modification + good-faith doctrine.
+// Distinct from `security_deposit_caps` (initial cap), `damage_deduction_
+// itemization`, `deposit_interest`, `security_deposit_bank_disclosure`,
+// and `deposit_return_windows`.
+// ---------------------------------------------------------------------------
+
+async fn mid_tenancy_security_deposit_increase_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MidTenancySecurityDepositInput>,
+) -> Result<Json<MidTenancySecurityDepositResult>, ApiError> {
+    Ok(Json(check_mid_tenancy_security_deposit_increase(&b)))
 }
 
 // ---------------------------------------------------------------------------
