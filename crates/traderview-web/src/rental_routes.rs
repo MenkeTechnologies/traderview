@@ -186,6 +186,9 @@ use traderview_expense::meth_contamination_disclosure::{
 use traderview_expense::death_in_unit_disclosure::{
     check as check_death_in_unit_disclosure, DeathDisclosureInput, DeathDisclosureResult,
 };
+use traderview_expense::rent_payment_method::{
+    check as check_rent_payment_method, RentPaymentMethodInput, RentPaymentMethodResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -385,6 +388,7 @@ pub fn router() -> Router<AppState> {
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
         .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
+        .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -2958,6 +2962,35 @@ async fn death_in_unit_disclosure_route(
         ));
     }
     Ok(Json(check_death_in_unit_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State rent-payment-method compliance — what methods landlord must accept
+// and which may not be required.
+//
+// Mounted at POST /api/rental/rent-payment-method. Three regimes:
+// California1947_3 (Cal. Civ. Code § 1947.3(a) — must allow at least one
+// non-cash non-electronic method, fee-for-check prohibited; § 1947.3(c)
+// 3-month cash-only carve-out after bounced check + written notice;
+// § 1947.3(d) waiver void as public policy); NewYork235G (NY RPP § 235-g(1)
+// — electronic-only requirement prohibited; § 235-g(2) no fee for non-
+// electronic payers; § 235-g(4) waiver void); Default (no statewide
+// statute — lease terms control). Distinct from advance_rent_limit
+// (which caps the AMOUNT collectable in advance) — this module addresses
+// HOW rent may be paid.
+// ---------------------------------------------------------------------------
+
+async fn rent_payment_method_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentPaymentMethodInput>,
+) -> Result<Json<RentPaymentMethodResult>, ApiError> {
+    if b.months_since_bounced_check > 1_000 {
+        return Err(ApiError::BadRequest(
+            "months_since_bounced_check looks invalid (>1000)".into(),
+        ));
+    }
+    Ok(Json(check_rent_payment_method(&b)))
 }
 
 // ---------------------------------------------------------------------------
