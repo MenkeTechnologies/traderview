@@ -36,6 +36,7 @@ pub mod depreciation;
 pub mod deposit_interest;
 pub mod detector_requirements;
 pub mod deposit_return_windows;
+pub mod dv_survivor_lock_change;
 pub mod dv_termination;
 pub mod entry_notice;
 pub mod disposition;

@@ -65,6 +65,9 @@ use traderview_expense::application_fees::{
 use traderview_expense::bedbug_disclosure::{
     check as check_bedbug_disclosure, BedbugCheckInput, BedbugCheckResult,
 };
+use traderview_expense::dv_survivor_lock_change::{
+    check as check_dv_survivor_lock_change, DvLockChangeInput, DvLockChangeResult,
+};
 use traderview_expense::dv_termination::{
     check as check_dv_termination, DvEarlyTerminationInput, DvEarlyTerminationResult,
 };
@@ -550,6 +553,7 @@ pub fn router() -> Router<AppState> {
         .route("/retaliation-check", axum::routing::post(retaliation_check_route))
         .route("/application-fee-check", axum::routing::post(application_fee_check_route))
         .route("/lockout-penalty-check", axum::routing::post(lockout_penalty_check_route))
+        .route("/dv-survivor-lock-change", axum::routing::post(dv_survivor_lock_change_route))
         .route("/dv-termination-check", axum::routing::post(dv_termination_check_route))
         .route("/just-cause-check", axum::routing::post(just_cause_check_route))
         .route("/soi-protection-check", axum::routing::post(soi_protection_check_route))
@@ -5477,6 +5481,50 @@ async fn dv_termination_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_dv_termination(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// dv_survivor_lock_change: DV / sexual assault / stalking survivor mid-
+// tenancy lock change rights. Four regimes: California (Cal. Civ. Code
+// § 1941.5 perpetrator-NOT-co-tenant 24-hour landlord-pays + § 1941.6
+// perpetrator-IS-co-tenant landlord-pays + 21-day reimbursement on tenant
+// self-help + SB 1051 signed-statement acceptance); Texas (§ 92.156(d)
+// turnover rekey at landlord expense + § 92.156(e) tenant-requested rekey
+// at TENANT expense including DV survivor + § 92.016 DV early termination
+// separately covered); Washington (RCW 59.18.575 tenant-paid + 7-day
+// written notice to landlord with order or qualified-third-party record;
+// signed statement alone NOT accepted); Default (common-law lease + state-
+// specific DV statute; varies sharply). Distinct from dv_termination,
+// lock_change_between_tenancies, landlord_harassment.
+// ---------------------------------------------------------------------------
+
+async fn dv_survivor_lock_change_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DvLockChangeInput>,
+) -> Result<Json<DvLockChangeResult>, ApiError> {
+    if let Some(h) = b.hours_to_landlord_action {
+        if h > 100_000 {
+            return Err(ApiError::BadRequest(
+                "hours_to_landlord_action looks invalid (>100000)".into(),
+            ));
+        }
+    }
+    if let Some(d) = b.days_to_landlord_reimbursement {
+        if d > 100_000 {
+            return Err(ApiError::BadRequest(
+                "days_to_landlord_reimbursement looks invalid (>100000)".into(),
+            ));
+        }
+    }
+    if let Some(d) = b.days_to_landlord_notice {
+        if d > 100_000 {
+            return Err(ApiError::BadRequest(
+                "days_to_landlord_notice looks invalid (>100000)".into(),
+            ));
+        }
+    }
+    Ok(Json(check_dv_survivor_lock_change(&b)))
 }
 
 // ---------------------------------------------------------------------------
