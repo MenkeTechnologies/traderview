@@ -244,6 +244,10 @@ use traderview_expense::landlord_identification_disclosure::{
     check as check_landlord_identification_disclosure, LandlordIdentificationInput,
     LandlordIdentificationResult,
 };
+use traderview_expense::reasonable_accommodation_modification::{
+    check as check_reasonable_accommodation_modification,
+    CheckResult as ReasonableAccommodationResult, Input as ReasonableAccommodationInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -460,6 +464,7 @@ pub fn router() -> Router<AppState> {
         .route("/credit-check-authorization", axum::routing::post(credit_check_authorization_route))
         .route("/winter-eviction-protections", axum::routing::post(winter_eviction_protections_route))
         .route("/landlord-identification-disclosure", axum::routing::post(landlord_identification_disclosure_route))
+        .route("/reasonable-accommodation-modification", axum::routing::post(reasonable_accommodation_modification_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3549,6 +3554,46 @@ async fn landlord_identification_disclosure_route(
         ));
     }
     Ok(Json(check_landlord_identification_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Federal FHA + state reasonable accommodation / modification
+// compliance check for tenants with disabilities.
+//
+// Mounted at POST /api/rental/reasonable-accommodation-modification. Four
+// regimes: Federal (42 U.S.C. § 3604(f)(3)(A) modification at tenant's
+// expense + § 3604(f)(3)(B) accommodation in rules/policies/practices/
+// services at landlord's expense unless undue burden or fundamental
+// alteration); California (Cal. Civ. Code § 54.1(b)(3)(A)–(B) — mirrors
+// FHA modification + restoration agreement permitted + NO ADDITIONAL
+// SECURITY + escrow capped at reasonable estimate of restoration cost;
+// § 54(b) sensory-disability protections broader than ADA); NYC (N.Y.C.
+// Admin. Code § 8-107(15)(c) MANDATORY cooperative-dialogue requirement
+// — landlord MUST engage in documented written/oral dialogue with
+// tenant; failure to engage is itself a discriminatory practice
+// independent of substantive outcome; § 8-102 defines dialogue);
+// Washington (RCW 49.60.222(2)(b) — mirrors FHA cost allocation).
+// ---------------------------------------------------------------------------
+
+async fn reasonable_accommodation_modification_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ReasonableAccommodationInput>,
+) -> Result<Json<ReasonableAccommodationResult>, ApiError> {
+    if b.modification_cost_cents < 0
+        || b.escrow_amount_cents < 0
+        || b.restoration_estimate_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.days_since_request_received > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_request_received looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_reasonable_accommodation_modification(&b)))
 }
 
 // ---------------------------------------------------------------------------
