@@ -90,6 +90,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-108",           post(section_108_route))
         .route("/calc/section-104",           post(section_104_route))
         .route("/calc/section-1014",          post(section_1014_route))
+        .route("/calc/section-1014e",         post(section_1014e_route))
         .route("/calc/section-1015",          post(section_1015_route))
         .route("/calc/section-1041",          post(section_1041_route))
         .route("/calc/section-170e",          post(section_170e_route))
@@ -839,6 +840,30 @@ async fn section_1014_route(
         }
     }
     Ok(Json(traderview_expense::section_1014::compute(&b)))
+}
+
+// ── §1014(e) appreciated-property-by-gift-within-1-year-of-death ────
+// Mounted at /api/calc/section-1014e. Anti-abuse companion to § 1014
+// general step-up. Triggers when (1) decedent acquired property by
+// gift, (2) within 1 year of death, (3) property passes back to
+// donor or donor's spouse. Result: basis = decedent's adjusted
+// basis immediately before death (no FMV step-up). Credit-shelter-
+// trust workaround per NAEPC Journal analysis.
+
+async fn section_1014e_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1014e::Section1014eInput>,
+) -> Result<Json<traderview_expense::section_1014e::Section1014eResult>, ApiError> {
+    if b.donor_adjusted_basis_at_gift_dollars < 0
+        || b.fmv_at_gift_dollars < 0
+        || b.decedent_adjusted_basis_immediately_before_death_dollars < 0
+        || b.fmv_at_death_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1014e::compute(&b)))
 }
 
 // ── §1091 wash sale loss disallowance ────────────────────────────────
