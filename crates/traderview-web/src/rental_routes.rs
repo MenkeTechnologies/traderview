@@ -304,6 +304,10 @@ use traderview_expense::mid_tenancy_ownership_change::{
     check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
     Input as MidTenancyOwnershipInput,
 };
+use traderview_expense::mid_tenancy_term_modification::{
+    check as check_mid_tenancy_term_modification, ModificationInput as MidTenancyTermModInput,
+    ModificationResult as MidTenancyTermModResult,
+};
 use traderview_expense::tenant_solar_installation::{
     check as check_tenant_solar_installation, CheckResult as TenantSolarResult,
     Input as TenantSolarInput,
@@ -614,6 +618,7 @@ pub fn router() -> Router<AppState> {
         .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
+        .route("/mid-tenancy-term-modification", axum::routing::post(mid_tenancy_term_modification_route))
         .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
         .route("/flag-display-right", axum::routing::post(flag_display_right_route))
         .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
@@ -4260,6 +4265,46 @@ async fn mid_tenancy_ownership_change_route(
         ));
     }
     Ok(Json(check_mid_tenancy_ownership_change(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// mid_tenancy_term_modification: Mid-tenancy modification of NON-RENT lease
+// terms — landlord compliance check for unilateral changes to pet policy,
+// parking rules, smoking policy, late-fee structure, etc. during an existing
+// tenancy. Four regimes: California (Cal. Civ. Code § 827(a) permits
+// unilateral periodic-tenancy term modification with 30-day notice for
+// monthly periodic or 7-day floor for shorter periodic; CCP § 1013(a) adds
+// 5 mail-service days within CA; fixed-term requires bilateral consent);
+// NewYork (no statute authorizes unilateral non-rent term modification —
+// bilateral written consent required; RPL § 226-c addresses only rent +
+// non-renewal); Texas (lease-granted modification right enforceable with
+// written notice and prescribed advance period; absent lease clause,
+// bilateral consent required; § 92.006 anti-waiver of mandatory warranties);
+// Default (common-law contract rule — bilateral consent + Restatement
+// (Second) of Contracts § 149 statute of frauds for 1-year-plus leases).
+// Distinct from rent_increase_notice_period (rent-amount changes for
+// CA/WA/OR) and lease_termination_notice (ending/non-renewal across
+// CA/NY/OR/WA/NJ + default).
+// ---------------------------------------------------------------------------
+
+async fn mid_tenancy_term_modification_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MidTenancyTermModInput>,
+) -> Result<Json<MidTenancyTermModResult>, ApiError> {
+    if b.notice_days_provided > 10_000 {
+        return Err(ApiError::BadRequest(
+            "notice_days_provided looks invalid (>10000)".into(),
+        ));
+    }
+    if let Some(d) = b.agreement_shortened_to_days {
+        if d > 10_000 {
+            return Err(ApiError::BadRequest(
+                "agreement_shortened_to_days looks invalid (>10000)".into(),
+            ));
+        }
+    }
+    Ok(Json(check_mid_tenancy_term_modification(&b)))
 }
 
 // ---------------------------------------------------------------------------
