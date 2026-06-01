@@ -152,6 +152,9 @@ use traderview_expense::tenant_data_privacy::{
 use traderview_expense::drug_eviction::{
     check as check_drug_eviction, DrugEvictionInput, DrugEvictionResult,
 };
+use traderview_expense::quiet_enjoyment::{
+    check as check_quiet_enjoyment, QuietEnjoymentInput, QuietEnjoymentResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -302,6 +305,7 @@ pub fn router() -> Router<AppState> {
         .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
         .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
         .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
+        .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2519,6 +2523,34 @@ async fn drug_eviction_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_drug_eviction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State quiet enjoyment / nuisance statute compliance check
+//
+// Mounted at POST /api/rental/quiet-enjoyment-check. Two regimes:
+// MassachusettsTrebleDamagesAndCriminal (MA G.L. c. 186 § 14 only --
+// damages = greater of actual or 3× monthly rent + intentional
+// breach triggers $25-$300 fine + up to 6-month jail);
+// CommonLawImpliedCovenant (all other states + DC, with CA Civ.
+// Code § 1927 statutory codification; NY RPL § 235-b; IL 765 ILCS
+// 705).
+// ---------------------------------------------------------------------------
+
+async fn quiet_enjoyment_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<QuietEnjoymentInput>,
+) -> Result<Json<QuietEnjoymentResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_dollars < 0 || b.actual_damages_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_dollars and actual_damages_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_quiet_enjoyment(&b)))
 }
 
 // ---------------------------------------------------------------------------

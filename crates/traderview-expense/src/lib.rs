@@ -57,6 +57,7 @@ pub mod normalize;
 pub mod pet_fees;
 pub mod qbi;
 pub mod quarterly_tax;
+pub mod quiet_enjoyment;
 pub mod recurring;
 pub mod radon_disclosure;
 pub mod rent_control;
