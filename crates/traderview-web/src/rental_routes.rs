@@ -104,6 +104,9 @@ use traderview_expense::str_regulation::{
 use traderview_expense::pet_fees::{
     check as check_pet_fees, PetFeeInput, PetFeeResult,
 };
+use traderview_expense::non_refundable_cleaning_fees::{
+    check as check_non_refundable_cleaning_fees, CleaningFeeInput, CleaningFeeResult,
+};
 use traderview_expense::eviction_record_sealing::{
     check as check_eviction_sealing, EvictionSealingInput, EvictionSealingResult,
 };
@@ -571,6 +574,7 @@ pub fn router() -> Router<AppState> {
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
+        .route("/non-refundable-cleaning-fees", axum::routing::post(non_refundable_cleaning_fees_route))
         .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
         .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
@@ -2439,6 +2443,37 @@ async fn pet_fees_check_route(
         ));
     }
     Ok(Json(check_pet_fees(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// non_refundable_cleaning_fees: Non-refundable cleaning / move-in fee
+// enforceability — landlord compliance check for whether a fee labeled
+// "non-refundable" in the lease is actually enforceable as such or gets
+// converted to a refundable security deposit. Five regimes: California
+// (Cal. Civ. Code § 1950.5(n) STRICT PROHIBITION — broad § 1950.5(b)
+// security definition voids non-refundable label regardless of
+// disclosure); Texas (Tex. Prop. Code Ch. 92 + § 92.103 — permitted with
+// lease disclosure); Washington (RCW 59.18.285 — permitted ONLY in
+// written lease with clear non-refundable designation; no written lease
+// → landlord LIABLE for full fee; written lease lacking designation →
+// treated as refundable deposit under §§ 59.18.260/.270/.280); New York
+// (GOL § 7-108(1-a) HSTPA 2019 IMPLICIT PROHIBITION via 1-month security
+// cap + advance-payment limit); Default (written-lease disclosure
+// required). Distinct from pet_fees, application_fees, damage_deduction
+// _itemization, security_deposit_caps.
+// ---------------------------------------------------------------------------
+
+async fn non_refundable_cleaning_fees_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CleaningFeeInput>,
+) -> Result<Json<CleaningFeeResult>, ApiError> {
+    if b.fee_amount_cents < 0 || b.monthly_rent_cents < 0 || b.ny_existing_security_deposit_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_non_refundable_cleaning_fees(&b)))
 }
 
 // ---------------------------------------------------------------------------

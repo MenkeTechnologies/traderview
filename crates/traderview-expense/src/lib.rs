@@ -101,6 +101,7 @@ pub mod occupancy_standards;
 pub mod otard_antenna_installation;
 pub mod owner_identification;
 pub mod owner_move_in_eviction;
+pub mod non_refundable_cleaning_fees;
 pub mod normalize;
 pub mod pesticide_application_notice;
 pub mod pet_fees;
