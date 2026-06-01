@@ -272,6 +272,10 @@ use traderview_expense::otard_antenna_installation::{
     check as check_otard_antenna_installation, CheckResult as OtardAntennaResult,
     Input as OtardAntennaInput,
 };
+use traderview_expense::religious_display_doorpost::{
+    check as check_religious_display_doorpost, CheckResult as ReligiousDisplayResult,
+    Input as ReligiousDisplayInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -495,6 +499,7 @@ pub fn router() -> Router<AppState> {
         .route("/pesticide-application-notice", axum::routing::post(pesticide_application_notice_route))
         .route("/condominium-conversion-protection", axum::routing::post(condominium_conversion_protection_route))
         .route("/otard-antenna-installation", axum::routing::post(otard_antenna_installation_route))
+        .route("/religious-display-doorpost", axum::routing::post(religious_display_doorpost_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3857,6 +3862,39 @@ async fn otard_antenna_installation_route(
     Json(b): Json<OtardAntennaInput>,
 ) -> Result<Json<OtardAntennaResult>, ApiError> {
     Ok(Json(check_otard_antenna_installation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord religious-display / mezuzah-on-doorpost tenant
+// right compliance check.
+//
+// Mounted at POST /api/rental/religious-display-doorpost. Eight
+// regimes: California (Cal. Civ. Code § 1940.45 SB 652 "Mezuzah
+// Bill" 2024 — broadest scope explicitly covers landlord-tenant +
+// dormitory rooms + apartments); Texas (Tex. Prop. Code § 202.018
+// HOA-focused with rental coverage via restrictive-covenant
+// analysis); Florida (Fla. Stat. § 720.3045 HOA-focused with
+// explicit tenant extension); Illinois (765 ILCS 605/18.4 Mezuzah
+// Law condominium-focused); Connecticut (Conn. Gen. Stat.
+// § 47-230a Common Interest Ownership Act); RhodeIsland (R.I. Gen.
+// Laws § 34-36.1-3.18 parallel); NewYork (NO enacted state
+// statute — S4466 proposed only; FHA fallback); Default (42
+// U.S.C. § 3604(b) Fair Housing Act religious-discrimination
+// federal floor + Bloch v. Frischholz 587 F.3d 771 (7th Cir. 2009)
+// (en banc) precedent).
+// ---------------------------------------------------------------------------
+
+async fn religious_display_doorpost_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ReligiousDisplayInput>,
+) -> Result<Json<ReligiousDisplayResult>, ApiError> {
+    if b.item_size_inches > 10_000 {
+        return Err(ApiError::BadRequest(
+            "item_size_inches looks invalid".into(),
+        ));
+    }
+    Ok(Json(check_religious_display_doorpost(&b)))
 }
 
 // ---------------------------------------------------------------------------

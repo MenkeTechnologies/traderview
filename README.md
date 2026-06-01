@@ -425,6 +425,36 @@ The compute fn independently checks each requirement, flags individual failures 
 
 Mounted at `POST /api/rental/senior-disabled-check`. Twenty-two tests pin: 51-row coverage; **NJ canonical eligible senior** (all 5 prongs pass); **each of NJ's 5 disqualification paths individually pinned** (age 61, income $50,001, 4-unit building, 0-year tenancy, multi-disqualification stack); **NJ income $50k exact boundary** qualifies; **NJ disabled at any age** qualifies; **NY SCRIE/DRIE permanent (no max_years)**; CA just-cause no carve-out; TX no specific statute; CT § 47a-23c age-62 qualifies (no income gate); PA § 250.504-A age-62 qualifies; unknown state errors; case-insensitive; sorted all_states; non-empty citations; **NJ-only StatewideConversionProtection sweep**; **NY-only MunicipalRentIncreaseExemption sweep**; **7-state JustCauseCoversNoCarveOut regime sweep**; **NJ-only 40-year cap sweep** across 50 other states.
 
+`traderview-expense::religious_display_doorpost` is the **state landlord religious-display / mezuzah-on-doorpost tenant right compliance check** — post-2010 wave of state statutes protecting tenants' right to affix religious items on the entry door or doorframe of a leased dwelling. Sibling to `service_animal` (FHA reasonable accommodation for assistance animals) and `reasonable_accommodation_modification` (FHA § 3604(f)(3) disability accommodation/modification). Driven by **Bloch v. Frischholz, 587 F.3d 771 (7th Cir. 2009) (en banc)** which held that an HOA's removal of mezuzot violated 42 U.S.C. § 3604 Fair Housing Act religious-discrimination prohibition.
+
+**Eight regimes**:
+
+| Regime | Authority | Statutory protection | Covers landlord-tenant | Covers dormitory | Citation |
+|--------|-----------|----------------------|------------------------|--------------------|----------|
+| `California` | Cal. Civ. Code § 1940.45 (SB 652 "Mezuzah Bill" 2024) | **YES** | **YES** | **YES** (unique) | § 1940.45 |
+| `Texas` | Tex. Prop. Code § 202.018 | **YES** (HOA) | No | No | § 202.018 |
+| `Florida` | Fla. Stat. § 720.3045 | **YES** | **YES** | No | § 720.3045 |
+| `Illinois` | 765 ILCS 605/18.4 (Mezuzah Law) | **YES** (condo) | No | No | 765 ILCS 605/18.4 |
+| `Connecticut` | Conn. Gen. Stat. § 47-230a (CIOA) | **YES** | No | No | § 47-230a |
+| `RhodeIsland` | R.I. Gen. Laws § 34-36.1-3.18 | **YES** | No | No | § 34-36.1-3.18 |
+| `NewYork` | S4466 PROPOSED (not enacted) + FHA fallback | No | No | No | S4466 + Bloch v. Frischholz |
+| `Default` | 42 U.S.C. § 3604(b) Fair Housing Act floor | No | No | No | § 3604(b) + Bloch v. Frischholz |
+
+**California § 1940.45 (SB 652) is the broadest statute in the matrix.** Signed in 2024, the "Mezuzah Bill" explicitly extends religious-display protection to landlord-tenant relationships AND dormitory rooms AND apartments. Unique among the eight regimes in covering all three contexts. Pinned by `california_protects_apartment_display`, `california_dormitory_explicitly_covered`, `california_restriction_imposed_violation`, and the 8-regime invariant `only_california_covers_dormitory_explicitly_invariant`.
+
+**Six states have enacted statutes; two (NY + Default) rely on federal FHA only.** California, Texas, Florida, Illinois, Connecticut, and Rhode Island have enacted statutory protection. New York's S4466 has been proposed (most recently in the 2025-2026 session) but is not yet enacted — tenants rely on FHA religious-discrimination protection and case law. Pinned by `only_six_states_have_enacted_statute_invariant`.
+
+**Bloch v. Frischholz (7th Cir. 2009 en banc) establishes the federal floor.** Even without a state statute, restriction of religious-display motivated by sincere religious belief can constitute religious discrimination under 42 U.S.C. § 3604(b) FHA. The FHA risk attaches universally across all 8 regimes when (restriction imposed + sincere religious belief + door location + no temporary removal). Pinned by `new_york_restriction_still_triggers_fha_risk` (state-statute-absent path still has FHA risk), `default_federal_fha_floor_only`, the 8-regime invariant `fha_risk_attaches_universally_when_restriction_meets_threshold_invariant`, and `bloch_v_frischholz_cited_in_default_and_ny_paths_invariant`.
+
+**Three universal threshold gates apply across all 8 regimes**:
+- Sincere religious motivation (no religious motivation → no protection)
+- Display on entry door or entry doorframe (interior displays outside statutory scope)
+- No temporary removal for paint / repair (universally permitted across regimes)
+
+Pinned by `no_religious_motivation_no_protection`, `interior_only_display_outside_statutory_scope`, and the 8-regime invariant `temporary_removal_for_repair_universally_permitted` (confirmed all 8 regimes permit temporary removal for repair).
+
+Mounted at `POST /api/rental/religious-display-doorpost`. Twenty-two tests pin: **CA protects apartment display + dormitory explicitly covered + restriction violation**; **TX § 202.018 protects display motivated by religious belief + restriction violation**; **FL § 720.3045 explicit tenant extension**; **IL Mezuzah Law condominium-focused**; **CT CIOA § 47-230a protection**; **RI § 34-36.1-3.18 parallel protection**; **NY no state statute FHA only + restriction still triggers FHA risk**; **Default federal FHA § 3604(b) floor only**; **no religious motivation no protection** (threshold gate); **interior-only display outside statutory scope** (location gate); **temporary removal for repair universally permitted 8-regime invariant**; **only-California-covers-dormitory-explicitly 8-regime invariant**; **only-CA-and-FL-explicitly-cover-landlord-tenant 8-regime invariant**; **only-six-states-have-enacted-statute 8-regime invariant** (CA, TX, FL, IL, CT, RI vs NY + Default); **FHA risk attaches universally when restriction meets threshold 8-regime invariant**; **citation pins authority per regime** (§ 1940.45 + SB 652 for CA + § 202.018 for TX + § 720.3045 for FL + 765 ILCS 605/18.4 for IL + § 47-230a for CT + § 34-36.1-3.18 for RI + S4466 for NY + § 3604(b) for Default); **Bloch v. Frischholz cited in Default and NY paths invariant**; **sibling-module note across all 8 regimes** (UX-text regression for service_animal + reasonable_accommodation_modification pairing).
+
 `traderview-expense::service_animal` is the **federal FHA + state service animal / ESA accommodation compliance table** — common landlord trap. Federal Fair Housing Act mandates reasonable accommodation for assistance animals regardless of "no pets" policy and prohibits pet deposits/fees. State additions impose anti-fraud documentation requirements after the post-2015 ESA letter mill problem.
 
 **Federal floor (universal across all 51 jurisdictions):**

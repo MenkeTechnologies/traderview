@@ -91,6 +91,7 @@ pub mod quiet_enjoyment;
 pub mod recurring;
 pub mod radon_disclosure;
 pub mod reasonable_accommodation_modification;
+pub mod religious_display_doorpost;
 pub mod rent_control;
 pub mod rent_credit_reporting;
 pub mod rent_escrow;
