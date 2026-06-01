@@ -176,6 +176,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-195",           post(section_195_route))
+        .route("/calc/section-197",           post(section_197_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
         .route("/calc/section-1091",          post(section_1091_route))
@@ -938,6 +939,42 @@ async fn section_195_route(
         ));
     }
     Ok(Json(traderview_expense::section_195::compute(&b)))
+}
+
+// ── §197 amortization of goodwill and certain other intangibles ─────
+// Mounted at /api/calc/section-197. § 197(a) 15-year (180-month)
+// straight-line amortization beginning month acquired for any
+// "amortizable section 197 intangible" — § 197(d) nine categories
+// (goodwill, going concern value, workforce in place, books and
+// records, patent/copyright/process, customer or supplier intangibles,
+// government license, covenant not to compete, franchise/trademark/
+// trade name). § 197(e) three exceptions covered (land, financial
+// interest, lease of tangible property). § 197(c) requires post-
+// August-10-1993 acquisition + trade-or-business use. § 197(f)(9)
+// anti-churning bars amortization when intangible held during
+// 7/25/1991-8/10/1993 transition by taxpayer or related (>20%) party,
+// OR acquired from related party with continued use. § 197(b) bars
+// any § 167 depreciation deduction. Trader-relevant when acquiring a
+// trading business (customer list, workforce, goodwill, non-compete
+// with seller).
+
+async fn section_197_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_197::Section197Input>,
+) -> Result<Json<traderview_expense::section_197::Section197Result>, ApiError> {
+    if b.adjusted_basis_cents < -10_000_000_000
+        || b.adjusted_basis_cents > 10_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "adjusted_basis_cents out of plausible range".into(),
+        ));
+    }
+    if b.months_held_since_acquisition > 100_000 {
+        return Err(ApiError::BadRequest(
+            "months_held_since_acquisition looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_197::compute(&b)))
 }
 
 // ── §170(e) charitable contribution of appreciated property ─────────

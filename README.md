@@ -4009,6 +4009,46 @@ Mounted at `POST /api/calc/section-172`. Twenty-four tests pin: all three regime
 
 Mounted at `POST /api/calc/section-195`. Twenty-eight tests pin: **small startup under $5K full first year no amortization**; **$5K startup full first year no amortization**; **$10K startup $5K immediate plus 180-month amortization** ($5K pool → $27.77/mo × 12 = $333.24 first-year amortization); **$50K startup at phase-out floor $5K immediate** (zero phase-out reduction); **$51K startup $1K phase-out reduces immediate to $4K**; **$53K startup $3K phase-out reduces immediate to $2K**; **$55K startup full phase-out no immediate deduction** (ceiling boundary); **$60K startup full phase-out**; **$100K startup full phase-out large amortization pool**; **months active in first year caps at 12** (no over-allocation); **months active six proportional amortization** (50% pool / 12 mo); **months active one proportional amortization**; **months active zero no amortization** (active business begins last day of taxable year); **affirmative capitalization election zeros all deductions**; **phase-out threshold boundary $50K → $51K** (zero reduction at floor vs $1K at +$1K); **phase-out completes exactly at $55K** (last cent valid at $54,999, zero at $55,000); **first-year total = immediate + amortization invariant**; **citation pins subsections + Treasury Regs + T.D. 9542 Sept. 8, 2011 + Rev. Rul. 99-23**; **zero startup zero deduction no panic**; **negative startup clamped to zero** (defensive); **monthly amortization integer division truncates** ($500,000 / 180 = $2,777 cents = $27.77/mo); **$1M startup full phase-out amortizes over 15 years**; **all four constants pin** (PHASE_OUT_FLOOR=$50K, FIRST_YEAR_CAP=$5K, PHASE_OUT_CEILING=$55K, AMORTIZATION_MONTHS=180); **election applies default path true**; **phase-out engagement note appears when above $50K below $55K**.
 
+`traderview-expense::section_197` is the **IRC § 197 amortization of goodwill and certain other intangibles** — 15-year (180-month) straight-line amortization beginning month acquired for any "amortizable section 197 intangible." Trader-relevant when a trading entity acquires another trading business (asset purchase including customer list, workforce in place, goodwill, non-compete with seller). § 197 is the EXCLUSIVE deduction pathway — § 197(b) bars § 167 depreciation on covered intangibles. Companion to `section_195` (startup expenditures), `section_174` (R&E), and `section_263a` (UNICAP) in the acquisition-cost capitalization landscape.
+
+**Nine amortizable § 197(d) categories**:
+
+| Category | Citation | Examples |
+|----------|----------|----------|
+| Goodwill | § 197(d)(1)(A) | premium over identifiable asset FMV |
+| Going concern value | § 197(d)(1)(B) | continuity premium |
+| Workforce in place | § 197(d)(1)(C) | composition + terms and conditions of employment |
+| Books and records / operating systems | § 197(d)(1)(D) | trading desk SOPs, OMS configurations |
+| Patent / copyright / process | § 197(d)(1)(E) | proprietary algorithms |
+| Customer-based or supplier-based intangible | § 197(d)(1)(F) | brokerage client lists |
+| Government license / permit | § 197(d)(1)(G) | SEC / FINRA registrations |
+| Covenant not to compete | § 197(d)(1)(H) | non-compete with selling principal |
+| Franchise / trademark / trade name | § 197(d)(1)(I) | brand name |
+
+**Three § 197(e) excluded categories** (no § 197 amortization):
+
+| Exclusion | Citation | Treatment |
+|-----------|----------|-----------|
+| Land | § 197(e)(2) | non-amortizable; held at basis |
+| Financial interest | § 197(e)(1) | § 1234 / capital asset rules |
+| Lease of tangible property | § 197(e)(4) | § 168 separate treatment |
+
+**Three gatekeepers** kill amortization at the door regardless of category:
+
+| Gatekeeper | Authority | Effect |
+|------------|-----------|--------|
+| Not held in trade or business | § 197(c)(2) | amortization unavailable |
+| Acquired ON OR BEFORE August 10, 1993 | § 197(c)(1) | pre-TRA-93 acquisition; amortization unavailable |
+| § 197(f)(9) anti-churning engaged | § 197(f)(9) | held during 7/25/1991-8/10/1993 transition period by taxpayer or related (> 20%) party, OR acquired from related party with continued use |
+
+**§ 197(f)(9) anti-churning rules** prevent taxpayers from converting pre-1993 non-amortizable intangibles into post-1993 § 197-amortizable intangibles via related-party transfers. "Related person" includes a corporation and an individual who owns, directly or indirectly, more than 20% of the corporation's outstanding stock. Pinned by `anti_churning_transition_period_blocks_amortization` and `anti_churning_related_party_continued_use_blocks_amortization`.
+
+**§ 197(a) straight-line math: basis ÷ 180 months.** $180,000 goodwill → $1,000/month → $12,000/year → fully amortized at 180 months. Pinned by `goodwill_180000_basis_1000_monthly_amortization` (basis $180K → monthly $1K → annual $12K → cumulative at 12 months $12K → remaining $168K), `customer_list_15_years_fully_amortized` (180 months → cumulative $180K, remaining $0), `cumulative_at_60_months_one_third_of_basis` (cumulative = monthly × 60).
+
+**Sports franchises were added to § 197 by AJCA 2004 § 886.** Previously a § 197(e)(7) exception; the 2004 amendment made sports franchise acquisitions § 197-amortizable.
+
+Mounted at `POST /api/calc/section-197`. Twenty-five tests pin: **goodwill $180K basis $1K monthly amortization**; **customer list 15 years fully amortized** (180 months); **workforce in place first-month amortization**; **covenant not to compete categorized as § 197 intangible**; **franchise/trademark/trade name amortizable**; **government license amortizable**; **going concern value amortizable**; **business books and records amortizable**; **patent or copyright amortizable**; **land excluded no amortization** (§ 197(e)(2)); **financial interest excluded no amortization** (§ 197(e)(1)); **lease of tangible property excluded** (§ 197(e)(4)); **not held in trade or business no amortization** (§ 197(c)(2)); **pre-August 10 1993 acquisition no amortization** (§ 197(c)(1) TRA-93 effective date); **anti-churning transition period blocks amortization** (§ 197(f)(9)); **anti-churning related party continued use blocks amortization**; **negative basis clamped to zero** (defensive); **months exceed 180 caps cumulative at basis**; **citation pins subsections + Treas. Reg. § 1.197-2 + Rev. Rul. 2004-49 + AJCA 2004 § 886**; **AMORTIZATION_MONTHS constant pins 180**; **annual amortization equals monthly × 12 invariant**; **note describes 15-year (180-month) straight-line**; **nine intangible categories § 197(d)(1)(A)-(I) all amortizable invariant**; **three exception categories § 197(e) all non-amortizable invariant**; **cumulative at 60 months one-third of basis**.
+
 `traderview-expense::section_213` is the **IRC §213 medical, dental, etc. expenses deduction module** — universal for any itemizing trader. Allows deduction of qualified medical expenses to the extent they EXCEED **7.5% of Adjusted Gross Income**. The 7.5% floor was made **PERMANENT** by Section 103 of the Taxpayer Certainty and Disaster Tax Relief Act of 2019, enacted as part of the Further Consolidated Appropriations Act of 2020 (P.L. 116-94), amending § 213(f) — previously scheduled to revert to 10% ([Cornell LII 26 U.S.C. § 213](https://www.law.cornell.edu/uscode/text/26/213), [IRS Publication 502 (2025)](https://www.irs.gov/publications/p502)).
 
 **§213(d) qualified medical care** includes: doctor visits, dental, vision, mental health; prescription drugs and insulin; hospital and clinic charges; long-term-care services (chronic illness, ADL impairment); transportation to medical care; lodging up to $50/night while away from home for medical care; health insurance premiums (subject to §162(l) limits for self-employed traders).
