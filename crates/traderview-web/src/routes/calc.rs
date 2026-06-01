@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-6662",          post(section_6662_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
@@ -1682,6 +1683,33 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §6662 accuracy-related penalty ──────────────────────────────────
+// Mounted at /api/calc/section-6662. §6662(a) 20% baseline on
+// portion of underpayment attributable to misconduct; §6662(h) 40%
+// for gross valuation misstatement (claimed ≥ 200% correct);
+// §6662(b) 8 categories (negligence, substantial understatement,
+// valuation misstatement, etc.); §6662(d) substantial-understatement
+// threshold (greater of 10% of correct tax or $5k individual /
+// $10k corporate, capped at $10M); §6664(c) reasonable-cause-and-
+// good-faith defense (UNAVAILABLE for §6662(b)(6) economic substance
+// + §6662(b)(7) undisclosed foreign asset); no stacking.
+
+async fn section_6662_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6662::Section6662Input>,
+) -> Result<Json<traderview_expense::section_6662::Section6662Result>, ApiError> {
+    if b.underpayment_dollars < 0
+        || b.correct_tax_required_dollars < 0
+        || b.claimed_value_dollars < 0
+        || b.correct_value_for_valuation_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6662::compute(&b)))
 }
 
 // ── §448 small business gross receipts test + cascade exemptions ────

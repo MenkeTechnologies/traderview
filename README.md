@@ -2082,6 +2082,35 @@ Mounted at `POST /api/calc/section-250`. Twenty tests pin: **pre-OBBBA GILTI 50%
 
 Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
 
+`traderview-expense::section_6662` is the **IRC §6662 accuracy-related penalty module** — the most-litigated taxpayer penalty in the Code. Routinely asserted against active traders whose returns the IRS audits. **20% baseline** on the portion of underpayment attributable to misconduct, **40% for gross valuation misstatement**, with a no-stacking cap.
+
+**§6662(b) eight misconduct categories** (any of which triggers):
+
+| Category | Sub-section | Penalty rate | §6664(c) defense available? |
+|----------|-------------|--------------|------------------------------|
+| Negligence or disregard of rules/regs | §6662(b)(1) | 20% | Yes |
+| Substantial understatement of income tax | §6662(b)(2) | 20% | Yes |
+| Substantial valuation misstatement (≥ 150%) | §6662(b)(3) | 20% | Yes |
+| Gross valuation misstatement (≥ 200%) | §6662(h) | **40%** | Yes |
+| Pension liability overstatement | §6662(b)(4) | 20% | Yes |
+| Estate/gift valuation understatement | §6662(b)(5) | 20% | Yes |
+| §7701(o) economic-substance failure | §6662(b)(6) | 20% | **NO** |
+| Undisclosed foreign financial asset | §6662(b)(7) | 20% | **NO** |
+| Inconsistent estate basis (§6035) | §6662(b)(8) | 20% | Yes |
+
+**§6662(d) substantial-understatement threshold**:
+
+| Taxpayer | Threshold |
+|----------|-----------|
+| Individual | Exceeds greater of 10% of correct tax OR $5,000 |
+| C corporation (non-S, non-PHC) | Exceeds greater of 10% of correct tax OR $10,000, **capped at $10,000,000** |
+
+**§6664(c) reasonable-cause-and-good-faith defense** is the primary escape hatch — but it's **statutorily unavailable** for §6662(b)(6) (economic-substance failure) and §6662(b)(7) (undisclosed foreign financial asset). For these two categories, even a taxpayer who reasonably relied on professional advice still pays.
+
+**No stacking** (§6662(a) flush language): when multiple categories trigger simultaneously, the higher-rate category wins — gross valuation (40%) beats substantial understatement (20%), and combining both still caps at 40%, not 60%.
+
+Mounted at `POST /api/calc/section-6662`. Twenty-four tests pin: **individual threshold max(10% × correct_tax, $5k)** ($500k correct tax → $50k threshold; $30k correct tax → $5k floor); **corporate threshold $10k floor when correct tax low** ($50k correct → $10k floor); **corporate threshold capped at $10M** ($1B correct → 10% = $100M but capped at $10M); **negligence triggers 20%** ($10k × 20% = $2k); **substantial understatement triggers 20%** ($100k × 20% = $20k); **under-threshold no trigger**; **valuation at 150% substantial misstatement** (20%); 149% no trigger (strict ≥ 150%); **valuation at 200% gross misstatement triggers 40% rate** ($100k underpayment × 40% = $40k); 300% still 40%; **economic substance failure has NO §6664(c) defense** (regression target — even with reasonable cause asserted, penalty stands); **undisclosed foreign asset has NO §6664(c) defense**; reasonable cause zeros substantial understatement penalty; reasonable cause zeros negligence; reasonable cause zeros gross-valuation 40% penalty (when available); **gross valuation beats substantial understatement for rate** (highest-rate wins); **no stacking** — negligence + gross valuation still capped at 40% (not 60%); no trigger → zero penalty; **citation mentions all 9 relevant authorities** (§6662(a) + (h) + (b) + (d) + §6664(c) + §7701(o) + 200% + 150% + "no stacking"); note describes "EXCEEDED" when threshold breached; note says "UNAVAILABLE" for economic-substance defense; **$1B precision** ($1B × 20% = $200M); **$500M underpayment gross valuation precision** ($500M × 40% = $200M).
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:
