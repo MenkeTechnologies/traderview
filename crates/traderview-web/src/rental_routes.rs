@@ -110,6 +110,9 @@ use traderview_expense::non_refundable_cleaning_fees::{
 use traderview_expense::eviction_record_sealing::{
     check as check_eviction_sealing, EvictionSealingInput, EvictionSealingResult,
 };
+use traderview_expense::lease_termination_catastrophic_damage::{
+    check as check_catastrophic_damage, CatastrophicDamageInput, CatastrophicDamageResult,
+};
 use traderview_expense::lease_termination_notice::{
     check as check_termination_notice, NoticeInput, NoticeResult,
 };
@@ -580,6 +583,7 @@ pub fn router() -> Router<AppState> {
         .route("/non-refundable-cleaning-fees", axum::routing::post(non_refundable_cleaning_fees_route))
         .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
         .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
+        .route("/lease-termination-catastrophic-damage", axum::routing::post(lease_termination_catastrophic_damage_route))
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
@@ -2533,6 +2537,33 @@ async fn termination_notice_check_route(
         ));
     }
     Ok(Json(check_termination_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// lease_termination_catastrophic_damage: Tenant lease termination right
+// for catastrophic property damage (fire, flood, hurricane, earthquake,
+// explosion, similar casualty). Five regimes: California (Cal. Civ. Code
+// § 1932(2) greater-part destruction tenant election + § 1933(4) entire-
+// destruction automatic termination + § 1950.5(g) 21-day deposit
+// refund); Texas (Tex. Prop. Code § 92.054(a)/(b) totally-unusable
+// standard + § 92.054(c) written notice before repairs complete +
+// § 92.052(b) insurance-proceeds-trigger repair period unique procedural
+// rule); NewYork (RPL § 227 fire-or-other-casualty surrender-possession
+// right + tenant affirmative election); NewJersey (N.J.S.A. 46:8-6
+// total destruction + § 46:8-7 partial destruction proportional rent
+// reduction + § 46:8-8 fault attribution); Default (common-law
+// impossibility of performance per Restatement (Second) of Contracts §
+// 261). Tenant fault uniformly defeats termination right. Distinct
+// from dv_termination, military_termination, crime_victim_termination,
+// habitability_remedies.
+// ---------------------------------------------------------------------------
+
+async fn lease_termination_catastrophic_damage_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CatastrophicDamageInput>,
+) -> Result<Json<CatastrophicDamageResult>, ApiError> {
+    Ok(Json(check_catastrophic_damage(&b)))
 }
 
 // ---------------------------------------------------------------------------
