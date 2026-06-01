@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
+        .route("/calc/section-6212",          post(section_6212_route))
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
@@ -2598,6 +2599,31 @@ async fn section_6050w_route(
 }
 
 // ── §6651 failure-to-file / failure-to-pay penalty ──────────────────
+// ── §6212 statutory notice of deficiency (SNOD / 90-day letter) ─────
+// Mounted at /api/calc/section-6212. § 6212(a) Secretary authority to
+// issue SNOD by CERTIFIED or REGISTERED mail when § 6211 deficiency
+// exists; § 6212(b) load-bearing LAST KNOWN ADDRESS rule (Treas. Reg.
+// § 301.6212-2) — mailing to wrong address renders SNOD INVALID and
+// any subsequent assessment also invalid; § 6212(c) generally ONE
+// SNOD per taxable year (exceptions: fraud, substantial omission,
+// § 6861 jeopardy assessment, bankruptcy); § 6212(d) rescission with
+// taxpayer's WRITTEN consent — SNOD treated as if never issued + §
+// 6212(c) one-per-year limit does not bar subsequent re-issued SNOD;
+// § 6213(a) petition deadline 90 days (or 150 days if taxpayer
+// address outside US) + restraint on assessment during petition
+// window and while petition pending; Hopkins v. Commissioner (T.C.
+// 2024) — taxpayer may equitably rely on stated "last day to file"
+// date even when incorrect. Natural sibling to section_6213 (Tax
+// Court petition deadline + restrictions on assessment), section_6501
+// (ASED), section_6502 (CSED).
+
+async fn section_6212_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6212::Section6212Input>,
+) -> Result<Json<traderview_expense::section_6212::Section6212Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6212::check(&b)))
+}
+
 // ── §6213 Tax Court petition 90-day rule ────────────────────────────
 // Mounted at /api/calc/section-6213. § 6213(a) 90-day standard period
 // (150 days if notice addressed to person outside US) for filing
