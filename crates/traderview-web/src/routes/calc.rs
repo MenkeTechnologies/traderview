@@ -55,6 +55,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
+        .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1351,6 +1352,29 @@ async fn section_475c2_route(
     Json(b): Json<traderview_expense::section_475c2::Section475c2Input>,
 ) -> Result<Json<traderview_expense::section_475c2::Section475c2Result>, ApiError> {
     Ok(Json(traderview_expense::section_475c2::compute(&b)))
+}
+
+// ── §213 medical expense deduction ──────────────────────────────────
+// Mounted at /api/calc/section-213. §213(a) 7.5% AGI floor (CAA 2020
+// § 103 made permanent); §213(d) qualified medical care; §213(d)(10)
+// age-tiered LTC premium caps from IRS Rev. Proc. 2024-40 (2025) and
+// Rev. Proc. 2025-32 (2026); HSA/FSA/HRA reimbursement
+// double-deduction prevention. Requires Schedule A itemization.
+
+async fn section_213_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_213::Section213Input>,
+) -> Result<Json<traderview_expense::section_213::Section213Result>, ApiError> {
+    if b.adjusted_gross_income < Decimal::ZERO
+        || b.qualified_medical_expenses_other_than_ltc_premiums < Decimal::ZERO
+        || b.ltc_premiums_paid < Decimal::ZERO
+        || b.hsa_fsa_hra_reimbursements < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_213::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────

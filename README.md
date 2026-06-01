@@ -1419,6 +1419,28 @@ Pinned by `pre_2018_legacy_classified` + `cares_act_2018_2020_classified` + `per
 
 Mounted at `POST /api/calc/section-172`. Twenty-four tests pin: all three regimes + boundary year classification; **80% limit boundary $80k exact does not bind, $80,001 binds** (regression target); 80% limit binds with large NOL ($200k → $80k + $120k); CARES 100% offset (no 80% limit); pre-2018 100% offset; current-year NOL flows to carryforward not absorption (load-bearing); current loss + prior combined carryforward math; farming flag surfaces 2-year carryback; non-farming default no carryback flag; CARES year flags 5-year carryback regardless of farming; zero TI no absorption; zero NOL no-op; **TI after NOL never negative** (defensive clamping); **$1B / $5B precision** ($800M limit, $4.2B carryforward); note describes regime + 80%-binding flag + 5-year-carryback for CARES paths.
 
+`traderview-expense::section_213` is the **IRC §213 medical, dental, etc. expenses deduction module** — universal for any itemizing trader. Allows deduction of qualified medical expenses to the extent they EXCEED **7.5% of Adjusted Gross Income**. The 7.5% floor was made **PERMANENT** by Section 103 of the Taxpayer Certainty and Disaster Tax Relief Act of 2019, enacted as part of the Further Consolidated Appropriations Act of 2020 (P.L. 116-94), amending § 213(f) — previously scheduled to revert to 10% ([Cornell LII 26 U.S.C. § 213](https://www.law.cornell.edu/uscode/text/26/213), [IRS Publication 502 (2025)](https://www.irs.gov/publications/p502)).
+
+**§213(d) qualified medical care** includes: doctor visits, dental, vision, mental health; prescription drugs and insulin; hospital and clinic charges; long-term-care services (chronic illness, ADL impairment); transportation to medical care; lodging up to $50/night while away from home for medical care; health insurance premiums (subject to §162(l) limits for self-employed traders).
+
+**§213(d)(10) eligible long-term-care premium age-tiered caps** indexed annually by IRS Rev. Proc.:
+
+| Insured's attained age at year end | 2025 cap (Rev. Proc. 2024-40) | 2026 cap (Rev. Proc. 2025-32) |
+|------------------------------------|-------------------------------|-------------------------------|
+| ≤ 40                               | $480                          | $500                          |
+| 41-50                              | $900                          | $930                          |
+| 51-60                              | $1,800                        | $1,860                        |
+| 61-70                              | $4,810                        | $4,810 (2025 fallback — 2026 not confirmed) |
+| 71+                                | $6,020                        | $6,200                        |
+
+Age-tier boundaries pin "≤40 = first tier" and "41 = second tier". Module looks up tier by `(tax_year, age)` tuple with 2025 caps as fallback for any year not explicitly modeled (forward-compatible until updated). ([AALTCI 2026 Tax Deduction Limits](https://www.aaltci.org/news/long-term-care-insurance-association-news/2026-tax-deductible-limits-for-long-term-care-insurance-increase-3-percent), [IRS LTC Premium Limits VITA](https://apps.irs.gov/app/vita/content/00/00_25_005.jsp))
+
+**HSA / FSA / HRA double-deduction prevention**: any amount paid or reimbursed under an HSA, FSA, Archer MSA, or HRA cannot also be deducted under §213. The module subtracts `hsa_fsa_hra_reimbursements` from qualified expenses BEFORE applying the 7.5% AGI floor, clamping at zero. Pinned by `hsa_reimbursements_reduce_deduction` + `reimbursements_exceed_expenses_clamp_to_zero`.
+
+**Schedule A itemization required** — the standard deduction takes precedence if larger. Module always returns `requires_itemization: true` so callers know to compare to standard deduction before claiming.
+
+Mounted at `POST /api/calc/section-213`. Twenty-eight tests pin: **7.5% AGI floor baseline** (AGI $100k × 7.5% = $7,500 floor; $15k expenses → $7,500 deductible); **expenses below floor no deduction**; **expenses exactly at floor no deduction**; **$1 above floor deductible** (boundary); **HSA reimbursements reduce deduction** ($5k reimbursement → $10k qualified → $2.5k deductible); **reimbursements exceed expenses clamp to zero**; **all 5 LTC 2025 age tiers** (≤40 $480, 50 $900, 60 $1,800, 70 $4,810, 71+ $6,020) with excess-premium pinning; **age boundaries 40 first-tier / 41 second-tier**; **4 LTC 2026 tiers** (≤40 $500, 50 $930, 60 $1,860, 71+ $6,200); LTC within cap full allowed (no excess); **LTC premium added to total qualified** ($15k + $900 = $15.9k → $8.4k deductible); **high-AGI high-floor no deduction** ($1M AGI → $75k floor); high-AGI with high expenses full floor subtraction ($200k expenses − $75k = $125k); **zero AGI zero floor full expenses deductible**; zero expenses zero deduction; **unknown year (2030) falls back to 2025 caps**; note describes 7.5% floor + Schedule A; **note describes LTC excess when capped** ("excess premium NOT deductible"); requires_itemization always true; citation mentions CAA 2020 and Rev. Proc.
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:
