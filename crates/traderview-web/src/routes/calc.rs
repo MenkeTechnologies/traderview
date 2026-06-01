@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6662",          post(section_6662_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
@@ -1699,6 +1700,30 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §6651 failure-to-file / failure-to-pay penalty ──────────────────
+// Mounted at /api/calc/section-6651. §6651(a)(1) FTF 5%/month / 25%
+// max; §6651(a)(2) FTP 0.5%/month / 25% max; §6651(c)(1) FTF reduced
+// by FTP for overlap months (net 4.5%/month FTF + 0.5%/month FTP =
+// 5%/month combined); §6651(f) fraud 15%/month / 75% max; §6651(g)
+// minimum-penalty floor for returns > 60 days late (lesser of
+// inflation-adjusted amount Rev. Proc. 2025 = $510 or 100% tax);
+// §6651(h) installment-rate 0.25%/month when timely-filed-with-
+// extension + §6159 agreement; reasonable-cause defense (NOT for fraud).
+
+async fn section_6651_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6651::Section6651Input>,
+) -> Result<Json<traderview_expense::section_6651::Section6651Result>, ApiError> {
+    if b.tax_required_dollars < 0
+        || b.minimum_penalty_inflation_adjusted_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6651::compute(&b)))
 }
 
 // ── §6662 accuracy-related penalty ──────────────────────────────────

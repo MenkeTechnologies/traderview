@@ -2126,6 +2126,29 @@ Mounted at `POST /api/calc/section-250`. Twenty tests pin: **pre-OBBBA GILTI 50%
 
 Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
 
+`traderview-expense::section_6651` is the **IRC §6651 failure-to-file / failure-to-pay penalty module** — the most commonly asserted civil tax penalty. Two parallel tracks (late filing under §6651(a)(1); late paying under §6651(a)(2)) that interact via a reduction rule (§6651(c)(1)) and a minimum-penalty floor for returns over 60 days late (§6651(g)). Fraud triples the FTF rate via §6651(f).
+
+**Rate table**:
+
+| Penalty path | Authority | Rate | Maximum |
+|--------------|-----------|------|---------|
+| Failure to file (standard) | §6651(a)(1) | 5%/month | 25% (5 months) |
+| Failure to file (FRAUD) | §6651(f) | **15%/month** | **75%** (5 months) |
+| Failure to pay (standard) | §6651(a)(2) | 0.5%/month | 25% (50 months) |
+| Failure to pay (installment-agreement) | §6651(h) | **0.25%/month** | 25% |
+
+**§6651(c)(1) interaction rule**: when both FTF and FTP apply for the same month, the FTF penalty is reduced by the FTP penalty amount. Effect: 4.5%/month FTF + 0.5%/month FTP = 5%/month combined (NOT 5.5%/month). This is the most-mis-modeled IRS penalty mechanic.
+
+**§6651(g) minimum penalty for returns > 60 days late**: floor is the LESSER of:
+- Inflation-adjusted statutory amount (Rev. Proc. 2024 = $485; 2025 = $510); module accepts caller-supplied year-agnostic value
+- 100% of the tax required to be shown
+
+**§6651(h) installment-rate cut**: 0.25%/month FTP applies ONLY when BOTH (i) return was filed by due date including extensions AND (ii) a §6159 installment agreement is in effect. Missing either prong defaults back to 0.5%/month.
+
+**Reasonable-cause defense** (§6651(a) flush language): no penalty when failure is due to reasonable cause and not willful neglect. **Statutorily unavailable for §6651(f) fraud** — even a taxpayer who reasonably relied on professional advice still pays fraud-uplift FTF.
+
+Mounted at `POST /api/calc/section-6651`. Twenty-three tests pin: **FTF 1 month 5%** ($100k × 5% = $5k); 3 months 15%; **FTF max capped at 25%** (100 months → $25k); **FTP 1 month 0.5%** ($500); FTP max capped at 25% (100 months → $25k); **installment-agreement + timely-filed-with-extension reduces FTP to 0.25%/month** ($1k for 4 months); **installment without timely-filing → no reduction** (regression — BOTH prongs required); **combined FTF + FTP 1 month** ($5k gross FTF − $500 reduction = $4,500 net + $500 FTP = $5k combined); 3-month combined ($15k); **fraud uplift 15%/month** ($15k for 1 month); **fraud capped at 75% / 5 months** ($75k); **fraud no §6651(c)(1) reduction** (regression); **minimum-penalty triggered when return > 60 days late**; **minimum-penalty floor binds when normal penalty smaller** ($5k tax × 5% = $250 < $510 floor → $510); **minimum-penalty capped at 100% tax** ($100 tax → floor = $100, not $510); not-over-60-days no floor; **reasonable-cause zeros normal penalty**; **reasonable-cause does NOT zero fraud penalty** (regression target); **citation mentions all 10 relevant authorities** (§6651(a)(1) + (a)(2) + (c)(1) + (f) + (g) + (h) + "5%/month" + "0.5%/month" + "15%/month" + "0.25%/month"); note includes installment path; note includes fraud path; note includes minimum-floor when triggered; **$1B precision** ($1B × 25% = $250M FTF + $25M FTP = $250M total).
+
 `traderview-expense::section_6662` is the **IRC §6662 accuracy-related penalty module** — the most-litigated taxpayer penalty in the Code. Routinely asserted against active traders whose returns the IRS audits. **20% baseline** on the portion of underpayment attributable to misconduct, **40% for gross valuation misstatement**, with a no-stacking cap.
 
 **§6662(b) eight misconduct categories** (any of which triggers):
