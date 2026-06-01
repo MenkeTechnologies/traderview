@@ -1657,6 +1657,43 @@ Mounted at `POST /api/rental/roommate-authorization-check`. Twenty-eight tests p
 
 Mounted at `POST /api/rental/otard-antenna-installation`. Twenty-six tests pin: **DBS on patio protected**; **MMDS on balcony protected**; **broadcast TV any size protected**; **antenna outside OTARD scope not protected**; **fixed-wireless 2021 with both requirements protected**; **without on-premises customer not protected**; **without broadband-only not protected**; **common area installation not protected**; **common area with protected antenna type still unprotected** (location overrides type); **safety restriction without impairment permissible**; **safety with unreasonable delay not permissible**; **safety with cost increase not permissible**; **safety with signal preclusion not permissible**; **historic preservation without impairment permissible**; **historic with impairment not permissible**; **aesthetic never permissible**; **blanket prohibition never permissible**; **pre-approval delay not permissible**; **burden on restricting party when OTARD protected**; **no burden when not protected**; **aesthetic + blanket + pre-approval invalidate regardless of antenna type 12-cell invariant**; **safety + historic subject to no-impairment standard 6-cell invariant** (2 restriction types × 3 impairment flags); **citation pins 2021 expansion for fixed wireless**; **preemption note across all 10 paths** (5 antenna × 2 location); **fixed-wireless 2021 expansion thresholds required 4-cell invariant**; **no restriction path compliant when protected**.
 
+`traderview-expense::tenant_solar_installation` is the **state tenant right-to-install solar-energy-system compliance check** — emerging area parallel to `ev_charger_installation` (tenant right-to-charge EV). Most state solar-rights laws cover homeowners + HOAs + condos but not rental tenants directly; the push to extend protection to renters is recent (2024-2026), with portable / plug-in solar systems leading the way because they require no permanent installation.
+
+**Four regimes**:
+
+| Regime | Authority | Statutory tenant protection |
+|--------|-----------|------------------------------|
+| `California` | Cal. Civ. Code § 714 (Solar Rights Act) + § 714.1 + § 4600 + § 4746 | Plug-in portable + roof-mounted (with exclusive-use) |
+| `Colorado` | Colorado HB22-1020 + 2026 plug-in solar legalization bill | Plug-in portable only |
+| `NewJersey` | N.J.S.A. 45:22A-48.2 (Planned Real Estate Development Full Disclosure Act) | None for rental tenants (HOA-focused) |
+| `Default` | Various state solar-rights laws | None for rental tenants |
+
+**Three installation types**:
+
+| Type | Permissibility | Common protection |
+|------|----------------|---------------------|
+| `PlugInPortable` | Most permissive (balcony / window mount) | CA + CO |
+| `RoofMounted` | Typically requires consent | CA only (with exclusive use) |
+| `GroundMounted` | Always requires consent | None |
+
+**California § 714 Solar Rights Act renders restrictions on solar energy systems "void and unenforceable."** § 714 applies most directly to plug-in portable installations. Roof-mounted installations require the tenant to have exclusive use or control of the installation area (similar to OTARD's tenant-exclusive-use scope). Pinned by `california_plug_in_portable_statutorily_protected`, `california_roof_mounted_with_exclusive_use_protected`, `california_roof_mounted_without_exclusive_use_not_protected`, and the 4-regime invariant `only_california_protects_roof_mounted_with_exclusive_use_invariant`.
+
+**Colorado 2026 plug-in solar legalization** establishes regulatory framework for portable arrays without landlord prohibition. Builds on HB22-1020 (Customer Right To Use Energy 2022). Pinned by `colorado_plug_in_portable_protected_for_renters`, `colorado_roof_mounted_not_statutorily_protected_for_renters`, `colorado_ground_mounted_not_protected`.
+
+**Universal safety thresholds apply across all regimes**:
+- Installation must meet electrical / safety code
+- Installation must not damage landlord property (or restoration agreement in place)
+
+Failure of either threshold prevents installation regardless of regime or installation type. Pinned by `unsafe_installation_never_permitted_invariant` (12-cell: 4 regimes × 3 installation types) and `property_damage_never_permitted_invariant` (4 regimes).
+
+**Ground-mounted yard installation is never statutorily protected.** Across all four regimes, ground-mounted requires landlord consent. Pinned by `ground_mounted_never_statutorily_protected_invariant`.
+
+**Installation-permitted truth table** = `safety_ok AND (statutory_protection OR landlord_consent)`. 8-cell truth table pinned by `installation_permitted_iff_safety_and_either_protected_or_consented_invariant`.
+
+**Plug-in portable protection is unique to CA + CO.** Of the four regimes, only California (via § 714 Solar Rights Act) and Colorado (via HB22-1020 + 2026 bill) statutorily protect renter installation of portable solar. NJ + Default require landlord consent. Pinned by `only_california_and_colorado_protect_plug_in_portable_invariant` (4-regime invariant).
+
+Mounted at `POST /api/rental/tenant-solar-installation`. Nineteen tests pin: **CA plug-in portable statutorily protected + roof-mounted with exclusive use protected + roof-mounted without exclusive use not protected + ground-mounted requires consent**; **CO plug-in portable protected for renters + roof-mounted not protected + ground-mounted not protected**; **NJ HOA focus no tenant rental protection**; **Default no tenant rental protection**; **unsafe installation never permitted 12-cell invariant** (4 regimes × 3 installation types); **property damage never permitted 4-regime invariant**; **landlord consent permits otherwise unprotected installation**; **missing consent violation when not statutorily protected**; **only-California-and-Colorado-protect-plug-in-portable 4-regime invariant**; **only-California-protects-roof-mounted-with-exclusive-use 4-regime invariant**; **ground-mounted never statutorily protected 4-regime invariant**; **installation permitted iff safety AND (statutory or consent) 8-cell truth-table invariant**; **citation pins authority per regime** (§ 714 for CA; HB22-1020 for CO; § 45:22A-48.2 for NJ; "Most states" for Default); **sibling-module note across all 12 combos** (UX-text regression for ev_charger_installation pairing).
+
 `traderview-expense::ev_charger_installation` is the **state tenant right-to-install electric-vehicle charging station compliance table** — modern "right-to-charge" laws addressing demand for at-home EV charging in multi-unit rental housing. Only 4 states grant tenant-specific protections; MD / VA / CO / FL right-to-charge laws cover HOAs and condos but do not extend to standalone rental tenants.
 
 **Five regimes** with sharply different gates:

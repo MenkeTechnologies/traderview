@@ -130,6 +130,7 @@ pub mod tenant_cannabis_use_protection;
 pub mod tenant_data_privacy;
 pub mod tenant_death_termination;
 pub mod tenant_organizing;
+pub mod tenant_solar_installation;
 pub mod tenant_relocation_assistance;
 pub mod tenant_topa;
 pub mod utility_shutoff;

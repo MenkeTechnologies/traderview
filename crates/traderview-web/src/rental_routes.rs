@@ -304,6 +304,10 @@ use traderview_expense::mid_tenancy_ownership_change::{
     check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
     Input as MidTenancyOwnershipInput,
 };
+use traderview_expense::tenant_solar_installation::{
+    check as check_tenant_solar_installation, CheckResult as TenantSolarResult,
+    Input as TenantSolarInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -535,6 +539,7 @@ pub fn router() -> Router<AppState> {
         .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
+        .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4163,6 +4168,42 @@ async fn mid_tenancy_ownership_change_route(
         ));
     }
     Ok(Json(check_mid_tenancy_ownership_change(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant right-to-install solar-energy-system compliance
+// check.
+//
+// Mounted at POST /api/rental/tenant-solar-installation. Emerging
+// area parallel to ev_charger_installation (tenant right-to-charge
+// EV). Four regimes: California (Cal. Civ. Code § 714 Solar Rights
+// Act restrictions on solar energy systems are void and
+// unenforceable + § 714.1 HOA common-interest development rooftop
+// solar + § 4600 + § 4746 CID common-area solar installation by
+// member-owners — tenant rental coverage limited; protects plug-in
+// portable and roof-mounted where tenant has exclusive use);
+// Colorado (Colorado HB22-1020 Customer Right To Use Energy 2022 +
+// Colorado 2026 plug-in solar legalization bill extending portable
+// solar to renters and multifamily residents — establishes
+// regulatory framework for portable arrays without landlord
+// prohibition); NewJersey (N.J.S.A. 45:22A-48.2 Planned Real Estate
+// Development Full Disclosure Act limits HOA authority over solar
+// collectors; tenant rental coverage limited; requires lease
+// consent); Default (most states with solar-rights laws cover
+// homeowners + HOAs + condos; tenant rentals require lease-based
+// or landlord-consent installation). Three installation types:
+// PlugInPortable (most permissive), RoofMounted (typically requires
+// consent), GroundMounted (always requires consent). Universal
+// safety thresholds: installation must meet electrical/safety code
+// AND must not damage landlord property.
+// ---------------------------------------------------------------------------
+
+async fn tenant_solar_installation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantSolarInput>,
+) -> Result<Json<TenantSolarResult>, ApiError> {
+    Ok(Json(check_tenant_solar_installation(&b)))
 }
 
 // ---------------------------------------------------------------------------
