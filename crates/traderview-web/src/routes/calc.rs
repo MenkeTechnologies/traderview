@@ -97,6 +97,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1271",          post(section_1271_route))
         .route("/calc/section-1272",          post(section_1272_route))
         .route("/calc/section-1273",          post(section_1273_route))
+        .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2701,6 +2702,29 @@ async fn section_1273_route(
         ));
     }
     Ok(Json(traderview_expense::section_1273::compute(&b)))
+}
+
+// ── §1281 current inclusion of acquisition discount on short-term ─
+// Mounted at /api/calc/section-1281. Bookend to OID cluster: § 1272
+// governs long-term OID; § 1281 governs short-term obligations
+// (≤ 1 year). § 1272(a)(2)(C) and § 1271(a)(3)/(a)(4) cross-reference
+// § 1281. Critical distinction: § 1281 applies ONLY to specific
+// holder categories — § 1281(b)(1)(A) accrual-method taxpayers +
+// (B) dealers + (C) banks (§ 581) + (D) RICs + common trust funds +
+// (E) § 1256(e)(2) hedging-transaction-identified + (F) stripped-
+// bond strippers + § 1281(b)(2) pass-thru entities. Cash-method
+// individual investors are OUTSIDE § 1281 scope and defer to
+// § 1271(a)(3)/(a)(4) ratable accrual at disposition. § 1281(c)
+// cross-references § 1283(c) for nongovernmental obligation OID-
+// only limitation. § 1283(a)(1) short-term obligation definition
+// (≤ 1 year to maturity); § 1283(a)(2) acquisition discount = SRPM
+// minus basis at acquisition.
+
+async fn section_1281_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1281::Section1281Input>,
+) -> Result<Json<traderview_expense::section_1281::Section1281Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1281::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

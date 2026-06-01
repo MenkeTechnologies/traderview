@@ -4223,6 +4223,31 @@ The **§1092(c)(4)(B) qualified covered call (QCC) exception** is the load-beari
 
 Mounted at `POST /api/calc/section-1092`. Seventeen tests pin: loss fully deferred when gain on offset exceeds loss (5k gain + 2k loss → all 2k deferred, 0 recognized); loss partially deferred when gain less than loss (2k gain + 5k loss → 2k deferred, 3k recognized); no gain on offset full loss recognized (still flags holding-period suspension because it's still a straddle); loss-on-disposed-at-zero no-op; QCC exception fully qualified recognizes loss with holding period preserved; **QCC disqualified at exactly 30 days** (boundary — strict `>` boundary); QCC qualified at 31 days; QCC disqualified when underlying not publicly traded; QCC disqualified when strike deep ITM; multiple offsetting legs sum their unrecognized gains; **unrealized LOSS on offsetting leg doesn't count negative** (only positive unrecognized gains feed the deferral pool, losses ignored); loss exactly equal to gain fully deferred; no-offsetting-legs degenerate case handled; note distinguishes QCC path from normal straddle path; holding-period suspension only for non-QCC straddle; empty legs no-op; QCC short-circuit runs before offsetting-gain calculation (even a $90k gain doesn't change the QCC outcome).
 
+`traderview-expense::section_1281` is the **IRC §1281 current-inclusion-of-acquisition-discount-on-short-term-obligations module** — the bookend to the OID cluster. § 1272 governs long-term OID; § 1281 governs short-term obligations (≤ 1 year to maturity). § 1272(a)(2)(C) and § 1271(a)(3)/(a)(4) cross-reference § 1281 as the operative provision for short-term obligation current accrual. Critical trader distinction: § 1281 applies ONLY to specific holder categories — cash-method individual investors holding short-term obligations are OUTSIDE scope and defer to § 1271(a)(3)/(a)(4) ratable accrual at disposition.
+
+**Eight holder categories**:
+
+| Category | Statute | In scope? |
+|----------|---------|-----------|
+| `AccrualMethod` | § 1281(b)(1)(A) | **Yes** — accrual-method taxpayer |
+| `DealerInSecurities` | § 1281(b)(1)(B) | **Yes** — held primarily for sale to customers in ordinary course of trade or business |
+| `Bank` | § 1281(b)(1)(C) | **Yes** — bank as defined in § 581 |
+| `RegulatedInvestmentCompany` | § 1281(b)(1)(D) | **Yes** — RIC or common trust fund |
+| `HedgingTransaction` | § 1281(b)(1)(E) | **Yes** — § 1256(e)(2) hedging-transaction identified |
+| `StripperStrippedBond` | § 1281(b)(1)(F) | **Yes** — stripped bond / coupon held by person who stripped it |
+| `PassThruEntity` | § 1281(b)(2) | **Yes** — pass-thru entity with 5%+ ownership control during accrual periods |
+| `CashMethodIndividual` | (not listed) | **NO** — defers to § 1271(a)(3)/(a)(4) ratable accrual at disposition |
+
+**§ 1281(c) + § 1283(c) limit nongovernmental obligations to OID component only.** For governmental short-term obligations (T-bills, federal agency notes), the full acquisition discount accrues currently. For nongovernmental short-term obligations (corporate commercial paper, asset-backed notes), only the OID component accrues — the remainder of acquisition discount defers to disposition. Pinned by `non_governmental_limited_to_oid_component`, `governmental_vs_nongovernmental_obligation_base_invariant`, and the multi-OID invariant `nongovernmental_base_never_exceeds_oid_component_invariant` (5 OID levels confirmed).
+
+**Cash-method individual investor is the only holder category outside § 1281 scope.** Across all seven mandatory-inclusion categories, current_inclusion_required is true. Only `CashMethodIndividual` falls back to § 1271(a)(3)/(a)(4) ratable accrual at disposition. Pinned by `cash_method_individual_outside_scope_defers_to_1271`, `cash_method_individual_only_holder_outside_scope_invariant` (7 in-scope confirmations + 1 out-of-scope).
+
+**§ 1283(a)(1) short-term obligation threshold is ≤ 1 year to maturity.** Daily-portion ratable accrual under § 1281(a) uses days_held / days_from_acquisition_to_maturity as the proration fraction — proration is strictly linear (half days held = half daily-portion total). Pinned by `proration_is_linear_in_days_held_invariant` (180/360 daily portion × 2 = 360/360 daily portion).
+
+**§ 1281(a) daily-portion math caps at full discount when held > total days** (defensive — typically can't happen since instruments mature). Pinned by `days_held_exceeds_days_total_caps_at_total`.
+
+Mounted at `POST /api/calc/section-1281`. Twenty-one tests pin: **§ 1281(b)(1)(A) accrual-method full-period inclusion**; **accrual-method held full period full discount**; **§ 1281(b)(1)(B) dealer in scope**; **§ 1281(b)(1)(C) bank in scope (§ 581 def.)**; **§ 1281(b)(1)(D) RIC in scope**; **§ 1281(b)(1)(E) hedging transaction in scope (§ 1256(e)(2))**; **§ 1281(b)(1)(F) stripped-bond stripper in scope**; **§ 1281(b)(2) pass-thru entity in scope**; **cash-method individual outside scope defers to § 1271(a)(3)/(a)(4)**; **non-governmental limited to OID component** (§ 1283(c)); **governmental vs non-governmental obligation base invariant**; **zero days held zero inclusion**; **zero total days uses min-1 denominator** (defensive); **days held exceeds days total caps at total**; **negative acquisition discount clamps at zero**; **non-governmental negative OID component clamps at zero**; **cash-method individual only holder outside scope 8-regime invariant**; **non-governmental base never exceeds OID component 5-cell invariant**; **citation pins holder category subparagraph per type** (7 holder types × subparagraph match); **note documents holder category per type 7-regime invariant**; **proration is linear in days held invariant**.
+
 `traderview-expense::section_1273` is the **IRC §1273 OID-definition + issue-price-determination module** — the definitional anchor for the OID cluster. § 1272 (current inclusion) and § 1278 (market discount) both cross-reference § 1273 for the underlying numbers. Companion to `section_1271` (retirement), `section_1272` (current inclusion), `section_1276`/`section_1277`/`section_1278` (market discount trilogy). Five modules now cover the full OID + market-discount-bond statutory cluster.
 
 **§ 1273(a) — three operative paragraphs**:
