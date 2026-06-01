@@ -1213,6 +1213,30 @@ Mounted at `POST /api/rental/tenant-organizing-check`. Thirty-two tests pin: **5
 
 Mounted at `POST /api/rental/plain-language-lease-check`. Thirty-three tests pin: **5 regime classifications** (NY / NJ / PA / CT + default AL/CA/FL/TX/WA/MA/DC/WY); **NY compliant lease no penalty**; **NY non-compliant lease → actual $500 + $50 penalty = $550**; **NY good-faith defense applies** (zeros penalty); **NY full-performance barred** (zeros penalty); **NY pre-1978 lease statute does not apply**; **NJ actual $50 below $100 → $100 minimum applies**; **NJ actual $5,000 → uses actual**; **NJ attorney fees recoverable on violation**; NJ no attorney fees when compliant; **NJ has NO good-faith defense path** (regression — only NY does); **PA all 9 tests passed + lease complies → compliant**; **PA 8-of-9 tests satisfied → non-compliant** (regression target — substantial compliance requires all 9); PA attorney fees recoverable; default state no statute applies; **4 citation regression targets** (NY § 5-702 + "$50 statutory penalty" + "good-faith"; NJ 56:12-1 + "$100 statutory minimum" + "attorney fees"; PA 73 P.S. § 2201 + "9 objective tests"; CT § 42-152 + "oldest"); **51-state coverage**; non-empty citations; **5 single-state-uniqueness invariants** (NY-only 50-dollar / NJ-only 100-minimum / PA-only 9-tests / CT-only descriptive-readability / **NY-only good-faith defense**); NY good-faith note mentions defense; NY full-performance note mentions "statutorily barred"; lowercase state code normalizes.
 
+`traderview-expense::roommate_authorization` is the **state tenant roommate / additional-occupant authorization compliance table** — distinct from `sublet_consent` (which is assignment / re-leasing of the entire unit) and from `occupancy_standards` (building-code limits). This module captures the tenant's STATUTORY right to bring in an unrelated adult occupant despite contrary lease terms. Only 2 states create such a right.
+
+**Three regimes**:
+
+| Regime | States | Mechanism | Lease restrictions |
+|--------|--------|-----------|---------------------|
+| `NewYorkStatutoryRoommateRight` | NY | RPL § 235-f Roommate Law — 1 additional adult occupant per tenant + immediate family + occupant's dependent children + tenant's primary residence + 30-day landlord notification | **VOID and unenforceable as against public policy** under § 235-f(7) |
+| `CaliforniaTwoPlusOneFormula` | CA | State-law occupancy formula: 2 per bedroom + 1 additional | Enforceable above the statutory floor |
+| `DefaultLeaseGoverns` | 48 other states + DC | Lease terms control | Enforceable |
+
+**NY RPL § 235-f is uniquely powerful**: lease prohibitions on unrelated roommates are statutorily VOID. The tenant's right does NOT depend on landlord consent. Multi-tenant lease cap: total tenants + occupants ≤ number of tenants on the lease (so a 2-tenant lease permits 2 additional adult occupants total — one per tenant).
+
+**CA "2 plus 1" arithmetic**:
+- 1-bedroom unit → max 3 occupants
+- 2-bedroom unit → max 5 occupants
+- 3-bedroom unit → max 7 occupants
+- N-bedroom unit → max 2N + 1 occupants
+
+**NY 30-day notification window**: tenant must inform the landlord of the new occupant's name within 30 days of occupancy commencement OR within 30 days of the landlord's request, whichever is later. Failure to notify does not void the right but creates a separate lease-compliance issue.
+
+**NJ de-facto co-tenancy doctrine** (default regime): tenants in default-regime NJ can argue de-facto co-tenancy when an unauthorized roommate has shown continuous residence + substantial financial contribution + landlord acknowledgment. Not modeled here as a regime since it's a judicial doctrine, not a statutory right.
+
+Mounted at `POST /api/rental/roommate-authorization-check`. Twenty-eight tests pin: **3 regime classifications** (NY / CA + default AL/FL/TX/WA/DC/WY/MA/NJ/IL); **NY single-tenant 1 additional adult permitted**; **NY 2 additional adults exceeds per-tenant cap of 1** (regression — RPL § 235-f permits only 1 per tenant); **NY not-primary-residence → no statutory right**; **NY lease restriction VOID when statute permits** (regression target — only NY does this); **NY 30-day notification window** (day 30 within; day 31 without notification non-compliant); **NY multi-tenant 2-on-lease + 2 additional = OK** (cap 2 tenants × 1 additional each = 2); **NY multi-tenant 2-on-lease + 3 additional exceeds cap**; **CA 1-bedroom max 3 occupants** ($N \times 2 + 1 = 3$); **CA 1-bedroom 4 occupants exceeds max**; **CA 2-bedroom max 5**; **CA 3-bedroom max 7**; **CA lease remains enforceable above floor** (regression — CA does NOT void lease restrictions); default-state no-lease-restriction permitted; default-state lease-restriction blocks roommate; **2 citation regression targets** (NY § 235-f + "VOID" + "30 days"; CA "2 plus 1" + "2 per bedroom"); **51-state coverage**; non-empty citations; **3 single-state-uniqueness invariants** (NY-only / CA-only / **NY-only lease-restrictions-void**); NY note describes per-tenant cap arithmetic; CA note describes bedroom formula; lowercase state code normalizes.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:

@@ -179,6 +179,9 @@ use traderview_expense::tenant_organizing::{
 use traderview_expense::plain_language_lease::{
     check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
 };
+use traderview_expense::roommate_authorization::{
+    check as check_roommate_authorization, RoommateAuthorizationInput, RoommateAuthorizationResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -338,6 +341,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
+        .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2814,6 +2818,30 @@ async fn plain_language_lease_check_route(
         ));
     }
     Ok(Json(check_plain_language(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant roommate / additional-occupant authorization check
+//
+// Mounted at POST /api/rental/roommate-authorization-check. Three
+// regimes: NewYorkStatutoryRoommateRight (NY RPL § 235-f Roommate
+// Law — 1 additional adult occupant per tenant + immediate family +
+// dependent children of occupant + tenant's primary residence;
+// lease restrictions VOID under § 235-f(7); 30-day notification);
+// CaliforniaTwoPlusOneFormula (CA state-law '2 per bedroom + 1
+// additional' occupancy formula); DefaultLeaseGoverns (48 other
+// states + DC).
+// ---------------------------------------------------------------------------
+
+async fn roommate_authorization_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RoommateAuthorizationInput>,
+) -> Result<Json<RoommateAuthorizationResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_roommate_authorization(&b)))
 }
 
 // ---------------------------------------------------------------------------
