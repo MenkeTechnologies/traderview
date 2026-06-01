@@ -170,6 +170,9 @@ use traderview_expense::late_payment_grace_period::{
 use traderview_expense::owner_move_in_eviction::{
     check as check_owner_move_in, OwnerMoveInInput, OwnerMoveInResult,
 };
+use traderview_expense::lease_copy_delivery::{
+    check as check_lease_copy_delivery, LeaseCopyDeliveryInput, LeaseCopyDeliveryResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -326,6 +329,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-death-termination-check", axum::routing::post(tenant_death_termination_check_route))
         .route("/late-payment-grace-period-check", axum::routing::post(late_payment_grace_period_check_route))
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
+        .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2720,6 +2724,27 @@ async fn owner_move_in_eviction_check_route(
         ));
     }
     Ok(Json(check_owner_move_in(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord lease-copy delivery compliance check
+//
+// Mounted at POST /api/rental/lease-copy-delivery-check. Four regimes:
+// California15DayDelivery (Cal. Civ. Code § 1962(a)(1)); Massachusetts-
+// 30DayWith300DollarFine (MA G.L. c. 186 § 15D + $300 fine + waiver
+// void); Texas3BusinessDayDelivery (Tex. Prop. Code § 92.024);
+// NoStateLeaseCopyDeliveryDeadline (47 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn lease_copy_delivery_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseCopyDeliveryInput>,
+) -> Result<Json<LeaseCopyDeliveryResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_lease_copy_delivery(&b)))
 }
 
 // ---------------------------------------------------------------------------
