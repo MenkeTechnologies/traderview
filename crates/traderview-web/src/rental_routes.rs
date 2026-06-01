@@ -420,6 +420,10 @@ use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
 };
+use traderview_expense::rental_property_registration::{
+    check as check_rental_property_registration, RentalPropertyRegistrationInput,
+    RentalPropertyRegistrationResult,
+};
 use traderview_expense::residential_lease_arbitration_clause::{
     check as check_residential_arbitration, ArbitrationClauseInput, ArbitrationClauseResult,
 };
@@ -718,6 +722,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
+        .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
@@ -5263,6 +5268,35 @@ async fn rental_junk_fee_transparency_route(
     Json(b): Json<RentalJunkFeeTransparencyInput>,
 ) -> Result<Json<RentalJunkFeeTransparencyResult>, ApiError> {
     Ok(Json(check_rental_junk_fee_transparency(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_property_registration: Mandatory landlord rental property
+// registration with state / municipal agency — distinct from owner_
+// identification + landlord_identification_disclosure + tenant_rights_
+// statement_disclosure. Affirmative registration obligation BEFORE
+// lawfully renting. Mounted at POST /api/rental/rental-property-
+// registration. Three regimes: (1) New Jersey N.J.S.A. §§ 46:8-28 +
+// 46:8-28.5: two-tier filing (1-unit OR 2-unit non-owner-occupied →
+// municipal clerk; 3+ unit "multiple dwelling" under Hotel and Multiple
+// Dwelling Law → Bureau of Housing Inspection, NJ DCA); certificate
+// contents include record owner + agent for service of process + bank
+// holding security deposits; amended certificate within 20 DAYS of any
+// change; nonregistration = cannot enforce rent collection + cannot
+// pursue eviction + treble damages under N.J.S.A. 56:8-1 CFA. (2)
+// District of Columbia D.C. Code § 47-2851.03: Basic Business License
+// with Rental Housing endorsement; DC v. Hayes equitable bar — landlord
+// without license BARRED from collecting rent in court. (3) Default:
+// no statewide mandate; municipal ordinances (Chicago RLTO, NYC MDL §
+// 325, MA Mass. Gen. Laws ch. 111 § 197A) may impose.
+// ---------------------------------------------------------------------------
+
+async fn rental_property_registration_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPropertyRegistrationInput>,
+) -> Result<Json<RentalPropertyRegistrationResult>, ApiError> {
+    Ok(Json(check_rental_property_registration(&b)))
 }
 
 // ---------------------------------------------------------------------------
