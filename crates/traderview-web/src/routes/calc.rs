@@ -95,6 +95,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1277",          post(section_1277_route))
         .route("/calc/section-1278",          post(section_1278_route))
         .route("/calc/section-1271",          post(section_1271_route))
+        .route("/calc/section-1272",          post(section_1272_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2636,6 +2637,37 @@ async fn section_1271_route(
         ));
     }
     Ok(Json(traderview_expense::section_1271::compute(&b)))
+}
+
+// ── §1272 current inclusion of original issue discount (OID) ──────
+// Mounted at /api/calc/section-1272. §1272(a)(1) general rule —
+// holder must include sum of daily portions of OID in gross income
+// each year regardless of cash received (phantom income). § 1272(a)(2)
+// carve-outs: (A) tax-exempt obligations; (B) U.S. savings bonds;
+// (C) short-term obligations ≤ 1 year (§ 1281 + § 1283 govern);
+// (D) natural-person small loans ≤ $10,000 not for tax avoidance.
+// § 1272(a)(3) daily-portion ratable allocation by days held.
+// § 1272(a)(6) prepayable mortgage-backed / REMIC special PV
+// methodology. § 1272(a)(7) acquisition-premium reduction —
+// secondary-market basis above adjusted issue price reduces daily-
+// portion by fraction (basis − AIP) / (stated redemption − AIP).
+// Companion to § 1271 (retirement; § 1271(c) no double inclusion)
+// and § 1273 (OID definition).
+
+async fn section_1272_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1272::Section1272Input>,
+) -> Result<Json<traderview_expense::section_1272::Section1272Result>, ApiError> {
+    if b.adjusted_issue_price_start_of_year_cents < 0
+        || b.adjusted_issue_price_end_of_year_cents < 0
+        || b.acquisition_premium_cents < 0
+        || b.stated_redemption_minus_aip_at_acquisition_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1272::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
