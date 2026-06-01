@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
         .route("/calc/section-7430",          post(section_7430_route))
+        .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-7521",          post(section_7521_route))
@@ -2802,6 +2803,35 @@ async fn section_7521_route(
     Json(b): Json<traderview_expense::section_7521::Section7521Input>,
 ) -> Result<Json<traderview_expense::section_7521::Section7521Result>, ApiError> {
     Ok(Json(traderview_expense::section_7521::compute(&b)))
+}
+
+// ── §7491 burden of proof shifts to Secretary ───────────────────────
+// Mounted at /api/calc/section-7491. § 7491(a)(1) general burden
+// shift on factual issues under Subtitle A income tax / B estate-
+// gift-GST when taxpayer introduces CREDIBLE EVIDENCE (court would
+// find sufficient to base decision on); § 7491(a)(2) three
+// threshold conditions (A) substantiation + (B) records maintained
+// + (C) cooperation with reasonable IRS requests for witnesses /
+// information / documents / meetings / interviews; § 7491(a)(2)(C)
+// net worth limitation — corporations + partnerships + trusts with
+// net worth EXCEEDING $7,000,000 EXCLUDED from (a)(1) shifting
+// (individuals + estates unlimited); § 7491(b) statistical
+// reconstruction burden — Secretary bears burden on any income
+// item reconstructed by statistical methods from unrelated
+// taxpayers (BLS surveys, market-segment analysis) for INDIVIDUAL
+// Subtitle A; § 7491(c) penalty PRODUCTION burden (not persuasion)
+// for any penalty or addition to tax including § 6651, § 6662, §
+// 6663, § 6672. Enacted under IRS Restructuring and Reform Act of
+// 1998 (Pub. L. No. 105-206). Cross-references § 7454(a) fraud +
+// accumulated earnings burden + § 6664(c) reasonable cause
+// defense. Highly relevant to trader-tax controversy on § 1256
+// MTM, § 988 currency, § 1202 QSBS, § 475(f) trader-tax-status.
+
+async fn section_7491_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7491::Section7491Input>,
+) -> Result<Json<traderview_expense::section_7491::Section7491Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7491::check(&b)))
 }
 
 // ── §7430 awarding of costs and certain fees ────────────────────────
