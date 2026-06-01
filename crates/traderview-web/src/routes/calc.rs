@@ -128,6 +128,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6111",          post(section_6111_route))
         .route("/calc/section-6112",          post(section_6112_route))
         .route("/calc/section-6662a",         post(section_6662a_route))
+        .route("/calc/section-6672",          post(section_6672_route))
         .route("/calc/section-6694",          post(section_6694_route))
         .route("/calc/section-6695",          post(section_6695_route))
         .route("/calc/section-6700",          post(section_6700_route))
@@ -3884,6 +3885,30 @@ async fn section_6662a_route(
         ));
     }
     Ok(Json(traderview_expense::section_6662a::compute(&b)))
+}
+
+// ── § 6672 Trust Fund Recovery Penalty (TFRP) ───────────────────────
+// Mounted at /api/calc/section-6672. 100% PERSONAL liability on
+// responsible persons for unpaid trust fund portion of employment
+// taxes (§ 3402 income tax withholding + § 3101 employee FICA; NOT
+// § 3111 employer FICA + § 3301 FUTA). Two-prong test: (1)
+// responsible person = significant (not exclusive) control over
+// finances OR officer/director/designated status OR check-signing /
+// payment authority; (2) willfulness = knew taxes due OR reckless
+// disregard OR used available funds to pay other creditors (no
+// evil intent required). § 6672(b)(1) IRS MUST send preliminary
+// notice (Letter 1153 + Form 2751) at least 60 days before
+// assessment. § 6672(d) joint and several liability + state-law
+// contribution claim among co-responsible persons. 11 U.S.C. §
+// 523(a)(7) NONDISCHARGEABLE in personal bankruptcy + § 507(a)(8)(C)
+// priority claim. Critical trader-business operational risk for
+// LLC / S-corp / C-corp with W-2 employees.
+
+async fn section_6672_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6672::Section6672Input>,
+) -> Result<Json<traderview_expense::section_6672::Section6672Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6672::check(&b)))
 }
 
 // ── § 6694 tax return preparer penalties ────────────────────────────
