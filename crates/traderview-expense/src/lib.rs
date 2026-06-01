@@ -17,6 +17,7 @@ pub mod asbestos_disclosure;
 pub mod bedbug_disclosure;
 pub mod bedbug_extermination_cost;
 pub mod boa;
+pub mod broker_fee_allocation;
 pub mod carpet_replacement_useful_life;
 pub mod chase;
 pub mod contractor_1099;

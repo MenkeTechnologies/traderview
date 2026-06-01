@@ -62,6 +62,9 @@ use traderview_expense::rent_control_lease_disclosure::{
 use traderview_expense::entry_notice::{
     compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
 };
+use traderview_expense::broker_fee_allocation::{
+    check as check_broker_fee_allocation, BrokerFeeAllocationInput, BrokerFeeAllocationResult,
+};
 use traderview_expense::application_fees::{
     check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
 };
@@ -578,6 +581,7 @@ pub fn router() -> Router<AppState> {
         .route("/entry-notice-check", axum::routing::post(entry_notice_check_route))
         .route("/retaliation-check", axum::routing::post(retaliation_check_route))
         .route("/application-fee-check", axum::routing::post(application_fee_check_route))
+        .route("/broker-fee-allocation", axum::routing::post(broker_fee_allocation_route))
         .route("/lockout-penalty-check", axum::routing::post(lockout_penalty_check_route))
         .route("/dv-survivor-lock-change", axum::routing::post(dv_survivor_lock_change_route))
         .route("/dv-termination-check", axum::routing::post(dv_termination_check_route))
@@ -5805,6 +5809,30 @@ async fn application_fee_check_route(
         }
     }
     Ok(Json(check_application_fee(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// broker_fee_allocation: Broker fee allocation between landlord and tenant.
+// Two regimes: NewYorkCityFareAct (NYC Local Law 119, eff. June 11, 2025 —
+// party-who-hired-pays rule under § 20-699.20; landlord may not impose fee
+// on tenant for broker landlord engaged; § 20-699.21 disclosure of other
+// fees in listing AND lease; § 20-699.22 DCWP civil penalty / action
+// enforcement); Default (lease + market practice + Boston Ord. 17-2024
+// disclosure overlay). Distinct from application_fees, non_refundable_
+// cleaning_fees, pet_fees, lease_disclosures.
+// ---------------------------------------------------------------------------
+
+async fn broker_fee_allocation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<BrokerFeeAllocationInput>,
+) -> Result<Json<BrokerFeeAllocationResult>, ApiError> {
+    if b.broker_fee_amount_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "broker_fee_amount_cents must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_broker_fee_allocation(&b)))
 }
 
 // ---------------------------------------------------------------------------
