@@ -2403,6 +2403,29 @@ Mounted at `POST /api/calc/section-250`. Twenty tests pin: **pre-OBBBA GILTI 50%
 
 Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
 
+`traderview-expense::section_6050w` is the **IRC §6050W payment-settlement-entity Form 1099-K reporting threshold module** — hits every trader, side-business operator, and landlord who accepts payments through Venmo, PayPal, Cash App, Zelle, eBay, Etsy, Airbnb, Stripe, or Square. The threshold has been a bouncing ball: ARPA 2021 dropped it from $20K/200 to $600 with no transaction floor, IRS delayed enforcement three times, and **OBBBA § 70432 (eff. 2025-01-01) fully REVERSED the ARPA reduction retroactively** — restoring the original $20,000 AND 200 transactions strict-greater-than threshold for 2025 and every later year. The transitional $5K (2024) and $2,500 (2025) from IRS Notice 2024-85 were SUPERSEDED — the 2025 transitional never bound.
+
+**Two PSE categories with very different thresholds**:
+
+| Entity type | Examples | Threshold | Citation |
+|-------------|----------|-----------|----------|
+| `MerchantAcquiringEntity` | Stripe, Square, Adyen, Worldpay (payment-card processors) | **NO de minimis** — every dollar reportable | § 6050W(d)(1) |
+| `ThirdPartySettlementOrganization` (TPSO) | PayPal, Venmo, Cash App, Zelle, eBay, Etsy, StubHub, Airbnb | Year-dependent (see below) | § 6050W(d)(3) + § 6050W(e) |
+
+**TPSO threshold by year**:
+
+| Year | Threshold | Source |
+|------|-----------|--------|
+| Pre-2022 | $20,000 AND 200 transactions | Original § 6050W(e) |
+| 2022 | $600 nominal (ARPA reduction; IRS Notice 2022-1 delayed enforcement) | ARPA 2021 |
+| 2023 | $20,000 AND 200 transactions (IRS Notice 2023-74 delayed reduction) | Notice 2023-74 |
+| 2024 | $5,000 transitional (no transaction minimum) | IRS Notice 2024-85 |
+| **2025+** | **$20,000 AND 200 transactions** (RETROACTIVE restoration; transitional $2,500 superseded) | **OBBBA § 70432** |
+
+**Both prongs must be STRICTLY exceeded** for the $20K/200 regime — exactly $20,000 AND exactly 200 transactions does NOT trigger 1099-K filing. Only $20,000.01 AND 201 (or more) transactions triggers reporting. This strict-greater-than-on-both is the regression-critical boundary.
+
+Mounted at `POST /api/calc/section-6050w`. Nineteen tests pin: **merchant acquiring no-minimum** — one dollar one transaction triggers reporting on Stripe/Square; **merchant zero not reportable**; **TPSO 2026 OBBBA threshold $25K + 300 tx reportable** + "OBBBA § 70432" citation; **TPSO 2026 only dollar threshold met NOT reportable** (regression — BOTH prongs required); **TPSO 2026 only transaction threshold met NOT reportable**; **TPSO 2026 exact $20K AND exact 200 NOT reportable** (strict-greater-than-on-both boundary regression); **TPSO 2026 $20K + 1 cent AND 201 tx reportable** (off-by-one); **TPSO 2025 OBBBA retroactive supersedes $2,500 transitional** (regression — 2025 transitional from Notice 2024-85 never binds); **TPSO 2024 transitional $5K no transaction minimum** + Notice 2024-85 citation; **TPSO 2024 under $5K not reportable**; **TPSO 2023 IRS Notice 2023-74 delayed to $20K/200** ($5K + 201 tx in 2023 NOT reportable); **TPSO 2022 ARPA $600 threshold pinned** + ARPA citation (historical accuracy); **TPSO 2021 pre-ARPA original threshold**; **TPSO pre-ARPA one-prong-only NOT reportable** (regression — pre-ARPA also requires BOTH prongs); **merchant ignores year entirely** (no de minimis regardless); **OBBBA retroactive for 2025/2026/2027/2030** (4-year invariant in single test); **citations pin authorities** (§ 6050W(d)(1) + § 6050W(e) + OBBBA § 70432 + Notice 2024-85 + ARPA); **note reports both prongs with MET/NOT-MET when applicable**; **boundary invariant 6-case truth table for 2026** (both-at-threshold=false; dollar-at-count-over=false; dollar-over-count-at=false; both-over=true; dollar-under=false; count-under=false).
+
 `traderview-expense::section_6651` is the **IRC §6651 failure-to-file / failure-to-pay penalty module** — the most commonly asserted civil tax penalty. Two parallel tracks (late filing under §6651(a)(1); late paying under §6651(a)(2)) that interact via a reduction rule (§6651(c)(1)) and a minimum-penalty floor for returns over 60 days late (§6651(g)). Fraud triples the FTF rate via §6651(f).
 
 **Rate table**:

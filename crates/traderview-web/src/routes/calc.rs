@@ -66,6 +66,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
@@ -1916,6 +1917,36 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §6050W payment-settlement-entity 1099-K reporting threshold ──────
+// Mounted at /api/calc/section-6050w. Two PSE categories with different
+// thresholds: §6050W(d)(1) merchant acquiring entity (Stripe, Square,
+// traditional card processors) — NO de minimis; every dollar reportable.
+// §6050W(d)(3) Third-Party Settlement Organization (PayPal, Venmo, Cash
+// App, Zelle, eBay, Etsy, StubHub, Airbnb) — bouncing-ball threshold.
+// OBBBA §70432 (eff. 2025-01-01) RETROACTIVELY restored the original
+// $20,000 AND 200 transactions strict-greater-than threshold for 2025+,
+// superseding the ARPA $600 nominal and IRS Notice 2024-85 transitional
+// $5K/$2,500. Historical years 2022 (ARPA $600), 2023 (delayed to $20K/200
+// per Notice 2023-74), 2024 (transitional $5K per Notice 2024-85) pinned
+// for pre-2025 accuracy.
+
+async fn section_6050w_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6050w::Section6050WInput>,
+) -> Result<Json<traderview_expense::section_6050w::Section6050WResult>, ApiError> {
+    if b.gross_amount_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "gross_amount_cents must be non-negative".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1990, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6050w::compute(&b)))
 }
 
 // ── §6651 failure-to-file / failure-to-pay penalty ──────────────────
