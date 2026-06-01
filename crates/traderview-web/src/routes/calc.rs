@@ -83,6 +83,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6213",          post(section_6213_route))
+        .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
@@ -2539,6 +2540,37 @@ async fn section_6213_route(
         ));
     }
     Ok(Json(traderview_expense::section_6213::compute(&b)))
+}
+
+// ── §6320 Collection Due Process (CDP) for liens ────────────────────
+// Mounted at /api/calc/section-6320. Parallel framework to § 6330
+// (CDP for levies). § 6320(a)(2)(B) 5-business-day notice deadline
+// (Letter 3172) after NFTL filing + § 6320(a)(3)(B) 30-day CDP
+// request window starting day AFTER 5-business-day notice period +
+// § 6320(b)(1) fair CDP hearing right + § 6320(c) issues considered
+// (incorporates § 6330(c) collection alternatives + spousal defenses
+// + underlying-liability gating + lien-specific § 6323(j) WITHDRAWAL,
+// § 6325(d) SUBORDINATION, § 6325(b) DISCHARGE) + § 6320(d) Tax Court
+// review (incorporates § 6330(d)(1) 30-day petition window). Key
+// difference vs § 6330 — lien REMAINS in place during CDP review;
+// no automatic withdrawal. Boechler v. Commissioner (596 U.S. 199,
+// 2022) holding likely extends via § 6320(d) incorporation of
+// § 6330(d)(1). Trader-relevant when receiving Letter 3172 after IRS
+// files Notice of Federal Tax Lien.
+
+async fn section_6320_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6320::Section6320Input>,
+) -> Result<Json<traderview_expense::section_6320::Section6320Result>, ApiError> {
+    if b.business_days_from_nftl_filing_to_notice > 10_000
+        || b.days_from_notice_to_cdp_request > 100_000
+        || b.days_from_determination_to_tax_court_petition > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "day inputs out of plausible range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6320::compute(&b)))
 }
 
 // ── §6330 Collection Due Process (CDP) for levies ───────────────────
