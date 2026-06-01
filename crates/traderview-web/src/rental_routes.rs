@@ -268,6 +268,10 @@ use traderview_expense::condominium_conversion_protection::{
     check as check_condominium_conversion_protection, CheckResult as CondoConversionResult,
     Input as CondoConversionInput,
 };
+use traderview_expense::otard_antenna_installation::{
+    check as check_otard_antenna_installation, CheckResult as OtardAntennaResult,
+    Input as OtardAntennaInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -490,6 +494,7 @@ pub fn router() -> Router<AppState> {
         .route("/duty-to-mitigate-damages", axum::routing::post(duty_to_mitigate_damages_route))
         .route("/pesticide-application-notice", axum::routing::post(pesticide_application_notice_route))
         .route("/condominium-conversion-protection", axum::routing::post(condominium_conversion_protection_route))
+        .route("/otard-antenna-installation", axum::routing::post(otard_antenna_installation_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3820,6 +3825,38 @@ async fn condominium_conversion_protection_route(
         ));
     }
     Ok(Json(check_condominium_conversion_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Federal FCC Over-the-Air Reception Devices (OTARD) rule
+// compliance check for tenant antenna / satellite-dish / fixed-
+// wireless-receiver installation.
+//
+// Mounted at POST /api/rental/otard-antenna-installation. 47 CFR
+// § 1.4000 PREEMPTS state, local, HOA, and lease restrictions that
+// impair a tenant's ability to install, maintain, or use a covered
+// antenna in an area within the tenant's exclusive use or control.
+// Five protected antenna types: DBS satellite dish (≤ 1m); MMDS
+// antenna (≤ 1m); broadcast TV antenna (any size); supporting mast;
+// fixed-wireless hub/relay (FCC 21-10 2021 Report and Order eff.
+// 2021-03-29 — requires on-premises customer + broadband-only).
+// Tenant-exclusive-use scope: patio + balcony + single-tenant
+// rooftop qualify; common areas (shared rooftops + exterior walls +
+// hallways) are OUTSIDE scope. Three permissible-restriction
+// categories under § 1.4000(b): (1) safety; (2) historic
+// preservation (National Register properties); (3) no-impairment
+// standard — restriction must NOT unreasonably delay, increase
+// cost, or preclude acceptable-quality signal. § 1.4000(c) burden
+// of proof on restricting party. Aesthetic restrictions + blanket
+// prohibitions + pre-approval delays are NEVER permissible.
+// ---------------------------------------------------------------------------
+
+async fn otard_antenna_installation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<OtardAntennaInput>,
+) -> Result<Json<OtardAntennaResult>, ApiError> {
+    Ok(Json(check_otard_antenna_installation(&b)))
 }
 
 // ---------------------------------------------------------------------------

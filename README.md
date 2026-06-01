@@ -1466,6 +1466,43 @@ Mounted at `POST /api/rental/plain-language-lease-check`. Thirty-three tests pin
 
 Mounted at `POST /api/rental/roommate-authorization-check`. Twenty-eight tests pin: **3 regime classifications** (NY / CA + default AL/FL/TX/WA/DC/WY/MA/NJ/IL); **NY single-tenant 1 additional adult permitted**; **NY 2 additional adults exceeds per-tenant cap of 1** (regression — RPL § 235-f permits only 1 per tenant); **NY not-primary-residence → no statutory right**; **NY lease restriction VOID when statute permits** (regression target — only NY does this); **NY 30-day notification window** (day 30 within; day 31 without notification non-compliant); **NY multi-tenant 2-on-lease + 2 additional = OK** (cap 2 tenants × 1 additional each = 2); **NY multi-tenant 2-on-lease + 3 additional exceeds cap**; **CA 1-bedroom max 3 occupants** ($N \times 2 + 1 = 3$); **CA 1-bedroom 4 occupants exceeds max**; **CA 2-bedroom max 5**; **CA 3-bedroom max 7**; **CA lease remains enforceable above floor** (regression — CA does NOT void lease restrictions); default-state no-lease-restriction permitted; default-state lease-restriction blocks roommate; **2 citation regression targets** (NY § 235-f + "VOID" + "30 days"; CA "2 plus 1" + "2 per bedroom"); **51-state coverage**; non-empty citations; **3 single-state-uniqueness invariants** (NY-only / CA-only / **NY-only lease-restrictions-void**); NY note describes per-tenant cap arithmetic; CA note describes bedroom formula; lowercase state code normalizes.
 
+`traderview-expense::otard_antenna_installation` is the **federal FCC Over-the-Air Reception Devices (OTARD) rule compliance check for tenant antenna / satellite-dish / fixed-wireless-receiver installation** — sibling to `ev_charger_installation` (tenant right-to-install electric vehicle charging). 47 CFR § 1.4000 **PREEMPTS** state, local, HOA, and lease restrictions that impair a tenant's ability to install, maintain, or use a covered antenna in an area within the tenant's exclusive use or control. Trader-relevant for traders who depend on satellite-TV market data feeds, broadcast-TV business news (CNBC / Bloomberg over-the-air), or fixed-wireless broadband for low-latency price feeds.
+
+**Five protected antenna types under § 1.4000(a)(1)**:
+
+| Type | Size limit | Notes |
+|------|------------|-------|
+| `DBS` | ≤ 1 meter diameter | Direct broadcast satellite (DirecTV, Dish Network); no size limit in Alaska |
+| `MMDS` | ≤ 1 meter diameter or diagonal | Multipoint distribution service / wireless cable |
+| `BroadcastTV` | **Any size** | Over-the-air TV receive antenna |
+| Supporting mast | (none stated) | Mast supporting any of the above |
+| `FixedWirelessHubRelay2021` | (2021 expansion) | FCC 21-10 R&O eff. 2021-03-29 — requires on-premises customer AND broadband-only |
+
+**Three permissible restriction categories under § 1.4000(b)**:
+
+| Category | Statute | Subject to no-impairment test |
+|----------|---------|--------------------------------|
+| `Safety` | § 1.4000(b)(1) | YES — must not unreasonably delay/cost/signal |
+| `HistoricPreservation` | § 1.4000(b)(2) | YES — National Register properties only |
+| `Aesthetic` | NEVER permissible | n/a |
+| `BlanketProhibition` | NEVER permissible | n/a — "no antennas of any kind" clauses are void |
+| `PreApprovalDelay` | NEVER permissible | n/a — § 1.4000(a)(3)(i) |
+
+**§ 1.4000(a)(3) no-impairment standard** has three independent failure modes — any one defeats an otherwise-permissible safety or historic-preservation restriction:
+- Unreasonably **delays** or prevents installation
+- Unreasonably **increases the cost** of installation, maintenance, or use
+- **Precludes** reception or transmission of an acceptable-quality signal
+
+**The 2021 OTARD expansion (FCC 21-10) is the trader-critical addition.** Fixed-wireless hub/relay antennas — the kind that brings high-speed broadband to apartment buildings via roof-mounted distribution antennas — are protected ONLY IF (a) the antenna serves a customer on whose premises it is located, AND (b) the service provided is broadband-only. Both requirements must be satisfied; failure of either drops the antenna out of OTARD scope. Pinned by `fixed_wireless_2021_with_both_requirements_protected`, `fixed_wireless_2021_without_on_premises_customer_not_protected`, `fixed_wireless_2021_without_broadband_only_not_protected`, and the invariant `fixed_wireless_2021_expansion_thresholds_required_invariant` (4-cell truth table: only (true, true) protects).
+
+**Tenant-exclusive-use scope is the location-side gate.** Patios, balconies, single-tenant rooftops, owned condo unit interior facing exterior all qualify. Common areas (shared rooftops, exterior walls of apartment buildings, hallways, shared yards) are OUTSIDE the rule's scope — landlord retains restriction authority on those. Pinned by `common_area_installation_not_protected` and `common_area_with_protected_antenna_type_still_unprotected` (confirms location overrides antenna-type protection across all 4 covered types).
+
+**§ 1.4000(c) burden of proof.** When OTARD applies, the burden of demonstrating that a particular restriction complies with the rule rests on the party seeking to impose or maintain the restriction (the landlord / HOA). Enforcement of conflicting restrictions is stayed pending FCC or court review. Pinned by `burden_on_restricting_party_when_otard_protected` and `no_burden_when_otard_not_protected`.
+
+**Aesthetic and blanket-prohibition restrictions are NEVER permissible regardless of antenna type.** § 1.4000 does not list aesthetic concerns as a permissible restriction category. Lease clauses that say "no antennas of any kind" or "satellite dishes prohibited" are void as preempted. Pinned by `aesthetic_restriction_never_permissible`, `blanket_prohibition_never_permissible`, `pre_approval_delay_not_permissible`, and the invariant `aesthetic_blanket_pre_approval_invalidate_regardless_of_antenna_type` (4 antenna types × 3 restriction types = 12 confirmed-invalid cells).
+
+Mounted at `POST /api/rental/otard-antenna-installation`. Twenty-six tests pin: **DBS on patio protected**; **MMDS on balcony protected**; **broadcast TV any size protected**; **antenna outside OTARD scope not protected**; **fixed-wireless 2021 with both requirements protected**; **without on-premises customer not protected**; **without broadband-only not protected**; **common area installation not protected**; **common area with protected antenna type still unprotected** (location overrides type); **safety restriction without impairment permissible**; **safety with unreasonable delay not permissible**; **safety with cost increase not permissible**; **safety with signal preclusion not permissible**; **historic preservation without impairment permissible**; **historic with impairment not permissible**; **aesthetic never permissible**; **blanket prohibition never permissible**; **pre-approval delay not permissible**; **burden on restricting party when OTARD protected**; **no burden when not protected**; **aesthetic + blanket + pre-approval invalidate regardless of antenna type 12-cell invariant**; **safety + historic subject to no-impairment standard 6-cell invariant** (2 restriction types × 3 impairment flags); **citation pins 2021 expansion for fixed wireless**; **preemption note across all 10 paths** (5 antenna × 2 location); **fixed-wireless 2021 expansion thresholds required 4-cell invariant**; **no restriction path compliant when protected**.
+
 `traderview-expense::ev_charger_installation` is the **state tenant right-to-install electric-vehicle charging station compliance table** — modern "right-to-charge" laws addressing demand for at-home EV charging in multi-unit rental housing. Only 4 states grant tenant-specific protections; MD / VA / CO / FL right-to-charge laws cover HOAs and condos but do not extend to standalone rental tenants.
 
 **Five regimes** with sharply different gates:
