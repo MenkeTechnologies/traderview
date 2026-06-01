@@ -343,6 +343,10 @@ use traderview_expense::mid_tenancy_ownership_change::{
     check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
     Input as MidTenancyOwnershipInput,
 };
+use traderview_expense::mid_tenancy_temporary_relocation::{
+    check as check_mid_tenancy_temporary_relocation, TemporaryRelocationInput,
+    TemporaryRelocationResult,
+};
 use traderview_expense::mid_tenancy_term_modification::{
     check as check_mid_tenancy_term_modification, ModificationInput as MidTenancyTermModInput,
     ModificationResult as MidTenancyTermModResult,
@@ -675,6 +679,7 @@ pub fn router() -> Router<AppState> {
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
         .route("/mid-tenancy-term-modification", axum::routing::post(mid_tenancy_term_modification_route))
+        .route("/mid-tenancy-temporary-relocation", axum::routing::post(mid_tenancy_temporary_relocation_route))
         .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
         .route("/flag-display-right", axum::routing::post(flag_display_right_route))
         .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
@@ -4578,6 +4583,32 @@ async fn mid_tenancy_term_modification_route(
         }
     }
     Ok(Json(check_mid_tenancy_term_modification(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// mid_tenancy_temporary_relocation: Mid-tenancy temporary relocation
+// rights when landlord requires tenant to temporarily vacate for
+// substantial repairs / renovation / abatement. Four regimes: California
+// (Cal. Civ. Code § 1946.2(d)(2) substantial-remodel just-cause + 30-day
+// vacancy threshold + § 1946.2(d)(3) one-month-rent relocation
+// assistance OR alternative housing + § 1942.5(b) tenant right to
+// return + SF Rent Ordinance § 37.9(a)(11) + Long Beach SRTD local
+// overlays); NewJersey (N.J.S.A. § 2A:18-61.1(g) Anti-Eviction Act
+// renovation removal + § 2A:18-61.11 alternative housing OR relocation
+// expenses); Washington (RCW 59.18.085 displacement assistance + Seattle
+// SMC 22.210 + Bellingham Tenant Protections Ordinance local overlays);
+// Default (lease + common-law habitability + municipal overlays).
+// Distinct from tenant_relocation_assistance (no-fault permanent
+// eviction), lease_termination_catastrophic_damage (fire/flood
+// termination), demolition_tenant_notice (permanent unit demolition).
+// ---------------------------------------------------------------------------
+
+async fn mid_tenancy_temporary_relocation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TemporaryRelocationInput>,
+) -> Result<Json<TemporaryRelocationResult>, ApiError> {
+    Ok(Json(check_mid_tenancy_temporary_relocation(&b)))
 }
 
 // ---------------------------------------------------------------------------
