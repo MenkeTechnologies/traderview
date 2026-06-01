@@ -95,6 +95,9 @@ use traderview_expense::soi_protection::{
 use traderview_expense::str_regulation::{
     check as check_str_regulation, StrComplianceInput, StrComplianceResult,
 };
+use traderview_expense::pet_fees::{
+    check as check_pet_fees, PetFeeInput, PetFeeResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -226,6 +229,7 @@ pub fn router() -> Router<AppState> {
         .route("/radon-disclosure-check", axum::routing::post(radon_disclosure_check_route))
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
+        .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -1963,6 +1967,43 @@ async fn str_regulation_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_str_regulation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State pet deposit / pet rent / pet fee compliance check
+//
+// Mounted at POST /api/rental/pet-fees-check. Four-regime table:
+// SpecificPetDepositAndRentCap (CO: $300 + max($35, 1.5% × rent)),
+// TotalDepositCapAbsorbsPet (CA AB 12, WA RCW 59.18.260),
+// NoSeparatePetDepositAllowed (MA: pet deposit banned, monthly pet
+// rent OK), NoStateRule (38 silent states). Federal FHA + ADA floor:
+// zero-charge override for service animal / ESA in every state.
+// ---------------------------------------------------------------------------
+
+async fn pet_fees_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PetFeeInput>,
+) -> Result<Json<PetFeeResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents must be >= 0".into(),
+        ));
+    }
+    if b.charged_pet_deposit_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "charged_pet_deposit_cents must be >= 0".into(),
+        ));
+    }
+    if b.charged_pet_rent_monthly_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "charged_pet_rent_monthly_cents must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_pet_fees(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -44,6 +44,7 @@ pub mod mlp_ubti;
 pub mod mtm_475f;
 pub mod niit;
 pub mod normalize;
+pub mod pet_fees;
 pub mod qbi;
 pub mod quarterly_tax;
 pub mod recurring;
