@@ -44,6 +44,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/section-1045",          post(section_1045_route))
         .route("/calc/section-121",           post(section_121_route))
+        .route("/calc/section-121d",          post(section_121d_route))
         .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/section-163j",          post(section_163j_route))
         .route("/calc/section-267",           post(section_267_route))
@@ -1720,4 +1721,23 @@ async fn section_121_route(
         ));
     }
     Ok(Json(traderview_expense::section_121::compute(&b)))
+}
+
+// ── §121(d) divorce special rules ───────────────────────────────────
+// Mounted at /api/calc/section-121d. §121(d)(2) holding-period
+// tacking from §1041(a) transferor spouse; §121(d)(3)(A) use
+// attribution via former-spouse occupation under divorce or
+// separation instrument. Lets divorced spouse meet 2-year ownership
+// and 2-year use tests even after years of non-occupation.
+
+async fn section_121d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_121d::Section121dInput>,
+) -> Result<Json<traderview_expense::section_121d::Section121dResult>, ApiError> {
+    if b.gain_realized_on_sale_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "gain_realized_on_sale_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_121d::compute(&b)))
 }
