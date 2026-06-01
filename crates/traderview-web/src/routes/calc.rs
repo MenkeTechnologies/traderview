@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
+        .route("/calc/section-219",           post(section_219_route))
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
@@ -1853,6 +1854,36 @@ async fn section_213_route(
         ));
     }
     Ok(Json(traderview_expense::section_213::compute(&b)))
+}
+
+// ── §219 IRA contribution deduction + Roth phaseout ──────────────────
+// Mounted at /api/calc/section-219. §219(a) above-the-line Traditional
+// IRA deduction; §219(b)(5)(A) 2026 $7,500 base contribution limit (was
+// $7,000 for 2024/2025); §219(b)(5)(B) age-50+ catch-up — SECURE 2.0
+// indexed starting 2024: 2026 = $1,100 (was statutory $1,000 pre-SECURE
+// -2.0 still applies for 2024). §219(g) Traditional deduction phaseout
+// when taxpayer OR spouse covered by workplace retirement plan: 2026
+// Single $81K-$91K + MFJ taxpayer-covered $129K-$149K + MFJ spouse-only
+// covered $242K-$252K (§219(g)(7) widened range) + MFS $0-$10K.
+// §408A(c)(3) Roth contribution phaseout: 2026 Single $153K-$168K + MFJ
+// $242K-$252K + MFS $0-$10K. §4973 6% excise on excess. Earned income
+// caps contribution under §219(b)(1).
+
+async fn section_219_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_219::Section219Input>,
+) -> Result<Json<traderview_expense::section_219::Section219Result>, ApiError> {
+    if b.contributions_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "contributions_cents must be non-negative".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1990, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_219::compute(&b)))
 }
 
 // ── §223 Health Savings Accounts (HSAs) — triple-tax-advantaged ──────

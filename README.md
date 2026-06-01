@@ -2441,6 +2441,40 @@ Age-tier boundaries pin "≤40 = first tier" and "41 = second tier". Module look
 
 Mounted at `POST /api/calc/section-213`. Twenty-eight tests pin: **7.5% AGI floor baseline** (AGI $100k × 7.5% = $7,500 floor; $15k expenses → $7,500 deductible); **expenses below floor no deduction**; **expenses exactly at floor no deduction**; **$1 above floor deductible** (boundary); **HSA reimbursements reduce deduction** ($5k reimbursement → $10k qualified → $2.5k deductible); **reimbursements exceed expenses clamp to zero**; **all 5 LTC 2025 age tiers** (≤40 $480, 50 $900, 60 $1,800, 70 $4,810, 71+ $6,020) with excess-premium pinning; **age boundaries 40 first-tier / 41 second-tier**; **4 LTC 2026 tiers** (≤40 $500, 50 $930, 60 $1,860, 71+ $6,200); LTC within cap full allowed (no excess); **LTC premium added to total qualified** ($15k + $900 = $15.9k → $8.4k deductible); **high-AGI high-floor no deduction** ($1M AGI → $75k floor); high-AGI with high expenses full floor subtraction ($200k expenses − $75k = $125k); **zero AGI zero floor full expenses deductible**; zero expenses zero deduction; **unknown year (2030) falls back to 2025 caps**; note describes 7.5% floor + Schedule A; **note describes LTC excess when capped** ("excess premium NOT deductible"); requires_itemization always true; citation mentions CAA 2020 and Rev. Proc.
 
+`traderview-expense::section_219` is the **IRC §219 Individual Retirement Account (IRA) contribution module** — sibling to `section_223` (HSAs). Universal for traders and landlords saving for retirement. § 219(a) provides an above-the-line deduction for Traditional IRA contributions; Roth contributions are NEVER deductible but the contribution itself phases out by MAGI. Distinguishes the **Traditional-vs-Roth phaseout treatment**: Traditional phaseout reduces DEDUCTION only (non-deductible contributions still permitted → backdoor Roth conversion path); Roth phaseout reduces CONTRIBUTION itself (above the high end → $0).
+
+**2026 limits** (per IRS Notice 2025-XX):
+
+| Component | Amount | Citation |
+|-----------|--------|----------|
+| Base IRA contribution | **$7,500** (was $7,000 for 2024/2025) | § 219(b)(5)(A) |
+| Age 50+ catch-up | **$1,100** (SECURE 2.0 indexed; pre-2024 was $1,000) | § 219(b)(5)(B) |
+| Combined cap (age 50+) | **$8,600** | § 219(b)(5) |
+| Earned income cap | min(earned, statutory) | § 219(b)(1) |
+
+**2026 Traditional IRA deduction phaseout** (§ 219(g) — applies only when taxpayer or spouse covered by workplace plan):
+
+| Filing status | Phaseout range |
+|---------------|----------------|
+| Single / HoH (covered) | $81,000-$91,000 |
+| MFJ (taxpayer covered) | $129,000-$149,000 |
+| MFJ (spouse only covered) | $242,000-$252,000 (§ 219(g)(7) widened range) |
+| MFS (covered) | $0-$10,000 |
+
+**2026 Roth IRA contribution phaseout** (§ 408A(c)(3)):
+
+| Filing status | Phaseout range |
+|---------------|----------------|
+| Single / HoH | $153,000-$168,000 |
+| MFJ | $242,000-$252,000 |
+| MFS | $0-$10,000 |
+
+**Backdoor Roth conversion**: even when MAGI exceeds the Roth phaseout high end and direct Roth contribution = $0, the taxpayer may still make a non-deductible Traditional IRA contribution and convert to Roth (subject to pro-rata rule on aggregate IRA basis).
+
+**Excess contribution** triggers § 4973 6% excise tax each year the excess remains in the account.
+
+Mounted at `POST /api/calc/section-219`. Twenty-six tests pin: **Traditional 2026 under 50 no workplace plan full deduction**; **Traditional 2026 age 50 catch-up adds $1,100 → $8,600**; **Traditional 2024 age 50 catch-up was $1,000** (year-aware regression — pre-SECURE-2.0 statutory $1,000); **Traditional Single covered above $91K → no deduction but still $7,500 contribution permitted** (backdoor Roth setup); **Traditional Single covered at $81K boundary full deduction**; **Traditional Single covered at $86K midpoint partial phaseout**; **Traditional MFJ covered above $149K → no deduction**; **Traditional MFJ spouse-only-covered widened phaseout** (§ 219(g)(7) $242K-$252K regression); **Traditional MFJ neither covered → no phaseout at $500K income**; **Roth Single 2026 below $153K full contribution**; **Roth Single 2026 above $168K NO contribution** + 6% excise on full $7,500 = $450 excise; **Roth MFJ 2026 above $252K no contribution**; **Roth MFJ 2026 $247K midpoint partial**; **Roth MFS 2026 $0-$10K phaseout**; **Roth MFS 2026 above $10K no contribution**; **earned income caps contribution** ($3K earned → $3K limit even with $7,500 statutory cap; $4,500 excess); **excess contribution triggers 6% excise**; **age 49 no catch-up**; **age 50 boundary catch-up applies** (≥ strict); **citations pin § 219(b)(5) + § 219(g) + § 408A(c)(3) + § 4973**; **negative inputs clamped**; **Roth at $153K low-end boundary full contribution**; **Roth at $168K high-end fully phased out**; **Traditional above phaseout backdoor-Roth-eligible** (regression — deduction zero but contribution allowed); **Roth-vs-Traditional distinct phaseout behavior** (regression-critical — same $200K MAGI Single + covered: Traditional allows $7,500 nondeductible contribution; Roth allows $0); **year-aware 2025 $7,000 base limit**.
+
 `traderview-expense::section_223` is the **IRC §223 Health Savings Account (HSA) module** — triple tax-advantaged: contributions deductible above-the-line under §223(a), earnings grow tax-free, withdrawals for qualified medical expenses tax-free. Universal for any trader or landlord with HDHP coverage. To contribute, the taxpayer must be covered by a High Deductible Health Plan meeting the §223(c)(2) three-prong test (minimum deductible + capped out-of-pocket maximum + no payment for non-preventive care before deductible).
 
 **2026 inflation-adjusted amounts** (Rev. Proc. 2025-19):
