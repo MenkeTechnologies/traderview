@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
+        .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
@@ -1852,6 +1853,35 @@ async fn section_213_route(
         ));
     }
     Ok(Json(traderview_expense::section_213::compute(&b)))
+}
+
+// ── §223 Health Savings Accounts (HSAs) — triple-tax-advantaged ──────
+// Mounted at /api/calc/section-223. §223(a) above-the-line deduction;
+// §223(b)(2) contribution limits (2026 self-only $4,400 + family
+// $8,750; 2025 $4,300 + $8,550); §223(b)(3) age-55+ catch-up $1,000
+// STATUTORY not inflation-adjusted; §223(c)(2) HDHP definition (2026
+// self-only min deductible $1,700 max OOP $8,500; family $3,400 / $17K;
+// 2025 self-only $1,650 / $8,300; family $3,300 / $16,600). §4973 6%
+// excise tax on excess contributions modeled.
+
+async fn section_223_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_223::Section223Input>,
+) -> Result<Json<traderview_expense::section_223::Section223Result>, ApiError> {
+    if b.contributions_cents < 0
+        || b.hdhp_deductible_cents < 0
+        || b.hdhp_out_of_pocket_max_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1990, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_223::compute(&b)))
 }
 
 // ── §243 / §246 Dividends Received Deduction (DRD) ──────────────────

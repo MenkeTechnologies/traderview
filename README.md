@@ -2423,6 +2423,26 @@ Age-tier boundaries pin "≤40 = first tier" and "41 = second tier". Module look
 
 Mounted at `POST /api/calc/section-213`. Twenty-eight tests pin: **7.5% AGI floor baseline** (AGI $100k × 7.5% = $7,500 floor; $15k expenses → $7,500 deductible); **expenses below floor no deduction**; **expenses exactly at floor no deduction**; **$1 above floor deductible** (boundary); **HSA reimbursements reduce deduction** ($5k reimbursement → $10k qualified → $2.5k deductible); **reimbursements exceed expenses clamp to zero**; **all 5 LTC 2025 age tiers** (≤40 $480, 50 $900, 60 $1,800, 70 $4,810, 71+ $6,020) with excess-premium pinning; **age boundaries 40 first-tier / 41 second-tier**; **4 LTC 2026 tiers** (≤40 $500, 50 $930, 60 $1,860, 71+ $6,200); LTC within cap full allowed (no excess); **LTC premium added to total qualified** ($15k + $900 = $15.9k → $8.4k deductible); **high-AGI high-floor no deduction** ($1M AGI → $75k floor); high-AGI with high expenses full floor subtraction ($200k expenses − $75k = $125k); **zero AGI zero floor full expenses deductible**; zero expenses zero deduction; **unknown year (2030) falls back to 2025 caps**; note describes 7.5% floor + Schedule A; **note describes LTC excess when capped** ("excess premium NOT deductible"); requires_itemization always true; citation mentions CAA 2020 and Rev. Proc.
 
+`traderview-expense::section_223` is the **IRC §223 Health Savings Account (HSA) module** — triple tax-advantaged: contributions deductible above-the-line under §223(a), earnings grow tax-free, withdrawals for qualified medical expenses tax-free. Universal for any trader or landlord with HDHP coverage. To contribute, the taxpayer must be covered by a High Deductible Health Plan meeting the §223(c)(2) three-prong test (minimum deductible + capped out-of-pocket maximum + no payment for non-preventive care before deductible).
+
+**2026 inflation-adjusted amounts** (Rev. Proc. 2025-19):
+
+| Component | Self-only | Family | Citation |
+|-----------|-----------|--------|----------|
+| Contribution limit | **$4,400** | **$8,750** | § 223(b)(2) |
+| HDHP minimum deductible | **$1,700** | **$3,400** | § 223(c)(2)(A) |
+| HDHP max in-network OOP | **$8,500** | **$17,000** | § 223(c)(2)(B) |
+| Age-55+ catch-up | +$1,000 | +$1,000 | § 223(b)(3) (STATUTORY, not inflation-adjusted) |
+| Combined cap (age 55+) | $5,400 | $9,750 | § 223(b)(2) + (b)(3) |
+
+**2025 amounts**: self-only $4,300 / $1,650 min ded / $8,300 max OOP; family $8,550 / $3,300 / $16,600.
+
+**$1,000 catch-up is statutory** — does NOT inflation-adjust. Same $1,000 in 2025 + 2026 + every future year unless Congress amends.
+
+**Excess contribution** triggers a **6% excise tax under § 4973** each year the excess remains in the account. Disqualified plan (HDHP-eligibility test fails) → ALL contributions are excess.
+
+Mounted at `POST /api/calc/section-223`. Twenty-four tests pin: **self-only 2026 under 55 full $4,400**; **self-only 2026 age 55+ catch-up adds $1,000 → $5,400**; **family 2026 under 55 $8,750**; **family 2026 age 55+ → $9,750**; **deductible below minimum ($1,500 < $1,700) disqualifies + all contributions excess + 6% excise** (regression — disqualified plan path); **deductible at $1,700 boundary qualifies** (≥ strict); **OOP max above $8,500 disqualifies**; **OOP max at $8,500 boundary qualifies** (≤ strict); **excess contribution triggers 6% excise** ($5,000 contributed - $4,400 limit = $600 excess → $36 excise); **excess contribution age 55 calculated against higher limit**; **under contribution no excess**; **family 2026 $8,750 inflation-adjusted**; **self-only 2025 $4,300** (year-aware regression); **family 2025 $8,550**; **catch-up $1,000 does NOT inflation-adjust** (2025 + 2026 same $1,000 — regression-critical statutory pin); **age 54 no catch-up**; **age 55 boundary catch-up applies** (≥ strict); **zero OOP max disqualifies** (invalid HDHP); **negative inputs clamped**; **citations pin § 223(a) + (b)(2) + (b)(3) + (c)(2) + § 4973**; **note includes excise tax amount**; **family min deductible 2x self-only invariant**; **family OOP max 2x self-only invariant**; **worked example high-income trader age 60 family HDHP** ($9,750 contribution + age-55+ catch-up + 37% bracket → $3,607.50 tax savings).
+
 `traderview-expense::section_243` is the **IRC §243 / §246 Dividends Received Deduction (DRD) module** — universal for any trader operating through a C-corp that holds dividend-paying domestic stock. Allows the C-corp to deduct a percentage of inter-corporate dividends from taxable income, with the percentage depending on OWNERSHIP STAKE, reduced for debt-financed stock and disallowed entirely when the §246(c) holding period fails ([Cornell LII 26 U.S.C. § 243](https://www.law.cornell.edu/uscode/text/26/243), [IRC §246 — Rules Applying to DRDs (Bloomberg Tax)](https://irc.bloombergtax.com/public/uscode/doc/irc/section_246)).
 
 **§243 ownership tier table** (post-TCJA percentages — TCJA P.L. 115-97 § 13002 lowered 70%→50% and 80%→65% when § 11 corporate rate dropped from 35% to 21%):
