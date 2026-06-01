@@ -412,6 +412,10 @@ use traderview_expense::landlord_possession_delivery::{
     CheckResult as LandlordPossessionDeliveryResult,
     Input as LandlordPossessionDeliveryInput,
 };
+use traderview_expense::rental_junk_fee_transparency::{
+    check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
+    RentalJunkFeeTransparencyResult,
+};
 use traderview_expense::residential_lease_arbitration_clause::{
     check as check_residential_arbitration, ArbitrationClauseInput, ArbitrationClauseResult,
 };
@@ -703,6 +707,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
+        .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
@@ -5155,6 +5160,36 @@ async fn residential_lease_arbitration_clause_route(
     Json(b): Json<ArbitrationClauseInput>,
 ) -> Result<Json<ArbitrationClauseResult>, ApiError> {
     Ok(Json(check_residential_arbitration(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_junk_fee_transparency: Rental junk-fee + non-rent fee transparency
+// compliance — what statutory disclosure obligations attach to fees, charges,
+// or other amounts beyond base rent when a residential landlord advertises,
+// leases, or renews? Mounted at POST /api/rental/rental-junk-fee-transparency.
+// Four regimes: (1) Massachusetts — 940 CMR 38.00 (Unfair and Deceptive Fees,
+// eff. 2025-09-02 under M.G.L. c. 93A Consumer Protection Act + TREBLE
+// damages): clearly and conspicuously disclose TOTAL PRICE inclusive of all
+// fees in advertising/leasing/renewals. (2) Colorado — Colo. Rev. Stat. §
+// 38-12-1101 et seq. (HB25-1090 Honest Pricing Law, eff. 2026-01-01): total
+// price as SINGLE NUMBER + bans utility markup above provider cost + bans
+// CAM charges + caps markup fees at 2% / $10/month + bans charges for
+// undelivered services + bans landlord-responsibility cost passthrough. (3)
+// California — Cal. Civ. Code § 1950.5 (AB 12 non-rent security cap one
+// month's rent in TPA-covered units); pending broader junk fee legislation.
+// (4) Default — 16 CFR Part 464 (FTC Unfair or Deceptive Fees Rule covers
+// short-term rentals + hotels); 15 U.S.C. § 45 FTC Act § 5 UDAP. Distinct
+// from `application_fees` (application-stage), `late_fee_caps` (post-
+// default), `pet_fees` (pet deposits), and `broker_fee_allocation` (broker
+// fee party-allocation).
+// ---------------------------------------------------------------------------
+
+async fn rental_junk_fee_transparency_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalJunkFeeTransparencyInput>,
+) -> Result<Json<RentalJunkFeeTransparencyResult>, ApiError> {
+    Ok(Json(check_rental_junk_fee_transparency(&b)))
 }
 
 // ---------------------------------------------------------------------------

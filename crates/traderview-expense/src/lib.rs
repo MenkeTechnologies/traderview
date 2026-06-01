@@ -138,6 +138,7 @@ pub mod rent_receipts;
 pub mod repair_and_deduct;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
+pub mod rental_junk_fee_transparency;
 pub mod right_to_dry;
 pub mod reps_qualification;
 pub mod rules;
