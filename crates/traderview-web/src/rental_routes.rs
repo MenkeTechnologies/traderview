@@ -198,6 +198,9 @@ use traderview_expense::crime_victim_termination::{
     check as check_crime_victim_termination,
     CrimeVictimTerminationInput, CrimeVictimTerminationResult,
 };
+use traderview_expense::lease_succession::{
+    check as check_lease_succession, LeaseSuccessionInput, LeaseSuccessionResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -363,6 +366,7 @@ pub fn router() -> Router<AppState> {
         .route("/fire-sprinkler-disclosure-check", axum::routing::post(fire_sprinkler_disclosure_check_route))
         .route("/bedbug-extermination-cost-check", axum::routing::post(bedbug_extermination_cost_check_route))
         .route("/crime-victim-termination-check", axum::routing::post(crime_victim_termination_check_route))
+        .route("/lease-succession-check", axum::routing::post(lease_succession_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2997,6 +3001,30 @@ async fn crime_victim_termination_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_crime_victim_termination(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State succession rights — surviving family member lease assumption
+//
+// Mounted at POST /api/rental/lease-succession-check. Three regimes:
+// NewYorkRentRegulatedSuccession (NYC Rent Stabilization Code
+// § 2523.5(b)(1) DHCR 1987 — 2-year residency adult / 1-year senior
+// or disabled + broad family definition including non-traditional);
+// NewJerseyAntiEvictionImmediateFamily (N.J.S.A. 2A:18-61.1 et seq.
+// Anti-Eviction Act bars no-fault eviction of immediate family
+// co-residents); DefaultLeaseGovernsNoSuccession (48 other states
+// + DC — lease extinguishes on tenant's death).
+// ---------------------------------------------------------------------------
+
+async fn lease_succession_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseSuccessionInput>,
+) -> Result<Json<LeaseSuccessionResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_lease_succession(&b)))
 }
 
 // ---------------------------------------------------------------------------
