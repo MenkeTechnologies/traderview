@@ -78,6 +78,7 @@ pub mod occupancy_standards;
 pub mod owner_identification;
 pub mod owner_move_in_eviction;
 pub mod normalize;
+pub mod pesticide_application_notice;
 pub mod pet_fees;
 pub mod plain_language_lease;
 pub mod pre_move_out_inspection;

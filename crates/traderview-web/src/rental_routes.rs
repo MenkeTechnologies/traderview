@@ -260,6 +260,10 @@ use traderview_expense::duty_to_mitigate_damages::{
     check as check_duty_to_mitigate_damages, CheckResult as DutyToMitigateResult,
     Input as DutyToMitigateInput,
 };
+use traderview_expense::pesticide_application_notice::{
+    check as check_pesticide_application_notice, CheckResult as PesticideNoticeResult,
+    Input as PesticideNoticeInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -480,6 +484,7 @@ pub fn router() -> Router<AppState> {
         .route("/damage-deduction-itemization", axum::routing::post(damage_deduction_itemization_route))
         .route("/cooling-requirements", axum::routing::post(cooling_requirements_route))
         .route("/duty-to-mitigate-damages", axum::routing::post(duty_to_mitigate_damages_route))
+        .route("/pesticide-application-notice", axum::routing::post(pesticide_application_notice_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3722,6 +3727,47 @@ async fn duty_to_mitigate_damages_route(
         ));
     }
     Ok(Json(check_duty_to_mitigate_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord pesticide-application notice compliance check.
+//
+// Mounted at POST /api/rental/pesticide-application-notice. Six
+// regimes: California (Cal. Civ. Code § 1940.8.5 + 14 CCR § 6740 —
+// 24-hour written advance notice to treated tenant; adjacent units
+// also for broadcast / total-release fogger / aerosol spray; notice
+// content requires pesticide product + manufacturer + EPA
+// registration + applicator); NewJersey (N.J.A.C. § 7:30-9.12 —
+// applicator provides label info AT TIME OF APPLICATION + applicator
+// contact + National Pesticide Information Center phone + NJDEP
+// Pesticide Control Program phone; multi-family owner distributes on
+// request); NewYork (N.Y. ECL § 33-1004 Pesticide Reporting Law /
+// Neighbor Notification Law — NO statewide advance-notice mandate
+// for residential rentals; one/two-family applicator provides label
+// info at application; multi-dwelling applicator provides to owner
+// who provides to occupants ON REQUEST); Massachusetts (Mass. G.L.
+// c. 132B § 9 + 333 CMR 13.04 — 48-hour advance written notice to
+// occupants + posting at building entrances); Oregon (ORS § 634.740
+// — 24-hour warning-sign posting before application + 72-hour
+// minimum sign retention); Default (federal FIFRA 7 U.S.C. § 136
+// labeling + applicator licensing only — no statewide advance-notice
+// mandate).
+// ---------------------------------------------------------------------------
+
+async fn pesticide_application_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PesticideNoticeInput>,
+) -> Result<Json<PesticideNoticeResult>, ApiError> {
+    if b.hours_advance_notice_to_treated_tenant > 100_000
+        || b.hours_advance_notice_to_adjacent_tenants > 100_000
+        || b.hours_advance_posting_at_building > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "hour counters look invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_pesticide_application_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------
