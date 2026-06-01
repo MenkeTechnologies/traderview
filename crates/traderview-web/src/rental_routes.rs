@@ -183,6 +183,9 @@ use traderview_expense::fair_chance_housing::{
 use traderview_expense::meth_contamination_disclosure::{
     check as check_meth_contamination_disclosure, MethDisclosureInput, MethDisclosureResult,
 };
+use traderview_expense::death_in_unit_disclosure::{
+    check as check_death_in_unit_disclosure, DeathDisclosureInput, DeathDisclosureResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -381,6 +384,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
+        .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -2925,6 +2929,35 @@ async fn meth_contamination_disclosure_route(
     Json(b): Json<MethDisclosureInput>,
 ) -> Result<Json<MethDisclosureResult>, ApiError> {
     Ok(Json(check_meth_contamination_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Death-in-unit landlord disclosure compliance check.
+//
+// Mounted at POST /api/rental/death-in-unit-disclosure. Four regimes:
+// California1710_2 (Cal. Civ. Code § 1710.2(a) — 3-year (36-month)
+// disclosure window for ALL deaths including natural causes; HIV/AIDS
+// carve-out per § 1710.2(a)(1); § 1710.2(b) intentional-misrepresentation
+// override on direct inquiry — a lie is actionable regardless of window);
+// SouthDakota (S.D. Codified Laws § 43-4-44 — 12-month disclosure window
+// for homicides/suicides/felonies only; natural deaths not covered);
+// Alaska (AS 08.88.615 — 12-month real-estate-agent disclosure window for
+// known murders and suicides; agent disclosure not owner disclosure);
+// Default (no statewide statute; common-law caveat emptor; direct-inquiry
+// misrepresentation may still be actionable under general fraud).
+// ---------------------------------------------------------------------------
+
+async fn death_in_unit_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DeathDisclosureInput>,
+) -> Result<Json<DeathDisclosureResult>, ApiError> {
+    if b.months_since_death > 100_000 {
+        return Err(ApiError::BadRequest(
+            "months_since_death looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_death_in_unit_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
