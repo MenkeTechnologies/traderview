@@ -913,6 +913,34 @@ Mounted at `POST /api/rental/cosigner-check`. Twenty-three tests pin: **continui
 
 Mounted at `POST /api/rental/mobile-home-park-check`. Twenty-six tests pin: **CA 90-day notice complies / 89-day insufficient**; **CA landlord termination requires just cause** + just-cause termination complies; **OR within 10% cap complies / exact 10% boundary complies / above 10% violates**; **FL small park under 10 lots NOT subject** (boundary test) + 10-lot exact boundary subject + 50-lot park subject; **FL no statewide rent cap** (50% increase passes); **WA 90-day notice required** + just-cause termination required; **TX generic law applies — no MHP statute**; NY generic law no just-cause required; **51-state coverage**; non-empty citations; **4 regime-uniqueness invariants** (CA+OR / FL+WA / OR rent cap / FL 10-lot threshold); unknown state falls back to generic; lowercase normalizes; **CA note describes JustCauseWithRentCap**; FL note describes "no statewide rent cap"; FL small-park note mentions lot threshold.
 
+`traderview-expense::submetering_rules` is the **state utility submetering / RUBS (Ratio Utility Billing System) compliance table** — practical for trader-landlords with multifamily portfolios who bill tenants for water, sewer, electricity, or gas via individual unit submeters or RUBS (mathematical-formula allocation by square footage / occupancy / bedrooms). Three regimes:
+
+| Regime                                       | States  | Source                                                                |
+|----------------------------------------------|---------|-----------------------------------------------------------------------|
+| **DisclosureAndTestingRequired**             | CA, VA  | Cal. Civ. Code § 1954.201 (SB 7 of 2016, eff. 2018-01-01); Va. Code § 55.1-1212 — lease disclosure required + free tenant-requested meter testing (VA max once per 24 months) |
+| **PSCRegisteredCappedFees**                  | TX      | Tex. Water Code Ch. 13 + TCEQ 16 TAC § 24.275 — PSC registration + late fee cap **5%** + service charge cap **9%** of allocated utility cost + specific billing-format disclosure |
+| **NoStateRegulation**                        | 48 other states + DC | Common-law and contract terms govern; federal PURPA does not regulate landlord-tenant submetering |
+
+**California SB 7 of 2016 (Cal. Civ. Code § 1954.201)** added Chapter 2.5 to the Civil Code to encourage water conservation in multifamily residential rentals. Before executing a rental agreement, a landlord charging separately for water service via submeters MUST clearly disclose this in writing. The disclosure must include the contact information for the local county sealer. Tenants who suspect submeter inaccuracy can request testing through the county sealer ([CA SB 7 enrolled text](https://www.leginfo.ca.gov/pub/15-16/bill/sen/sb_0001-0050/sb_7_bill_20160906_enrolled.html), [Guardian Water & Power — CA SB 7](https://www.guardianwp.com/post/2018/11/03/Submetering-in-California-Understanding-Senate-Bill-7)). Pinned by `ca_with_lease_disclosure_complies` + `ca_without_lease_disclosure_violates` + `ca_tenant_test_request_must_be_free` + `ca_tenant_test_provided_complies`.
+
+**Virginia Va. Code § 55.1-1212** — submetering or RUBS allowed ONLY if clearly stated in the lease. Energy allocation equipment shall be tested periodically by the owner. Upon tenant request, a free meter test must be provided, though this free test cannot be conducted more frequently than once in a **24-month period** for the same tenant ([Va. Code § 55.1-1212](https://law.lis.virginia.gov/vacode/title55.1/chapter12/section55.1-1212/)). Pinned by `va_without_lease_disclosure_violates` + `va_24_month_test_window_pinned_in_citation`.
+
+**Texas TCEQ 16 TAC § 24.275 caps**: landlord-operators must register with the Public Service Commission. Charges are capped at:
+- **Late fee** ≤ **5%** of the late bill
+- **Service charge** ≤ **9%** of utility costs allocated to the submetered unit
+- Plus cost per gallon + applicable taxes + surcharges from the utility company
+
+Pinned by both rate-cap boundaries: `tx_late_fee_5_pct_exact_complies` + `tx_late_fee_6_pct_violates` (1-point boundary); `tx_service_charge_9_pct_exact_complies` + `tx_service_charge_10_pct_violates`. PSC registration required: `tx_with_psc_registration_complies` + `tx_without_psc_registration_violates`. Multiple violations stack and are all listed: `tx_multiple_violations_all_listed` (3 issues).
+
+**No-submetering carveout**: when the landlord doesn't use submetering or RUBS, no state regulation triggers regardless of state. Pinned by `no_submetering_no_state_check_triggered`.
+
+**Module invariants** (3 separately pinned):
+- CA + VA only on DisclosureAndTestingRequired regime (`ca_va_only_disclosure_and_testing_regime`)
+- TX only on PSCRegisteredCappedFees regime (`tx_only_psc_registered_regime`)
+- TX only with fee caps (`only_tx_has_fee_caps`)
+
+Mounted at `POST /api/rental/submetering-check`. Twenty-four tests pin: **CA with lease disclosure complies** + without violates with "not disclosed" violation; **CA tenant test request must be free** + tenant test provided complies; VA same regime as CA; **VA 24-month test window pinned in citation**; **TX with PSC registration complies** + without violates; **TX late fee 5% exact complies / 6% violates** (boundary); **TX service charge 9% exact complies / 10% violates** (boundary); TX all 3 fee caps individually pinned at 5%/9%; **no-regulation state (FL) no compliance issues** even with 50% late fee; no-submetering-in-use no check triggered; **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (CA+VA / TX only / TX only with fee caps); unknown state falls back to no regulation; lowercase normalizes; TX multiple-violations all listed (3 stack); CA violation note lists issues.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:

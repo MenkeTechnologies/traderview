@@ -73,6 +73,7 @@ pub mod service_animal;
 pub mod soi_protection;
 pub mod str_regulation;
 pub mod sublet_consent;
+pub mod submetering_rules;
 pub mod tenant_abandonment;
 pub mod tenant_topa;
 pub mod utility_shutoff;

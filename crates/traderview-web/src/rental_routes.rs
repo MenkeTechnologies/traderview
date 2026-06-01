@@ -140,6 +140,9 @@ use traderview_expense::cosigner_rules::{
 use traderview_expense::mobile_home_park::{
     check as check_mobile_home_park, MhpInput, MhpResult,
 };
+use traderview_expense::submetering_rules::{
+    check as check_submetering, SubmeteringInput, SubmeteringResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -286,6 +289,7 @@ pub fn router() -> Router<AppState> {
         .route("/repair-deduct-check", axum::routing::post(repair_and_deduct_check_route))
         .route("/cosigner-check", axum::routing::post(cosigner_rules_check_route))
         .route("/mobile-home-park-check", axum::routing::post(mobile_home_park_check_route))
+        .route("/submetering-check", axum::routing::post(submetering_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2407,6 +2411,28 @@ async fn mobile_home_park_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_mobile_home_park(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State utility submetering / RUBS compliance check
+//
+// Mounted at POST /api/rental/submetering-check. Three regimes:
+// DisclosureAndTestingRequired (CA Civ. Code § 1954.201 SB 7 of 2016
+// + VA Va. Code § 55.1-1212 -- lease disclosure required + free
+// tenant-requested meter testing); PSCRegisteredCappedFees (TX Water
+// Code Ch. 13 + TCEQ 16 TAC § 24.275 -- PSC registration + 5% late
+// fee cap + 9% service charge cap); NoStateRegulation elsewhere.
+// ---------------------------------------------------------------------------
+
+async fn submetering_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SubmeteringInput>,
+) -> Result<Json<SubmeteringResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_submetering(&b)))
 }
 
 // ---------------------------------------------------------------------------
