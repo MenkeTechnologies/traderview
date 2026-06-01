@@ -93,6 +93,7 @@ pub mod section_988;
 pub mod section_280a;
 pub mod section_280a_d2;
 pub mod section_280f;
+pub mod section_382;
 pub mod section_83b;
 pub mod section_401a9;
 pub mod section_408_d3;

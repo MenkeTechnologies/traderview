@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
+        .route("/calc/section-382",           post(section_382_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
@@ -984,6 +985,42 @@ async fn section_409a_route(
         ));
     }
     Ok(Json(traderview_expense::section_409a::compute(&b)))
+}
+
+// ── §382 NOL limitation following ownership change ──────────────────
+// Mounted at /api/calc/section-382. §382(b)(1) annual limitation =
+// corp FMV × applicable LT tax-exempt rate; §382(g) ownership change
+// (> 50% shift among 5%+ shareholders / 3-year testing period);
+// §382(l)(5) bankruptcy exception waives the annual limit at the cost
+// of a mandatory interest haircut; §382(h) NUBIG recognition can
+// increase the limit during the 5-year recognition period. Pairs with
+// /api/calc/section-172 for the underlying NOL deduction.
+
+async fn section_382_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_382::Section382Input>,
+) -> Result<Json<traderview_expense::section_382::Section382Result>, ApiError> {
+    if b.corporation_fmv_at_change < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "corporation_fmv_at_change must be >= 0".into(),
+        ));
+    }
+    if b.pre_change_nol_carryover < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "pre_change_nol_carryover must be >= 0".into(),
+        ));
+    }
+    if b.mandatory_interest_haircut_l5 < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "mandatory_interest_haircut_l5 must be >= 0".into(),
+        ));
+    }
+    if b.recognized_built_in_gain_this_year < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "recognized_built_in_gain_this_year must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_382::compute(&b)))
 }
 
 // ── §408(m) collectibles in IRA ──────────────────────────────────────
