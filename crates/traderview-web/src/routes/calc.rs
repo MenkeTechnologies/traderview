@@ -90,6 +90,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-332",           post(section_332_route))
         .route("/calc/section-1234a",         post(section_1234a_route))
         .route("/calc/section-1234b",         post(section_1234b_route))
+        .route("/calc/section-263g",          post(section_263g_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2463,6 +2464,40 @@ async fn section_1234b_route(
     Json(b): Json<traderview_expense::section_1234b::Section1234BInput>,
 ) -> Result<Json<traderview_expense::section_1234b::Section1234BResult>, ApiError> {
     Ok(Json(traderview_expense::section_1234b::compute(&b)))
+}
+
+// ── §263(g) capitalization of interest + carrying charges on straddles ─
+// Mounted at /api/calc/section-263g. §263(g)(1) general rule disallows
+// current deduction for interest + carrying charges allocable to
+// personal property that is part of a §1092(c) straddle; disallowed
+// amount is chargeable to the capital account (basis) of the straddle
+// property — timing-only, not permanent. §263(g)(2) defines interest
+// and carrying charges as the EXCESS of (A) interest-on-indebtedness +
+// other carrying costs (storage / insurance / transport) OVER (B)
+// interest received + ordinary income from property + dividends net of
+// §243 DRD + security loan fee payments includible in gross income.
+// §263(g)(3) exempts §1256(e) hedging transactions (bona fide hedge of
+// inventory / ordinary obligations / borrowings; identified before
+// close of day entered into). §263(g)(4) provides coordination rules
+// with §263(h) short-sale + §1277/§1282 market-discount/OID rules.
+
+async fn section_263g_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_263g::Section263GInput>,
+) -> Result<Json<traderview_expense::section_263g::Section263GResult>, ApiError> {
+    if b.interest_on_indebtedness_cents < 0
+        || b.carrying_costs_cents < 0
+        || b.interest_received_cents < 0
+        || b.ordinary_income_from_property_cents < 0
+        || b.dividends_received_cents < 0
+        || b.dividend_received_deduction_cents < 0
+        || b.security_loan_fees_received_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_263g::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
