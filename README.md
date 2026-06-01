@@ -2851,6 +2851,38 @@ Mounted at `POST /api/rental/foreclosure-tenant-check`. Twenty-five tests pin: 5
 
 Mounted at `POST /api/rental/lead-disclosure-check`. Twenty-three tests pin: 51-row coverage; **1977/1978/1980 cutoff boundary** (regulatory bright line); each of 4 federal disclosure elements individually triggers a violation; **MA child-under-6 deleading** trigger + no-child case; NJ periodic-inspection regime; RI occupancy-change regime; **NY comprehensive (two simultaneous violations)** when both rules fail; 8-state federal-floor-only sweep; unknown state handled; case-insensitive; sorted `all_states()`; non-empty citations; **child-based-deleading 9-state sweep** (CT/MA/MN/WI/NY/IL/RI/VT/DC); **periodic-inspection 4-state sweep** (NJ/MD/NY/DC); **occupancy-change 4-state sweep** (IL/RI/VT/MD); post-1978 in MA also skips state rules; federal penalty constant matches 40 CFR § 745.118 ($10k/violation); treble-damages flag pinned across 10 states; multiple violations stack (NJ regime: 2 federal + 2 NJ inspections = 4); note describes post-1978 no-obligation case.
 
+`traderview-expense::lead_renovation_repair_painting` is the **EPA Lead Renovation, Repair, and Painting (RRP) Rule compliance check** — 40 CFR Part 745, Subpart E. Critical for any trader-landlord renovating older multifamily property — TSCA § 16(a) penalties are PER-DAY-PER-VIOLATION and have triggered EPA's largest-ever lead-paint enforcement actions. Distinct from `lead_disclosure` (TSCA § 1018 / 40 CFR Part 745 Subpart F — initial lead-based paint disclosure upon SALE or LEASE), `asbestos_disclosure`, and `bedbug_extermination_cost` — this module addresses ONLY the RENOVATION WORK PRACTICES pathway when work disturbs lead-based paint in pre-1978 housing or a child-occupied facility.
+
+**Two jurisdictional regimes**:
+
+| Regime | Authority | States | Firm registration |
+|--------|-----------|--------|---------------------|
+| **EPA Federal** | 40 CFR Part 745 Subpart E + TSCA § 16(a) | ~35 states + DC | EPA online application |
+| **State-Authorized** | TSCA § 404 (15 USC § 2684) delegation | 15 EPA-delegated states: WI, IA, NC, MS, KS, RI, UT, OR, MA, AL, WA, GA, OK, DE, VT | State lead program |
+
+State-authorized programs MUST be AT LEAST AS PROTECTIVE as the federal floor — the 8 compliance elements are universal regardless of jurisdiction.
+
+**Eight compliance elements** (all required when rule applies):
+
+| # | Element | Authority |
+|---|---------|-----------|
+| 1 | Target housing (pre-1978) OR child-occupied facility | § 745.83 definitions |
+| 2 | Work disturbs paint above de minimis (>6 sq ft interior / >20 sq ft exterior / window replacement / demolition) | § 745.83 minor-repair-and-maintenance exemption |
+| 3 | Firm EPA or state-authorized certified | §§ 745.89, 745.90 |
+| 4 | Individual renovator trained (EPA-accredited 8-hour course; 5-year validity; 4-hour refresher) | § 745.90 |
+| 5 | "Renovate Right" pamphlet provided to owner + occupant + signed acknowledgment or certificate of mailing retained | § 745.84 |
+| 6 | Containment used (plastic sheeting + signage) + prohibited work practices avoided (no open-flame burning, no machine sanding/grinding without HEPA, no heat guns above 1100°F) | § 745.85(a)(1), (a)(3) |
+| 7 | Cleanup verification completed (visual inspection + dust-cleanup verification cards or clearance testing) | § 745.85(b) |
+| 8 | Records retained 3 years post-renovation | § 745.86 |
+
+**Two-prong applicability gate kills RRP at the gate.** If the building is NOT target housing (pre-1978) OR child-occupied facility, the rule doesn't apply — no compliance required regardless of work scope. If work falls within the § 745.83 minor-repair-and-maintenance threshold (≤ 6 sq ft interior / ≤ 20 sq ft exterior / no window replacement / no demolition), the rule also doesn't apply. Pinned by `post_1978_housing_rule_does_not_apply`, `minor_repair_below_de_minimis_rule_does_not_apply`, `neither_target_housing_nor_above_de_minimis_rule_does_not_apply`, and `rule_applies_when_target_housing_and_above_de_minimis`.
+
+**TSCA § 16(a) civil penalty up to $37,500 per day per violation** at statutory base (15 USC § 2615(a)(1)). Inflation-adjusted maximum under 40 CFR § 19.4 is materially higher (mid-$40K range as of 2025; 2026 adjustment canceled by OMB so 2025 figure persists). Criminal penalties under TSCA § 16(b) available for knowing or willful violations — up to $25,000/day plus imprisonment. The penalty note surfaces in every applicable-rule result. Pinned by `note_pins_tsca_section_16_penalty`.
+
+**8-element invariant — any single gap defeats compliance.** Pinned by `all_eight_elements_must_be_satisfied_invariant` (8-iteration sweep flipping each element to false confirms each individually breaks compliance) and `multiple_violations_accumulate_all_listed` (3 simultaneous gaps surface 3+ violations).
+
+Mounted at `POST /api/rental/lead-renovation-repair-painting`. Twenty-two tests pin: **full compliance federal passes**; **full compliance state-authorized passes**; **post-1978 housing rule does not apply** (target housing gate); **minor repair below de minimis rule does not apply** (work-scope gate); **missing firm certification violation** (§§ 745.89, 745.90); **missing individual training violation** (§ 745.90 8-hour); **missing pamphlet distribution violation** (§ 745.84 Renovate Right); **missing pamphlet acknowledgment violation**; **pamphlet not provided skips acknowledgment check** (cascade); **missing containment violation** (§ 745.85(a)(1) plastic sheeting); **prohibited work practices violation** (§ 745.85(a)(3) open-flame burning); **missing cleanup verification violation** (§ 745.85(b) clearance testing); **missing records retention violation** (§ 745.86 3 years); **note pins TSCA § 16(a) $37,500/day penalty**; **federal jurisdiction note describes EPA application**; **state-authorized note lists 15 states** (WI, IA, NC, MS, KS, RI, UT, OR, MA, AL, WA, GA, OK, DE, VT); **citation federal pins Part 745 Subpart E + TSCA § 16(a) + 40 CFR § 19.4**; **citation state-authorized pins TSCA § 404 + 15 USC § 2684 + federal floor**; **all 8 elements must be satisfied invariant** (8-iteration sweep); **multiple violations accumulate all listed**; **rule applies when target housing and above de minimis**; **neither target housing nor above de minimis rule does not apply**.
+
 `traderview-expense::detector_requirements` is the **state-by-state smoke + carbon monoxide detector compliance table** — life-safety obligation with massive liability exposure (tenant death from non-functional CO detector = wrongful death suit + criminal exposure in some states). Sibling to `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
 
 **All 50 states require smoke detectors in residential rental units.** The variation lives in placement rules (every bedroom vs outside sleeping areas vs every level), power source (10-year sealed battery vs replaceable battery), and landlord-install obligations at occupancy.

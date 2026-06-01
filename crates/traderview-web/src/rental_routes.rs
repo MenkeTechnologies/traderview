@@ -92,6 +92,9 @@ use traderview_expense::radon_disclosure::{
 use traderview_expense::lead_disclosure::{
     check as check_lead_disclosure, LeadCheckInput, LeadCheckResult,
 };
+use traderview_expense::lead_renovation_repair_painting::{
+    check as check_lead_rrp, RrpInput, RrpResult,
+};
 use traderview_expense::soi_protection::{
     check as check_soi_protection, SoiCheckInput, SoiCheckResult,
 };
@@ -559,6 +562,7 @@ pub fn router() -> Router<AppState> {
         .route("/soi-protection-check", axum::routing::post(soi_protection_check_route))
         .route("/detector-check", axum::routing::post(detector_check_route))
         .route("/lead-disclosure-check", axum::routing::post(lead_disclosure_check_route))
+        .route("/lead-renovation-repair-painting", axum::routing::post(lead_renovation_repair_painting_route))
         .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
         .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
@@ -5416,6 +5420,35 @@ async fn lead_disclosure_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_lead_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// lead_renovation_repair_painting: EPA Lead Renovation, Repair, and Painting
+// (RRP) Rule compliance — 40 CFR Part 745, Subpart E. Eight compliance
+// elements when work is performed in target housing (pre-1978) or child-
+// occupied facility above the § 745.83 minor-repair-and-maintenance
+// threshold: (1) target housing or child-occupied facility; (2) work
+// disturbs paint above de minimis (>6 sq ft interior / >20 sq ft exterior /
+// window replacement / demolition); (3) firm EPA or state-authorized
+// certified; (4) renovator individually trained (EPA-accredited 8-hour);
+// (5) Renovate Right pamphlet provided + acknowledgment retained;
+// (6) containment used + prohibited work practices avoided; (7) cleanup
+// verification; (8) 3-year records retention. Two jurisdictions: EPA
+// Federal (most states) vs StateAuthorized (15 EPA-delegated states under
+// TSCA § 404: WI, IA, NC, MS, KS, RI, UT, OR, MA, AL, WA, GA, OK, DE, VT).
+// TSCA § 16(a) civil penalty up to $37,500/day/violation (15 USC §
+// 2615(a)(1)) at statutory base; inflation-adjusted maximum higher per
+// 40 CFR § 19.4. Criminal penalties under TSCA § 16(b). Distinct from
+// lead_disclosure (TSCA § 1018 / 40 CFR Part 745 Subpart F initial
+// disclosure upon SALE or LEASE), asbestos_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn lead_renovation_repair_painting_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RrpInput>,
+) -> Result<Json<RrpResult>, ApiError> {
+    Ok(Json(check_lead_rrp(&b)))
 }
 
 // ---------------------------------------------------------------------------
