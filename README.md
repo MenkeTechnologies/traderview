@@ -2691,6 +2691,27 @@ Mounted at `POST /api/calc/section-444`. Eighteen tests pin: **all 3 eligible fi
 
 Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no withholding** (full payment to payee); **A trigger TIN-not-furnished triggers 24% withholding** ($10k → $2,400); **B trigger IRS-notified incorrect TIN** triggers withholding; **C trigger fires for interest** + dividends (load-bearing); **C trigger does NOT fire for rent** + non-employee comp (regression); **D trigger certification failure** triggers withholding; **3 trigger precedence pins** (A > B, B > C, C > D); **withholding rate 24%** (2400bp); withholding at $100k payment = $24k; **$1B precision** = $240M withheld; zero payment zero withholding; **all 10 payment types subject to A trigger** sweep; triggered note describes trigger + 24%; untriggered note describes no trigger; **citation mentions all 4 trigger subsections** + § 3406(b)(1)(A) rate + CP 2100 + Publication 1281.
 
+`traderview-expense::section_305` is the **IRC §305 stock dividend distribution classification module** — trader-relevant for anyone holding corporate stock who receives a stock dividend or stock right. §305(a) general rule excludes stock-on-stock distributions from gross income (the distribution simply changes per-share basis under §307(a)). §305(b) enumerates **5 exceptions** making the distribution taxable as a §301 distribution. §305(c) creates deemed distributions from certain capital-structure events.
+
+**§305(b) five taxable exceptions** with priority ordering:
+
+| Sub-section | Trigger | Description |
+|-------------|---------|-------------|
+| (b)(1) | In lieu of money | Any shareholder may elect cash instead of stock — taxes ALL shareholders |
+| (b)(2) | Disproportionate | Some get property; others' proportionate interest increases |
+| (b)(3) | Common-and-preferred | Some common-holders get preferred; others get common |
+| (b)(4) | On preferred stock | Distribution on preferred (limited convertible-ratio carve-out) |
+| (b)(5) | Convertible preferred | Convertible preferred stock without anti-dilution safe harbor |
+| (c) | Deemed distribution | Capital-structure event (conversion-ratio adjust, redemption premium accrual) |
+
+**§305(a) non-taxable path → §307(a) basis allocation**: when no exception triggers, the shareholder allocates the OLD share basis between OLD and NEW shares in proportion to FMV. Old basis $10k + old FMV $19k + new FMV $1k → total FMV $20k → new shares allocated $10k × (1 / 20) = $500; old shares retain $9,500. Holding period of old shares tacks to new under §1223(5).
+
+**§305(b) taxable path → §301 distribution treatment**: dividend up to current+accumulated E&P; basis recovery for excess over E&P; capital gain for residue. New shares take FMV basis under §301(d) (no allocation from old basis).
+
+**Priority ordering** when multiple exception facts are present: (b)(1) → (b)(2) → (b)(3) → (b)(4) → (b)(5) → (c). The (c) deemed-distribution path fires ONLY when no §305(b) exception applies.
+
+Mounted at `POST /api/calc/section-305`. Twenty-two tests pin: **no-exception non-taxable §305(a) general rule** + **§307(a) basis allocation** ($10k basis + 1/20 FMV ratio = $500 new + $9,500 old); **§305(b)(1) in lieu of money triggers taxability**; **§305(b)(2) disproportionate triggers**; **§305(b)(3) common-and-preferred triggers**; **§305(b)(4) distribution on preferred triggers**; **§305(b)(5) convertible preferred without safe harbor triggers**; **§305(c) deemed distribution triggers (lowest priority)** (regression target — only fires when no (b) exception); **(b)(1) short-circuits other exceptions** (priority ordering); **(b)(2) short-circuits lower priority**; **§301 dividend treatment when taxable** ($1k all dividend when E&P sufficient); **excess over E&P → basis recovery** ($200 dividend + $800 basis recovery when E&P = $200); zero E&P → all basis recovery; **taxable new basis = FMV** ($1k regression — distinguishes from §305(a) §307 allocation); **taxable old basis unchanged**; non-taxable zero FMV no allocation; non-taxable proportional 50/50 split; **citation mentions all 7 relevant authorities** (§305(a) + §305(b) + §305(c) + §307(a) + §1223(5) + §301 + "5 taxable exceptions"); note describes non-taxable + taxable paths; **$1B precision** ($500M new share basis allocation).
+
 `traderview-expense::section_331` is the **IRC §331 shareholder corporate liquidation gain/loss module** — the shareholder-side counterpart to `section_336` (corporate-side of the same transaction) and bookend with `section_351` (formation). On complete liquidation, §331(a) treats the liquidating distribution as in full payment in exchange for stock under §1001 — gain or loss = FMV of property received minus shareholder's adjusted basis in stock, with capital character if stock was a capital asset.
 
 **Three regimes determine the shareholder's tax outcome**:

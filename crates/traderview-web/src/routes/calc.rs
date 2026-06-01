@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
+        .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
@@ -1960,6 +1961,23 @@ async fn section_3406_route(
         ));
     }
     Ok(Json(traderview_expense::section_3406::compute(&b)))
+}
+
+// ── §305 stock dividend distribution classification ─────────────────
+// Mounted at /api/calc/section-305. §305(a) general rule excludes
+// stock-on-stock distributions from gross income; §305(b) 5
+// taxable exceptions (in lieu of money / disproportionate / common-
+// and-preferred / on preferred stock / convertible preferred w/o
+// safe harbor); §305(c) deemed distributions from capital-structure
+// events; §307(a) basis allocation between old and new shares when
+// §305(a) applies; §301 distribution treatment when taxable
+// (dividend up to E&P + basis recovery + capital gain).
+
+async fn section_305_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_305::Section305Input>,
+) -> Result<Json<traderview_expense::section_305::Section305Result>, ApiError> {
+    Ok(Json(traderview_expense::section_305::compute(&b)))
 }
 
 // ── §331 shareholder gain/loss in corporate complete liquidation ─
