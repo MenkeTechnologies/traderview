@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-448",           post(section_448_route))
+        .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1557,6 +1558,36 @@ async fn section_448_route(
         ));
     }
     Ok(Json(traderview_expense::section_448::compute(&b)))
+}
+
+// ── §444 fiscal year election ───────────────────────────────────────
+// Mounted at /api/calc/section-444. §444(a) election availability for
+// partnerships, S-corps, and PSCs; §444(b)(2) 3-month deferral cap
+// (only Sept 30 / Oct 31 / Nov 30 fiscal year ends qualify when
+// required year is calendar); §7519 required payment for partnerships
+// and S-corps (Form 8752, due May 15); §280H deduction limitations
+// for PSCs.
+
+async fn section_444_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_444::Section444Input>,
+) -> Result<Json<traderview_expense::section_444::Section444Result>, ApiError> {
+    if b.net_income_for_election_year_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "net_income_for_election_year_dollars must be >= 0".into(),
+        ));
+    }
+    if b.required_tax_year_end_month == 0 || b.required_tax_year_end_month > 12 {
+        return Err(ApiError::BadRequest(
+            "required_tax_year_end_month must be 1..=12".into(),
+        ));
+    }
+    if b.proposed_fiscal_year_end_month == 0 || b.proposed_fiscal_year_end_month > 12 {
+        return Err(ApiError::BadRequest(
+            "proposed_fiscal_year_end_month must be 1..=12".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_444::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
