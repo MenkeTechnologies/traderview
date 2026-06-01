@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1367",          post(section_1367_route))
         .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
+        .route("/calc/section-1375",          post(section_1375_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-170",           post(section_170_route))
@@ -1920,6 +1921,29 @@ async fn section_1368_route(
     Json(b): Json<traderview_expense::section_1368::Section1368Input>,
 ) -> Result<Json<traderview_expense::section_1368::Section1368Result>, ApiError> {
     Ok(Json(traderview_expense::section_1368::compute(&b)))
+}
+
+// ── § 1375 S-corp passive investment income tax ─────────────────────
+// Mounted at /api/calc/section-1375. Completes S-corp cluster
+// (§ 1361 + § 1366 + § 1367 + § 1368 + § 1374 + § 1375). Tax
+// engages when S-corp has accumulated E&P AND passive investment
+// income exceeds 25% of gross receipts. § 1375(b)(1)(B) ENPI
+// formula: NPI × (PII - 25% × GR) / PII. § 1375(b)(1)(A) caps
+// ENPI at taxable income. Tax at highest § 11(b) corporate rate
+// (21% post-TCJA). Companion: § 1362(d)(3) — three consecutive
+// years of E&P + >25% PII terminates S election. § 1362(g) —
+// 5-year re-election waiting period after termination.
+
+async fn section_1375_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1375::Section1375Input>,
+) -> Result<Json<traderview_expense::section_1375::Section1375Result>, ApiError> {
+    if b.corporate_tax_rate_bps < 0 || b.corporate_tax_rate_bps > 10_000 {
+        return Err(ApiError::BadRequest(
+            "corporate_tax_rate_bps out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1375::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────
