@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
+        .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -2601,6 +2602,30 @@ async fn section_6330_route(
         ));
     }
     Ok(Json(traderview_expense::section_6330::compute(&b)))
+}
+
+// ── §6402 refund offsets / Treasury Offset Program ──────────────────
+// Mounted at /api/calc/section-6402. § 6402 statutory hierarchy
+// applies overpayments to debts in priority order: § 6402(a) IRS
+// internal revenue tax (IRS handles directly), § 6402(c)(1) past-due
+// child support ASSIGNED to a State, § 6402(d) federal agency non-tax
+// debt (student loans etc.), § 6402(c)(2) child support NOT assigned
+// to a State, § 6402(e) state income tax, § 6402(f) state unemployment
+// compensation, § 6402(g) state TANF. § 6402(n) injured spouse rule
+// (Form 8379) protects non-debtor spouse's share of joint refund.
+// Centralized administration: Treasury Offset Program (TOP) under
+// Bureau of the Fiscal Service since 1999.
+
+async fn section_6402_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6402::Section6402Input>,
+) -> Result<Json<traderview_expense::section_6402::Section6402Result>, ApiError> {
+    if b.injured_spouse_share_bps > 100_000 {
+        return Err(ApiError::BadRequest(
+            "injured_spouse_share_bps out of plausible range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6402::compute(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────
