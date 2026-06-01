@@ -173,6 +173,10 @@ use traderview_expense::owner_move_in_eviction::{
 use traderview_expense::lease_copy_delivery::{
     check as check_lease_copy_delivery, LeaseCopyDeliveryInput, LeaseCopyDeliveryResult,
 };
+use traderview_expense::tenant_relocation_assistance::{
+    compute as compute_tenant_relocation_assistance, RelocationInput as TenantRelocationInput,
+    RelocationResult as TenantRelocationResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -368,6 +372,7 @@ pub fn router() -> Router<AppState> {
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
+        .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -2819,6 +2824,44 @@ async fn tenant_organizing_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_organizing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant relocation assistance — landlord-paid relocation amount owed when
+// a no-fault eviction or qualifying displacement event occurs.
+//
+// Mounted at POST /api/rental/tenant-relocation-assistance. Five regimes:
+// CaliforniaAb1482 (Cal. Civ. Code § 1946.2(d)(3) — one month rent within
+// 15 days of notice, for owner move-in / withdrawal / demo / gov order;
+// strict-compliance voids non-compliant notice); PortlandOr (PCC 30.01.085
+// — graduated by bedrooms $2,900 / $3,300 / $4,200 / $4,500 for studio /
+// 1BR / 2BR / 3BR+; triggered by no-cause termination, qualifying landlord-
+// cause termination, or rent increase >=10%; 90-day notice required;
+// penalty up to 3x rent + actual damages + attorney fees); SeattleTrao
+// (SMC Ch. 22.210 — $5,552 split $2,776 landlord / $2,776 City; demo /
+// substantial-rehab / change-of-use triggers; <=50% AMI households only);
+// SeattleEdra (SMC Ch. 22.212 eff. 2022-07-01 — 3x monthly housing cost;
+// rent-increase >=10% in rolling 12-month window; <=80% AMI households
+// only; City advances payment, landlord reimburses); Default (no statewide
+// statute, local ordinance may apply).
+// ---------------------------------------------------------------------------
+
+async fn tenant_relocation_assistance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantRelocationInput>,
+) -> Result<Json<TenantRelocationResult>, ApiError> {
+    if b.monthly_rent_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents must be non-negative".into(),
+        ));
+    }
+    if b.household_ami_percent > 1_000 {
+        return Err(ApiError::BadRequest(
+            "household_ami_percent looks invalid (>1000)".into(),
+        ));
+    }
+    Ok(Json(compute_tenant_relocation_assistance(&b)))
 }
 
 // ---------------------------------------------------------------------------
