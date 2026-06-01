@@ -3556,6 +3556,25 @@ Mounted at `POST /api/calc/section-263a`. Sixteen tests pin: dealer above thresh
 
 Mounted at `POST /api/calc/section-267`. Fourteen tests pin: unrelated full loss recognized; family member full loss disallowed; no-loss no-op; §267(d) buyer gain reduced by disallowed loss ($20k gain → $10k taxable after $10k reduction); §267(d) reduction capped at buyer gain ($3k gain → $7k permanently lost); buyer loss loses entire disallowance; buyer not yet sold preserves disallowance for future; all ten §267(b) categories treated as related; buyer initial basis is cash price (not seller basis); §267(d) zero gain leaves loss lost; unrelated with subsequent gain ignores §267(d); corp+partnership common owner is related (trader LLC ↔ S-corp); is-related helper returns false only for Unrelated; note text describes the partial-reduction split.
 
+`traderview-expense::section_164` is the **IRC §164 State and Local Tax (SALT) deduction cap module** — hits every high-income itemizing trader and landlord in high-tax states. TCJA capped SALT at **$10K ($5K MFS)** for 2018-2024; OBBBA § 70413 **temporarily expanded the cap to $40K ($20K MFS)** effective 2025-01-01 with a high-income phaseout, automatic 1% annual growth through 2029, and a hard sunset back to the TCJA cap in 2030.
+
+**Mechanics (2025-2029)**:
+
+| Component | Single / MFJ / HoH (2025) | MFS (2025) | Annual growth |
+|-----------|----------------------------|------------|----------------|
+| Base cap | **$40,000** | **$20,000** | 1% compounded |
+| Phaseout threshold (MAGI) | **$500,000** | **$250,000** | 1% compounded |
+| Phaseout reduction rate | **30%** of MAGI − threshold | 30% | — |
+| Statutory floor | **$10,000** | **$5,000** | — |
+
+**Phaseout formula**: `reduced_cap = max(floor, base_cap − 30% × max(0, MAGI − threshold))`. The floor is a hard guarantee — a $10M-MAGI taxpayer still gets at least $10K ($5K MFS).
+
+**2030 sunset**: cap snaps back to TCJA $10K ($5K MFS) with no phaseout. No further extensions written into OBBBA.
+
+**Out of scope**: pass-through-entity (PTET) workaround — state-level elections that re-characterize state income tax as a deductible business expense at the entity level. PTET planning is a state-by-state field; this module just computes the federal itemized cap.
+
+Mounted at `POST /api/calc/section-164`. Twenty-three tests pin: **TCJA 2024 cap $10K** + "TCJA" citation regression; **TCJA 2024 MFS cap $5K**; **OBBBA 2025 single under threshold full $40K cap**; **OBBBA 2025 at $500K boundary no reduction** (regression — > strict required); **OBBBA 2025 one dollar above threshold 30-cent reduction** (off-by-one); **OBBBA 2025 high MAGI phaseout to $10K floor** ($1M MAGI → $150K reduction → cap clamped at floor); **OBBBA 2025 statutory floor protects high income** ($10M MAGI still gets $10K); **OBBBA 2025 MFS half-amounts** ($20K cap + $250K threshold + $5K floor); **OBBBA 2026 cap rises 1%** ($40K → $40,400); **OBBBA 2027 compounds** ($40K × 1.01² = $40,804); **OBBBA 2029 final year** (computed via compound_one_percent regression); **OBBBA 2030 sunsets to TCJA $10K** + "sunset" + § 164(b)(6)(B) citation; **OBBBA 2030 MFS sunsets to $5K**; **OBBBA 2031 still TCJA**; **salt paid under cap no blocking**; **salt paid exactly cap no blocking**; **phaseout partial reduction above floor** ($550K MAGI → $15K reduction → $25K cap); **MFS phaseout at $250K threshold**; **MFJ uses $500K threshold not $250K**; **citations pin authorities** (TCJA + § 70413 + OBBBA + $500,000 + sunset); **blocked_by_cap = salt_paid − allowed_deduction invariant** (4-year regression in single test); **negative inputs clamped**; **compound growth strictly monotonic across OBBBA years 2025-2029** (year-over-year cap growth invariant).
+
 `traderview-expense::section_163d` is the **IRC §163(d) investment interest expense limitation** — the §163(j) equivalent for non-trader investors (anyone NOT making the §475(f) trader-in-securities election). Margin interest is deductible only up to **net investment income** under §163(d)(1); excess carries forward **indefinitely** under §163(d)(2). Pairs with iter 16's `section_163j` — together they cover the two §163 limitation paths a margin-debt taxpayer can hit.
 
 Net investment income per §163(d)(4) sums: **interest income** (always counted), **ordinary dividends** (always), **net short-term capital gain** (always — STCG is ordinary regardless), and OPTIONALLY **qualified dividends** + **net long-term capital gain** if the taxpayer makes the **§1(h)(11)(D)(i)** / **§163(d)(4)(B)(iii)** election to treat them as investment income. Investment expenses other than interest (§163(d)(4)(C) — e.g. portion of management fees) reduce the NII figure.

@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1341",          post(section_1341_route))
         .route("/calc/section-168g",          post(section_168g_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
+        .route("/calc/section-164",           post(section_164_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
@@ -2278,6 +2279,33 @@ async fn section_163j_tradeoff_route(
         ));
     }
     Ok(Json(traderview_expense::section_168g::analyze_tradeoff(&b)))
+}
+
+// ── §164 SALT deduction cap (TCJA + OBBBA expansion) ─────────────────
+// Mounted at /api/calc/section-164. TCJA §164(b)(6) capped SALT at
+// $10K ($5K MFS) for 2018-2024. OBBBA §70413 (eff. 2025-01-01)
+// temporarily expanded the cap to $40K ($20K MFS) for 2025 with annual
+// 1% compounded growth through 2029; 30% high-income phaseout above
+// $500K MAGI ($250K MFS) with threshold also growing 1%/yr; statutory
+// $10K ($5K MFS) floor — phaseout never drives the cap below the floor.
+// Automatic sunset to TCJA $10K cap in 2030. Out of scope: pass-through-
+// entity (PTET) workaround state-level elections.
+
+async fn section_164_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_164::Section164Input>,
+) -> Result<Json<traderview_expense::section_164::Section164Result>, ApiError> {
+    if b.salt_paid_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "salt_paid_cents must be non-negative".into(),
+        ));
+    }
+    if !(1900..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1900, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_164::compute(&b)))
 }
 
 // ── §1296 PFIC mark-to-market election ───────────────────────────────
