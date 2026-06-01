@@ -3061,6 +3061,29 @@ Three disqualification paths:
 
 Mounted at `POST /api/calc/section-453`. Eighteen tests pin: straight installment GPR applied correctly ($500k gain / $700k contract = 0.714286 GPR; $50k down × 0.714286 = $35,714.30 gain); marketable securities excluded with full recognition; opt-out election triggers full recognition; **§453(g) related-party 2-year resale triggers full clawback** of $350k remaining + current GPR gain; related-party without 2-year resale no clawback (selling to family is fine if they hold); loss on sale no-op (§453 only for gains); qualifying indebtedness reduces contract price; full-basis assumed-debt zero contract price; GPR capped at 1.0 when gross profit exceeds contract price; interest separately recognized as ordinary even in zero-principal years; multi-year chain eventually recognizes full gain; zero principal received zero recognition; **marketable security short-circuits other inputs** (even with §453(g) facts, §453(k) disqualifies first); both marketable + opt-out list both disqualification reasons; unrelated buyer resold no clawback (only related-party triggers); $1M business sale GPR math (0.7 GPR, $175k recognized year 1); note distinguishes §453(k) vs §453(d) paths; note distinguishes normal installment vs §453(g) clawback path.
 
+`traderview-expense::section_453a` is the **IRC §453A nondealer installment interest charge module** — natural companion to `section_453`. §453 defers gain recognition; §453A then imposes a non-deductible **interest charge** on the deferred tax for the portion of large installment obligations exceeding $5M aggregate face at year-end. Originally added by the Omnibus Budget Reconciliation Act of 1987 § 10202(d) to offset the time-value benefit of large deferrals.
+
+**Applicability gates** — all must be true:
+
+| Gate | Threshold | Authority |
+|------|-----------|-----------|
+| Per-sale | Sales price > $150,000 (strict greater) | §453A(b)(1) |
+| Aggregate year-end face | > $5,000,000 (strict greater) | §453A(b)(2)(A) |
+| Property type | Not personal-use, not residential lots/timeshares from dealer | §453A(b)(3),(4) |
+| Taxpayer | Nondealer (dealers use §453(l) accrual) | §453A(b) |
+
+**Formula**:
+
+```
+Applicable_Percentage = (Aggregate_Face − $5,000,000) / Aggregate_Face
+Deferred_Tax_Liability = Unrecognized_Gain × Max_Applicable_Tax_Rate
+Interest_Charge = Applicable_% × Deferred_Tax × Underpayment_Rate(§6621)
+```
+
+The §6621 federal underpayment rate equals the short-term AFR + 3 percentage points, set quarterly by IRS revenue ruling. The interest charge is **non-deductible** additional tax reported on Form 1040 Schedule 2 line 8c (individual returns).
+
+Mounted at `POST /api/calc/section-453a`. Twenty-nine tests pin: **baseline applicable** ($10M sale, $10M aggregate, $8M unrecognized gain, 20% LTCG, 8% underpayment); **per-sale $150,000 exactly fails strict-greater gate** + **$150,001 meets it**; **aggregate $5M exactly fails** + **$5,000,001 meets** (boundary regression targets); **dealer / personal-use / residential-lots-or-timeshares each categorically excluded**; **dealer exclusion short-circuits BEFORE threshold tests** (regression — exclusion order matters); **applicable % formula** ($10M → 50%; $20M → 75%; $50M → 90%; $5B → 99.9%); **deferred tax at 20% LTCG / 21% C-corp / 37% top ordinary**; **full integration math** (50% applicable × $1.6M deferred × 8% underpayment = $64,000); **interest scales linearly with underpayment rate** (doubling rate doubles charge); **interest zero when not applicable**; **interest zero with zero unrecognized gain even if applicable**; citation mentions OBRA 1987 origin + $5M aggregate threshold + §6621 + AFR + Schedule 2 line 8c (4 distinct authority pins); note for applicable describes "§453A interest charge applies"; note for sub-threshold per-sale failure mentions §453A(b)(1); note for sub-threshold aggregate failure mentions §453A(b)(2)(A); **$1B precision case** (99.5% × $296M × 8% = $23,561,600); **negative unrecognized gain clamps to zero deferred tax** (defensive regression target).
+
 `traderview-expense::disposition` is the **rental property disposition module** — the sale-time computation every landlord faces but generic tax software handles poorly. Realized gain decomposes into TWO buckets the IRS taxes at different rates: **§1250 unrecaptured gain** (the portion attributable to prior depreciation, capped at 25% federal) and **§1231 LTCG** (the remainder, at 0/15/20% LTCG rates). The split is `§1250 = min(accumulated_depreciation, realized_gain)`; depreciation can't recapture more gain than actually exists. Selling at a loss triggers §1231 ordinary-loss treatment with no §1250 component.
 
 When the seller rolls into a replacement via **§1031 like-kind exchange**, gain is DEFERRED to the extent of replacement value. Boot — cash received or net debt relief — triggers recognition `MIN(realized_gain, boot_received + debt_relief_net)`. Replacement basis = `adjusted_basis + boot_paid − boot_received + gain_recognized`, carrying the deferred gain into the new property. Per §1031(c), losses are recognized in full — §1031 does not defer losses.

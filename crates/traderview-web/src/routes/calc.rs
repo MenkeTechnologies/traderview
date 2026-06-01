@@ -76,6 +76,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
+        .route("/calc/section-453a",          post(section_453a_route))
         .route("/calc/section-461l",          post(section_461l_route))
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-691",           post(section_691_route))
@@ -483,6 +484,30 @@ async fn section_453_route(
         ));
     }
     Ok(Json(traderview_expense::section_453::compute(&b)))
+}
+
+// ── §453A nondealer installment interest charge ─────────────────────
+// Mounted at /api/calc/section-453a. Pairs with §453: imposes a
+// non-deductible interest charge on the deferred tax liability of
+// large installment obligations exceeding $5M aggregate face at
+// year-end. Per-sale floor $150k + non-dealer + non-personal-use +
+// non-residential-lots/timeshares. Interest = applicable % ×
+// deferred tax × §6621 underpayment rate (short-term AFR + 3 pp).
+
+async fn section_453a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_453a::Section453aInput>,
+) -> Result<Json<traderview_expense::section_453a::Section453aResult>, ApiError> {
+    if b.sales_price_dollars < 0
+        || b.aggregate_year_end_face_obligations_dollars < 0
+        || b.maximum_applicable_tax_rate_bp > 10_000
+        || b.underpayment_rate_bp > 10_000
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs and rates ≤ 100% (10,000bp) required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_453a::compute(&b)))
 }
 
 // ── §168(e)(6) Qualified Improvement Property ────────────────────────
