@@ -411,6 +411,10 @@ use traderview_expense::security_deposit_bank_disclosure::{
     CheckResult as SecurityDepositBankDisclosureResult,
     Input as SecurityDepositBankDisclosureInput,
 };
+use traderview_expense::landlord_annual_rent_statement::{
+    check as check_landlord_annual_rent_statement, LandlordAnnualRentStatementInput,
+    LandlordAnnualRentStatementResult,
+};
 use traderview_expense::landlord_harassment::{
     check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
     Input as LandlordHarassmentInput,
@@ -727,6 +731,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
+        .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
@@ -5175,6 +5180,34 @@ async fn security_deposit_bank_disclosure_route(
 // Sibling modules: lockout_penalties, quiet_enjoyment,
 // retaliation_windows.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// landlord_annual_rent_statement: Mandatory landlord-provided annual rent
+// statement to tenant for tenant tax-credit purposes — when must a
+// residential landlord issue an annual rent-paid statement to enable the
+// tenant to claim a state-level renter's tax credit or property tax
+// refund? Mounted at POST /api/rental/landlord-annual-rent-statement.
+// Three regimes: (1) Minnesota Minn. Stat. § 290A.19 — Certificate of
+// Rent Paid (CRP) MUST be issued by JANUARY 31 each year; electronic OR
+// hard copy; supports tenant's Property Tax Refund / Renter's Credit
+// claim under § 290A; if landlord fails to issue, tenant may request a
+// Rent Paid Affidavit from MN Department of Revenue (which audits and
+// imposes state-law penalties on landlord). (2) Vermont Vt. Stat. tit.
+// 32 § 6066 — Form LRC-147 required for tenant Renter Rebate claim.
+// (3) Default — no statewide proactive landlord statement mandate;
+// renter-tax-credit states (MA + MI + WI + IN + IA + ME + MD) typically
+// have tenants claim based on tenant's own records; landlord must
+// produce records on tenant request. Distinct from `rent_receipts`
+// (per-payment receipts) and `security_deposit_interest_statement`.
+// ---------------------------------------------------------------------------
+
+async fn landlord_annual_rent_statement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordAnnualRentStatementInput>,
+) -> Result<Json<LandlordAnnualRentStatementResult>, ApiError> {
+    Ok(Json(check_landlord_annual_rent_statement(&b)))
+}
 
 async fn landlord_harassment_route(
     _s: State<AppState>,
