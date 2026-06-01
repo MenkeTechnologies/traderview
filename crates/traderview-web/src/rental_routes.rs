@@ -230,6 +230,10 @@ use traderview_expense::carpet_replacement_useful_life::{
     check as check_carpet_replacement_useful_life, CarpetReplacementInput,
     CarpetReplacementResult,
 };
+use traderview_expense::pre_move_out_inspection::{
+    check as check_pre_move_out_inspection, PreMoveOutInspectionInput,
+    PreMoveOutInspectionResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -442,6 +446,7 @@ pub fn router() -> Router<AppState> {
         .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
         .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
         .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
+        .route("/pre-move-out-inspection", axum::routing::post(pre_move_out_inspection_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3407,6 +3412,39 @@ async fn carpet_replacement_useful_life_route(
         ));
     }
     Ok(Json(check_carpet_replacement_useful_life(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State pre-move-out inspection landlord compliance check.
+//
+// Mounted at POST /api/rental/pre-move-out-inspection. Two regimes:
+// CaliforniaCivCode19505F (Cal. Civ. Code § 1950.5(f) — landlord MUST
+// notify tenant in writing of right to request initial inspection AND
+// right to be present; § 1950.5(f)(2) inspection at reasonable time
+// but NO EARLIER THAN 2 WEEKS (14 days) before termination/end-of-lease
+// date; § 1950.5(f)(3) landlord must provide itemized statement of
+// proposed deductions; tenant has cure period until termination to
+// remedy identified deficiencies; § 1950.5(f)(4) WAIVER: if premises
+// were clear of tenant possessions at inspection AND landlord
+// conducted inspection AND provided itemized statement, landlord
+// SHALL NOT use security deposit for deductions NOT identified in the
+// itemized statement) + Default (no statewide pre-move-out inspection
+// statute; landlord conducts post-move-out inspection only; state-
+// specific security-deposit itemization timelines apply on back-end).
+// Distinct from move_in_inspection (START-of-tenancy condition).
+// ---------------------------------------------------------------------------
+
+async fn pre_move_out_inspection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PreMoveOutInspectionInput>,
+) -> Result<Json<PreMoveOutInspectionResult>, ApiError> {
+    if b.days_between_inspection_and_termination > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_between_inspection_and_termination looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_pre_move_out_inspection(&b)))
 }
 
 // ---------------------------------------------------------------------------
