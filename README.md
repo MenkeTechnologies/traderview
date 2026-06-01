@@ -1870,6 +1870,33 @@ The **§1259(c)(3)(A) safe harbor** lets a hedge escape if ALL three conditions 
 
 Mounted at `POST /api/calc/section-1259`. Nineteen tests pin: classic short-against-box triggers + $30k LTCG + $80k basis step-up + new holding period from hedge date; short-term holding yields STCG; **exactly one year is short-term** (leap-year-safe calendar math); safe harbor with all three conditions = no trigger; safe harbor failures (missing 60-day window / risk reduction / late close) each trigger; loss position no trigger (§1259(b)(1) requires appreciation); break-even no trigger; §1256 contract exempt under §1259(c)(3)(C); NoCoveredTransaction no trigger; offsetting NPC triggers; forward / futures / combined positions each trigger; basis step-up equals gain recognized invariant; safe harbor preserves original basis + no new holding period; appreciation = FMV - basis; loss position with failed safe harbor still no trigger.
 
+`traderview-expense::section_1374` is the **IRC §1374 S-corporation built-in gains (BIG) tax module** — the integrity tax that prevents a C-corp from escaping corporate-level tax on pre-conversion appreciation by simply electing S-corp status. When a C-corp converts, its built-in gains remain exposed to corporate-level tax for a **5-year recognition period** under § 1374(d)(7), permanently set by the **PATH Act of 2015** (down from 10 years originally, then 7 years, then 5). The tax rate is the highest §11(b) corporate rate — **21% post-TCJA** — applied to net recognized built-in gain ([Beancount.io §1374 guide](https://beancount.io/blog/2026/05/10/section-1374-built-in-gains-tax-c-corp-s-corp-conversion-five-year-recognition-period-guide), [Cornell LII 26 U.S.C. § 1374](https://www.law.cornell.edu/uscode/text/26/1374)).
+
+**NUBIG (Net Unrealized Built-In Gain) at conversion** is the LIFETIME ceiling on what can ever be taxed under §1374:
+
+```text
+NUBIG = Σ(FMV − adjusted basis) at conversion
+      − liabilities and deductible items at conversion
+```
+
+If NUBIG is $2M at conversion, the cumulative §1374 tax base over the entire 5-year recognition period can never exceed $2M — no matter how much gain is recognized in any single year. Pinned by `nubig_ceiling_binds_when_prior_years_exhausted_most_of_it`.
+
+**NRBIG (Net Recognized Built-In Gain) for each year** = LESSER OF three limits per § 1374(d)(2):
+
+1. **Recognized BIG limit**: (gross recognized built-in gain − recognized built-in loss) for the year
+2. **Taxable income limit** (§ 1374(d)(2)(A)(ii)): the corporation's taxable income computed as if it were a C-corp, per § 1375(b)(1)(B)
+3. **NUBIG ceiling**: conversion-date NUBIG MINUS cumulative prior-year NRBIG
+
+When the **taxable income limit binds**, the excess recognized BIG **carries forward** within the recognition period under § 1374(d)(2)(B) and is treated as recognized BIG in subsequent years — surfaced via `nrbig_carryforward_for_subsequent_year` so callers can chain across the 5 years. This creates a planning incentive to bunch deductions into years when BIG is recognized: "if the corporation's taxable income can be reduced to zero, no Built-In-Gains Tax will be imposed" ([Foster Garvey — Subchapter S Part 1](https://www.foster.com/larry-s-tax-law/subchapter-s-part-1-the-built-in-gains-tax)).
+
+**Two C-corp tax-attribute carryovers reduce BIG tax**:
+- **§ 1374(b)(2) C-corp NOL deduction** — pre-conversion NOL carryforwards deductible against NRBIG; pinned by `c_corp_nol_reduces_taxable_nrbig` + `c_corp_nol_exceeds_nrbig_clamps_to_zero_tax`.
+- **§ 1374(b)(3) credit offset** — pre-conversion general business credits, minimum tax credits, foreign tax credits reduce the BIG tax LIABILITY dollar-for-dollar (after rate applied); pinned by `credit_offset_reduces_tax_dollar_for_dollar` + `credit_offset_exceeds_tax_clamps_to_zero`.
+
+**Outside the 5-year window**: BIG tax exposure ends. Returned via `in_recognition_period: false` + `binding_limit: OutsideRecognitionPeriod`. Pinned by `outside_5_year_recognition_period_no_tax`; boundary case `year_5_exact_boundary_still_inside` pins that year 5 (index 4 of the 5-year window) is still INSIDE.
+
+Mounted at `POST /api/calc/section-1374`. Twenty-two tests pin: **baseline recognized-BIG binds** (rec $1M < TI $2M < NUBIG $5M → $1M NRBIG × 21% = $210k tax); **TI limit binds with $2.5M carryforward** (rec $3M > TI $500k → $500k NRBIG, $2.5M carries); **NUBIG ceiling binds** when prior NRBIG $4.5M exhausts the $5M cap; outside-5-year-period zero tax + zero NRBIG + OutsideRecognitionPeriod binding; year-5-exact-boundary still inside; recognized BIL offsets BIG ($1M − $400k = $600k net); **C-corp NOL reduces taxable NRBIG** (NOL $400k → $600k taxable → $126k tax); NOL exceeds NRBIG clamps tax to zero; **credit offset reduces tax dollar-for-dollar** ($50k credit → $160k after-credits); credit exceeds tax clamps to zero; NRBIG carryforward from prior year stacks with this year's gross; zero NUBIG no exposure (ceiling binds at 0); negative recognized BIG (BIL > BIG) clamps to zero; **pre-TCJA 35% rate path** ($1M × 35% = $350k); zero TI no tax full carryforward; NUBIG ceiling remaining clamps at zero when prior NRBIG exceeds NUBIG; note describes recognized-BIG binding; note describes TI binding with carryforward; note outside-period describes no exposure; very large NUBIG precision path ($500M / $100M / $200M / 21% → $21M tax); **all-three-limits-tie binding precedence** (RecognizedBigLimit wins ties); NOL does not create negative tax.
+
 `traderview-expense::section_871m` is the **IRC §871(m) dividend-equivalent withholding module** — companion to iter 32's `section_864b2`. That module handles the non-US trader's own-account safe harbor (avoiding ECI classification); this module handles the **30% withholding** the broker imposes on dividend-equivalent payments from US-equity-linked derivatives, regardless of safe-harbor status. The two analyses are INDEPENDENT — a non-US person qualifying under §864(b)(2) still owes §871(m) withholding on their derivative dividend equivalents.
 
 Pre-§871(m), non-US persons used total-return swaps and other equity derivatives to receive dividend-equivalent payments on US stocks WITHOUT triggering the §871(a) / §881 FDAP withholding that an actual dividend would trigger. Congress closed the loophole through §871(m) (enacted 2010, effective 2014 for swaps, 2017 for listed options).

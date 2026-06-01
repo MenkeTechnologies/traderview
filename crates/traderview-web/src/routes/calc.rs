@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
+        .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1279,6 +1280,33 @@ async fn section_1259_route(
     Json(b): Json<traderview_expense::section_1259::Section1259Input>,
 ) -> Result<Json<traderview_expense::section_1259::Section1259Result>, ApiError> {
     Ok(Json(traderview_expense::section_1259::compute(&b)))
+}
+
+// ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────
+// Mounted at /api/calc/section-1374. Models the 5-year §1374(d)(7)
+// recognition period (PATH Act 2015), the §1374(d)(2) lesser-of-three
+// NRBIG computation (recognized BIG vs taxable-income limit vs NUBIG
+// ceiling), §1374(b)(2) C-corp NOL deduction, §1374(b)(3) credit
+// offset, and §1374(d)(2)(B) NRBIG carryforward when TI limit binds.
+// 21% rate under §11(b) post-TCJA but rate is parameterized.
+
+async fn section_1374_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1374::Section1374Input>,
+) -> Result<Json<traderview_expense::section_1374::Section1374Result>, ApiError> {
+    if b.nubig_at_conversion < Decimal::ZERO
+        || b.recognized_big_this_year < Decimal::ZERO
+        || b.recognized_bil_this_year < Decimal::ZERO
+        || b.cumulative_prior_nrbig < Decimal::ZERO
+        || b.c_corp_nol_carryforward < Decimal::ZERO
+        || b.c_corp_credit_offset < Decimal::ZERO
+        || b.nrbig_carryforward_from_prior_year < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1374::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────

@@ -83,6 +83,7 @@ pub mod section_1041;
 pub mod section_1091;
 pub mod section_1256;
 pub mod section_1259;
+pub mod section_1374;
 pub mod section_1295;
 pub mod section_1296;
 pub mod section_163d;
