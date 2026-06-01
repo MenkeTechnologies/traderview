@@ -5208,6 +5208,43 @@ All three required; missing any one defeats (a)(1). Pinned by `three_threshold_c
 
 Mounted at `POST /api/calc/section-7491`. Thirty tests pin: **individual full compliance burden shifts**; **missing credible evidence no shift**; **missing substantiation no shift** (§ 7491(a)(2)(A)); **missing records no shift** (§ 7491(a)(2)(B)); **missing cooperation no shift** (§ 7491(a)(2)(C)); **three threshold conjunctive truth table** (8-cell sweep A × B × C); **corporation net worth above $7M limitation engaged**; **corporation net worth at $7M boundary no limitation**; **partnership net worth above $7M limitation engaged**; **trust net worth above $7M limitation engaged**; **individual unlimited by net worth** (no limitation regardless of size); **estate not subject to $7M limitation**; **employment tax outside burden shift scope** (Subtitle C); **excise tax outside burden shift scope** (Subtitle D); **estate / gift / GST within scope** (Subtitle B); **statistical reconstruction individual Subtitle A engages (b)** (BLS surveys + market-segment analysis); **statistical reconstruction corporation not engaged**; **statistical reconstruction estate Subtitle B not engaged**; **penalty production burden engaged** (§ 7491(c) BURDEN OF PRODUCTION not persuasion); **penalty production burden not engaged when no penalty**; **penalty production burden independent of other subsections** (engages even without (a)(1)); **any burden shift engaged when any subsection engaged**; **any burden shift not engaged when no subsection**; **credible evidence note describes post-critical-analysis**; **three threshold satisfied note lists (A) substantiation + (B) records + (C) cooperation**; **RRA 1998 enactment note present** (Pub. L. No. 105-206); **citation pins all subsections** (§§ 7491(a)(1) / 7491(a)(2)(A) / 7491(a)(2)(B) / 7491(a)(2)(C) / 7491(b) / 7491(c) + § 7454(a) + § 6664(c) cross-references); **three subsections independent routing** (8-cell sweep credible × statistical × penalty); **net worth limitation only for corp / partnership / trust**; **corp with low net worth can engage (a)(1) shift**.
 
+`traderview-expense::section_7206` is the **IRC § 7206 fraud and false statements (criminal felony — "tax perjury" statute)** module — criminal counterpart to `section_6663` civil fraud 75% penalty. Five enumerated criminal tax offenses with up to 3 years imprisonment + $250K individual / $500K corporation fine under 18 U.S.C. § 3571. Natural sibling to `section_6663` (civil fraud), `section_6664` (reasonable cause defense), `section_6501` (§ 6501(c)(1) unlimited ASED for fraud), and `section_7491` (burden shifts — criminal cases OUTSIDE § 7491 scope).
+
+**Five enumerated offenses**:
+
+| Subsection | Crime | SOL (§ 6531) |
+|------------|-------|---------------|
+| § 7206(1) | Tax perjury — false return signed under penalty of perjury | 6 years |
+| § 7206(2) | Aiding or assisting false document (preparers/advisors/third parties) | 6 years |
+| § 7206(3) | Fraudulent bonds, permits, entries | 6 years |
+| § 7206(4) | Removal or concealment of taxed goods with intent to defraud | 6 years |
+| § 7206(5) | Compromises and closing-agreement fraud (§§ 7121/7122) | 3 years |
+
+**§ 7206(1) five-element test** (government bears BEYOND REASONABLE DOUBT burden):
+
+1. Defendant MADE AND SUBSCRIBED a return / statement / other document
+2. Document was FALSE as to a MATERIAL matter
+3. Document contained a written DECLARATION UNDER PENALTIES OF PERJURY
+4. Defendant DID NOT BELIEVE the document to be true and correct as to every material matter
+5. Defendant ACTED WILLFULLY with specific intent to violate the law
+
+All five required; failure of any element defeats prosecution. Pinned by `section_1_five_element_truth_table` (32-cell sweep across all five elements).
+
+**§ 7206(2) reach beyond signing taxpayer**. Aids / assists / procures / counsels / advises preparation of false document. Reaches **return preparers, advisors, and third parties EVEN WHEN the taxpayer-signer is innocent**. Pinned by `section_2_aiding_full_elements_authorizes` and `section_2_aiding_element_note_describes_reach`.
+
+**Cheek defense — Cheek v. United States, 498 U.S. 192 (1991)**. Good-faith subjective MISUNDERSTANDING of the law negates willfulness element (subjective belief test). **NOT** a defense for disagreement with the law (constitutional challenges, tax-protester arguments). Most important taxpayer defense to § 7206(1) prosecution. Pinned by `cheek_defense_successful_defeats_prosecution`, `cheek_defense_unsuccessful_does_not_defeat`, `cheek_only_defeats_when_successful_and_asserted` (4-cell sweep across asserted × successful).
+
+**Penalties**:
+- Imprisonment up to 3 YEARS
+- Fine $250K individual / $500K corporation (18 U.S.C. § 3571 Criminal Fines Improvement Act supersedes § 7206's original $100K cap)
+- BOTH imprisonment and fine permitted, plus costs of prosecution
+
+**§ 6531 criminal statute of limitations** — 6 years for § 7206(1)/(2)/(3)/(4); 3 years for § 7206(5) compromises and closing agreements. Pinned by `sol_truth_table_per_subsection` (5-subsection sweep).
+
+**Spies-Daly doctrine — parallel civil + criminal**. § 7206 criminal prosecution may PROCEED IN PARALLEL with § 6663 civil fraud 75% penalty. Double jeopardy does NOT bar civil penalty after criminal conviction (or acquittal). § 6501(c)(1) UNLIMITED ASED applies once fraud established; § 6501(c)(2) UNLIMITED ASED for willful evasion. **§ 7491 burden shifts do NOT apply to criminal prosecutions** — government bears beyond-reasonable-doubt burden on each element. Pinned by `section_6663_civil_parallel_always_available`, `unlimited_ased_cross_reference_note`, `section_7491_burden_shifts_excluded_note`.
+
+Mounted at `POST /api/calc/section-7206`. Twenty-nine tests pin: **§ 7206(1) all five elements authorizes prosecution**; **§ 7206(1) missing any element no prosecution**; **§ 7206(1) five-element truth table** (32-cell sweep e1 × e2 × e3 × e4 × e5); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek not asserted no Cheek engagement**; **Cheek case note describes subjective belief test**; **Cheek only defeats when successful and asserted** (4-cell sweep); **individual max fine $250K** (18 U.S.C. § 3571); **corporation max fine $500K**; **maximum imprisonment always 3 years** (5-subsection invariant); **§ 7206(1)/(2)/(3)/(4) six-year SOL** (§ 6531); **§ 7206(5) three-year SOL**; **SOL truth table per subsection** (5-subsection sweep); **§ 7206(2) aiding full elements authorizes**; **§ 7206(2) aiding missing aid no prosecution**; **§ 7206(2) aiding missing willfulness no prosecution**; **§ 7206(2) Cheek defeats aiding**; **§ 7206(2) aiding element note describes reach** (preparers + advisors + third parties even when taxpayer-signer innocent); **§ 6663 civil parallel always available** (Spies-Daly doctrine); **unlimited ASED cross-reference note** (§ 6501(c)(1)); **§ 7491 burden shifts excluded note** (BEYOND REASONABLE DOUBT); **CFIA 18 U.S.C. § 3571 supersedes note**; **IRM 9.1.3 note present**; **citation pins all subsections** (§§ 7206(1)/(2)/(3)/(4)/(5) + § 6531 + § 6663 + § 6501(c)(1) + § 6501(c)(2) + 18 U.S.C. § 3571 + Cheek + IRM 9.1.3); **five subsections routed correctly**; **elements count zero when no elements**; **elements count increments per element**; **§ 7206(1) five-element note present** (5/5 satisfied note).
+
 `traderview-expense::section_7811` is the **IRC § 7811 Taxpayer Assistance Orders (TAOs)** module — administrative equitable remedy available when an IRS action or inaction is causing or about to cause "significant hardship" to the taxpayer. The National Taxpayer Advocate (NTA) has independent statutory authority under § 7811 to order the IRS to release property, take action, or refrain from taking action. Distinct from `section_6330`/`section_6320` (CDP — pre-action 30-day notice + Tax Court review), `section_7430` (attorney fees against IRS), and `section_6402` (refund offsets) — TAO is a parallel administrative pathway available alongside these judicial remedies.
 
 **Five-input compliance framework**:

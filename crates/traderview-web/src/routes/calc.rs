@@ -88,6 +88,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
+        .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
@@ -2803,6 +2804,39 @@ async fn section_7521_route(
     Json(b): Json<traderview_expense::section_7521::Section7521Input>,
 ) -> Result<Json<traderview_expense::section_7521::Section7521Result>, ApiError> {
     Ok(Json(traderview_expense::section_7521::compute(&b)))
+}
+
+// ── §7206 fraud and false statements (criminal felony) ──────────────
+// Mounted at /api/calc/section-7206. Five enumerated criminal tax
+// offenses: § 7206(1) tax perjury (workhorse statute) — willfully
+// makes and subscribes return / statement / document containing
+// declaration under penalty of perjury knowing it false as to
+// material matter; § 7206(2) aiding or assisting preparation of
+// false document — reaches return preparers, advisors, third
+// parties even when taxpayer-signer innocent; § 7206(3) fraudulent
+// bonds + permits + entries; § 7206(4) removal or concealment of
+// taxed goods with intent to defraud; § 7206(5) compromises and
+// closing agreement fraud under § 7121 / § 7122. Penalties: up to
+// 3 YEARS imprisonment + fine $250K individual / $500K corporation
+// (18 U.S.C. § 3571 Criminal Fines Improvement Act supersedes §
+// 7206's original $100K cap) + costs of prosecution. § 7206(1)
+// five-element test: (1) made and subscribed + (2) false as to
+// material matter + (3) declaration under penalty of perjury + (4)
+// did not believe true + (5) willful with specific intent.
+// Cheek v. United States, 498 U.S. 192 (1991) good-faith
+// misunderstanding defeats willfulness (subjective belief test).
+// § 6531 criminal SOL: 6 years for § 7206(1)/(2)/(3)/(4); 3 years
+// for § 7206(5). Spies-Daly doctrine permits parallel civil §
+// 6663 75% fraud penalty + § 6501(c)(1) UNLIMITED ASED + § 6501
+// (c)(2) UNLIMITED ASED for willful evasion. § 7491 burden shifts
+// do NOT apply — government bears BEYOND REASONABLE DOUBT burden.
+// IRM 9.1.3 Criminal Statutory Provisions and Common Law.
+
+async fn section_7206_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7206::Section7206Input>,
+) -> Result<Json<traderview_expense::section_7206::Section7206Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7206::check(&b)))
 }
 
 // ── §7491 burden of proof shifts to Secretary ───────────────────────
