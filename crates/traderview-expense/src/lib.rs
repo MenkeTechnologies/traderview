@@ -171,6 +171,7 @@ pub mod tenant_organizing;
 pub mod tenant_solar_installation;
 pub mod tenant_relocation_assistance;
 pub mod tenant_rights_statement_disclosure;
+pub mod tenant_smart_lock_biometric_consent;
 pub mod tenant_utility_account_designation;
 pub mod tenant_rent_judgment_wage_garnishment;
 pub mod tenant_topa;

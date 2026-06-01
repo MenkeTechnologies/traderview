@@ -475,6 +475,10 @@ use traderview_expense::tenant_rights_statement_disclosure::{
     check as check_tenant_rights_statement_disclosure, TenantRightsStatementInput,
     TenantRightsStatementResult,
 };
+use traderview_expense::tenant_smart_lock_biometric_consent::{
+    check as check_tenant_smart_lock_biometric_consent, TenantSmartLockBiometricInput,
+    TenantSmartLockBiometricResult,
+};
 use traderview_expense::tenant_utility_account_designation::{
     check as check_tenant_utility_account_designation, TenantUtilityAccountInput,
     TenantUtilityAccountResult,
@@ -684,6 +688,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
+        .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
@@ -3439,6 +3444,39 @@ async fn tenant_utility_account_designation_route(
     Json(b): Json<TenantUtilityAccountInput>,
 ) -> Result<Json<TenantUtilityAccountResult>, ApiError> {
     Ok(Json(check_tenant_utility_account_designation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_smart_lock_biometric_consent: Tenant right to refuse landlord-
+// installed BIOMETRIC smart lock (fingerprint + facial recognition +
+// retinal scanner) — biometric privacy framework. Mounted at POST
+// /api/rental/tenant-smart-lock-biometric-consent. Five regimes: (1)
+// Illinois 740 ILCS 14 BIPA (most aggressive: § 15(b) written consent +
+// purpose disclosure + length of term + written release; § 15(c)
+// no-profit; § 20 PRIVATE RIGHT OF ACTION with $1,000 negligent /
+// $5,000 reckless statutory damages + attorney fees + costs; Cothron
+// v. White Castle 2023 IL 128004 per-scan violation accrual). (2)
+// Washington RCW 19.375 Biometric Identifiers Act (AG enforcement
+// only, no private right of action). (3) Texas Tex. Bus. & Comm.
+// Code § 503.001 ($25,000 per violation AG civil penalty, no
+// private right of action). (4) California Cal. Civ. Code §§
+// 1798.80 + 1798.100 et seq. CCPA/CPRA classify biometric as
+// sensitive personal information + Cal. Civ. Code § 1940.2
+// prohibited harassment. (5) Default no biometric statute; FTC Act
+// § 5 (15 U.S.C. § 45) + state UDAP + common-law invasion of privacy.
+// Anti-tying principle: traditional key access must be offered as
+// alternative when tenant refuses biometric enrollment. Distinct
+// from `security_camera_disclosure` (surveillance cameras),
+// `lock_change_between_tenancies` (between-tenancy locks), and
+// `landlord_tenant_recording_consent` (audio recording).
+// ---------------------------------------------------------------------------
+
+async fn tenant_smart_lock_biometric_consent_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantSmartLockBiometricInput>,
+) -> Result<Json<TenantSmartLockBiometricResult>, ApiError> {
+    Ok(Json(check_tenant_smart_lock_biometric_consent(&b)))
 }
 
 // ---------------------------------------------------------------------------
