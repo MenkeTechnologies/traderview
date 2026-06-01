@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
+        .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
@@ -2473,6 +2474,36 @@ async fn section_6050w_route(
 }
 
 // ── §6651 failure-to-file / failure-to-pay penalty ──────────────────
+// ── §6511 limitations on credit or refund ───────────────────────────
+// Mounted at /api/calc/section-6511. §6511(a) general 3-year-from-
+// filing or 2-year-from-payment whichever later; §6511(b)(2) 3-year
+// or 2-year lookback rule on refund amount; §6511(d)(1) 7-year bad
+// debt / worthless security (§§ 166, 832(c), 165(g)); §6511(d)(2)(A)
+// NOL/capital loss carryback period ends 3 years after due date of
+// LOSS-year return; §6511(d)(3)(A) 10-year foreign tax credit;
+// §6511(h) financial-disability suspension flagged for caller. Rev.
+// Rul. 2020-8 (suspending Rev. Rul. 71-533) flagged for FTC carryback
+// from NOL carryback open question. Trader-critical for Form 1040-X
+// amended returns claiming missed § 475(f) MTM elections, missed
+// § 901 FTCs, worthless-security losses, or NOL carrybacks.
+
+async fn section_6511_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6511::Section6511Input>,
+) -> Result<Json<traderview_expense::section_6511::Section6511Result>, ApiError> {
+    if b.return_tax_year < 1900 || b.return_tax_year > 2200 {
+        return Err(ApiError::BadRequest("return_tax_year out of range".into()));
+    }
+    if let Some(y) = b.carryback_loss_year {
+        if !(1900..=2200).contains(&y) {
+            return Err(ApiError::BadRequest(
+                "carryback_loss_year out of range".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_6511::compute(&b)))
+}
+
 // Mounted at /api/calc/section-6651. §6651(a)(1) FTF 5%/month / 25%
 // max; §6651(a)(2) FTP 0.5%/month / 25% max; §6651(c)(1) FTF reduced
 // by FTP for overlap months (net 4.5%/month FTF + 0.5%/month FTP =
