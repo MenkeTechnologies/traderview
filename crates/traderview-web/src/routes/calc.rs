@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
+        .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
@@ -2474,6 +2475,32 @@ async fn section_6050w_route(
 }
 
 // ── §6651 failure-to-file / failure-to-pay penalty ──────────────────
+// ── §6213 Tax Court petition 90-day rule ────────────────────────────
+// Mounted at /api/calc/section-6213. § 6213(a) 90-day standard period
+// (150 days if notice addressed to person outside US) for filing
+// petition with Tax Court for redetermination of deficiency. Weekend/
+// DC-holiday-at-last-day extension. § 6213(a) last sentence — petition
+// timely if filed on or before Secretary-specified date in notice of
+// deficiency (even if later than 90/150 days). § 6213(c) failure to
+// file → assessment on notice and demand. Hallmark Research
+// Collective (159 T.C. No. 6, 2022) holds deadline JURISDICTIONAL;
+// Culp v. Commissioner (75 F.4th 196, 3d Cir. 2023) holds non-
+// jurisdictional — circuit split. Trader-relevant when receiving IRS
+// notice asserting § 475(f) MTM election was untimely or TTS criteria
+// not satisfied — 90-day clock starts on notice mailing date.
+
+async fn section_6213_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6213::Section6213Input>,
+) -> Result<Json<traderview_expense::section_6213::Section6213Result>, ApiError> {
+    if b.days_from_mailing_to_petition > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_from_mailing_to_petition looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6213::compute(&b)))
+}
+
 // ── §6511 limitations on credit or refund ───────────────────────────
 // Mounted at /api/calc/section-6511. §6511(a) general 3-year-from-
 // filing or 2-year-from-payment whichever later; §6511(b)(2) 3-year
