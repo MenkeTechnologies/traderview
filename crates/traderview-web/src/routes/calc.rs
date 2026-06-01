@@ -122,6 +122,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-83i",           post(section_83i_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
+        .route("/calc/section-41",            post(section_41_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-179",           post(section_179_route))
@@ -1469,6 +1470,34 @@ async fn section_408m_route(
         ));
     }
     Ok(Json(traderview_expense::section_408m::compute(&b)))
+}
+
+// ── §41 R&D credit (Regular + Alternative Simplified + §280C(c)) ─────
+// Mounted at /api/calc/section-41. Practical for algorithmic traders
+// building custom trading systems + data pipelines + ML models that
+// qualify as research under §41(d). Two computation methods:
+// §41(a)(1) Regular Credit = 20% × (QRE − base amount) where base =
+// max(fixed-base-% × 4-year avg gross receipts, 50% × current QRE);
+// fixed-base-% capped at 16% under §41(c)(3); startup uses 3%.
+// §41(c)(4) Alternative Simplified Credit (ASC) = 14% × (QRE − 50% ×
+// prior 3-year avg QRE); §41(c)(4)(B) startup path 6% × current QRE
+// when no QRE in any of 3 prior years. §280C(c)(2) reduced-credit
+// election reduces credit by 21% in exchange for keeping full §174
+// deduction (§280C(c)(3) election must be on original return).
+
+async fn section_41_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_41::Section41Input>,
+) -> Result<Json<traderview_expense::section_41::Section41Result>, ApiError> {
+    if b.current_year_qre_cents < 0
+        || b.prior_3_year_avg_qre_cents < 0
+        || b.prior_4_year_avg_gross_receipts_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_41::compute(&b)))
 }
 
 // ── §408(d)(3) IRA 60-day rollover rules ─────────────────────────────

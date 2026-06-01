@@ -193,6 +193,7 @@ pub mod section_83i;
 pub mod section_401a9;
 pub mod section_408_d3;
 pub mod section_408m;
+pub mod section_41;
 #[allow(non_snake_case)]
 pub mod section_408A_d3;
 pub mod section_409a;
