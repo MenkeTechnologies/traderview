@@ -378,6 +378,11 @@ use traderview_expense::emotional_support_animal_documentation::{
     CheckResult as EsaDocumentationResult,
     Input as EsaDocumentationInput,
 };
+use traderview_expense::lease_nondisparagement_prohibition::{
+    check as check_lease_nondisparagement_prohibition,
+    CheckResult as LeaseNondisparagementResult,
+    Input as LeaseNondisparagementInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -626,6 +631,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
         .route("/emotional-support-animal-documentation", axum::routing::post(emotional_support_animal_documentation_route))
+        .route("/lease-nondisparagement-prohibition", axum::routing::post(lease_nondisparagement_prohibition_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4851,6 +4857,33 @@ async fn emotional_support_animal_documentation_route(
         ));
     }
     Ok(Json(check_esa_documentation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Lease non-disparagement clause prohibition (federal CRFA).
+//
+// Mounted at POST /api/rental/lease-nondisparagement-prohibition.
+// Federal Consumer Review Fairness Act of 2016, 15 U.S.C. § 45b,
+// voids form-contract provisions that (1) prohibit/restrict
+// tenant's ability to engage in covered communications (online
+// reviews), (2) impose penalty/fee for review, or (3) transfer
+// IP rights in feedback. Four § 45b(c) exceptions: legally
+// actionable content, trade secret / personal info, medical-
+// record content, otherwise-unlawful content. § 45b(d) makes
+// OFFERING such a form contract itself unlawful — separate
+// violation from attempts at enforcement. § 45b(e) provides
+// concurrent FTC and state attorney general enforcement.
+// Distinct from sibling modules lease_waiver_enforceability
+// (general lease waivers — NY § 5-321 + CA § 1953),
+// landlord_retaliation_damages, and landlord_harassment.
+// ---------------------------------------------------------------------------
+
+async fn lease_nondisparagement_prohibition_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseNondisparagementInput>,
+) -> Result<Json<LeaseNondisparagementResult>, ApiError> {
+    Ok(Json(check_lease_nondisparagement_prohibition(&b)))
 }
 
 // ---------------------------------------------------------------------------

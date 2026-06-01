@@ -2034,6 +2034,41 @@ Pinned by `ca_all_5_elements_satisfied_reliable`, `ca_missing_license_unreliable
 
 Mounted at `POST /api/rental/emotional-support-animal-documentation`. Twenty-nine tests pin: **CA all 5 elements satisfied reliable**; **CA missing license unreliable**; **CA missing jurisdiction unreliable**; **CA 29-day relationship unreliable**; **CA exactly 30-day relationship reliable** (boundary); **CA missing evaluation unreliable**; **CA missing warning unreliable**; **CA practitioner discipline on violation**; **FL all elements satisfied reliable**; **FL missing personal knowledge unreliable**; **FL missing telehealth compliance unreliable**; **FL internet-only explicitly unreliable** (§ 760.27 categorical rejection); **default licensed practitioner non-internet reliable**; **default internet-only unreliable**; **default unlicensed unreliable**; **readily-apparent disability bypasses documentation** (short-circuit in CA regime with all 5 elements failed); **readily-apparent applies to all regimes** (3-regime sweep); **CA fraudulent documentation misdemeanor**; **FL fraudulent documentation misdemeanor**; **default fraudulent documentation no state misdemeanor**; **only CA uses 5-element test invariant** (3-regime sweep); **only FL uses personal-knowledge test invariant** (3-regime sweep); **misdemeanor exposure only in CA and FL invariant** (3-regime sweep); **CA 5-element truth table** (5-prong sweep breaking each element); **CA 30-day threshold constant invariant**; **citation pins all authorities** (§ 122318 + AB 468 + Jan 1, 2022 + § 122318(b)/(c) + § 760.27 + § 760.27(2)(b)/(3) + July 1, 2020 + 42 U.S.C. § 3604(f) + HUD Notice FHEO-2020-01 + January 28, 2020 + 24 CFR § 100.204 + ADA § 12102); **sibling distinction note present** (UX-text regression for `service_animal` + `reasonable_accommodation_modification` + `fair_chance_housing` + `pet_fees` + ESA-vs-service-animal + pet-fee exemption); **defensive negative relationship days clamped**; **boundary 29/30/31-day truth table** (3-cell precision sweep).
 
+`traderview-expense::lease_nondisparagement_prohibition` is the **federal Consumer Review Fairness Act (CRFA) lease non-disparagement clause prohibition module** — 15 U.S.C. § 45b (Pub. L. 114-258, December 14, 2016). Distinct from sibling `lease_waiver_enforceability` (general lease waivers under N.Y. GOL § 5-321 + Cal. Civ. Code § 1953 + common law) and `landlord_retaliation_damages` (retaliation against tenant for exercising rights). This module focuses on the NARROW PROHIBITION — landlord-drafted clauses in form (adhesion) lease contracts that gag the tenant from posting honest reviews of landlord/property on Yelp, Google, Apartments.com, Reddit, etc. CRFA creates a federal floor; state attorneys general have concurrent enforcement.
+
+**§ 45b(b) three void-clause categories**:
+
+| Subsection | Provision type | Effect |
+|------------|----------------|--------|
+| § 45b(b)(1) | Prohibits or restricts review of landlord/property | **Void from inception** |
+| § 45b(b)(2) | Imposes penalty or fee for engaging in review | **Void from inception** |
+| § 45b(b)(3) | Transfers (or requires transfer of) IP rights in review/feedback content | **Void from inception** |
+
+**§ 45b(a) form-contract gating** — CRFA applies ONLY to form contracts (adhesion contracts with standardized terms imposed without meaningful opportunity to negotiate). Genuinely negotiated leases fall outside CRFA scope; non-disparagement clauses remain subject to common-law contract enforcement under sibling `lease_waiver_enforceability` analysis. Pinned by `non_form_contract_crfa_does_not_apply` (3-clause sweep where CRFA inapplicable even with all 3 voiding clauses present).
+
+**§ 45b(c) four exceptions** (any single exception preserves the challenged clause):
+
+| Subsection | Carve-out |
+|------------|-----------|
+| § 45b(c)(1) | Legally actionable content (defamation, harassment, knowingly false statements) |
+| § 45b(c)(2) | Trade secret or personal information protected under existing law |
+| § 45b(c)(3) | Medical-record content (HIPAA) |
+| § 45b(c)(4) | Otherwise unlawful content (child pornography, true threats) |
+
+Pinned by individual exception tests for all 4 carve-outs, `exception_blocks_all_three_void_categories` (single exception protects all 3 clause types), and `exception_truth_table_for_4_carve_outs` (**16-cell sweep** — any single exception true triggers engagement; only all-false leaves clause void).
+
+**§ 45b(d) offering prohibition — independent violation**. Offering a form contract containing a void provision is ITSELF unlawful, separate from any attempt at enforcement. Landlord exposed to FTC enforcement under § 5 of FTC Act (15 U.S.C. § 45, unfair or deceptive acts) and state attorney general civil action. Pinned by `offering_violation_independent_of_enforcement_attempt`.
+
+**§ 45b(e) concurrent enforcement** — FTC enforces under § 5 of FTC Act (unfair or deceptive act). State attorneys general have CONCURRENT enforcement authority; may bring federal-district-court civil action for injunctive relief, damages, restitution, civil penalties, or other equitable relief. FTC Bulletin 2022-05 (March 2022) provides interpretive guidance.
+
+**Three-clause truth table** — `three_clause_truth_table` (**8-cell sweep** over non-disparagement × penalty × IP-transfer; void count matches sum of present-clauses-without-exception). Pinned by `all_three_clauses_void_simultaneously`.
+
+**Sibling distinction note** — every result references `lease_waiver_enforceability` (general lease waivers), `landlord_retaliation_damages` (retaliation for tenant review may be parallel cause of action), and `landlord_harassment`, clarifying CRFA is a federal FLOOR — state-law remedies remain available and may provide additional damages. Pinned by `sibling_distinction_note_present`.
+
+**Enforcement note** — every result references FTC + State attorneys general concurrent enforcement + FTC Bulletin 2022-05. Pinned by `ftc_state_ag_enforcement_note_present` (UX-text regression).
+
+Mounted at `POST /api/rental/lease-nondisparagement-prohibition`. Twenty-two tests pin: **non-form contract CRFA does not apply** (3-clause sweep inapplicable); **form contract no voiding clauses compliant** (baseline); **non-disparagement clause void no exception** (§ 45b(b)(1)); **penalty clause void no exception** (§ 45b(b)(2)); **IP transfer clause void no exception** (§ 45b(b)(3)); **legally actionable content exception preserves clause** (§ 45b(c)(1)); **trade secret exception preserves clause** (§ 45b(c)(2)); **medical record exception preserves clause** (§ 45b(c)(3)); **unlawful content exception preserves clause** (§ 45b(c)(4)); **exception blocks all three void categories** (single exception covers); **all three clauses void simultaneously**; **offering violation independent of enforcement attempt** (§ 45b(d)); **no void clause no offering violation**; **FTC and state AG enforcement available on voiding**; **no enforcement available on compliant lease**; **three-clause truth table** (8-cell sweep over non-disparagement × penalty × IP-transfer); **exception truth table for 4 carve-outs** (16-cell exhaustive sweep); **citation pins all subsections** (15 U.S.C. § 45b + Pub. L. 114-258 + Dec 14, 2016 + § 45b(a)/(b)(1)/(b)(2)/(b)(3)/(c)/(d)/(e) + § 45 FTC Act + FTC Bulletin 2022-05); **sibling distinction note present** (UX-text regression for `lease_waiver_enforceability` + `landlord_retaliation_damages` + `landlord_harassment` + federal-floor concept); **FTC + state AG enforcement note present** (UX-text regression for concurrent enforcement + Bulletin 2022-05); **lease with no offending provisions compliant**; **lease with exception only carve-out compliant**.
+
 `traderview-expense::plain_language_lease` is the **state plain-language lease / consumer-contract requirement compliance table** — only 4 states have enacted statutes specifically requiring residential leases to be written in clear, readable language understandable to the average tenant. The 1970s consumer-protection movement produced the original wave: CT (1979, U.S. pioneer), NY (1978-effective), NJ (1981), PA (1993). The 46 other states + DC rely on common-law unconscionability + contract-of-adhesion doctrines.
 
 **Five regimes** with sharply different remedies:
