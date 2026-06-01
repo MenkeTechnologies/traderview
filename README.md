@@ -2750,6 +2750,46 @@ The basis + previously-taxed-income (PTI) machinery is the non-obvious part. Eac
 
 Mounted at `POST /api/calc/section-1295`. Eighteen tests pin: year-1 inclusion preserves character (ordinary stays ordinary, LTCG stays LTCG); basis steps up by total inclusion; PTI account year-end equals total inclusion when no distribution; distribution fully absorbed by PTI no taxable dividend; distribution exceeds PTI excess taxable as dividend ($5k PTI pool + $8k dist = $5k PTI absorbed + $3k taxable); prior PTI carries into current year ($10k prior + $5k current pool absorbs $8k dist with $7k remaining); basis decreases by PTI distribution only; **basis doesn't decrease for taxable dividend portion** (the $3k dividend doesn't touch basis); multi-year chain basis + PTI evolve correctly; zero inclusion + zero distribution no-op; negative PFIC earnings treated as zero (§1293 includes only positives); character preserved (key advantage over §1296 ordinary-only); PTI never negative; basis never negative; note text distinguishes distribution vs no-distribution paths; ordinary-only PFIC still includes ordinary; LTCG-only PFIC still includes LTCG.
 
+`traderview-expense::section_1298` is the **IRC §1298 PFIC attribution + special rules + annual reporting module** — direct companion to `section_1297` (PFIC classification — which cross-references § 1298(b)(1) purging election in § 1297(d)). Where § 1297 defines what makes a foreign corporation a PFIC, § 1298 governs WHEN a U.S. person is treated as OWNING PFIC stock indirectly (through corporations, partnerships, trusts, estates, or options), the PURGING ELECTION mechanism, the pledge-as-security deemed-disposition trap, and Form 8621 annual reporting.
+
+**§ 1298(a) — three attribution rules**:
+
+| Subparagraph | Statute | Rule |
+|--------------|---------|------|
+| § 1298(a)(2) | 26 U.S.C. § 1298(a)(2) | **50% value corporation attribution** — person owning 50%+ by value of corp's stock is treated as owning corp's PFIC stock proportionately |
+| § 1298(a)(3) | 26 U.S.C. § 1298(a)(3) | **Partnership / estate / trust proportionate attribution** — owners/partners/beneficiaries own proportionate share regardless of percentage |
+| § 1298(a)(4) | 26 U.S.C. § 1298(a)(4) | **Options attribution** — options to acquire PFIC stock treated as ownership per Treasury regulations |
+
+**§ 1298(b) — special rules**:
+
+| Subparagraph | Statute | Rule |
+|--------------|---------|------|
+| § 1298(b)(1) | 26 U.S.C. § 1298(b)(1) | **Purging election** under rules similar to § 1291(d)(2) — pay current tax on accumulated PFIC gain to shed PFIC taint going forward; pairs with § 1297(d) qualified-portion exception |
+| § 1298(b)(6) | 26 U.S.C. § 1298(b)(6) | **Pledge-as-security deemed disposition** — using PFIC stock as security for a loan is a deemed SALE triggering § 1291 excess-distribution consequences immediately |
+
+**§ 1298(f) — annual reporting**: Every U.S. person who is a shareholder of a PFIC (directly OR by attribution) must file Form 8621 each year. Failure to file is a standalone violation.
+
+**Corporation attribution requires 50% VALUE threshold; partnership/trust/estate attribution engages at any percentage.** This is the load-bearing structural asymmetry of § 1298(a). A 49% corporate shareholder gets no PFIC attribution; a 1% partner does. Pinned by `corporation_50_pct_attribution_engages_at_boundary`, `corporation_49_pct_below_threshold_no_attribution`, the 4-cell invariant `corporation_attribution_only_at_or_above_50_pct_value_invariant`, and the 5-bp × 3-entity-type invariant `partnership_trust_estate_engages_at_any_percentage_invariant`.
+
+**Proportionate attribution math** = `pfic_value × ownership_bp / 10_000`. A 25% partner of a partnership holding $1000 of PFIC stock is treated as owning $250 worth. Pinned by `proportionate_attribution_calculation_invariant` (5 percentage levels).
+
+**§ 1298(b)(6) is the load-bearing trader trap.** Margin-account use of PFIC stock as loan collateral is a DEEMED SALE — even though the stock has not actually changed hands. This triggers immediate § 1291 excess-distribution consequences (highest historical marginal rate + deferred interest charge). Pinned by `pledge_as_security_triggers_deemed_disposition`, `no_pledge_no_deemed_disposition`, `pledge_as_security_works_with_direct_ownership`, `pledge_as_security_works_with_attributed_ownership`, and the 2-cell invariant `deemed_disposition_only_triggered_by_pledge_invariant`.
+
+**§ 1298(f) annual reporting violation iff required AND not filed.** 4-cell truth table:
+
+| Required (attribution) | Filed | Compliant |
+|-------------------------|-------|-----------|
+| Yes | Yes | ✓ |
+| Yes | No | ✗ (violation) |
+| No | Yes | ✓ |
+| No | No | ✓ |
+
+Pinned by `annual_reporting_required_for_direct_ownership`, `annual_reporting_required_for_partnership_attribution`, `zero_attributed_value_no_reporting_required`, and the truth-table invariant `annual_reporting_violation_iff_required_and_not_filed_invariant`.
+
+**§ 1298(b)(1) purging election shadows § 1297(d) qualified-portion exception.** The purging election in § 1298(b)(1) is what § 1297(d) cross-references — once the taxpayer pays current tax on accumulated PFIC gain, the corporation's PFIC status is shed for the post-purging qualified portion of the holding period.
+
+Mounted at `POST /api/calc/section-1298`. Twenty-three tests pin: **corporation 50% attribution engages at boundary**; **corporation 75% attribution proportional ($75k from $100k)**; **corporation 49% below threshold no attribution**; **partnership proportionate attribution at 10%**; **trust proportionate at 25%**; **estate proportionate at 33%**; **option attribution at 100%**; **direct ownership full value attributed**; **pledge as security triggers deemed disposition**; **no pledge no deemed disposition**; **purging election made note present** (UX-text regression citing § 1291(d)(2) + § 1297(d)); **annual reporting required for direct ownership + violation if not filed**; **annual reporting required for partnership attribution**; **zero attributed value no reporting required**; **corporation attribution only at or above 50% value 4-cell invariant**; **partnership/trust/estate engages at any percentage 15-cell invariant** (3 entity types × 5 percentage levels); **proportionate attribution calculation 5-cell invariant**; **deemed disposition only triggered by pledge 2-cell invariant**; **annual reporting violation iff required AND not filed 4-cell invariant**; **citation pins all subsections** (§ 1298(a)(2)/(a)(3)/(a)(4)/(b)(1)/(b)(6)/(f) + § 1291 + § 1297 + § 1295 + § 1296); **sibling-module note across all 7 ownership types** (UX-text regression for § 1297 + § 1295 + § 1296 + § 1291 trio pairing); **pledge works with direct ownership**; **pledge works with attributed ownership**.
+
 `traderview-expense::section_1297` is the **IRC §1297 PFIC classification (income + asset tests) module** — the definitional anchor for the PFIC cluster. Companion to `section_1295` (QEF election) and `section_1296` (mark-to-market election) — those modules govern AVOIDANCE of PFIC consequences; § 1297 governs the underlying CLASSIFICATION. Trader-critical for any investor holding foreign mutual funds, foreign ETFs, or foreign stock.
 
 **§ 1297(a) — two independent tests, EITHER triggers PFIC status**:

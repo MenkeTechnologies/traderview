@@ -102,6 +102,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6045b",         post(section_6045b_route))
         .route("/calc/section-6045a",         post(section_6045a_route))
         .route("/calc/section-1297",          post(section_1297_route))
+        .route("/calc/section-1298",          post(section_1298_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2852,6 +2853,35 @@ async fn section_1297_route(
         ));
     }
     Ok(Json(traderview_expense::section_1297::compute(&b)))
+}
+
+// ── §1298 PFIC attribution + special rules + annual reporting ────
+// Mounted at /api/calc/section-1298. Direct companion to section_1297
+// (which cross-references § 1298(b)(1) purging election in § 1297(d)).
+// § 1298(a)(2) 50% value corporation attribution; § 1298(a)(3)
+// partnership/estate/trust proportionate attribution; § 1298(a)(4)
+// options attribution per regulations; § 1298(b)(1) purging election
+// under § 1291(d)(2) — pay current tax on accumulated PFIC gain to
+// shed PFIC taint going forward; § 1298(b)(6) PLEDGE-AS-SECURITY
+// DEEMED DISPOSITION — using PFIC stock as security for loan
+// triggers deemed sale under § 1291; § 1298(f) annual Form 8621
+// reporting required for every U.S. PFIC shareholder.
+
+async fn section_1298_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1298::Section1298Input>,
+) -> Result<Json<traderview_expense::section_1298::Section1298Result>, ApiError> {
+    if b.pfic_stock_value_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.upstream_value_ownership_bp > 10_000 {
+        return Err(ApiError::BadRequest(
+            "upstream_value_ownership_bp must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1298::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
