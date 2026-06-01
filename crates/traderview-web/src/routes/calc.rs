@@ -101,6 +101,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-6045b",         post(section_6045b_route))
         .route("/calc/section-6045a",         post(section_6045a_route))
+        .route("/calc/section-1297",          post(section_1297_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2814,6 +2815,43 @@ async fn section_6045a_route(
         ));
     }
     Ok(Json(traderview_expense::section_6045a::check(&b)))
+}
+
+// ── §1297 PFIC classification income + asset tests ───────────────
+// Mounted at /api/calc/section-1297. Trader-critical for any
+// investor holding foreign mutual funds + foreign ETFs + foreign
+// stock. § 1297(a)(1) 75% income test — 75% or more of gross income
+// is passive income. § 1297(a)(2) 50% asset test — 50% or more of
+// average assets produce passive income. EITHER test triggers PFIC
+// status which subjects shareholder to § 1291 punitive excess-
+// distribution + interest-charge regime unless QEF (§ 1295) or
+// mark-to-market (§ 1296) election made. § 1297(b)(1) passive
+// income = § 954(c) foreign personal holding company income.
+// § 1297(b)(2) exceptions — (A) active banking + (B) active
+// insurance + (C) related-party allocable income. § 1297(c) 25%
+// look-through rule — foreign corp owning 25%+ of subsidiary by
+// value is treated as holding proportionate share of subsidiary's
+// assets and income. § 1297(d) once-a-PFIC qualified portion
+// exception with § 1298(b)(1) purging election.
+
+async fn section_1297_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1297::Section1297Input>,
+) -> Result<Json<traderview_expense::section_1297::Section1297Result>, ApiError> {
+    if b.gross_income_total_cents < 0
+        || b.passive_income_cents < 0
+        || b.avg_total_assets_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.avg_passive_assets_bp > 10_000 {
+        return Err(ApiError::BadRequest(
+            "avg_passive_assets_bp must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1297::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

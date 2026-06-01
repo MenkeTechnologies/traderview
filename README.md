@@ -2715,6 +2715,51 @@ The basis + previously-taxed-income (PTI) machinery is the non-obvious part. Eac
 
 Mounted at `POST /api/calc/section-1295`. Eighteen tests pin: year-1 inclusion preserves character (ordinary stays ordinary, LTCG stays LTCG); basis steps up by total inclusion; PTI account year-end equals total inclusion when no distribution; distribution fully absorbed by PTI no taxable dividend; distribution exceeds PTI excess taxable as dividend ($5k PTI pool + $8k dist = $5k PTI absorbed + $3k taxable); prior PTI carries into current year ($10k prior + $5k current pool absorbs $8k dist with $7k remaining); basis decreases by PTI distribution only; **basis doesn't decrease for taxable dividend portion** (the $3k dividend doesn't touch basis); multi-year chain basis + PTI evolve correctly; zero inclusion + zero distribution no-op; negative PFIC earnings treated as zero (§1293 includes only positives); character preserved (key advantage over §1296 ordinary-only); PTI never negative; basis never negative; note text distinguishes distribution vs no-distribution paths; ordinary-only PFIC still includes ordinary; LTCG-only PFIC still includes LTCG.
 
+`traderview-expense::section_1297` is the **IRC §1297 PFIC classification (income + asset tests) module** — the definitional anchor for the PFIC cluster. Companion to `section_1295` (QEF election) and `section_1296` (mark-to-market election) — those modules govern AVOIDANCE of PFIC consequences; § 1297 governs the underlying CLASSIFICATION. Trader-critical for any investor holding foreign mutual funds, foreign ETFs, or foreign stock.
+
+**§ 1297(a) — two independent tests, EITHER triggers PFIC status**:
+
+| Test | Statute | Threshold |
+|------|---------|-----------|
+| § 1297(a)(1) | 26 U.S.C. § 1297(a)(1) | **75% income test** — 75% or more of gross income is passive |
+| § 1297(a)(2) | 26 U.S.C. § 1297(a)(2) | **50% asset test** — 50% or more of average assets produce passive income |
+
+**§ 1297(b) passive income definition + exceptions**:
+
+| Subparagraph | Statute | Rule |
+|--------------|---------|------|
+| § 1297(b)(1) | 26 U.S.C. § 1297(b)(1) | **Passive income** = § 954(c) foreign personal holding company income (interest, dividends, rents, royalties, passive-property gain) |
+| § 1297(b)(2)(A) | 26 U.S.C. § 1297(b)(2)(A) | **Active banking** exception — licensed bank's banking-business income is non-passive |
+| § 1297(b)(2)(B) | 26 U.S.C. § 1297(b)(2)(B) | **Active insurance** exception — qualifying insurance corporation's insurance-business income is non-passive |
+| § 1297(b)(2)(C) | 26 U.S.C. § 1297(b)(2)(C) | **Related-party** exception — interest/dividends/rents/royalties from related person allocable to non-passive income |
+
+**§ 1297(c) 25% look-through rule** — foreign corp owning at least 25% by value of subsidiary's stock is treated as holding its proportionate share of the subsidiary's assets and receiving its proportionate share of the subsidiary's income. Both numerator + denominator of income test scale up. Pinned by `look_through_subsidiary_income_flows_into_test`, `look_through_can_make_corp_pfic_by_subsidiary_income`, and `no_look_through_when_subsidiary_below_25_pct`.
+
+**§ 1297(d) once-a-PFIC qualified-portion exception** requires BOTH:
+1. § 1298(b)(1) purging election made by shareholder
+2. Shareholder in qualified portion of holding period (post-purging where corp ceases PFIC)
+
+If both satisfied, corporation is NOT treated as PFIC for that shareholder regardless of tests. Pinned by `once_a_pfic_qualified_portion_overrides_tests`, `purging_election_alone_without_qualified_portion_does_not_help`, `qualified_portion_alone_without_purging_does_not_help`, and the 4-cell invariant `once_a_pfic_requires_both_purging_and_qualified_portion_invariant`.
+
+**Income test boundary: 75% threshold is INCLUSIVE.** 74.99% (7499 bp) fails; 75.00% (7500 bp) satisfies; 75.01% (7501 bp) satisfies. Same pattern for asset test at 50%. Pinned by `income_test_75_pct_threshold_strict_boundary_invariant` and `asset_test_50_pct_threshold_strict_boundary_invariant` (3 boundary cells each).
+
+**§ 1297(b)(2) exceptions reduce passive income on a dollar-for-dollar basis.** Active banking, active insurance, and related-party carve-outs subtract from gross passive income before computing the 75% ratio. Multiple exceptions compound; carve-outs exceeding passive income clamp at zero (no negative passive). Pinned by `active_banking_exception_reduces_passive_income`, `active_insurance_exception_reduces_passive_income`, `related_party_exception_reduces_passive_income`, `all_three_exceptions_compound_to_zero_passive`, and `carve_outs_exceeding_passive_clamp_at_zero`.
+
+**Four-cell PFIC status truth table**:
+
+| Income test | Asset test | Status |
+|-------------|------------|--------|
+| Fail | Fail | `NotPfic` |
+| Pass | Fail | `PfiCByIncomeTest` |
+| Fail | Pass | `PfiCByAssetTest` |
+| Pass | Pass | `PfiCByBothTests` |
+
+Pinned by `either_test_triggers_pfic_status_invariant` (4 cells).
+
+**PFIC classification triggers § 1291 punitive excess-distribution + interest-charge regime** unless shareholder makes the § 1295 QEF election or § 1296 mark-to-market election. The pairing note pinned by `pfic_excess_distribution_note_present` (UX-text regression citing § 1291 + § 1295 + § 1296).
+
+Mounted at `POST /api/calc/section-1297`. Twenty-six tests pin: **passive 80% satisfies income test**; **passive at 75% boundary satisfies**; **passive just below 75% fails**; **passive assets 60% satisfies asset test**; **at 50% asset boundary satisfies**; **just below 50% fails**; **PFIC by both tests simultaneously**; **active banking exception reduces passive**; **active insurance exception reduces passive**; **related-party exception reduces passive**; **all 3 exceptions compound to zero**; **carve-outs exceeding passive clamp at zero**; **look-through subsidiary income flows into test**; **look-through can make corp PFIC by subsidiary income**; **no look-through when subsidiary below 25%**; **once-a-PFIC qualified portion overrides tests**; **purging election alone without qualified portion**; **qualified portion alone without purging**; **zero gross income zero passive percentage**; **passive exceeds gross clamps at 100%**; **either test triggers PFIC status 4-cell invariant**; **income test 75% threshold strict boundary 3-cell invariant**; **asset test 50% threshold strict boundary 3-cell invariant**; **once-a-PFIC requires both purging AND qualified portion 4-cell invariant**; **citation pins subsections per path**; **PFIC excess distribution note present** (UX-text regression for § 1291 + § 1295 + § 1296 trio).
+
 `traderview-expense::section_1296` is the **IRC §1296 PFIC mark-to-market election module** — every trader holding foreign ETFs (VWO, EWZ, EWJ-class international funds) or foreign ADRs without QEF status faces PFIC rules under §1297. The default §1291 regime is punitive: "excess distributions" are taxed at the HIGHEST historical marginal rate plus a deferred-interest charge computed back to acquisition. Most retail international ETF holders trip §1291 without realizing it.
 
 §1296 offers an escape valve for **marketable PFIC stock**: elect mark-to-market and report unrealized appreciation as **ordinary income** each year. Gain is recognized at ordinary rates (no LTCG preference), but the punitive interest charge vanishes entirely. The non-obvious trap: MTM **losses** are deductible only up to the taxpayer's **unreversed inclusions** — the running cumulative MTM gain previously recognized. A first-year MTM loss with no prior inclusions is **suspended**: not deductible, doesn't carry forward as a future deduction, doesn't reduce basis. It just vanishes for tax purposes until future gains get clawed back.
