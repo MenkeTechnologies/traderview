@@ -324,6 +324,10 @@ use traderview_expense::lease_assignment_consent::{
     check as check_lease_assignment_consent, CheckResult as LeaseAssignmentResult,
     Input as LeaseAssignmentInput,
 };
+use traderview_expense::lease_cure_period::{
+    check as check_lease_cure_period, CheckResult as LeaseCureResult,
+    Input as LeaseCureInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -560,6 +564,7 @@ pub fn router() -> Router<AppState> {
         .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
         .route("/holdover-tenant-damages", axum::routing::post(holdover_tenant_damages_route))
         .route("/lease-assignment-consent", axum::routing::post(lease_assignment_consent_route))
+        .route("/lease-cure-period", axum::routing::post(lease_cure_period_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4359,6 +4364,39 @@ async fn lease_assignment_consent_route(
         ));
     }
     Ok(Json(check_lease_assignment_consent(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant cure period for non-rent lease breach.
+//
+// Mounted at POST /api/rental/lease-cure-period. Four regimes for
+// the statutory cure window during which a tenant may correct a
+// non-rent lease violation: (1) California — Cal. Code Civ. Proc.
+// § 1161(3) 3-day cure EXCLUDING Saturdays, Sundays, and judicial
+// holidays (effectively 3 business days; not applicable to
+// non-payment-of-rent or nuisance cases); (2) Florida — Fla. Stat.
+// § 83.56(2)(b) 7-day cure for curable violations + § 83.56(2)(a)
+// 7-day vacate for non-curable; 12-MONTH RECURRENCE RULE bypasses
+// subsequent notice requirement; (3) New York — N.Y. RPAPL
+// § 753(4) 10-day cure for lease-covenant breach (HSTPA 2019
+// added 30-day chronic-late-rent / nuisance defense distinct from
+// § 753(4)); (4) Default common-law reasonable cure under
+// Restatement (Second) of Property § 13.1 + § 16.1. Distinct from
+// rent-payment cure (eviction_notices module) and grace periods
+// before late fees (late_payment_grace_period module).
+// ---------------------------------------------------------------------------
+
+async fn lease_cure_period_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseCureInput>,
+) -> Result<Json<LeaseCureResult>, ApiError> {
+    if b.days_since_notice_served > 100_000 || b.business_days_since_notice > 100_000 {
+        return Err(ApiError::BadRequest(
+            "day-count inputs out of range".into(),
+        ));
+    }
+    Ok(Json(check_lease_cure_period(&b)))
 }
 
 // ---------------------------------------------------------------------------
