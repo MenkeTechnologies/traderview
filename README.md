@@ -1903,6 +1903,41 @@ Pinned by `distribution_event_helper_classifies_correctly` (7-variant sweep) + `
 
 Mounted at `POST /api/calc/section-409a`. Twenty-one tests pin: compliant baseline no penalty; **impermissible distribution event** triggers §409A(a)(2) violation; **specified-employee separation 6-month boundary** (3m violates, 6m exact complies, 7m complies); non-specified-employee no delay required; **anti-acceleration violation** triggers §409A(a)(3); 20% additional tax math ($1M × 20% = $200k); **premium interest +1% addition** (IRS 8% + 1% × 5y × $1M = $450k); total penalty math (20% + premium = $650k); immediate income inclusion equals vested amount; multiple violations stack (separation+delay+acceleration); 3-violation separation path; **all 6 permitted events compliant sweep**; separation event alone complies without specified-employee status; **DistributionEvent::is_permitted() 7-variant classifier sweep**; zero years no premium interest (20% still applies); zero deferral no penalty even with violations; **$100M deferral precision case** ($100M / 6% IRS / 10y → $90M total penalty); note describes compliant path; note describes non-compliant path with violation count and dollar figures.
 
+`traderview-expense::section_448` is the **IRC §448 small business accrual exemption + cascade module** — foundational gate for any C-corp or partnership with a C-corp partner. § 448(a) defaults to MANDATORY ACCRUAL method, but § 448(b)(3) creates a small business exception that lets a taxpayer who meets the § 448(c) gross receipts test use the cash method AND escape four cascade provisions (§263A UNICAP, §471 inventory, §163(j) business interest, §460 long-term contracts). The single most consequential tax-classification call any small business makes annually ([Cornell LII 26 U.S.C. § 448](https://www.law.cornell.edu/uscode/text/26/448), [Crowe — Gross Receipts Test for Small Businesses](https://www.crowe.com/insights/tax-news-highlights/new-guidance-affects-gross-receipts-test-for-small-businesses)).
+
+**§ 448(c) gross receipts test threshold** — indexed for inflation from a $25M TCJA-2017 base, rounded to the nearest $1M annually:
+
+| Tax year | Threshold | Source                                        |
+|----------|-----------|-----------------------------------------------|
+| 2018     | $25M      | TCJA P.L. 115-97 § 13102 base                 |
+| 2019-2021| $26M      | IRS annual Rev. Proc.                         |
+| 2022     | $27M      | IRS Rev. Proc. 2021-45                        |
+| 2023     | $29M      | IRS Rev. Proc. 2022-38                        |
+| 2024     | $30M      | IRS Rev. Proc. 2023-34                        |
+| 2025     | $31M      | IRS Rev. Proc. 2024-40 ([RSM 2025 inflation](https://rsmus.com/insights/services/business-tax/irs-releases-2025-tax-inflation-adjustments.html)) |
+| 2026     | $32M      | IRS Rev. Proc. 2025-32                        |
+
+The test: average annual gross receipts for the **THREE preceding taxable years** must not exceed the threshold. **AGGREGATED across related entities** under common control per § 448(c)(2) / § 52(a)/(b) — a small entity wholly owned by a $1B affiliated group fails at the group level. Pinned by `aggregation_can_blow_through_threshold` (entity $10M avg / aggregated $40M avg → fails).
+
+**§ 448(a)(3) tax shelter disqualification — overrides everything**: even if the gross receipts test is satisfied, the § 448(b)(3) small business exception does NOT apply to any "tax shelter" under § 448(d)(3) / § 461(i)(3):
+
+- Any enterprise other than a C corp with interests offered for sale through registered securities
+- Any syndicate within the meaning of § 1256(e)(3)(B) (allocates > 35% of losses to limited partners)
+- Any entity described in § 6662(d)(2)(C)(ii) (significant tax-avoidance purpose)
+
+Tax shelter disqualification blocks ALL cascade exemptions even at $0 receipts. Pinned by `tax_shelter_disqualifies_even_when_test_satisfied` with full UNICAP / inventory / §163(j) / §460 application.
+
+**Four cascade exemptions when qualified** — all flow from § 448(c) status:
+
+- **§ 263A UNICAP exempt** — no capitalization of indirect costs into inventory
+- **§ 471 inventory exempt** — treats inventory as supplies / NIMS, no required maintenance
+- **§ 163(j) business interest exempt** — no 30%-of-ATI deduction limit
+- **§ 460 long-term contracts exempt** — completed-contract method available
+
+**Entity type matters**: § 448(a) MANDATORY ACCRUAL applies only to C-corps and partnerships with a C-corp partner. S-corps, other pass-throughs, and sole proprietors can use cash method REGARDLESS of receipt size — but only the qualifying entities (under § 448(c) + not tax shelter) get the cascade exemptions. Pinned by `s_corp_not_subject_to_448a_mandatory_accrual` ($50M S-corp can still use cash but NOT exempt from § 163(j)) + `sole_proprietor_can_use_cash_regardless` ($100M sole prop on cash basis but still subject to § 163(j)).
+
+Mounted at `POST /api/calc/section-448`. Twenty tests pin: **5-year threshold table** (2018 $25M / 2024 $30M / 2025 $31M / 2026 $32M + unknown-year falls back to 2025); **small C-corp qualifies — full cascade** (cash method + all 4 exemptions); **large C-corp fails — mandatory accrual + all 4 apply**; **exact threshold qualifies** (≤ test); **$1 over threshold fails** (boundary); **tax shelter disqualifies even when receipts test satisfied** with all cascade off + TAX SHELTER DISQUALIFICATION note priority; **aggregation can blow through threshold** (entity $10M / aggregated $40M); partnership-with-C-corp-partner subject to § 448(a) mandatory accrual; **S-corp at $50M can use cash but NOT exempt from § 163(j)** (entity-type / cascade decoupling); **sole proprietor at $100M same** ($163(j) still applies); average computed from 3 prior years ($5M + $10M + $15M → $10M); qualified note describes all 4 cascade exemptions by name; failed-test note describes "ALL apply"; citation mentions all 8 relevant authorities (§448(a), §448(b)(3), §448(c), §448(c)(2), §448(a)(3), TCJA, §263A, §163(j)); $1B aggregated receipts handled safely; zero receipts qualifies.
+
 `traderview-expense::section_382` is the **IRC §382 NOL limitation module** — the load-bearing rule after any M&A transaction involving a loss corporation. Where §172 controls whether NOLs CAN be deducted in principle, §382 controls HOW MUCH per year once an ownership change has fired. An "ownership change" under §382(g) occurs when 5%+ shareholders' aggregate percentage has increased by more than 50 percentage points over their lowest percentage in the rolling 3-year testing period; the trivial-percentage public is aggregated into a single shareholder group.
 
 **§382(b)(1) annual limitation** = corporation FMV at the change date × applicable long-term tax-exempt rate. The rate is the highest of the federal long-term tax-exempt rates published in the 3 months preceding the change. As a current data point, the **February 2026 long-term tax-exempt rate was 3.56%** ([Moss Adams, 2024](https://www.mossadams.com/articles/2024/04/offset-tax-liability-with-section-382)). A $10M corporation at 3.56% yields only **$356k/year** of usable pre-change NOLs — the basis for the rule's reputation as "death by limitation" for shell-purchase NOL trafficking schemes.

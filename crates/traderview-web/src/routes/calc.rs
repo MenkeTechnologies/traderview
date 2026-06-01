@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-243",           post(section_243_route))
+        .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1447,6 +1448,33 @@ async fn section_243_route(
         ));
     }
     Ok(Json(traderview_expense::section_243::compute(&b)))
+}
+
+// ── §448 small business gross receipts test + cascade exemptions ────
+// Mounted at /api/calc/section-448. §448(a) mandatory accrual for
+// C-corps / partnerships with C-corp partner; §448(b)(3) small
+// business exception when §448(c) 3-year average gross receipts ≤
+// inflation-indexed threshold ($25M TCJA base; $30M 2024 / $31M 2025
+// / $32M 2026); §448(a)(3) tax shelter disqualification; §448(c)(2)
+// §52(a)/(b) aggregation. Cascade exemptions: §263A UNICAP, §471
+// inventory, §163(j) business interest, §460 long-term contracts.
+
+async fn section_448_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_448::Section448Input>,
+) -> Result<Json<traderview_expense::section_448::Section448Result>, ApiError> {
+    if b.gross_receipts_year_minus_1_dollars < 0
+        || b.gross_receipts_year_minus_2_dollars < 0
+        || b.gross_receipts_year_minus_3_dollars < 0
+        || b.aggregated_gross_receipts_year_minus_1_dollars < 0
+        || b.aggregated_gross_receipts_year_minus_2_dollars < 0
+        || b.aggregated_gross_receipts_year_minus_3_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all gross receipts inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_448::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
