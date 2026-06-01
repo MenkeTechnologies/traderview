@@ -276,6 +276,10 @@ use traderview_expense::religious_display_doorpost::{
     check as check_religious_display_doorpost, CheckResult as ReligiousDisplayResult,
     Input as ReligiousDisplayInput,
 };
+use traderview_expense::asbestos_disclosure::{
+    check as check_asbestos_disclosure, CheckResult as AsbestosDisclosureResult,
+    Input as AsbestosDisclosureInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -500,6 +504,7 @@ pub fn router() -> Router<AppState> {
         .route("/condominium-conversion-protection", axum::routing::post(condominium_conversion_protection_route))
         .route("/otard-antenna-installation", axum::routing::post(otard_antenna_installation_route))
         .route("/religious-display-doorpost", axum::routing::post(religious_display_doorpost_route))
+        .route("/asbestos-disclosure", axum::routing::post(asbestos_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3895,6 +3900,43 @@ async fn religious_display_doorpost_route(
         ));
     }
     Ok(Json(check_religious_display_doorpost(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord asbestos disclosure compliance check.
+//
+// Mounted at POST /api/rental/asbestos-disclosure. Six regimes:
+// California (Cal. Health & Safety Code §§ 25915-25919.7 Connelly-
+// Areias-Chacon Asbestos Notification Act 1989 — buildings
+// constructed BEFORE 1979; 15-day notification deadline from
+// knowledge; ANNUAL re-notification required; $500/day penalty per
+// § 25917); NewJersey (N.J.A.C. 5:23-8 construction regulations
+// without separate lease-signing disclosure mandate); NewYork (NY
+// Multiple Dwelling Law habitability + N.Y. Industrial Code Rule 56
+// abatement; no state lease-signing mandate); FederalOSHA (29 CFR
+// § 1926.1101(k)(2) construction standard — building owner must
+// notify tenants/employers/contractors of PACM/ACM presence when
+// construction work is planned in occupied areas; commercial /
+// multi-tenant only — single-family residences OUTSIDE scope; PACM
+// presumption for buildings built before 1981); FederalAHERA (40
+// CFR Part 763 + 15 U.S.C. §§ 2641-2671 — covers public + private
+// nonprofit schools only; does NOT cover landlord-tenant rentals);
+// Default (federal OSHA construction-phase floor + state
+// habitability obligation; no specific lease-signing landlord
+// disclosure mandate).
+// ---------------------------------------------------------------------------
+
+async fn asbestos_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<AsbestosDisclosureInput>,
+) -> Result<Json<AsbestosDisclosureResult>, ApiError> {
+    if b.construction_year > 10_000 || b.days_since_knowledge_obtained > 100_000 {
+        return Err(ApiError::BadRequest(
+            "counters look invalid (>thresholds)".into(),
+        ));
+    }
+    Ok(Json(check_asbestos_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

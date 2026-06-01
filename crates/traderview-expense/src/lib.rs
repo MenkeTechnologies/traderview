@@ -12,6 +12,7 @@ pub mod advance_rent_limit;
 pub mod amazon;
 pub mod apple;
 pub mod application_fees;
+pub mod asbestos_disclosure;
 pub mod bedbug_disclosure;
 pub mod bedbug_extermination_cost;
 pub mod boa;
