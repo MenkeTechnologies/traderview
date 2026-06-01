@@ -66,6 +66,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-6651",          post(section_6651_route))
+        .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
@@ -1881,6 +1882,31 @@ async fn section_6651_route(
         ));
     }
     Ok(Json(traderview_expense::section_6651::compute(&b)))
+}
+
+// ── §6654 individual estimated-tax underpayment penalty ─────────────
+// Mounted at /api/calc/section-6654. §6654(d)(1)(B)(i) 90%-current-year
+// safe harbor; §6654(d)(1)(B)(ii) 100%-prior-year safe harbor;
+// §6654(d)(1)(C) 110% high-AGI uplift when prior-year AGI > $150,000
+// ($75,000 MFS); §6654(e)(1) $1,000 de minimis exception; required
+// installment = (lesser of the two safe-harbor amounts) ÷ 4; underpayment
+// per quarter accrues at the § 6621(a)(2) federal-short-term-rate + 3
+// percentage points (2026 Q1 = 7%, Q2 = 6%). Out of scope: §6654(d)(2)
+// annualized-income exception, §6654(i) farmer/fisherman two-thirds
+// rule, §6654(e)(3) retired/disabled waiver.
+
+async fn section_6654_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6654::Section6654Input>,
+) -> Result<Json<traderview_expense::section_6654::Section6654Result>, ApiError> {
+    for p in &b.quarterly_payments_cents {
+        if *p < 0 {
+            return Err(ApiError::BadRequest(
+                "quarterly_payments_cents must be non-negative".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_6654::compute(&b)))
 }
 
 // ── §6662 accuracy-related penalty ──────────────────────────────────
