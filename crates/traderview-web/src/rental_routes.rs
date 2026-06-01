@@ -110,6 +110,9 @@ use traderview_expense::occupancy_standards::{
 use traderview_expense::move_in_inspection::{
     check as check_move_in_inspection, InspectionInput, InspectionResult,
 };
+use traderview_expense::renters_insurance::{
+    check as check_renters_insurance, RentersInsuranceInput, RentersInsuranceResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -246,6 +249,7 @@ pub fn router() -> Router<AppState> {
         .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
+        .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2119,6 +2123,34 @@ async fn move_in_inspection_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_move_in_inspection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State renters insurance landlord-requirement compliance check
+//
+// Mounted at POST /api/rental/renters-insurance-check. Two regimes:
+// StatutoryCapWithLowIncomeExemption (OR ORS 90.222 only — $100k
+// liability cap + landlord-additional-insured prohibition + ≤50% AMI
+// low-income exemption); GenerallyAllowedNoStateCap (all other 49
+// states + DC, including OK which permits requirement under Okla.
+// Stat. tit. 41 § 113). No US state prohibits requiring renters
+// insurance entirely.
+// ---------------------------------------------------------------------------
+
+async fn renters_insurance_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentersInsuranceInput>,
+) -> Result<Json<RentersInsuranceResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.required_liability_coverage_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "required_liability_coverage_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_renters_insurance(&b)))
 }
 
 // ---------------------------------------------------------------------------
