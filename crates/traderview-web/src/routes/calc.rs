@@ -146,6 +146,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-704c",          post(section_704c_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
+        .route("/calc/section-752",           post(section_752_route))
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
@@ -1389,6 +1390,36 @@ async fn section_731_route(
         ));
     }
     Ok(Json(traderview_expense::section_731::compute(&b)))
+}
+
+// ── § 752 partnership liabilities — outside basis allocation ────────
+// Mounted at /api/calc/section-752. Completes partnership cluster
+// (§ 721 + § 731 + § 752). § 752(a) liability share increase
+// treated as money contribution (basis +); § 752(b) decrease
+// treated as money distribution (basis -, potential § 731(a)(1)
+// gain). § 752(c) property-subject-to-liability rule.
+// Treas. Reg. § 1.752-1 netting rule for single-transaction
+// gross changes. Treas. Reg. § 1.752-2 recourse allocation
+// (economic risk of loss). Treas. Reg. § 1.752-3 nonrecourse
+// THREE-TIER allocation: tier 1 § 704(b) minimum gain; tier 2
+// § 704(c) hypothetical-disposition gain; tier 3 excess-
+// nonrecourse profit share. TD 10014 (December 2, 2024) final
+// recourse regulations. Sibling cluster: § 721 + § 731 + § 704(b)
+// + § 704(c) + § 704(d) + § 705.
+
+async fn section_752_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_752::Section752Input>,
+) -> Result<Json<traderview_expense::section_752::Section752Result>, ApiError> {
+    if b.partner_share_liabilities_before_cents > 1_000_000_000_000
+        || b.partner_share_liabilities_after_cents > 1_000_000_000_000
+        || b.partner_outside_basis_before_cents > 1_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "partner_share_liabilities or partner_outside_basis_before_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_752::compute(&b)))
 }
 
 // ── §704(c) pre-contribution built-in gain/loss allocation ──────────
