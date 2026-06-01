@@ -102,6 +102,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6501",          post(section_6501_route))
         .route("/calc/section-6502",          post(section_6502_route))
+        .route("/calc/section-6531",          post(section_6531_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -3109,6 +3110,37 @@ async fn section_6404_route(
     Json(b): Json<traderview_expense::section_6404::Section6404Input>,
 ) -> Result<Json<traderview_expense::section_6404::Section6404Result>, ApiError> {
     Ok(Json(traderview_expense::section_6404::check(&b)))
+}
+
+// ── §6531 periods of limitation on criminal prosecutions ────────────
+// Mounted at /api/calc/section-6531. Cross-cutting reference statute
+// that determines criminal SOL for ALL Title 26 criminal tax
+// prosecutions. General rule: 3 YEARS from commission of offense.
+// 6-YEAR exception for enumerated offenses: § 7201 evasion + § 7202
+// trust fund failure + § 7203 failure to FILE/PAY (NOT failure to
+// keep records or supply info) + § 7206(1) filing false return +
+// § 7206(2) aiding false return + § 7207 fraudulent returns/
+// statements + § 7212(b) rescue of seized property + § 7214 unlawful
+// acts of revenue officers + 18 U.S.C. § 371 Klein conspiracy.
+// 3-year SOL: § 7203 records/info + § 7205 false withholding
+// exemption + § 7206(3)/(4)/(5) + § 7212(a) general obstruction +
+// all other Title 26 offenses. § 6531(4) carveout: 6-year for
+// failure to file does NOT apply to partnership Form 1065 + exempt
+// org Form 990 + S-corp Form 1120-S returns under Part III
+// Subchapter A Chapter 61 (3-year SOL applies). Final-paragraph
+// tolling: defendant outside US or fugitive tolls SOL until 6
+// months after return/surrender. Toussie v. United States, 397
+// U.S. 112 (1970) continuing-offense doctrine narrowed but
+// affirmative-act-doctrine cases survive — SOL runs from LAST
+// affirmative act for § 7201. § 6531 SOL is JURISDICTIONAL. DOJ
+// Criminal Tax Manual § 7.00 + IRM 25.6.2.1. Pairs with section_
+// 7201 + section_7202 + section_7203 + section_7206 + section_7212.
+
+async fn section_6531_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6531::Section6531Input>,
+) -> Result<Json<traderview_expense::section_6531::Section6531Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6531::check(&b)))
 }
 
 // ── §6501 limitations on assessment + collection (ASED) ─────────────

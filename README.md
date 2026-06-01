@@ -5759,6 +5759,45 @@ Mounted at `POST /api/calc/section-6501`. Thirty-one tests pin: **3-year default
 
 Mounted at `POST /api/calc/section-6502`. Twenty-six tests pin: **base period always 10 years**; **no suspensions engaged clean base**; **base period note describes CSED consequence** (IRS BARRED from levy/lien/court); **installment agreement engaged with 90-day extension note** (§ 6502(a)(2) post-2000 requests); **OIC pending engages suspension** (§ 6331(k)(1)); **OIC rejected engages 30-day extension**; **OIC rejected without pending no 30-day extension**; **CDP hearing engages suspension** (§ 6330(e)(1)); **CDP with less than 90 days engages 90-day floor**; **CDP 90-day floor only when CDP requested**; **bankruptcy engages suspension with 6-month extension note** (§ 6503(h)); **military combat zone engages with 180-day note** (§ 7508(a)); **continuous absence engages with 6-month note** (§ 6503(c)); **overlapping two suspensions engages concurrent warning** (IRM 5.1.19.3.4); **single suspension no overlap warning**; **all six suspensions engaged simultaneously**; **citation pins all seven authorities and IRM** (§§ 6502(a)(1), 6502(a)(2), 6331(k)(1), 6330(e)(1), 6503(h), 7508(a), 6503(c) + IRM 5.1.19.3.4 + IRM 8.21.5); **IRM 8.21.5 note always present**; **truth table six independent triggers each sets flag**; **three overlapping suspensions engage warning**; **OIC 30-day extension independent of CDP 90-day floor**; **rejected OIC 30-day note distinct from pending note**; **CDP hearing without 90-day remaining no floor note**; **any-suspension-engaged matches individual flags**; **10-year base immutable across all inputs**; **overlap warning only engages with 2+ distinct triggers**.
 
+`traderview-expense::section_6531` is the **IRC § 6531 periods of limitation on criminal prosecutions** module — cross-cutting reference statute that determines criminal SOL for ALL Title 26 criminal tax prosecutions. Pairs with `section_7201` (evasion), `section_7202` (trust fund failure), `section_7203` (failure to file), `section_7206` (perjury), and `section_7212` (obstruction). Critical trader-tax-defense statute — § 6531 SOL determines whether IRS Criminal Investigation referral to DOJ Tax Division can result in prosecution.
+
+**General rule**: 3 YEARS from commission of offense.
+
+**6-YEAR exception enumerated offenses** (§ 6531(2)):
+
+- § 7201 tax evasion
+- § 7202 willful failure to collect, account for, or pay over tax
+- § 7203 willful failure to FILE return or PAY tax (NOT failure to keep records or supply info)
+- § 7206(1) filing false return / tax perjury
+- § 7206(2) aid or assist preparation of false return
+- § 7207 fraudulent returns, statements, or other documents
+- § 7212(b) rescue of seized property (NOT general obstruction § 7212(a))
+- § 7214 unlawful acts of revenue officers
+- 18 U.S.C. § 371 Klein conspiracy
+
+Pinned by `nine_six_year_offenses_truth_table` (9-offense sweep).
+
+**3-YEAR SOL applies** to all other Title 26 offenses including:
+
+- § 7203 failure to keep records
+- § 7203 failure to supply information
+- § 7205 false withholding exemption certificate
+- § 7206(3), (4), (5) other subsections
+- § 7212(a) general obstruction of administration
+- All other Title 26 offenses not enumerated
+
+Pinned by `three_year_offenses_truth_table` (8-offense sweep).
+
+**§ 6531(4) carveout** — the 6-year rule for failure to file does NOT apply to returns required to be filed under Part III of Subchapter A of Chapter 61 (partnership Form 1065 + exempt organization Form 990 + S-corp Form 1120-S). 3-year SOL applies to these returns. Carveout applies ONLY to § 7203 (not other 6-year offenses). Pinned by `section_6531_4_carveout_partnership_return`, `section_6531_4_carveout_only_applies_to_7203`, `section_6531_4_carveout_truth_table`.
+
+**§ 6531 final-paragraph tolling** — if defendant is OUTSIDE the United States or is a fugitive from justice, SOL is TOLLED until 6 months after defendant returns or surrenders. Pinned by `outside_us_tolling_engages`, `returned_within_6_months_still_tolled`, `returned_past_6_months_tolling_ends`, `returned_at_6_month_boundary_still_tolled`.
+
+**Toussie v. United States, 397 U.S. 112 (1970)** — continuing-offense doctrine narrowed but affirmative-act-doctrine cases survive. SOL runs from LAST affirmative act for multi-act offenses like § 7201 tax evasion.
+
+**§ 6531 SOL is JURISDICTIONAL** — IRS Criminal Investigation must refer to DOJ Tax Division before SOL expiration. DOJ Criminal Tax Manual § 7.00 + IRM 25.6.2.1.
+
+Mounted at `POST /api/calc/section-6531`. Thirty-six tests pin: **§ 7201 6-year SOL**; **§ 7202 6-year SOL**; **§ 7203 failure-to-file-or-pay 6-year SOL**; **§ 7203 failure-to-keep-records 3-year SOL** (subset distinction); **§ 7203 failure-to-supply-information 3-year SOL**; **§ 7205 3-year SOL**; **§ 7206(1) filing false return 6-year SOL**; **§ 7206(2) aiding 6-year SOL**; **§ 7206(3)/(4)/(5) 3-year SOL** (subsection-specific); **§ 7207 6-year SOL**; **§ 7212(a) general obstruction 3-year SOL** (distinct from § 7212(b)); **§ 7212(b) rescue property 6-year SOL**; **Klein conspiracy 6-year SOL**; **other offense 3-year SOL**; **§ 6531(4) carveout partnership return** (Form 1065 + Form 990 + Form 1120-S); **§ 6531(4) carveout only applies to § 7203** (not other 6-year offenses); **§ 6531(4) carveout truth table** (2-cell sweep); **SOL satisfied within 3 years for 3-year offense**; **SOL expired after 3 years for 3-year offense**; **SOL satisfied within 6 years for 6-year offense**; **SOL expired after 6 years for 6-year offense**; **outside-US tolling engages**; **returned within 6 months still tolled**; **returned past 6 months tolling ends**; **returned at 6-month boundary still tolled**; **general 3-year rule note present**; **6-year exception note lists enumerated offenses**; **Toussie continuing-offense note present** (397 U.S. 112 (1970) + LAST affirmative act); **DOJ Manual + IRM note present** (§ 7.00 + IRM 25.6.2.1 + JURISDICTIONAL); **citation pins authorities** (§ 6531 + § 6531(4) + Toussie + DOJ + IRM); **nine 6-year offenses truth table** (9-offense sweep); **three-year offenses truth table** (8-offense sweep); **SOL boundary at exactly 3 years expired**; **SOL boundary at exactly 6 years expired**; **final paragraph tolling note present when absent**; **tolling disengages when no absence**.
+
 `traderview-expense::section_6601` is the **IRC § 6601 interest on underpayment / § 6621 rate determination / § 6622 daily compounding** module — when an amended return or audit produces additional tax due, § 6601 interest accrues from the ORIGINAL DUE DATE of the return (April 15 for most individuals) regardless of any extension to FILE, and continues to compound daily until full payment. Trader-relevant for amended returns, deficiency assessments, and any underpayment scenario.
 
 **Three statutory layers compose the interest computation**:
