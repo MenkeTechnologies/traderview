@@ -98,6 +98,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1272",          post(section_1272_route))
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1281",          post(section_1281_route))
+        .route("/calc/section-1283",          post(section_1283_route))
         .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-6045b",         post(section_6045b_route))
         .route("/calc/section-6045a",         post(section_6045a_route))
@@ -2731,6 +2732,35 @@ async fn section_1281_route(
     Json(b): Json<traderview_expense::section_1281::Section1281Input>,
 ) -> Result<Json<traderview_expense::section_1281::Section1281Result>, ApiError> {
     Ok(Json(traderview_expense::section_1281::compute(&b)))
+}
+
+// ── §1283 short-term obligation + acquisition discount definitions ─
+// Mounted at /api/calc/section-1283. Definitional anchor for short-
+// term obligation cluster. § 1281 (current inclusion) and § 1282
+// (interest deduction deferral) both cross-reference § 1283 for
+// underlying terms. § 1283(a)(1) defines short-term obligation as
+// any bond/debenture/note/certificate with fixed maturity ≤ 1 year
+// from date of issue (with tax-exempt carve-out). § 1283(a)(2)
+// acquisition discount = SRPM minus basis. § 1283(b)(1) daily-
+// portion ratable accrual = total discount divided by days from
+// acquisition to maturity inclusive. § 1283(b)(2) constant-yield
+// election parallels § 1272(a)(3) OID rules. § 1283(c) nongovern-
+// mental obligations substitute OID for acquisition discount.
+// § 1283(d) basis increased by § 1281 prior-year inclusion.
+
+async fn section_1283_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1283::Section1283Input>,
+) -> Result<Json<traderview_expense::section_1283::Section1283Result>, ApiError> {
+    if b.stated_redemption_price_at_maturity_cents < 0
+        || b.basis_at_acquisition_cents < 0
+        || b.oid_amount_for_nongovernmental_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1283::compute(&b)))
 }
 
 // ── §7704 publicly traded partnership corporate treatment ────────
