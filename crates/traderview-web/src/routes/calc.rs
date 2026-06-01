@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
+        .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1609,6 +1610,30 @@ async fn section_3406_route(
         ));
     }
     Ok(Json(traderview_expense::section_3406::compute(&b)))
+}
+
+// ── §451(b) AFS conformity / all-events test acceleration ───────────
+// Mounted at /api/calc/section-451b. TCJA P.L. 115-97 §13221 added
+// §451(b) requiring accrual taxpayers with AFS to recognize income
+// no later than when recognized on AFS; §451(b)(3) AFS hierarchy
+// (SEC-filed > audited > certified); §451(b) cost offset election
+// (TD 9941 eff. 2020-12-21); §451(c) 1-year advance payment deferral.
+
+async fn section_451b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_451b::Section451bInput>,
+) -> Result<Json<traderview_expense::section_451b::Section451bResult>, ApiError> {
+    if b.afs_revenue_recognized_for_item_dollars < 0
+        || b.classic_all_events_test_amount_dollars < 0
+        || b.costs_incurred_to_date_for_cost_offset_dollars < 0
+        || b.advance_payment_received_current_year_dollars < 0
+        || b.afs_advance_payment_recognized_current_year_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_451b::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────

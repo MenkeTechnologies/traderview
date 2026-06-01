@@ -2183,6 +2183,35 @@ Mounted at `POST /api/calc/section-444`. Eighteen tests pin: **all 3 eligible fi
 
 Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no withholding** (full payment to payee); **A trigger TIN-not-furnished triggers 24% withholding** ($10k → $2,400); **B trigger IRS-notified incorrect TIN** triggers withholding; **C trigger fires for interest** + dividends (load-bearing); **C trigger does NOT fire for rent** + non-employee comp (regression); **D trigger certification failure** triggers withholding; **3 trigger precedence pins** (A > B, B > C, C > D); **withholding rate 24%** (2400bp); withholding at $100k payment = $24k; **$1B precision** = $240M withheld; zero payment zero withholding; **all 10 payment types subject to A trigger** sweep; triggered note describes trigger + 24%; untriggered note describes no trigger; **citation mentions all 4 trigger subsections** + § 3406(b)(1)(A) rate + CP 2100 + Publication 1281.
 
+`traderview-expense::section_451b` is the **IRC §451(b) AFS conformity / all-events test acceleration module** — added by TCJA P.L. 115-97 § 13221, effective for tax years beginning after 2017-12-31. Requires accrual-method taxpayers with an Applicable Financial Statement (AFS) to recognize an item of income in gross income no LATER than when the item is recognized as revenue on the AFS. The rule is **ONE-DIRECTIONAL** — only accelerates timing for tax purposes; never defers ([FEI — Where GAAP and Tax Meet: § 451(b)](https://www.financialexecutives.org/FEI-Daily/October-2019/Where-GAAP-and-Tax-Meet-Understanding-IRC-451b.aspx), [Cornell LII 26 U.S.C. § 451](https://www.law.cornell.edu/uscode/text/26/451)).
+
+**§ 451(b) all-events test** — item of income is recognized at the EARLIEST of when it is:
+
+- Due (cash or accrual right to receive)
+- Paid
+- Earned (classic all-events test)
+- Taken into account as revenue in the taxpayer's AFS
+
+The rule effectively takes the GREATER of (classic all-events amount) or (AFS revenue recognized). Pinned by `afs_higher_than_all_events_uses_afs` ($1M AFS > $800k all-events → accelerate to $1M) + `all_events_higher_than_afs_uses_all_events` ($1.5M all-events > $1M AFS → keep $1.5M) + **one-directional rule never decreases** (`one_directional_rule_never_decreases` — AFS $500k < all-events $800k → keep $800k, not $500k).
+
+**§ 451(b)(3) AFS definition hierarchy** (highest priority first):
+
+1. Financial statement filed with SEC (10-K, 10-Q)
+2. Audited financial statement used for credit, financial reporting, or other substantial nontax purposes
+3. Other independently audited financial statements
+
+Taxpayers WITHOUT an AFS are not subject to § 451(b) — they apply the classic all-events test under § 451(a). Pinned by `no_afs_no_451b_applies` (no AFS → classic all-events $800k governs, no acceleration).
+
+**§ 451(b) coincides with ASC 606** — FASB ASC Topic 606 (Revenue From Contracts With Customers) became effective for public companies in 2018 and private companies in 2019. ASC 606 frequently accelerates GAAP revenue recognition, which in turn accelerates tax recognition under § 451(b). The two TCJA-era reforms interact tightly.
+
+**§ 451(b) cost offset election (TD 9941, eff. 2020-12-21)** — optional method allowing taxpayers to offset AFS income inclusions for over-time revenue recognition with costs incurred to date. Mitigates the harsh result of accelerated income inclusion without corresponding COGS deduction. Pinned by `cost_offset_election_reduces_current_year_inclusion` ($1M accelerated − $300k cost offset = $700k net), `cost_offset_capped_at_accelerated_inclusion` ($5M costs > $1M accelerated → capped at $1M, net = $0), and `cost_offset_not_applied_without_election` (election required to take offset).
+
+**§ 451(c) 1-year advance payment deferral** — codifies Rev. Proc. 2004-34. Accrual taxpayer may defer the portion of an advance payment not recognized on AFS in year of receipt until the following tax year. Pinned by `advance_payment_with_election_defers_unrecognized_portion` ($500k received, $100k AFS-recognized current → $100k current + $400k deferred) + `advance_payment_without_election_fully_current_year` (default: full $500k current) + `advance_payment_fully_afs_recognized_no_deferral` (when AFS recognizes full amount, election has no effect).
+
+**Effective date boundary**: § 451(b) applies for tax years beginning after 2017-12-31. Pinned by `tax_year_2018_first_post_tcja_year` + `tax_year_2017_pre_tcja_does_not_apply`.
+
+Mounted at `POST /api/calc/section-451b`. Twenty tests pin: **AFS higher than all-events uses AFS** ($1M); **all-events higher than AFS uses all-events** ($1.5M); **one-directional rule never decreases** (AFS $500k < all-events $800k → keep $800k); **pre-TCJA 2017 no acceleration** + 2018 first post-TCJA year boundary; **cash-method taxpayer no § 451(b)**; no-AFS no § 451(b) applies; **cost offset election reduces inclusion** ($300k → $700k net); **cost offset capped at accelerated** ($5M costs → $1M offset cap); **cost offset not applied without election**; **advance payment without election fully current year**; **advance payment with election defers unrecognized portion** ($500k received / $100k AFS → $400k deferred); **fully AFS-recognized advance no deferral** ($500k = $500k); applies note describes max() formula; cost offset election note describes TD 9941; advance payment election note describes § 451(c); citation mentions all 8 relevant authorities (§451(b), §451(b)(3), §451(c), TCJA §13221, TD 9941, ASC 606, Rev. Proc. 2004-34); $1B precision; zero revenue no-op.
+
 `traderview-expense::section_382` is the **IRC §382 NOL limitation module** — the load-bearing rule after any M&A transaction involving a loss corporation. Where §172 controls whether NOLs CAN be deducted in principle, §382 controls HOW MUCH per year once an ownership change has fired. An "ownership change" under §382(g) occurs when 5%+ shareholders' aggregate percentage has increased by more than 50 percentage points over their lowest percentage in the rolling 3-year testing period; the trivial-percentage public is aggregated into a single shareholder group.
 
 **§382(b)(1) annual limitation** = corporation FMV at the change date × applicable long-term tax-exempt rate. The rate is the highest of the federal long-term tax-exempt rates published in the 3 months preceding the change. As a current data point, the **February 2026 long-term tax-exempt rate was 3.56%** ([Moss Adams, 2024](https://www.mossadams.com/articles/2024/04/offset-tax-liability-with-section-382)). A $10M corporation at 3.56% yields only **$356k/year** of usable pre-change NOLs — the basis for the rule's reputation as "death by limitation" for shell-purchase NOL trafficking schemes.
