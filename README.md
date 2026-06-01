@@ -2960,6 +2960,24 @@ For 2026+, caller passes `small_business_threshold_override` with the current IR
 
 Mounted at `POST /api/calc/section-163j`. Fifteen tests pin: standard 30% cap partial deduction ($50k expense, $100k ATI → $30k deducted, $20k carries); expense below cap fully deducted; business interest income raises cap dollar-for-dollar; prior carryforward stacks; small-business under threshold fully exempt; at threshold exactly still exempt (≤ not <); $1 over loses exemption; **threshold table** 2020-2025 each year exact; caller override beats embedded table; negative ATI caps 30% at zero (only BI income + floor plan in cap); no-expense no-op; floor plan financing adds to cap; multi-year chain absorbs carryforward when ATI rises; full-deduction note vs carries-forward note.
 
+`traderview-expense::section_165g` is the **IRC §165(g) worthless securities deduction module** — the rule every trader needs when a portfolio holding goes to zero mid-year. Stock or bond held as a capital asset that becomes **wholly worthless** during the taxable year is deemed sold on the **last day of the taxable year** under §165(g)(1), generating a capital loss whose ST/LT character depends on the deemed holding period through Dec 31. Three escape hatches into ordinary-loss treatment can bypass the §1211 capital-loss net-on-net limitation.
+
+**§165(g)(2) definition of "security"** — covers all four trader-relevant instruments:
+- Share of stock in a corporation
+- Right to subscribe for / receive a share of stock
+- Bond, debenture, note, certificate, or other evidence of indebtedness issued by a corporation or government with interest coupons or in registered form
+
+**Wholly-worthless requirement is sharp**: §165(g) is unforgiving on partial decline. A holding that has lost 99% of its value but retains some residual economic value does NOT qualify — the taxpayer must wait for total worthlessness or dispose under §1001 to recognize the loss.
+
+**§165(g)(3) affiliated-domestic-corporation ordinary-loss exception** — three gates ALL required:
+- Corporation is **domestic** (foreign subsidiaries fall back to capital loss)
+- Taxpayer directly owns ≥ 80% of voting power AND ≥ 80% of value (§1504(a)(2) affiliation test)
+- **More than 90%** of corporation's aggregate gross receipts (across all tax years) from non-passive sources — operating income, not royalties / rents / dividends / interest / annuities / securities-sale gains
+
+**Priority order when multiple ordinary-loss paths apply**: `§1244 small business stock` → `§165(g)(3) affiliated` → `§165(g)(1) capital`. §1244 wins because its annual cap ($50k single / $100k MFJ — see `section_1244` module) is more specific and §1244 was enacted to provide ordinary treatment even when affiliation gates fail.
+
+Mounted at `POST /api/calc/section-165g`. Twenty-four tests pin: **baseline 400-day LT capital loss** ($100k basis fully recoverable; deemed sale 2026-12-31); **300-day ST capital loss path**; **365-day boundary still ST** (regression — §1222 requires holding period of MORE THAN one year); **366-day boundary LT**; **deemed sale date = Dec 31 of tax year** (tracks tax_year input); **partial worthlessness no deduction** + diagnostic note explains deferral; **§165(g)(3) all 3 gates** (domestic + 80% affiliation + > 90% non-passive → ordinary); foreign subsidiary falls back to capital; under-80% ownership fails §165(g)(3); **exactly 90% non-passive fails strict-greater test** (boundary regression — § statute uses "more than" 90%); **90.01% qualifies**; **§1244 takes precedence over §165(g)(1) capital** (loss to OrdinaryUnderSection1244); **§1244 takes precedence over §165(g)(3) affiliated** (priority ordering regression target); loss equals adjusted basis; $50M precision; negative basis clamps to zero; **citation mentions all 6 relevant authorities** (§165(g)(1) + §165(g)(2) + §165(g)(3) + §1504(a)(2) + §1244 + 26 CFR § 1.165-5); partial-worthlessness citation mentions §1001 deferral; note describes LT capital path; note for §165(g)(3) says "APPLIES"; note for §1244 path mentions the `section_1244` module redirect; note includes "365 required for LT" threshold explanation.
+
 `traderview-expense::section_1202` is the **IRC §1202 Qualified Small Business Stock (QSBS) gain-exclusion module** — the most-missed tax break for founders, employees with exit stock, and active traders buying primary-issuance small-company stock. Up to **the GREATER of $10,000,000 OR 10× the taxpayer's adjusted basis** of gain on QSBS is excluded from federal income tax. Paired with `section_1244`: §1244 handles the LOSS side (ordinary-loss treatment up to $50k/$100k), §1202 handles the GAIN side (exclusion up to $10M / 10× basis). This is the mechanism behind the "Peter Thiel $5B Roth" — qualified stock acquired cheaply, held > 5 years, sold for 9-figures, federal tax = $0.
 
 The exclusion percentage is a three-band step function on acquisition date:

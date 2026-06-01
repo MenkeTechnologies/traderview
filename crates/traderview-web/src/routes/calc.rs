@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-121d",          post(section_121d_route))
         .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/section-163j",          post(section_163j_route))
+        .route("/calc/section-165g",          post(section_165g_route))
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-988",           post(section_988_route))
         .route("/calc/section-1296",          post(section_1296_route))
@@ -462,6 +463,26 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §165(g) worthless securities deduction ──────────────────────────
+// Mounted at /api/calc/section-165g. Wholly worthless capital-asset
+// security deemed sold last day of taxable year (§165(g)(1));
+// §165(g)(2) security definition (stock + bond + debenture + registered
+// indebtedness); §165(g)(3) affiliated-domestic-corporation ordinary
+// loss exception (§1504(a)(2) 80%/80% + > 90% non-passive gross
+// receipts); §1244 small business stock ordinary loss priority.
+
+async fn section_165g_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_165g::Section165gInput>,
+) -> Result<Json<traderview_expense::section_165g::Section165gResult>, ApiError> {
+    if b.non_passive_gross_receipts_pct_bp > 10_000 {
+        return Err(ApiError::BadRequest(
+            "non_passive_gross_receipts_pct_bp must be ≤ 100% (10,000bp)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_165g::compute(&b)))
 }
 
 // ── §453 installment sale gain deferral ──────────────────────────────
