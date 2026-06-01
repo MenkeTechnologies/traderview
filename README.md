@@ -2932,6 +2932,26 @@ Mounted at `POST /api/calc/section-444`. Eighteen tests pin: **all 3 eligible fi
 
 Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no withholding** (full payment to payee); **A trigger TIN-not-furnished triggers 24% withholding** ($10k → $2,400); **B trigger IRS-notified incorrect TIN** triggers withholding; **C trigger fires for interest** + dividends (load-bearing); **C trigger does NOT fire for rent** + non-employee comp (regression); **D trigger certification failure** triggers withholding; **3 trigger precedence pins** (A > B, B > C, C > D); **withholding rate 24%** (2400bp); withholding at $100k payment = $24k; **$1B precision** = $240M withheld; zero payment zero withholding; **all 10 payment types subject to A trigger** sweep; triggered note describes trigger + 24%; untriggered note describes no trigger; **citation mentions all 4 trigger subsections** + § 3406(b)(1)(A) rate + CP 2100 + Publication 1281.
 
+`traderview-expense::section_25d` is the **IRC §25D Residential Clean Energy Credit module with OBBBA termination** — pairs with `section_30d` (Clean Vehicle Credit) as the two OBBBA-terminated IRA-2022 incentives. Provides a **30% nonrefundable credit** for qualifying clean energy property installed at the taxpayer's RESIDENCE (primary or secondary home). **Pure rentals never qualified** — a landlord whose tenants live in the unit but who does not himself reside there cannot claim §25D. OBBBA did not change the residence requirement; it only accelerated the sunset.
+
+**OBBBA § 70426 termination**: expenditures made **after December 31, 2025** ineligible. IRA 2022 had originally scheduled the 30% rate through 2032 with a 26%/22%/0% step-down for 2033/2034/2035; OBBBA wiped out all step-down years.
+
+**Qualifying property** (§25D(d)):
+
+| Property type | Qualifying threshold |
+|---------------|----------------------|
+| Solar electric (rooftop PV) | None |
+| Solar water heater | None |
+| Fuel cell | $500 / 0.5 kW capacity sublimit |
+| Small wind energy | None |
+| Geothermal heat pump | None |
+| **Battery storage** | **≥ 3 kWh capacity** (added 2023 — stand-alone now qualifies under § 25D(d)(6)) |
+| Biomass fuel | Removed end of 2022, moved to § 25C |
+
+**Nonrefundable + indefinite carryforward** (§25D(c)): credit limited to current-year tax liability; unused portion carries forward INDEFINITELY to succeeding tax years and adds to that year's §25D credit allowance.
+
+Mounted at `POST /api/calc/section-25d`. Twenty-three tests pin: **solar panels 30% credit** ($30K cost → $9K credit + fully usable against $100K tax liability); **OBBBA termination after 2025-12-31** + § 70426 + "TERMINATED" citation; **at 2025-12-31 boundary still eligible** (strict greater-than); **one day after cutoff (Jan 1) terminated**; **pure rental no-residence-requirement fail** + "USED AS A RESIDENCE" + "Pure rental" note regressions; **biomass fuel no longer qualifying** + § 25C citation regression (moved to other module); **battery storage above 3 kWh qualifies**; **battery storage at 3 kWh boundary qualifies** (≥ strict); **battery storage below 3 kWh fails** + § 25D(d)(6) + "3 kWh" citation regression; **carryforward when credit exceeds tax liability** ($30K solar = $9K credit + $5K tax → $4K carryforward); **prior-year carryforward adds to current-year** ($20K solar = $6K + $3K prior = $9K total + $10K tax → all used); **carryforward preserved through termination** (post-2025 expenditure produces no new credit but prior carryforward returned for separate Form 5695 line); **solar water heater + geothermal + small wind + fuel cell all qualify** (4 property-type-eligibility regressions); **zero cost no credit**; **negative inputs clamped**; **termination check precedence over residence** (regression — termination fires first even when residence test would also fail); **citations pin authorities** (§ 25D(a) + § 25D(c) + § 25D(d) + § 25D(d)(6) + OBBBA § 70426); **date boundary Dec 30/31 + Jan 1 three-day triple-test**; **$300K commercial-scale solar full credit ($90K)**; **$1M ultra-large solar with low tax creates $280K carryforward**.
+
 `traderview-expense::section_30d` is the **IRC §30D Clean Vehicle Credit module with OBBBA termination** — the post-IRA 2022 bifurcated $7,500 credit for new clean vehicles. Trader and landlord-relevant for any EV purchase. IRA 2022 redesigned the credit into a **$3,750 critical-minerals prong** + **$3,750 battery-components prong**, scheduled to run through 2032. **OBBBA § 70424 (eff. 2025-09-30) TERMINATED the credit** for vehicles acquired after September 30, 2025 — accelerating the sunset by more than 7 years.
 
 **Credit structure** (pre-termination):

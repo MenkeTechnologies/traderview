@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/section-164",           post(section_164_route))
         .route("/calc/section-165h",          post(section_165h_route))
+        .route("/calc/section-25d",           post(section_25d_route))
         .route("/calc/section-30d",           post(section_30d_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
@@ -2340,6 +2341,38 @@ async fn section_165h_route(
         ));
     }
     Ok(Json(traderview_expense::section_165h::compute(&b)))
+}
+
+// ── §25D Residential Clean Energy Credit (OBBBA termination 12/31/25) ─
+// Mounted at /api/calc/section-25d. IRA 2022 30% credit for qualifying
+// clean energy property installed at taxpayer's residence (primary +
+// secondary homes; NOT pure rentals). Qualifying property §25D(d):
+// solar electric + solar water heater + fuel cell + small wind +
+// geothermal heat pump + battery storage with capacity ≥ 3 kWh under
+// §25D(d)(6) added 2023 (biomass terminated end of 2022 moved to §25C).
+// Nonrefundable with §25D(c) INDEFINITE carryforward to succeeding
+// years. OBBBA §70426 ACCELERATED termination to expenditures made
+// after December 31, 2025 — wiping out 2026-2034 step-down years
+// originally scheduled under IRA.
+
+async fn section_25d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_25d::Section25DInput>,
+) -> Result<Json<traderview_expense::section_25d::Section25DResult>, ApiError> {
+    if b.qualifying_property_cost_cents < 0 || b.current_year_tax_liability_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.expenditure_year)
+        || !(1..=12).contains(&b.expenditure_month)
+        || !(1..=31).contains(&b.expenditure_day)
+    {
+        return Err(ApiError::BadRequest(
+            "expenditure date must be a valid year/month/day".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_25d::compute(&b)))
 }
 
 // ── §30D Clean Vehicle Credit (post-OBBBA termination 2025-09-30) ────
