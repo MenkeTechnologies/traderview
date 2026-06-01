@@ -93,6 +93,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-263g",          post(section_263g_route))
         .route("/calc/section-1276",          post(section_1276_route))
         .route("/calc/section-1277",          post(section_1277_route))
+        .route("/calc/section-1278",          post(section_1278_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2566,6 +2567,39 @@ async fn section_1277_route(
         ));
     }
     Ok(Json(traderview_expense::section_1277::compute(&b)))
+}
+
+// ── §1278 market-discount-bond definitions + § 1278(b) election ───
+// Mounted at /api/calc/section-1278. The definitional + election
+// module that both §1276 (ordinary-income recharacterization) and
+// §1277 (interest-deduction deferral) cross-reference. §1278(a)(1)
+// market discount bond definition with carve-outs for U.S. savings
+// bonds, short-term obligations (≤ 1 year to maturity), and §453B
+// installment obligations. §1278(a)(2)(A) market discount = stated
+// redemption price at maturity − basis at acquisition. §1278(a)(2)(B)
+// OID bonds use REVISED ISSUE PRICE (acquisition-date OID-adjusted
+// basis) in lieu of stated redemption price. §1278(a)(2)(C) DE
+// MINIMIS rule — raw discount STRICTLY LESS THAN ¼ of 1% of stated
+// redemption × complete years to maturity is treated as ZERO.
+// §1278(b)(1) current-inclusion election — switches off §1276
+// disposition recharacterization AND §1277 interest deferral.
+// §1278(b)(2) election scope to all market discount bonds acquired
+// during or after year of election. §1278(b)(3) election IRREVOCABLE
+// absent Secretary's consent.
+
+async fn section_1278_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1278::Section1278Input>,
+) -> Result<Json<traderview_expense::section_1278::Section1278Result>, ApiError> {
+    if b.stated_redemption_price_cents < 0
+        || b.revised_issue_price_cents < 0
+        || b.purchase_price_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1278::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
