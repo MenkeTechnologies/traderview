@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-280b",          post(section_280b_route))
+        .route("/calc/section-280e",          post(section_280e_route))
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
@@ -1432,6 +1433,32 @@ async fn section_280b_route(
         ));
     }
     Ok(Json(traderview_expense::section_280b::compute(&b)))
+}
+
+// ── §280E controlled-substance trafficking deduction disallowance ────
+// Mounted at /api/calc/section-280e. Disallows §162 deductions for
+// trafficking in Schedule I/II controlled substances regardless of
+// state legalization. COGS always allowed (Champ T.C. 2007); non-
+// trafficking bifurcated activity expenses always allowed.
+// EO 14370 (2025-12-18) directs DEA Schedule I → III rescheduling
+// for marijuana; DOJ Final Order partially reschedules FDA-approved
+// and state-licensed medical marijuana but leaves bulk / unlicensed
+// crops in Schedule I.
+
+async fn section_280e_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_280e::Section280eInput>,
+) -> Result<Json<traderview_expense::section_280e::Section280eResult>, ApiError> {
+    if b.gross_revenue_dollars < 0
+        || b.cogs_dollars < 0
+        || b.trafficking_business_expenses_dollars < 0
+        || b.non_trafficking_bifurcated_expenses_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_280e::compute(&b)))
 }
 
 // ── §481(a) accounting method change adjustment ──────────────────────
