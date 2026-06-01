@@ -164,6 +164,9 @@ use traderview_expense::owner_identification::{
 use traderview_expense::tenant_death_termination::{
     check as check_tenant_death, TenantDeathInput, TenantDeathResult,
 };
+use traderview_expense::late_payment_grace_period::{
+    check as check_grace_period, GracePeriodInput, GracePeriodResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -318,6 +321,7 @@ pub fn router() -> Router<AppState> {
         .route("/flood-disclosure-check", axum::routing::post(flood_disclosure_check_route))
         .route("/owner-identification-check", axum::routing::post(owner_identification_check_route))
         .route("/tenant-death-termination-check", axum::routing::post(tenant_death_termination_check_route))
+        .route("/late-payment-grace-period-check", axum::routing::post(late_payment_grace_period_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2648,6 +2652,38 @@ async fn tenant_death_termination_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_death(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant late-payment grace-period compliance check
+//
+// Mounted at POST /api/rental/late-payment-grace-period-check.
+// Distinct from late_fee_caps (which caps the fee amount) — this
+// captures the WINDOW before any late fee can attach. Six regimes:
+// MassachusettsLongGracePeriod (MA G.L. c. 186 § 15B(1)(c) 30
+// full days — most generous in U.S.); ConnecticutNineDayGracePeriod
+// (CT Gen. Stat. § 47a-15a); StandardFiveDayGracePeriod (NY RPL
+// § 238-a HSTPA 2019 + NC G.S. § 42-46 + WA RCW 59.18.170 + VA Code
+// § 55.1-1204); OregonFourDayGracePeriod (ORS 90.260); TexasShort-
+// GracePeriod (Tex. Prop. Code § 92.019 2 full days + written-lease
+// disclosure required); NoStatutoryGracePeriodReasonablenessOnly
+// (44 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn late_payment_grace_period_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<GracePeriodInput>,
+) -> Result<Json<GracePeriodResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.late_fee_charged_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "late_fee_charged_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_grace_period(&b)))
 }
 
 // ---------------------------------------------------------------------------
