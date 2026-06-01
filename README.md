@@ -1181,6 +1181,52 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_461l` is the **IRC §461(l) excess business loss limitation module** — **completes the loss-limitation cascade** for individual, trust, and estate taxpayers:
+
+| Order | Section          | Limit                                | Module                |
+|-------|------------------|--------------------------------------|-----------------------|
+| 1     | §704(d)          | Partner outside basis                | section_704d          |
+| 2     | §465             | At-risk amount                       | section_465           |
+| 3     | §469             | Passive activity loss                | section_469           |
+| 4     | **§461(l)**      | **Excess business loss**             | **section_461l** (this) |
+
+Each limit applies to the loss SURVIVING the prior limit. §461(l) is the final cap before deductibility.
+
+**§461(l)(1)** disallows the portion of a noncorporate taxpayer's net business loss exceeding the statutory threshold. The disallowed portion becomes a §172 NOL carryforward (no carryback).
+
+**§461(l)(3) inflation-adjusted thresholds** with OBBBA 2025 re-indexing:
+
+| Tax year | Single   | MFJ      |
+|----------|----------|----------|
+| 2021     | $262,000 | $524,000 |
+| 2022     | $270,000 | $540,000 |
+| 2023     | $289,000 | $578,000 |
+| 2024     | $305,000 | $610,000 |
+| 2025     | $313,000 | $626,000 |
+| **2026** | **$256,000** | **$512,000** |
+
+**The 2026 thresholds DROPPED from 2025** because the One Big Beautiful Bill Act of 2025 re-indexed back toward the TCJA-original $250k/$500k 2018 base. OBBBA also made §461(l) **permanent** — eliminating the prior 2028 sunset. The $114k MFJ drop from 2025 to 2026 ($626k → $512k) translates to real cash that stays with the IRS for at least another year. Pinned by `obbba_re_indexing_2025_vs_2026_delta` (single delta = $57k, MFJ delta = $114k).
+
+**All six historical thresholds individually pinned** (`historical_thresholds_pinned`) so any future regression that changes a single year's value is caught.
+
+**§461(l) applies to noncorporate taxpayers only**. C-corporations are NOT subject. Pinned by `c_corp_not_subject_to_section_461l`.
+
+**2018-2020 CARES Act suspension** — §461(l) was suspended for tax years 2018-2020 (CARES Act §2304). First effective year is 2021. Pinned by `cares_suspension_years_all_pinned` (3-year sweep: 2018/2019/2020 all suspended) + `pre_2018_no_limitation_existed` (TCJA enacted statute) + `first_effective_year_2021_applies`.
+
+**Threshold boundary math**: exact threshold = no binding; threshold + $1 = binds. Pinned by `threshold_exact_boundary_no_limit_binding` ($256k single exact, no EBL) + `threshold_one_dollar_over_binds` ($256,001 → $1 EBL).
+
+**MFJ threshold is exactly 2× single** under the statute. Pinned by `mfj_2026_threshold_512k` + `mfj_2026_700k_loss_excess_188k_disallowed` (load-bearing math: $700k - $512k = $188k disallowed).
+
+**HOH and MFS use the single-filer threshold** per the statute (no separate amounts). Pinned by `hoh_mfs_uses_single_threshold`.
+
+**Net gain produces no excess**. When business income exceeds deductions, there is no net loss to limit. Pinned by `net_gain_no_loss_no_excess`.
+
+**Excess loss becomes §172 NOL carryforward** subject to 80% taxable income cap in subsequent years (under permanent TCJA §172 regime, also tracked in `section_172`). The note explicitly mentions §172. Pinned by `excess_becomes_nol_per_172_note`.
+
+**Future-year fallback** uses the 2026 threshold for 2027+ pending IRS publication. Caller responsible for refreshing once future amounts are released. Pinned by `future_year_uses_2026_fallback`.
+
+Mounted at `POST /api/calc/section-461l`. Twenty-two tests pin: 2026 single $256k threshold + MFJ $512k; **load-bearing $400k single → $144k EBL + $700k MFJ → $188k EBL** dollar-figure math; OBBBA re-indexing 2025 vs 2026 delta ($57k single / $114k MFJ); loss below threshold no binding; **threshold exact-boundary no binding + one-dollar-over binds**; net gain no excess; C-corp not subject; pre-2021 CARES suspended; pre-2018 no limitation; **CARES 3-year suspension sweep**; first effective year 2021; **all six historical thresholds individually pinned**; HOH/MFS uses single; excess becomes §172 NOL (note pin); $1B precision case ($300M net loss, $299.488M EBL); future year 2027 uses 2026 fallback; loss just below MFJ threshold full allowance; note describes binding path with dollar figures; note describes satisfied path.
+
 `traderview-expense::section_704d` is the **IRC §704(d) partner basis limitation module** — completes the partner loss-limitation trio with `section_465` (at-risk) and `section_469` (passive activity losses). Sequential application order for partnership losses:
 
 | Order | Section          | Limit                                | Module                |

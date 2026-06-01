@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
+        .route("/calc/section-461l",          post(section_461l_route))
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-871m",          post(section_871m_route))
@@ -843,6 +844,27 @@ async fn section_408A_d3_route(
         ));
     }
     Ok(Json(traderview_expense::section_408A_d3::compute(&b)))
+}
+
+// ── §461(l) excess business loss limitation ─────────────────────────
+// Mounted at /api/calc/section-461l. Completes loss-limit cascade
+// after §704(d) → §465 → §469. Noncorporate taxpayers only; 2021+
+// effective (CARES suspended 2018-2020). 2026 thresholds re-indexed
+// by OBBBA: $256k single / $512k MFJ. Excess becomes §172 NOL
+// carryforward.
+
+async fn section_461l_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_461l::Section461lInput>,
+) -> Result<Json<traderview_expense::section_461l::Section461lResult>, ApiError> {
+    if b.aggregate_business_deductions_after_prior_limits < Decimal::ZERO
+        || b.aggregate_business_income < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "aggregate dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_461l::compute(&b)))
 }
 
 // ── §704(d) partner basis limitation ─────────────────────────────────
