@@ -220,6 +220,9 @@ use traderview_expense::tenant_cannabis_use_protection::{
     check as check_tenant_cannabis_use_protection, CannabisProtectionInput,
     CannabisProtectionResult,
 };
+use traderview_expense::snow_removal_responsibility::{
+    check as check_snow_removal_responsibility, SnowRemovalInput, SnowRemovalResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -429,6 +432,7 @@ pub fn router() -> Router<AppState> {
         .route("/abandoned-property-handling", axum::routing::post(abandoned_property_handling_route))
         .route("/right-to-counsel-eviction", axum::routing::post(right_to_counsel_eviction_route))
         .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
+        .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3301,6 +3305,38 @@ async fn tenant_cannabis_use_protection_route(
     Json(b): Json<CannabisProtectionInput>,
 ) -> Result<Json<CannabisProtectionResult>, ApiError> {
     Ok(Json(check_tenant_cannabis_use_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State snow/ice removal landlord responsibility compliance check.
+//
+// Mounted at POST /api/rental/snow-removal-responsibility. Four regimes:
+// Massachusetts (Papadopoulos v. Target Corp. 457 Mass. 368 (2010) +
+// State Sanitary Code 105 CMR 410.452 — natural-vs-unnatural accumulation
+// distinction abolished; landlord owes reasonable-care duty; primary
+// means-of-egress duty cannot be delegated to tenant via lease unless
+// tenant has independent private entrance and unit is not multi-unit);
+// Illinois (745 ILCS 75/ Snow and Ice Removal Act enacted 1979 — IMMUNITY
+// for residential owners who voluntarily clear PUBLIC SIDEWALK unless
+// willful or wanton; immunity does NOT extend to private property
+// driveway/walkway/garage); NewYorkCity (NYC Admin Code § 16-123 — 4-hour
+// removal window after snow stops except 9pm-7am; multi-unit landlord
+// fully responsible; single-family lease may delegate but owner still
+// gets ticket); Default (common-law habitability + premises-liability
+// rules vary by jurisdiction).
+// ---------------------------------------------------------------------------
+
+async fn snow_removal_responsibility_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SnowRemovalInput>,
+) -> Result<Json<SnowRemovalResult>, ApiError> {
+    if b.hours_since_snow_stopped > 100_000 {
+        return Err(ApiError::BadRequest(
+            "hours_since_snow_stopped looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_snow_removal_responsibility(&b)))
 }
 
 // ---------------------------------------------------------------------------

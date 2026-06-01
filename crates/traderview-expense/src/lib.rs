@@ -100,6 +100,7 @@ pub mod security_deposit_caps;
 pub mod senior_disabled_protection;
 pub mod service_animal;
 pub mod smoke_free_housing;
+pub mod snow_removal_responsibility;
 pub mod soi_protection;
 pub mod str_regulation;
 pub mod sublet_consent;
