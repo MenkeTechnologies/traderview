@@ -91,6 +91,7 @@ pub mod lease_translation;
 pub mod lease_waiver_enforceability;
 pub mod lock_change_between_tenancies;
 pub mod lockout_penalties;
+pub mod mandatory_renters_insurance_provider_choice;
 pub mod manual_entry;
 pub mod meals_50;
 pub mod meth_contamination_disclosure;

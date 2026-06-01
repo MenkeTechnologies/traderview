@@ -142,6 +142,10 @@ use traderview_expense::occupancy_standards::{
 use traderview_expense::move_in_inspection::{
     check as check_move_in_inspection, InspectionInput, InspectionResult,
 };
+use traderview_expense::mandatory_renters_insurance_provider_choice::{
+    check as check_mandatory_renters_insurance_provider_choice,
+    MandatoryRentersInsuranceInput, MandatoryRentersInsuranceResult,
+};
 use traderview_expense::renters_insurance::{
     check as check_renters_insurance, RentersInsuranceInput, RentersInsuranceResult,
 };
@@ -652,6 +656,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-termination-catastrophic-damage", axum::routing::post(lease_termination_catastrophic_damage_route))
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
+        .route("/mandatory-renters-insurance-provider-choice", axum::routing::post(mandatory_renters_insurance_provider_choice_route))
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
         .route("/vehicle-towing-from-rental-property", axum::routing::post(vehicle_towing_from_rental_property_route))
@@ -2727,6 +2732,35 @@ async fn move_in_inspection_check_route(
 // Stat. tit. 41 § 113). No US state prohibits requiring renters
 // insurance entirely.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// mandatory_renters_insurance_provider_choice: Tenant right to choose
+// renters insurance provider when landlord mandates coverage — anti-tying
+// framework. Distinct from `renters_insurance` (general framework +
+// coverage minimums) and `rental_junk_fee_transparency` (non-rent fee
+// transparency). Mounted at POST /api/rental/mandatory-renters-insurance-
+// provider-choice. Three regimes: (1) California Cal. Ins. Code + Cal.
+// Civ. Code § 1942.6 + § 1750 et seq. (Consumers Legal Remedies Act) +
+// Cal. Bus. & Prof. Code § 17200 (UDAP / Unfair Competition Law) —
+// landlord may require renters insurance and specify coverage minimums
+// but may NOT mandate specific insurer; recommendation OK; affiliate
+// financial interest heightens scrutiny. (2) New York N.Y. Gen. Bus.
+// Law § 349 (Deceptive Acts and Practices, $50 min / $1,000 max
+// statutory damages + treble damages + attorney fees on willful) + N.Y.
+// Ins. Law § 2502 (limited license / insurance agent regulation,
+// landlord acting as de facto unlicensed agent). (3) Default common-law
+// anti-tying + state UDAP (47 states + DC) + 15 U.S.C. § 45 FTC Act
+// § 5 UDAP. No state prohibits requirement of insurance entirely; all
+// regimes prohibit MANDATING specific provider.
+// ---------------------------------------------------------------------------
+
+async fn mandatory_renters_insurance_provider_choice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MandatoryRentersInsuranceInput>,
+) -> Result<Json<MandatoryRentersInsuranceResult>, ApiError> {
+    Ok(Json(check_mandatory_renters_insurance_provider_choice(&b)))
+}
 
 async fn renters_insurance_check_route(
     _s: State<AppState>,
