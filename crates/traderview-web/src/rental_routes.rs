@@ -116,6 +116,10 @@ use traderview_expense::renters_insurance::{
 use traderview_expense::utility_shutoff::{
     check as check_utility_shutoff, ShutoffInput, ShutoffResult,
 };
+use traderview_expense::vehicle_towing_from_rental_property::{
+    check as check_vehicle_towing, TowingInput as VehicleTowingInput,
+    TowingResult as VehicleTowingResult,
+};
 use traderview_expense::adverse_action_notice::{
     check as check_adverse_action, AdverseActionInput, AdverseActionResult,
 };
@@ -562,6 +566,7 @@ pub fn router() -> Router<AppState> {
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
+        .route("/vehicle-towing-from-rental-property", axum::routing::post(vehicle_towing_from_rental_property_route))
         .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
         .route("/topa-check", axum::routing::post(tenant_topa_check_route))
         .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
@@ -2578,6 +2583,42 @@ async fn utility_shutoff_check_route(
         ));
     }
     Ok(Json(check_utility_shutoff(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// vehicle_towing_from_rental_property: Landlord vehicle towing from rental
+// property — compliance check for unauthorized-vehicle removal under state
+// vehicle/transportation codes. Four regimes: California (Cal. Veh. Code
+// § 22658 — 17×22 inch signage at all entrances + 96-hour rule for parking-
+// violation notice + DOUBLE storage/towing charges liability under
+// § 22658(l)(1) for non-compliance); Texas (Tex. Occ. Code § 2308.252
+// signage + § 2308.253 apartment-complex 10-day registration-tow notice +
+// § 2308.255 written verification to towing company); Florida (Fla. Stat.
+// § 715.07 signage + § 715.07(2)(a)(3) 10-mile / 15-mile storage radius
+// depending on county population + § 715.07(2)(a)(4) 30-minute law-
+// enforcement notification + § 715.07(4) stop-during-tow half-fee
+// redemption + § 715.07(2)(c) single-family residence personal-notice
+// exception); Default (common-law trespass to chattel + state-specific
+// vehicle code). Distinct from landlord_lien_prohibition, tenant_
+// abandonment, abandoned_property_handling.
+// ---------------------------------------------------------------------------
+
+async fn vehicle_towing_from_rental_property_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<VehicleTowingInput>,
+) -> Result<Json<VehicleTowingResult>, ApiError> {
+    if b.fl_storage_distance_miles > 10_000 {
+        return Err(ApiError::BadRequest(
+            "fl_storage_distance_miles looks invalid (>10000)".into(),
+        ));
+    }
+    if b.fl_minutes_to_law_enforcement_notification > 100_000 {
+        return Err(ApiError::BadRequest(
+            "fl_minutes_to_law_enforcement_notification looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_vehicle_towing(&b)))
 }
 
 // ---------------------------------------------------------------------------

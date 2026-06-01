@@ -151,6 +151,7 @@ pub mod tenant_solar_installation;
 pub mod tenant_relocation_assistance;
 pub mod tenant_topa;
 pub mod utility_shutoff;
+pub mod vehicle_towing_from_rental_property;
 pub mod window_guard_requirements;
 pub mod winter_eviction_protections;
 pub mod written_lease_requirement;
