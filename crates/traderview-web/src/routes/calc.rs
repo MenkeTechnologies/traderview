@@ -99,6 +99,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-1283",          post(section_1283_route))
+        .route("/calc/section-1282",          post(section_1282_route))
         .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-6045b",         post(section_6045b_route))
         .route("/calc/section-6045a",         post(section_6045a_route))
@@ -2761,6 +2762,35 @@ async fn section_1283_route(
         ));
     }
     Ok(Json(traderview_expense::section_1283::compute(&b)))
+}
+
+// ── §1282 short-term obligation interest-deduction deferral ──────
+// Mounted at /api/calc/section-1282. Direct short-term-obligation
+// companion to section_1277 (long-term market-discount interest
+// deferral parallel). § 1282(a) general rule defers net direct
+// interest expense (NDIE) on indebtedness incurred to purchase or
+// carry short-term obligation to extent of daily portions of
+// acquisition discount allocable to days held in year. § 1282(b)(1)
+// exception for § 1281 holders (already including discount
+// currently — accrual + dealer + bank + RIC + hedging + stripper +
+// pass-thru). § 1282(b)(2) election to apply § 1281 to all
+// short-term obligations triggers § 1282(b) exception. § 1282(c)
+// cross-reference to § 1277 long-term rules. § 1282(d) § 1283(c)
+// nongovernmental OID substitution. Companion to section_1281
+// (current inclusion mandate) + section_1283 (definitions).
+
+async fn section_1282_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1282::Section1282Input>,
+) -> Result<Json<traderview_expense::section_1282::Section1282Result>, ApiError> {
+    if b.interest_expense_on_indebtedness_cents < 0
+        || b.interest_income_includible_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1282::compute(&b)))
 }
 
 // ── §7704 publicly traded partnership corporate treatment ────────
