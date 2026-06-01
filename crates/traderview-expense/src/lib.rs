@@ -47,6 +47,7 @@ pub mod normalize;
 pub mod qbi;
 pub mod quarterly_tax;
 pub mod recurring;
+pub mod radon_disclosure;
 pub mod rent_control;
 pub mod retaliation_windows;
 pub mod rental_depreciation;

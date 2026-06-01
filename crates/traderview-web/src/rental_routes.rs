@@ -83,6 +83,9 @@ use traderview_expense::heat_requirements::{
 use traderview_expense::mold_disclosure::{
     check as check_mold_disclosure, MoldCheckInput, MoldCheckResult,
 };
+use traderview_expense::radon_disclosure::{
+    check as check_radon_disclosure, RadonDisclosureInput, RadonDisclosureResult,
+};
 use traderview_expense::lead_disclosure::{
     check as check_lead_disclosure, LeadCheckInput, LeadCheckResult,
 };
@@ -217,6 +220,7 @@ pub fn router() -> Router<AppState> {
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
         .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
         .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
+        .route("/radon-disclosure-check", axum::routing::post(radon_disclosure_check_route))
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
@@ -1955,6 +1959,26 @@ async fn sublet_consent_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_sublet_consent(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State radon disclosure + testing compliance check
+// ---------------------------------------------------------------------------
+
+async fn radon_disclosure_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RadonDisclosureInput>,
+) -> Result<Json<RadonDisclosureResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.current_radon_level_pcil < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "current_radon_level_pcil must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_radon_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

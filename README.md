@@ -534,6 +534,46 @@ Mounted at `POST /api/rental/abandonment-check`. Twenty-five tests pin: 51-row c
 
 Mounted at `POST /api/rental/sublet-consent-check`. Twenty-six tests pin: 51-row coverage; NY sublet reasonable-standard at 4-units AND below 4-units (boundary); **NY 30-day deemed-consent window** (fires at day 31, not at day 30); NY unreasonable refusal tenant proceeds; NY reasonable refusal tenant blocked; **NY assignment unreasonable refusal gives lease-termination right** (not assignment-proceed right — load-bearing asymmetry); NY reasonable refusal no termination right; **NY § 235-f roommate-addition statutory protection**; CA case-law reasonable standard applies; CA no building threshold; **CA assignment uses reasonable not unconditional** (regression target distinguishing from NY); CA roommate no statute; TX contract governs; DC 30-day window mirror; VA reasonable standard no unit threshold; WA reasonable standard; unknown state; case-insensitive lookup; sorted all_states; non-empty citations; **5 reasonable-standard states pinned** (NY/DC/VA/WA + CA case-law); **NY-only unit threshold sweep** across 50 other states; **NY-only unconditional-with-termination assignment sweep**; **NY-only roommate-statute sweep**.
 
+`traderview-expense::radon_disclosure` is the **state radon disclosure + testing compliance table** — sibling to `mold_disclosure`, `bedbug_disclosure`, and `lead_disclosure`. EPA-recommended action level is **4.0 pCi/L** (picocuries per liter); levels at/above this are recommended for mitigation though EPA cannot mandate landlord action.
+
+**Five state regimes** across 51 jurisdictions:
+
+| Regime                                            | States                              |
+|---------------------------------------------------|-------------------------------------|
+| **Comprehensive landlord disclosure**             | IL (420 ILCS 46/ Radon Awareness Act eff. 2024) — uniquely on this regime |
+| **Mandatory testing + termination right**         | ME (14 M.R.S. § 6030-D) — strongest in country |
+| **Lease-level warning**                           | FL (Fla. Stat. § 404.056)           |
+| **Real estate transfer disclosure**               | CT / IA / MN / NJ / OR              |
+| **No statewide statute**                          | 44 other states                     |
+
+**IL Radon Awareness Act (420 ILCS 46/, eff. Jan 1, 2024) is the most comprehensive landlord-specific radon law in the country.** Applies to residential units on the 2nd floor or lower. Landlord must provide at application (before lease signing) or on tenant request:
+
+1. Radon Guide for Tenants pamphlet
+2. Disclosure of Information on Radon Hazards form
+3. Copies of any radon test records from past 2 years
+
+Tenant has 90 days from lease start to conduct own test, with 10-day window to share results with landlord.
+
+**IL 2nd-floor coverage threshold is load-bearing.** 3rd floor and above are exempt. 2nd floor exact qualifies (boundary inclusive). Basement (floor 0) is below 2nd floor → covered. Pinned by `il_floor_2_at_coverage_boundary` (2nd floor covered) + `il_floor_3_above_coverage_threshold` (3rd floor exempt) + `il_floor_0_basement_covered` (basement = floor 0 covered).
+
+**ME 14 M.R.S. § 6030-D mandatory testing + termination right is the strongest regime in the country.** Landlord must conduct radon testing in each building, provide written notice with results, and notify tenants of right to test. If radon ≥ 4.0 pCi/L is NOT mitigated, **either party may end the lease with 30 days' notice.** Pinned by `me_action_level_unmitigated_triggers_termination_right` ($4.5 pCi/L unmitigated → termination right available) + `me_action_level_with_mitigation_no_termination_right` (mitigation cures) + `me_below_action_level_no_termination_right` (3.9 below threshold) + `me_exact_action_level_4_0_triggers` (boundary inclusive).
+
+**EPA 4.0 pCi/L action level universal** across all rows. Pinned by `epa_action_level_universal_4_pcil` (sweep verifying every row has the same threshold).
+
+**IL is uniquely on ComprehensiveLandlordDisclosure regime.** No other state matches. Pinned by `il_only_state_with_comprehensive_disclosure_regime` (sweep across 50 other states).
+
+**ME is uniquely on MandatoryTestingAndTerminationRight regime.** Combination of mandatory testing + lease-termination right is found nowhere else. Pinned by `me_only_state_with_mandatory_testing_and_termination_right` (sweep).
+
+**Three disclosure violations independently pinned for IL**: missing pamphlet, missing disclosure form, missing prior test records. Each produces a distinct violation message.
+
+**Real estate transfer states (CT/IA/MN/NJ/OR)** require radon disclosure in sale-focused real estate transactions; often extended by lease practice to rental but not strictly required for tenancy. The module flags `disclosure_required: true` for these states.
+
+**FL lease-level warning** is universal (every lease contains the statutory warning language) but the module treats default-flag inputs as compliant (the warning is presumed in standard FL lease forms).
+
+**No-statute states (44 jurisdictions)** report `no_statute_in_state: true` and complies even without any radon documentation — EPA pamphlet practice is common but not legally required.
+
+Mounted at `POST /api/rental/radon-disclosure-check`. Twenty-three tests pin: 51-row coverage; **IL floor 1 full disclosure compliant**; IL missing pamphlet / missing disclosure form / missing prior test records each independently violates; **IL 2nd-floor coverage boundary** (floor 2 covered, floor 3 exempt, floor 0 covered); ME mandatory testing required; **ME action level 4.5 unmitigated → termination right** + mitigated cures + below-action-level (3.9) no termination + exact 4.0 triggers; FL lease-level warning regime default-compliant; NJ pamphlet required; no-statute states always comply; unknown state handled; case-insensitive; sorted all_states; non-empty citations; **IL-only ComprehensiveLandlordDisclosure sweep** across 50 other states; **ME-only MandatoryTestingAndTerminationRight sweep**; **EPA 4.0 pCi/L universal** sweep across all 51 rows.
+
 `traderview-expense::mold_disclosure` is the **state mold disclosure + remediation compliance table** — recent regulatory wave (2001-2025) starting with California's Toxic Mold Protection Act of 2001 (Civ. Code § 1941.7). Sibling to `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`.
 
 **Far fewer states have comprehensive mold statutes than bedbug or lead.** Most rely on the implied warranty of habitability. The verified-specific regimes are:
