@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6402",          post(section_6402_route))
+        .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -2626,6 +2627,29 @@ async fn section_6402_route(
         ));
     }
     Ok(Json(traderview_expense::section_6402::compute(&b)))
+}
+
+// ── §7502 timely mailing treated as timely filing ───────────────────
+// Mounted at /api/calc/section-7502. § 7502(a) US postmark = filing
+// date when postmark within prescribed period + envelope properly
+// addressed + sufficient postage; § 7502(c)(1) registered mail prima
+// facie evidence; § 7502(c)(2) certified mail registration = postmark
+// date; § 7502(f) designated PDS per Notice 2016-30 (FedEx First/
+// Priority/Standard Overnight, 2 Day, International Priority/First/
+// Economy; UPS Next Day Air variants, 2nd Day Air variants, Worldwide
+// Express; DHL Express 9:00/10:30/12:00, Worldwide, Envelope, Import
+// Express variants). Non-designated services (FedEx Ground, UPS
+// Ground, FedEx Home Delivery) DO NOT qualify. Electronic filing
+// governed by 26 CFR § 301.7502-1(d) e-file acknowledgment timestamp.
+// Anderson v. United States (9th Cir. 1992) — § 7502 displaces common-
+// law mailbox rule. Critical paired with § 6213(a) Hallmark jurisdic-
+// tional deadlines and § 6330(d) Boechler equitable tolling.
+
+async fn section_7502_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7502::Section7502Input>,
+) -> Result<Json<traderview_expense::section_7502::Section7502Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7502::compute(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────

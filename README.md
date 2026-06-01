@@ -4567,6 +4567,40 @@ Mounted at `POST /api/calc/section-6330`. Twenty-five tests pin: **timely CDP re
 
 Mounted at `POST /api/calc/section-6402`. Twenty-six tests pin: **no debts full refund to taxpayer**; **IRS tax liability priority 1** (§ 6402(a)); **child support state assigned priority 2** (§ 6402(c)(1)); **federal agency debt priority 3** (§ 6402(d)); **state income tax priority 5 after federal debts**; **full hierarchy seven levels priority order preserved**; **offset exhausts refund partial satisfaction** ($1K refund + $5K IRS debt → $1K offset); **debts exceeding refund only consume available amount**; **injured spouse Form 8379 protects share from offset**; **injured spouse share 100 bps protects all**; **injured spouse share capped at 10000 bps** (defensive); **no injured spouse filing no protection**; **zero overpayment no offsets applied**; **child support non-assigned priority 4 after federal agency**; **state unemployment priority 6 after state income tax**; **state TANF priority 7 lowest**; **citation pins all subsections + 26 CFR § 301.6402-6 + 31 CFR § 285.8 + Soc. Sec. Act §§ 402(a)(26)/471(a)(17) + BFS TOP**; **negative debts clamped to zero** (defensive); **note describes TOP administration** (BFS); **note describes offset count**; **injured spouse protection persists against all offset categories** (5-category sweep); **injured spouse protected amount added to remaining refund**; **offsets consume in strict priority order when refund partially exhausted**; **negative overpayment clamped to zero** (defensive); **all seven categories skip when empty**; **child support non-assigned falls between federal agency and state tax** (priority 4 between 3 and 5).
 
+`traderview-expense::section_7502` is the **IRC § 7502 timely mailing treated as timely filing and paying ("mailbox rule")** module — critical procedural rule for ALL tax filings (returns, claims for refund, Tax Court petitions, deficiency responses). The date a filing is MAILED (not received) can make the difference between timely and barred. Paired with § 6213(a) Hallmark Research Collective jurisdictional deadline and § 6330(d)(1) Boechler equitable tolling, § 7502 is often the difference between Tax Court jurisdiction and complete loss.
+
+**Eight delivery methods → three evidentiary statuses**:
+
+| Method | § 7502 protection | Evidentiary status |
+|--------|---------------------|---------------------|
+| USPS Registered Mail with proof | YES (§ 7502(c)(1)) | PrimaFacieTimely |
+| USPS Certified Mail with receipt | YES (§ 7502(c)(2)) | PrimaFacieTimely |
+| USPS Regular first-class | YES (§ 7502(a)) | OrdinaryTimely (Anderson v. United States caveat) |
+| FedEx designated (First/Priority/Standard Overnight, 2 Day, Intl Priority/First/Economy) | YES (§ 7502(f) + Notice 2016-30) | OrdinaryTimely |
+| UPS designated (Next Day Air variants, 2nd Day Air variants, Worldwide Express) | YES (§ 7502(f) + Notice 2016-30) | OrdinaryTimely |
+| DHL Express designated (Express 9:00/10:30/12:00, Worldwide, Envelope, Import Express) | YES (§ 7502(f) + Notice 2016-30) | OrdinaryTimely |
+| Non-designated PDS (FedEx Ground, UPS Ground, FedEx Home Delivery) | NO | NotProtected |
+| Electronic / e-file | governed by 26 CFR § 301.7502-1(d) acknowledgment timestamp | OrdinaryTimely |
+
+**Two § 7502(a)(2) gatekeepers** must be satisfied before any method protection applies:
+
+| Gatekeeper | Effect |
+|------------|--------|
+| Postmark within prescribed period | Required for any § 7502 protection |
+| Properly addressed with sufficient postage | Required for any § 7502 protection |
+
+**Certified and registered mail UNIQUELY get prima facie status.** § 7502(c) prima facie evidence shifts the burden of proof — the IRS must rebut the registered/certified mail proof, not the taxpayer. Other methods leave the burden on the taxpayer to prove postmark date. Pinned by `certified_and_registered_uniquely_get_prima_facie_status_invariant` (2-vs-4 method sweep), `usps_certified_with_receipt_prima_facie`, `usps_registered_with_proof_prima_facie`, `usps_certified_without_receipt_falls_back_to_ordinary` (proof retention is the load-bearing fact), `registered_mail_without_proof_falls_back_to_ordinary`.
+
+**Anderson v. United States, 966 F.2d 487 (9th Cir. 1992) displaces common-law mailbox rule** in most circuits. Ordinary first-class USPS mail (no certified/registered tracking) provides no presumption of timely filing — the taxpayer must prove postmark date. The Anderson note surfaces ONLY for `UspsRegular`. Pinned by `usps_regular_first_class_ordinary_timely_with_anderson_caveat`, `anderson_caveat_appears_only_for_usps_regular` (3-method sweep confirms Certified/Registered/FedEx do NOT trigger the caveat).
+
+**Notice 2016-30 enumerates designated PDSs.** Only specifically enumerated services qualify under § 7502(f). FedEx Ground, UPS Ground, FedEx Home Delivery, and similar non-listed services DO NOT qualify regardless of how reliable the delivery. Pinned by `non_designated_pds_does_not_qualify`, `non_designated_pds_uniquely_loses_protection_invariant` (7-method sweep: 6 methods protect, NonDesignated does not), `three_pds_invariant_all_qualify_when_postmark_within_period` (all 3 designated PDS providers qualify).
+
+**Postmark-outside-period and improper-addressing gates dominate method protection.** Even the best delivery method (Registered Mail with proof) cannot save a filing that was mailed AFTER the deadline. Pinned by `postmark_outside_period_overrides_method_protection` (2-method sweep), `improperly_addressed_overrides_method_protection`.
+
+**Electronic filings governed separately.** 26 CFR § 301.7502-1(d) — e-filed returns deemed filed on the date of electronic acknowledgment; § 7502 paper-mailing framework does not apply. Pinned by `electronic_filing_acknowledgment_within_period_timely`, `electronic_filing_acknowledgment_outside_period_untimely`.
+
+Mounted at `POST /api/calc/section-7502`. Twenty-five tests pin: **USPS Certified with receipt prima facie** (§ 7502(c)(2)); **USPS Certified without receipt falls back to ordinary**; **USPS Registered with proof prima facie** (§ 7502(c)(1)); **USPS Regular first-class ordinary timely with Anderson caveat** (9th Cir. 1992); **FedEx designated qualifies** (Notice 2016-30); **UPS designated qualifies**; **DHL Express designated qualifies**; **non-designated PDS does not qualify** (FedEx Ground / UPS Ground / FedEx Home Delivery); **postmark outside period not protected**; **improperly addressed envelope not protected**; **filing arrived before deadline no § 7502 needed**; **electronic filing acknowledgment within period timely**; **electronic filing acknowledgment outside period untimely**; **citation pins all subsections + 26 CFR § 301.7502-1 + Notice 2016-30 + Anderson v. United States**; **registered mail without proof falls back to ordinary**; **FedEx designated does not get prima facie status**; **UPS designated does not get prima facie status**; **three PDS invariant all qualify when postmark within period**; **non-designated PDS uniquely loses protection invariant** (7-method sweep: 6 protect, 1 not); **certified and registered uniquely get prima facie status invariant** (2-vs-4 method sweep); **postmark outside period overrides method protection** (2-method sweep); **improperly addressed overrides method protection**; **Anderson caveat appears only for USPS Regular** (3-method sweep); **before deadline path dominates method check** (2-method sweep); **FedEx note lists designated services** (Priority Overnight + International Priority/First/Economy).
+
 `traderview-expense::section_6320` is the **IRC § 6320 Collection Due Process (CDP) for LIENS** module — parallel framework to `section_6330` (CDP for levies, built iter 280) with lien-specific mechanics. Trader-critical when the IRS files a Notice of Federal Tax Lien (NFTL) — a public record asserting the government's claim against all of the taxpayer's property — and the taxpayer receives the CDP notice (Letter 3172) signaling their right to a hearing.
 
 **Six statutory subsections compose the lien CDP framework**:
