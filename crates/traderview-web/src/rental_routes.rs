@@ -177,6 +177,9 @@ use traderview_expense::tenant_relocation_assistance::{
     compute as compute_tenant_relocation_assistance, RelocationInput as TenantRelocationInput,
     RelocationResult as TenantRelocationResult,
 };
+use traderview_expense::fair_chance_housing::{
+    check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -373,6 +376,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
+        .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -2862,6 +2866,38 @@ async fn tenant_relocation_assistance_route(
         ));
     }
     Ok(Json(compute_tenant_relocation_assistance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Fair-chance-in-housing — landlord criminal-background-check restrictions.
+//
+// Mounted at POST /api/rental/fair-chance-housing. Four regimes:
+// NewJerseyFcha (N.J.S.A. 46:8-52 et seq. eff. 2022-01-01 — no inquiry
+// before conditional offer, individualized assessment required to
+// withdraw, 30-day appeal window; barred categories: arrests, pending
+// cases, sealed/expunged, juvenile adjudications); NewYorkCityFchha (NYC
+// Admin Code § 8-107.1 / Local Law 24 of 2024 eff. 2025-01-01 — felony
+// 5-year / misdemeanor 3-year lookback from release or sentencing; sex-
+// offender-registry convictions always considerable; barred categories:
+// arrests, pending cases, ACDs, juvenile adjudications, sealed/expunged,
+// non-criminal-violation convictions); CaliforniaFeha (Cal. Civ. Code §
+// 1786.18 + 2 Cal. Code Regs. § 12266 — no blanket bans, individualized
+// assessment required considering nature/severity, time elapsed, and
+// rehabilitation evidence); Default (15 U.S.C. § 1681c FCRA 7-year ceiling
+// on CRA arrest reports, conviction reports have no federal time limit).
+// ---------------------------------------------------------------------------
+
+async fn fair_chance_housing_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FairChanceInput>,
+) -> Result<Json<FairChanceResult>, ApiError> {
+    if b.years_since_release > 1_000 {
+        return Err(ApiError::BadRequest(
+            "years_since_release looks invalid (>1000)".into(),
+        ));
+    }
+    Ok(Json(check_fair_chance_housing(&b)))
 }
 
 // ---------------------------------------------------------------------------

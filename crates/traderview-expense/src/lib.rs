@@ -29,6 +29,7 @@ pub mod dv_termination;
 pub mod entry_notice;
 pub mod disposition;
 pub mod ev_charger_installation;
+pub mod fair_chance_housing;
 pub mod fire_sprinkler_disclosure;
 pub mod flood_disclosure;
 pub mod drug_eviction;
