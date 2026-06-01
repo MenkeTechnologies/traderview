@@ -128,6 +128,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6111",          post(section_6111_route))
         .route("/calc/section-6112",          post(section_6112_route))
         .route("/calc/section-6662a",         post(section_6662a_route))
+        .route("/calc/section-6664",          post(section_6664_route))
         .route("/calc/section-6672",          post(section_6672_route))
         .route("/calc/section-6694",          post(section_6694_route))
         .route("/calc/section-6695",          post(section_6695_route))
@@ -3885,6 +3886,34 @@ async fn section_6662a_route(
         ));
     }
     Ok(Json(traderview_expense::section_6662a::compute(&b)))
+}
+
+// ── § 6664 reasonable cause + good faith defense ────────────────────
+// Mounted at /api/calc/section-6664. § 6664(c)(1) general rule —
+// no penalty under § 6662 or § 6663 may be imposed for any portion
+// of an underpayment where taxpayer shows reasonable cause AND
+// good faith. § 6664(c)(2) economic-substance strict-liability
+// bar — defense NOT available for transactions lacking economic
+// substance under § 7701(o); § 6662(b)(6) + § 6662(i) impose 20%
+// (40% non-disclosed) strict-liability penalty with no escape.
+// § 6664(d) reportable-transaction heightened defense for § 6662A
+// requires ALL THREE elements: (A) adequate disclosure per
+// § 6664(d)(3)(A); (B) substantial authority per § 6664(d)(3)(B);
+// (C) reasonable belief more-likely-than-not per § 6664(d)(3)(C).
+// Treas. Reg. § 1.6664-4 implementing regulation — facts-and-
+// circumstances analysis (education, sophistication, business
+// experience, advisor reliance with complete + accurate facts).
+// Treas. Reg. § 1.6662-3(c)(2) regulation-invalidity adequate-
+// disclosure rule. Cross-cutting defense applies to section_6662
+// (accuracy) + section_6662a (reportable) + section_6663 (civil
+// fraud). Highly relevant for aggressive § 1256 MTM / § 988 / §
+// 1202 / § 475(f) trader positions.
+
+async fn section_6664_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6664::Section6664Input>,
+) -> Result<Json<traderview_expense::section_6664::Section6664Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6664::check(&b)))
 }
 
 // ── § 6672 Trust Fund Recovery Penalty (TFRP) ───────────────────────
