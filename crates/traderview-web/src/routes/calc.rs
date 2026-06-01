@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6402",          post(section_6402_route))
+        .route("/calc/section-6404",          post(section_6404_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
@@ -2859,6 +2860,34 @@ async fn section_162f_route(
         ));
     }
     Ok(Json(traderview_expense::section_162f::compute(&b)))
+}
+
+// ── §6404 abatement of interest + tax + penalties ───────────────────
+// Mounted at /api/calc/section-6404. § 6404(a) general abatement
+// authority for excessive / post-SOL / erroneously assessed; §
+// 6404(b) no statutory taxpayer RIGHT for interest / additions to
+// tax / additional amounts / assessable penalties (relies on
+// discretionary IRS authority OR § 6404(e)/(f)/(g)); § 6404(c)
+// small tax balance ($5 or less); § 6404(e)(1) UNREASONABLE ERROR
+// OR DELAY by IRS employee — error/delay after written IRS contact
+// + taxpayer did not contribute + act was MINISTERIAL (procedural/
+// mechanical, no judgment) OR MANAGERIAL (administrative, loss of
+// records or personnel discretion); legal-judgment delays NOT
+// abatable; § 6404(e)(2) erroneous refund check $50K cap; § 6404(f)
+// erroneous written advice three-element test (written request +
+// accurate facts + reasonable reliance); § 6404(g) 36-month
+// interest suspension for individuals when IRS fails to notify
+// within 1,095 days of timely return filing (21-day grace); §
+// 6404(h) Tax Court review of § 6404(e) refusals for abuse of
+// discretion within 180 days; Treas. Reg. § 301.6404-2; IRM 20.2.7
+// Abatement and Suspension of Underpayment Interest; Form 843 +
+// § 6511 lookback (3 years from return OR 2 years from payment).
+
+async fn section_6404_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6404::Section6404Input>,
+) -> Result<Json<traderview_expense::section_6404::Section6404Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6404::check(&b)))
 }
 
 // ── §6501 limitations on assessment + collection (ASED) ─────────────
