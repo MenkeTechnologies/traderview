@@ -316,6 +316,10 @@ use traderview_expense::written_lease_requirement::{
     check as check_written_lease_requirement, CheckResult as WrittenLeaseResult,
     Input as WrittenLeaseInput,
 };
+use traderview_expense::holdover_tenant_damages::{
+    check as check_holdover_tenant_damages, CheckResult as HoldoverTenantResult,
+    Input as HoldoverTenantInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -550,6 +554,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
         .route("/flag-display-right", axum::routing::post(flag_display_right_route))
         .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
+        .route("/holdover-tenant-damages", axum::routing::post(holdover_tenant_damages_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4273,6 +4278,43 @@ async fn written_lease_requirement_route(
         ));
     }
     Ok(Json(check_written_lease_requirement(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Holdover tenant damages — landlord recovery calculation.
+//
+// Mounted at POST /api/rental/holdover-tenant-damages. Two
+// structurally distinct regimes: (1) STATUTORY DOUBLE RENT
+// (Florida — Fla. Stat. § 83.58 imposes 2× rent multiplier on the
+// holdover period, partial months count as full periods per "any
+// part thereof" language); (2) RENT-ACCEPTANCE month-to-month
+// conversion (California — Cal. Civ. Code § 1945 rebuttable
+// presumption; New York — N.Y. Real Prop. Law § 232-c mandatory
+// conversion). Default common-law (Restatement (Second) of
+// Property § 14.5) gives the landlord an election between
+// new-tenancy treatment and actual-damages trespass. Crucial
+// distinction: FL multiplier applies regardless of rent
+// acceptance (subject to split-authority waiver concerns);
+// CA + NY conversion engages ONLY when rent is accepted
+// post-expiration.
+// ---------------------------------------------------------------------------
+
+async fn holdover_tenant_damages_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<HoldoverTenantInput>,
+) -> Result<Json<HoldoverTenantResult>, ApiError> {
+    if b.days_in_holdover > 50 * 365 {
+        return Err(ApiError::BadRequest(
+            "days_in_holdover looks invalid (>50 years)".into(),
+        ));
+    }
+    if b.monthly_rent_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents must be non-negative".into(),
+        ));
+    }
+    Ok(Json(check_holdover_tenant_damages(&b)))
 }
 
 // ---------------------------------------------------------------------------
