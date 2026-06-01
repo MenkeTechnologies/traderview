@@ -296,6 +296,10 @@ use traderview_expense::military_ordnance_disclosure::{
     check as check_military_ordnance_disclosure, CheckResult as MilitaryOrdnanceResult,
     Input as MilitaryOrdnanceInput,
 };
+use traderview_expense::sex_offender_database_notice::{
+    check as check_sex_offender_database_notice, CheckResult as SexOffenderNoticeResult,
+    Input as SexOffenderNoticeInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -525,6 +529,7 @@ pub fn router() -> Router<AppState> {
         .route("/lock-change-between-tenancies", axum::routing::post(lock_change_between_tenancies_route))
         .route("/landlord-lien-prohibition", axum::routing::post(landlord_lien_prohibition_route))
         .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
+        .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4092,6 +4097,34 @@ async fn military_ordnance_disclosure_route(
     Json(b): Json<MilitaryOrdnanceInput>,
 ) -> Result<Json<MilitaryOrdnanceResult>, ApiError> {
     Ok(Json(check_military_ordnance_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord sex-offender-database notice disclosure compliance
+// check (Megan's Law database notice in residential leases).
+//
+// Mounted at POST /api/rental/sex-offender-database-notice. Three
+// regimes: California (Cal. Civ. Code § 2079.10a + Cal. Pen. Code
+// § 290.46 — VERBATIM statutory notice required in every
+// residential lease pointing to www.meganslaw.ca.gov; landlord NOT
+// required to provide specific offender names or addresses;
+// landlord has NO statutory duty to investigate registry or
+// affirmatively warn); NewJersey (N.J.S.A. 2C:7-1 et seq.
+// Registration and Community Notification Laws RCNL community-
+// notification framework administered by county prosecutor + NJ
+// State Police; no landlord-tenant lease-disclosure mandate);
+// Default (34 U.S.C. § 20911 et seq. federal Megan's Law framework
+// formerly 42 U.S.C. § 14071; state registries; no statutory
+// landlord lease-disclosure mandate; common-law fraudulent-
+// concealment liability where landlord actively misrepresents).
+// ---------------------------------------------------------------------------
+
+async fn sex_offender_database_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SexOffenderNoticeInput>,
+) -> Result<Json<SexOffenderNoticeResult>, ApiError> {
+    Ok(Json(check_sex_offender_database_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------

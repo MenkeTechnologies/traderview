@@ -1428,6 +1428,41 @@ Mounted at `POST /api/rental/demolition-tenant-notice`. Twenty-six tests pin: **
 
 Mounted at `POST /api/rental/death-in-unit-disclosure`. Twenty-three tests pin: **CA natural-death within 3 years must disclose** (CA-only — natural causes are covered); **CA at 36-month boundary still within window** (regression — ≤ strict); **CA at 37 months outside window** + "37 months ago" note regression; **CA HIV/AIDS carve-out not disclosable**; **CA direct-inquiry misrep overrides 3-year window** (50-year-old death + lie = actionable under § 1710.2(b)); **CA direct-inquiry truthful response compliant**; **CA HIV/AIDS direct-inquiry lie STILL actionable** (regression — § 1710.2(b) override on top of § 1710.2(a)(1) carve-out); **SD homicide within 12 months must disclose**; **SD natural-death not disclosable** (regression — SD's narrower cause coverage); **SD homicide outside 12 months not disclosable**; **SD at 12-month boundary within window**; **SD no direct-inquiry override** (regression — § 1710.2(b) is CA-only); **AK homicide within 12 months must disclose** + AS 08.88.615 citation; **AK natural-cause not disclosable**; **default regime no obligation** + "caveat emptor" citation; **no-death no-obligation across all 4 regimes** (1-test 4-regime invariant); **CA longest lookback window** (CA 36 > SD 12 = AK 12); **CA broadest cause coverage** (natural causes only covered by CA); **state routing CA/SD/AK/Default** (NY → Default, TX → Default); **state routing case-insensitive**; **CA-only direct-inquiry-misrep override** (single-test 4-regime invariant: only CA returns `direct_inquiry_misrep_exposure: true`); **citations pin authorities** (§ 1710.2(a) + HIV/AIDS + § 43-4-44 + 12-month + 08.88.615 + agent disclosure); **CA required-disclosure compliant when no direct inquiry**.
 
+`traderview-expense::sex_offender_database_notice` is the **state landlord sex-offender-database notice disclosure compliance check (Megan's Law database notice in residential leases)** — California is the ONLY state with a statutory mandate that every residential lease include specific verbatim notice language pointing tenants to the state's Megan's Law database. Other states rely on community notification by law enforcement (the registry itself + AG/prosecutor-driven community alerts) rather than a lease-side disclosure. Rounds out the hazard-disclosure / community-information cluster alongside `military_ordnance_disclosure`, `asbestos_disclosure`, `lead_disclosure`, `mold_disclosure`, `radon_disclosure`, `flood_disclosure`, `meth_contamination_disclosure`, `bedbug_disclosure`, `fire_sprinkler_disclosure`, and `death_in_unit_disclosure`.
+
+**Three regimes**:
+
+| Regime | Authority | Lease disclosure mandate | Verbatim language required |
+|--------|-----------|---------------------------|------------------------------|
+| `California` | Cal. Civ. Code § 2079.10a + Pen. Code § 290.46 | **YES** | **YES** (no paraphrasing) |
+| `NewJersey` | N.J.S.A. 2C:7-1 et seq. (RCNL) | No (community notification only) | n/a |
+| `Default` | 34 U.S.C. § 20911 et seq. (federal Megan's Law) | No | n/a |
+
+**California § 2079.10a — three independent compliance gates**:
+
+| Gate | Statute | Rule |
+|------|---------|------|
+| § 2079.10a(a) | Cal. Civ. Code § 2079.10a(a) | Lease must contain Megan's Law database notice — VERBATIM statutory language, no paraphrasing |
+| § 2079.10a(b) | Cal. Civ. Code § 2079.10a(b) | Notice must be provided at lease execution / when rental period begins |
+| § 2079.10a(c) | Cal. Civ. Code § 2079.10a(c) | Landlord NOT required to provide specific offender names or addresses; tenant searches database directly at www.meganslaw.ca.gov |
+
+The verbatim notice reads: "Notice: Pursuant to Section 290.46 of the Penal Code, information about specified registered sex offenders is made available to the public via an Internet Web site maintained by the Department of Justice at www.meganslaw.ca.gov. Depending on an offender's criminal history, this information will include either the address at which the offender resides or the community of residence and ZIP code in which he or she resides."
+
+**Three independent California violations** — each is a standalone failure:
+- Missing notice (§ 2079.10a(a))
+- Paraphrased instead of verbatim language (§ 2079.10a(a))
+- Notice not at lease execution (§ 2079.10a(b))
+
+Pinned by `california_missing_notice_violation`, `california_paraphrased_notice_violation`, `california_notice_after_execution_violation`, and the 3-cell truth-table invariant `ca_three_independent_violations_invariant`.
+
+**§ 2079.10a(c) — landlord has NO statutory duty to investigate the registry or affirmatively warn tenants about specific registered offenders.** Affirmative denial or cancellation of tenancy based on registry status alone may trigger FHA + state anti-discrimination scrutiny. Pinned by `california_landlord_no_specific_offender_info_required_note` and `california_no_duty_to_investigate_note` (UX-text regressions).
+
+**Common-law fraudulent-concealment liability applies universally across regimes.** Where the landlord ACTIVELY misrepresents the absence of registered offenders (e.g., affirmatively states "there are no offenders in this neighborhood" when the landlord knows otherwise), common-law fraud liability attaches regardless of state lease-disclosure regime. Pinned by `active_misrepresentation_triggers_common_law_fraud_default`, `active_misrepresentation_triggers_fraud_even_in_california`, `active_misrepresentation_triggers_fraud_even_in_new_jersey`, and the universal invariant `active_misrepresentation_triggers_fraud_universally_invariant`.
+
+**Community notification framework exists across ALL regimes.** Every regime sits within at least the federal Megan's Law framework (34 U.S.C. § 20911 et seq., formerly 42 U.S.C. § 14071). The federal framework requires states to maintain public registries; what differs is whether the state ALSO imposes a lease-side disclosure mandate. Pinned by `community_notification_framework_exists_across_all_regimes_invariant`.
+
+Mounted at `POST /api/rental/sex-offender-database-notice`. Twenty-one tests pin: **CA verbatim notice at execution compliant + missing notice violation + paraphrased notice violation + notice after execution violation + no specific offender info required note + no duty to investigate note**; **NJ no lease disclosure mandate + compliant without notice**; **Default no state-specific mandate + compliant without lease notice**; **active misrepresentation triggers common-law fraud (Default + CA + NJ)**; **no misrepresentation no common-law fraud**; **only-California-imposes-lease-disclosure-mandate 3-regime invariant**; **only-California-requires-verbatim-language 3-regime invariant**; **community notification framework exists across all 3 regimes invariant**; **active misrepresentation triggers fraud universally 3-regime invariant**; **CA three independent violations 3-cell invariant** (missing/paraphrased/timing); **citation pins authority per regime** (§ 2079.10a + § 290.46 for CA; N.J.S.A. 2C:7-1 for NJ; 34 U.S.C. § 20911 for Default); **sibling-module note across all 3 regimes**.
+
 `traderview-expense::military_ordnance_disclosure` is the **state landlord former-federal-or-state-ordnance-location disclosure compliance check** — specialized hazard-disclosure topic prompted by the December 10, 1983 Tierra Santa tragedy in San Diego where a live munition exploded in a residential area that was formerly a U.S. military ordnance location, killing two residents. California responded with Cal. Civ. Code § 1940.7, the only statute of its kind. Rounds out the hazard-disclosure cluster alongside `asbestos_disclosure`, `lead_disclosure`, `mold_disclosure`, `radon_disclosure`, `flood_disclosure`, `meth_contamination_disclosure`, `bedbug_disclosure`, `fire_sprinkler_disclosure`, and `death_in_unit_disclosure`.
 
 **Three regimes**:
