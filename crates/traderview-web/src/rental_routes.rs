@@ -146,6 +146,9 @@ use traderview_expense::submetering_rules::{
 use traderview_expense::smoke_free_housing::{
     check as check_smoke_free, SmokeFreeInput, SmokeFreeResult,
 };
+use traderview_expense::tenant_data_privacy::{
+    check as check_tenant_privacy, PrivacyInput, PrivacyResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -294,6 +297,7 @@ pub fn router() -> Router<AppState> {
         .route("/mobile-home-park-check", axum::routing::post(mobile_home_park_check_route))
         .route("/submetering-check", axum::routing::post(submetering_check_route))
         .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
+        .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2459,6 +2463,35 @@ async fn smoke_free_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_smoke_free(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant data privacy / records access compliance check
+//
+// Mounted at POST /api/rental/tenant-privacy-check. Three regimes:
+// BiometricStrictWrittenConsent (IL 740 ILCS 14/ BIPA -- no revenue
+// threshold + written informed consent before biometric collection +
+// $1k negligent / $5k intentional per-violation damages);
+// ComprehensivePrivacyLawRevenueThreshold (CA CCPA/CPRA + VA VCDPA +
+// CO CPA + CT CTDPA + OR + DE + MD + MN -- 8 states with revenue /
+// consumer thresholds + 45-day DSAR window); NoStatePrivacyLaw
+// elsewhere.
+// ---------------------------------------------------------------------------
+
+async fn tenant_privacy_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PrivacyInput>,
+) -> Result<Json<PrivacyResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.landlord_annual_revenue_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "landlord_annual_revenue_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_tenant_privacy(&b)))
 }
 
 // ---------------------------------------------------------------------------

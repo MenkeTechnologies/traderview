@@ -969,6 +969,36 @@ The federal rule does NOT apply to private market multifamily — pinned by `tx_
 
 Mounted at `POST /api/rental/smoke-free-check`. Twenty-three tests pin: **PHA with full compliance passes**; **PHA without indoor policy violates**; **PHA without 25-ft buffer violates**; PHA both violations listed (count = 2); **CA private multifamily requires common-area smoke-free** + with common-area complies; **MN private multifamily common-area required**; **CA private single-family NO common-area requirement** (single-family carveout); **OR conversion with 90-day notice complies / 89-day violates** (boundary); **OR new tenancy NO conversion notice needed** (regression); **TX + NY private multifamily NO state requirement** (HudFloorOnly compliant by default); **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (CA+MN+OR state additions / OR only conversion notice / CA+MN only common-area requirement); OR 90-day window pinned; unknown state falls back to HUD-only; lowercase normalizes; PHA violation note describes HUD federal floor VIOLATION; MN citation mentions 2024 cannabis amendment.
 
+`traderview-expense::tenant_data_privacy` is the **state tenant data privacy / records access compliance table** — emerging area as landlord-traders adopt digital tenant screening, smart-building tech (smart locks, doorbell cameras, facial recognition / biometric entry), and tenant records databases. Three regimes:
+
+| Regime                                            | States                  | Source                                                                |
+|---------------------------------------------------|-------------------------|-----------------------------------------------------------------------|
+| **BiometricStrictWrittenConsent**                 | IL                      | 740 ILCS 14/ Biometric Information Privacy Act (BIPA, 2008) — applies to ALL entities with NO revenue threshold; written informed consent required BEFORE biometric collection; **$1,000 per negligent / $5,000 per intentional violation**; private right of action |
+| **ComprehensivePrivacyLawRevenueThreshold**       | CA, VA, CO, CT, OR, DE, MD, MN | Cal. Civ. Code § 1798.100 (CCPA/CPRA); Va. Code § 59.1-575 (VCDPA); Colo. Rev. Stat. § 6-1-1301 (CPA); Conn. Gen. Stat. § 42-515 (CTDPA); Or. Consumer Privacy Act (eff. 2024-07-01); Del. PDPA (eff. 2025-01-01); Md. ODPA (eff. 2025-10-01); Minn. CDPA (eff. 2025-07-31) — revenue / consumer thresholds + 45-day DSAR response window |
+| **NoStatePrivacyLaw**                             | 42 other states + DC    | No comprehensive state privacy law; common-law and contract terms govern |
+
+**Illinois BIPA is uniquely dangerous for landlord-traders using biometric building entry** — facial recognition cameras, fingerprint scanners, retina/iris scans all trigger BIPA regardless of building size or landlord revenue. Statutory damages stack PER TENANT PER VIOLATION: a 10-unit IL building using facial recognition without proper BIPA-compliant written consent faces **$10,000 negligent or $50,000 intentional** exposure ([740 ILCS 14/ statutory text](https://www.ilga.gov/legislation/ilcs/ilcs3.asp?ActID=3004) ). Pinned by `il_biometric_use_without_consent_violates` (10 tenants × $1k = $10k) + `il_intentional_violation_5x_damages` (10 × $5k = $50k) + `il_bipa_has_no_revenue_threshold` ($100k revenue landlord still subject).
+
+**CCPA / CPRA thresholds in CA** (any ONE triggers the law):
+- **$25M+** annual gross revenue
+- **100K+** CA consumers/households processed annually
+- **50%+** annual revenue from selling/sharing CA personal info
+
+Pinned by `ca_under_25m_revenue_under_100k_consumers_not_subject` (small landlord exempt) + `ca_over_25m_revenue_triggers_law` (revenue test) + `ca_100k_consumers_triggers_law` (consumer test).
+
+**VA / CO / CT / OR / MN follow the 100k threshold pattern**: 100k+ residents processed annually OR 25k residents + revenue from data sale. Pinned by `va_100k_residents_triggers_vcdpa` + `co_under_100k_residents_not_subject`.
+
+**DE / MD lowered the threshold to 35k residents** (newer 2025 statutes) — exposing more mid-size landlords. Pinned by `de_35k_residents_triggers_law` + `md_lower_threshold_than_ca`.
+
+**45-day DSAR (Data Subject Access Request) response window** applies in all 8 comprehensive-law states. A tenant who requests their personal data must receive a response within 45 days or the landlord violates the state privacy law. Pinned by `ca_dsar_response_within_45_days_complies` + `ca_dsar_response_46_days_violates` (boundary).
+
+**Module invariants** (3 separately pinned):
+- IL only on BiometricStrictWrittenConsent regime (`only_il_uses_bipa_regime`)
+- Exactly **8 states** on ComprehensivePrivacyLawRevenueThreshold regime (`comprehensive_privacy_law_8_states`)
+- IL only with BIPA per-violation damages > 0 (`only_il_has_bipa_damages`)
+
+Mounted at `POST /api/rental/tenant-privacy-check`. Twenty-six tests pin: **IL biometric use without consent violates** ($10k exposure for 10 tenants); **IL biometric with consent complies**; **IL intentional violation 5× damages** ($50k); IL no biometric no violation; **IL BIPA has no revenue threshold** (even $100k revenue landlord subject); **CA under $25M revenue + under 100k consumers NOT subject**; **CA over $25M revenue triggers**; **CA 100k consumers triggers**; **CA DSAR within 45 days complies / 46 days violates** (boundary); CA DSAR not responded violates; **VA 100k residents triggers VCDPA**; **CO under 100k residents not subject**; **DE 35k residents triggers** (lower threshold); MD lower threshold than CA; **TX no state privacy law no compliance required** (even with biometric in use); NY no comprehensive state law; **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (IL only BIPA / 8 states comprehensive / IL only damages); unknown state falls back to no law; lowercase normalizes; IL violation note mentions BIPA + dollar amount; CA subject note describes DSAR response.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
