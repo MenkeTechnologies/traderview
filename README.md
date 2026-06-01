@@ -1920,6 +1920,29 @@ Each rate boundary pinned: `pre_obbba_gilti_50_pct_deduction` + `pre_obbba_fdii_
 
 Mounted at `POST /api/calc/section-250`. Twenty tests pin: **pre-OBBBA GILTI 50% deduction** ($1M × 50% = $500k); **pre-OBBBA FDII 37.5% deduction** ($500k × 37.5% = $187,500); **pre-OBBBA effective GILTI rate 10.5%** (1050bp); pre-OBBBA effective FDII rate 13.125% (1312bp); **pre-OBBBA DTIR 10% of QBAI** ($2M QBAI → $200k DTIR + reduced GILTI to $800k); **pre-OBBBA FTC 80%** ($100k taxes → $80k FTC); **post-OBBBA NCTI 40% deduction**; **post-OBBBA FDDEI 33.34% deduction**; **post-OBBBA effective NCTI rate 12.6%**; **post-OBBBA effective FDDEI rate 14%**; **post-OBBBA DTIR eliminated** (regression); **post-OBBBA FTC 90%**; year 2025 pre-OBBBA + 2026 post-OBBBA boundary; **pre-OBBBA note uses GILTI/FDII labels**; **post-OBBBA note uses NCTI/FDDEI labels + DTIR elimination call-out**; citation mentions TCJA § 14202 + One Big Beautiful Bill Act + NCTI + FDDEI; $1B precision; zero income zero deduction.
 
+`traderview-expense::section_59a` is the **IRC §59A Base Erosion and Anti-Abuse Tax (BEAT) module** — the TCJA anti-base-erosion minimum tax targeting large US multinationals that deduct payments to foreign related parties. Added by TCJA P.L. 115-97 § 14401 effective 2018; substantially modified by the One Big Beautiful Bill Act (OBBBA) of 2025 effective for tax years beginning after 2025-12-31.
+
+**Applicability gates** — three gates must all be met (categorically excluded entities short-circuit before gates):
+
+| Gate | Standard C corp | Bank / registered securities dealer |
+|------|-----------------|--------------------------------------|
+| Gross receipts (3-yr avg) | ≥ $500M | ≥ $500M |
+| Base erosion percentage | ≥ 3% | ≥ 2% |
+| Entity excluded | S corp / REIT / RIC | (same) |
+
+**BEAT rate by tax year** — OBBBA changed the post-2025 rate from TCJA's scheduled 12.5% (13.5% banks) to a permanent 10.5% (11.5% banks):
+
+| Tax year | Standard rate | Bank surcharge |
+|----------|---------------|----------------|
+| 2018 | 5% | 6% |
+| 2019-2025 | 10% | 11% |
+| **2026+ (post-OBBBA)** | **10.5%** | **11.5%** |
+| 2026+ (TCJA-scheduled, repealed) | 12.5% | 13.5% |
+
+**Computation**: `BEAT = max(0, BEAT_rate × MTI − Regular_Tax_Liability)` where `MTI = Taxable_Income + Base_Erosion_Payments + NOL × BEP`.
+
+Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:

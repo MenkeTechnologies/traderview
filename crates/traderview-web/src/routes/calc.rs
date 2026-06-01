@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
+        .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
@@ -1557,6 +1558,33 @@ async fn section_250_route(
         ));
     }
     Ok(Json(traderview_expense::section_250::compute(&b)))
+}
+
+// ── §59A BEAT (Base Erosion and Anti-Abuse Tax) ─────────────────────
+// Mounted at /api/calc/section-59a. TCJA §14401 BEAT for large
+// multinationals: $500M 3-yr avg gross receipts gate, 3% base
+// erosion percentage gate (2% banks/dealers), rate 5%→10%→10.5%
+// post-OBBBA (was scheduled 12.5% under TCJA, repealed by OBBBA);
+// banks/dealers +1% surcharge throughout; S corps/REITs/RICs
+// categorically excluded under §59A(e)(2).
+
+async fn section_59a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_59a::Section59aInput>,
+) -> Result<Json<traderview_expense::section_59a::Section59aResult>, ApiError> {
+    if b.gross_receipts_year_minus_1_dollars < 0
+        || b.gross_receipts_year_minus_2_dollars < 0
+        || b.gross_receipts_year_minus_3_dollars < 0
+        || b.base_erosion_payments_dollars < 0
+        || b.total_deductions_dollars < 0
+        || b.nol_deduction_dollars < 0
+        || b.regular_tax_liability_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs except taxable_income must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_59a::compute(&b)))
 }
 
 // ── §448 small business gross receipts test + cascade exemptions ────

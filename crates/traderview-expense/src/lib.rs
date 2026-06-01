@@ -150,6 +150,7 @@ pub mod section_7872;
 pub mod section_864b2;
 pub mod section_871m;
 pub mod section_481;
+pub mod section_59a;
 pub mod seed_rules;
 pub mod self_employment_tax;
 pub mod sheet;
