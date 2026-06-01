@@ -300,6 +300,10 @@ use traderview_expense::sex_offender_database_notice::{
     check as check_sex_offender_database_notice, CheckResult as SexOffenderNoticeResult,
     Input as SexOffenderNoticeInput,
 };
+use traderview_expense::mid_tenancy_ownership_change::{
+    check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
+    Input as MidTenancyOwnershipInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -530,6 +534,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-lien-prohibition", axum::routing::post(landlord_lien_prohibition_route))
         .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
+        .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4125,6 +4130,39 @@ async fn sex_offender_database_notice_route(
     Json(b): Json<SexOffenderNoticeInput>,
 ) -> Result<Json<SexOffenderNoticeResult>, ApiError> {
     Ok(Json(check_sex_offender_database_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord mid-tenancy ownership-change notice + security
+// deposit transfer compliance check.
+//
+// Mounted at POST /api/rental/mid-tenancy-ownership-change.
+// Six regimes: California (Cal. Civ. Code § 1962(c) 15-day
+// successor identity disclosure + § 1950.5(g) deposit transfer or
+// refund + § 1962(c) bars nonpayment eviction during noncompliance);
+// Massachusetts (G.L. c. 186 § 15B(2)(b) 45-day transfer to
+// transferee plus accrued interest); Florida (Fla. Stat. § 83.49(5)
+// upon sale transfer to new owner with simultaneous tenant notice
+// OR refund); Washington (RCW 59.18.060(2) + RCW 59.18.270);
+// NewYork (N.Y. GOL § 7-105 5-day transfer plus tenant notice);
+// Default (most other states require some form of notice + deposit
+// transfer via state landlord-tenant statute or common-law
+// successor-liability). Distinct from landlord_identification_
+// disclosure (initial identity at tenancy start) and foreclosure_
+// tenant_rights (foreclosure-driven PTFA protections).
+// ---------------------------------------------------------------------------
+
+async fn mid_tenancy_ownership_change_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MidTenancyOwnershipInput>,
+) -> Result<Json<MidTenancyOwnershipResult>, ApiError> {
+    if b.days_since_ownership_transfer > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_ownership_transfer looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_mid_tenancy_ownership_change(&b)))
 }
 
 // ---------------------------------------------------------------------------

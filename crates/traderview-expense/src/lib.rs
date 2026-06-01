@@ -71,6 +71,7 @@ pub mod lockout_penalties;
 pub mod manual_entry;
 pub mod meals_50;
 pub mod meth_contamination_disclosure;
+pub mod mid_tenancy_ownership_change;
 pub mod military_ordnance_disclosure;
 pub mod mileage;
 pub mod mobile_home_park;
