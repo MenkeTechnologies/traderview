@@ -240,6 +240,10 @@ use traderview_expense::credit_check_authorization::{
 use traderview_expense::winter_eviction_protections::{
     check as check_winter_eviction_protections, WinterEvictionInput, WinterEvictionResult,
 };
+use traderview_expense::landlord_identification_disclosure::{
+    check as check_landlord_identification_disclosure, LandlordIdentificationInput,
+    LandlordIdentificationResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -455,6 +459,7 @@ pub fn router() -> Router<AppState> {
         .route("/pre-move-out-inspection", axum::routing::post(pre_move_out_inspection_route))
         .route("/credit-check-authorization", axum::routing::post(credit_check_authorization_route))
         .route("/winter-eviction-protections", axum::routing::post(winter_eviction_protections_route))
+        .route("/landlord-identification-disclosure", axum::routing::post(landlord_identification_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3514,6 +3519,36 @@ async fn winter_eviction_protections_route(
         ));
     }
     Ok(Json(check_winter_eviction_protections(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord-identification / emergency-contact-information
+// disclosure compliance check.
+//
+// Mounted at POST /api/rental/landlord-identification-disclosure. Four
+// regimes: California (Cal. Civ. Code § 1962 — name + telephone +
+// street address + entity for rent payments; 15-day deadline; STRICT
+// COMPLIANCE — JURISDICTIONAL PREREQUISITE to unlawful detainer);
+// NewJersey (N.J.S.A. 46:8-27 through 46:8-37 Landlord Identity Law —
+// register with municipal clerk within 30 days + supply registration
+// info to each tenant; NJ-only EMERGENCY-CONTACT requirement —
+// representative of owner or managing agent who may be contacted in
+// case of emergency); Washington (RCW 59.18.060 — name + address of
+// manager + owner / authorized agent; no phone or emergency-contact
+// requirement); Default (common-law tenant right to identify landlord).
+// ---------------------------------------------------------------------------
+
+async fn landlord_identification_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordIdentificationInput>,
+) -> Result<Json<LandlordIdentificationResult>, ApiError> {
+    if b.days_since_tenancy_created > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_tenancy_created looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_landlord_identification_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
