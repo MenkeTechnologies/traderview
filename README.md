@@ -4357,6 +4357,35 @@ Mounted at `POST /api/calc/section-6213`. Twenty-six tests pin: **90-day period 
 
 Mounted at `POST /api/calc/section-6511`. Twenty-five tests pin: **standard 3 years from filing when filed after payment** (2022 tax year, filed 2023, paid 2023, claim 2026 timely); **standard 3-year deadline barred in year 27** (2027 claim barred); **standard 2-year from payment when later than 3-year from filing** (2018 tax + late 2025 payment + 2026 claim → 2-year period governs); **standard 2-year lookback invoked when late payment**; **standard 3-year period pinned in notes**; **bad debt 7-year period** (§ 165(g) worthless security 2020 loss + 2028 claim timely); **bad debt barred in year 29**; **bad debt citation pins §§ 166, 832(c), 165(g)**; **NOL carryback 3 years from loss-year return due** (2021 loss → 2025 deadline); **NOL carryback deadline keyed to loss year not amended year**; **NOL carryback barred when filed after loss-year + 4** (2020 loss + 2025 claim barred); **FTC 10-year period** (2014 + 2025 timely); **FTC barred in year 26**; **FTC citation pins § 6511(d)(3)(A) + § 901**; **FTC notes Rev. Rul. 2020-8 open question**; **financial disability flag surfaces suspension note**; **FTC period beats standard for long-horizon overpayment**; **bad debt period beats standard for 7-year horizon**; **NOL carryback falls back to return tax year when loss year omitted**; **standard equal filing and payment year uses 3-year period**; **standard lookback 3 when 3-year period governs**; **standard lookback 2 when 2-year period governs**; **claim at deadline boundary year timely**; **claim one year after deadline barred**; **FTC period is 3× standard period invariant** (deadline delta = 7 years).
 
+`traderview-expense::section_6601` is the **IRC § 6601 interest on underpayment / § 6621 rate determination / § 6622 daily compounding** module — when an amended return or audit produces additional tax due, § 6601 interest accrues from the ORIGINAL DUE DATE of the return (April 15 for most individuals) regardless of any extension to FILE, and continues to compound daily until full payment. Trader-relevant for amended returns, deficiency assessments, and any underpayment scenario.
+
+**Three statutory layers compose the interest computation**:
+
+| Layer | Statute | Mechanic |
+|-------|---------|----------|
+| Interest accrual | § 6601(a) + § 6601(b)(1) | Runs from last date prescribed for payment to date paid; extension to FILE does not extend time to PAY |
+| Rate determination | § 6621(a)(2) + § 6621(c) | Federal short-term rate + 3% (general) or + 5% (large corporate underpayment > $100K) |
+| Compounding | § 6622(a) | Daily compounding (pre-1/1/1983 was simple interest) |
+
+**Quarterly published rates (2026)**:
+
+| Quarter | Authority | Underpayment | Large Corporate |
+|---------|-----------|---------------|------------------|
+| Q1 2026 | Rev. Rul. 2025-22 | 7% (700 bps) | 9% (900 bps) |
+| Q2 2026 | Rev. Rul. 2026-5 | 6% (600 bps) | 8% (800 bps) |
+
+**Daily compounding under § 6622(a) beats simple interest after a full year.** At 7% on $10,000 over 365 days, simple interest = $700; daily-compounded interest ≈ $725 (~$25 incremental due to compounding). Pinned by `daily_compounding_beats_simple_interest_after_full_year` (asserts > $700) and `q1_2026_individual_underpayment_rate_700_bps` (range $700.00 - $730.00). Pinned by `ten_year_compound_at_700_bps_doubles_principal_roughly` — $1,000 × (1 + 0.07/365)^3650 ≈ $2,014 (interest ≈ $1,014).
+
+**§ 6621(c) large corporate underpayment carries a 2-percentage-point premium over the individual rate.** Same quarter, same federal short-term rate base — the only difference is the +3% vs +5% adjustment. Pinned by `q1_2026_large_corp_2_percentage_point_premium_over_individual` (delta = 200 bps).
+
+**Q1 → Q2 2026 rates dropped 100 bps across the board** (individual: 7% → 6%; large corporate: 9% → 8%). Pinned by `q1_to_q2_2026_rate_dropped_100_bps_individual` and `q1_to_q2_2026_rate_dropped_100_bps_large_corporate`.
+
+**`rate_override_bps` bypasses the RATE_TABLE for years not yet published.** When the caller supplies an override, the lookup is bypassed and a note surfaces `"rate override applied"`. When RATE_TABLE has no entry and no override is provided (e.g., 2027 Q4), the module returns zero interest with an explanatory note instructing the caller to supply rate_override_bps. Pinned by `rate_override_bypasses_table`, `missing_year_no_override_returns_zero_interest_with_note`, `six_percent_rate_q2_2026_round_trip_with_override`.
+
+**§ 6621(c) note only surfaces on large-corporate path.** Pinned by `note_for_large_corporate_path_pins_section_6621c` and `note_for_individual_path_omits_section_6621c`.
+
+Mounted at `POST /api/calc/section-6601`. Twenty-four tests pin: **zero principal zero interest** (defensive); **zero days zero interest**; **Q1 2026 individual underpayment rate 700 bps** ($700-$730 daily-compounded on $10K over 365 days); **Q2 2026 individual underpayment rate 600 bps**; **Q1 2026 large corporate underpayment rate 900 bps** ($1M principal $90K-$95K interest); **Q2 2026 large corporate underpayment rate 800 bps**; **rate override bypasses table** (500 bps override); **missing year no override returns zero interest with note** (2027 Q4); **daily compounding beats simple interest after full year**; **daily compounding at 30 days matches approximate floor** ($10K × 7% × 30/365 ≈ $57); **citation pins all subsections** (§ 6601(a)/(b)(1)/(c)/(e)(1)/(f) + § 6621(a)(2)/(c) + § 6622(a) + Rev. Rul. 2025-22 + Rev. Rul. 2026-5); **note describes quarter and rate** ("2026 Q1" + "700 bps"); **note for large corporate path pins § 6621(c)** (+ "federal short-term + 5%" + "30 days after IRS notice"); **note for individual path omits § 6621(c)**; **Q1 2026 large corp 2-percentage-point premium over individual** (delta = 200 bps); **Q1 to Q2 2026 rate dropped 100 bps individual**; **Q1 to Q2 2026 rate dropped 100 bps large corporate**; **negative principal clamped to zero** (defensive); **lookup_rate returns None for missing year**; **lookup_rate returns Some for 2026 Q1**; **note includes daily compounding message when days positive**; **note omits daily compounding when days zero**; **ten-year compound at 700 bps doubles principal roughly** ($1K → ~$2K interest); **6% rate Q2 2026 round trip with override**.
+
 `traderview-expense::section_6651` is the **IRC §6651 failure-to-file / failure-to-pay penalty module** — the most commonly asserted civil tax penalty. Two parallel tracks (late filing under §6651(a)(1); late paying under §6651(a)(2)) that interact via a reduction rule (§6651(c)(1)) and a minimum-penalty floor for returns over 60 days late (§6651(g)). Fraud triples the FTF rate via §6651(f).
 
 **Rate table**:

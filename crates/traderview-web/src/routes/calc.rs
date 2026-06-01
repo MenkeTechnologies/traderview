@@ -84,6 +84,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6511",          post(section_6511_route))
+        .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
@@ -2529,6 +2530,39 @@ async fn section_6511_route(
         }
     }
     Ok(Json(traderview_expense::section_6511::compute(&b)))
+}
+
+// ── §6601 interest on underpayment + §6621 rate + §6622 compounding ─
+// Mounted at /api/calc/section-6601. § 6601(a) interest from last
+// date prescribed for payment under § 6601(b)(1) (extension to file
+// does not extend time to pay) until paid. § 6622(a) daily
+// compounding. § 6621(a)(2) underpayment rate = federal short-term
+// rate + 3%; § 6621(c) large corporate underpayment rate = federal
+// short-term rate + 5% (after applicable date — generally 30 days
+// after IRS notice). Quarterly rates published via Revenue Ruling.
+// 2026 Q1 (Rev. Rul. 2025-22): 7% underpayment / 9% large corporate.
+// 2026 Q2 (Rev. Rul. 2026-5): 6% underpayment / 8% large corporate.
+// Trader-relevant when amended return / audit produces additional
+// tax — interest runs from ORIGINAL April 15 due date regardless of
+// extension to file. § 6601 interest is non-deductible personal
+// interest under § 163(h) for individuals but deductible business
+// interest under § 163(a) for sole-proprietor traders.
+
+async fn section_6601_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6601::Section6601Input>,
+) -> Result<Json<traderview_expense::section_6601::Section6601Result>, ApiError> {
+    if b.rate_quarter == 0 || b.rate_quarter > 4 {
+        return Err(ApiError::BadRequest(
+            "rate_quarter must be 1, 2, 3, or 4".into(),
+        ));
+    }
+    if b.days_outstanding > 1_000_000 {
+        return Err(ApiError::BadRequest(
+            "days_outstanding looks invalid (>1000000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6601::compute(&b)))
 }
 
 // Mounted at /api/calc/section-6651. §6651(a)(1) FTF 5%/month / 25%
