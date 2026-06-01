@@ -161,6 +161,9 @@ use traderview_expense::flood_disclosure::{
 use traderview_expense::owner_identification::{
     check as check_owner_identification, OwnerIdentificationInput, OwnerIdentificationResult,
 };
+use traderview_expense::tenant_death_termination::{
+    check as check_tenant_death, TenantDeathInput, TenantDeathResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -314,6 +317,7 @@ pub fn router() -> Router<AppState> {
         .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
         .route("/flood-disclosure-check", axum::routing::post(flood_disclosure_check_route))
         .route("/owner-identification-check", axum::routing::post(owner_identification_check_route))
+        .route("/tenant-death-termination-check", axum::routing::post(tenant_death_termination_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2616,6 +2620,34 @@ async fn owner_identification_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_owner_identification(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant-death lease termination compliance check
+//
+// Mounted at POST /api/rental/tenant-death-termination-check. Five
+// regimes: EstateRepresentativeTerminatesWith30DayNotice (TX Prop.
+// Code § 92.0162 sole-occupant; written notice + property removal +
+// signed inventory; effective on later of 30 days or all conditions
+// met); MonthToMonthAutoTerminationOnLastRent (CA Civ. Code § 1934
+// month-to-month only — 30 days after last rent payment by deceased);
+// LeaseAutoTerminatesOnDateOfDeath (VA § 55.1-1256 — terminated as
+// of date of death + 10-day property-disposition notice to
+// authorized contact); MultiNoticeStorageRegime (WA RCW 59.18.595
+// first + second notice + 45-day storage hold); NoSpecificStatute-
+// CommonLawContract (46 other states + DC — lease survives death;
+// estate liable through end of term).
+// ---------------------------------------------------------------------------
+
+async fn tenant_death_termination_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantDeathInput>,
+) -> Result<Json<TenantDeathResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_tenant_death(&b)))
 }
 
 // ---------------------------------------------------------------------------
