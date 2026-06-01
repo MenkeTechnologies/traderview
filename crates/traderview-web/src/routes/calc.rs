@@ -144,6 +144,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-704c",          post(section_704c_route))
+        .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
@@ -1329,6 +1330,35 @@ async fn section_704d_route(
         ));
     }
     Ok(Json(traderview_expense::section_704d::compute(&b)))
+}
+
+// ── § 721 partnership contribution non-recognition ─────────────────
+// Mounted at /api/calc/section-721. Partnership-side counterpart
+// to § 351. § 721(a) general bilateral non-recognition rule.
+// § 721(b) investment company exception (> 80% readily marketable
+// stocks/securities triggers gain recognition; prevents tax-free
+// diversification). § 721(c) related foreign partner gain
+// recognition (effective Jan 18, 2017) with Gain Deferral Method
+// safe harbor under § 1.721(c)-3 allowing remedial-income
+// allocation over recovery period. § 721(d) recapture rules tie
+// in with § 736(a) retiring partner distributions. Sibling
+// modules: § 351 (corporate-side counterpart), § 704(c) (built-
+// in gain allocation), § 752 (partnership liabilities), § 754
+// (basis adjustment election). Trader-relevant for hedge funds,
+// real estate JVs, fund-of-fund structures.
+
+async fn section_721_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_721::Section721Input>,
+) -> Result<Json<traderview_expense::section_721::Section721Result>, ApiError> {
+    if b.fmv_contributed_cents > 1_000_000_000_000
+        || b.basis_contributed_cents > 1_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "fmv_contributed_cents or basis_contributed_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_721::compute(&b)))
 }
 
 // ── §704(c) pre-contribution built-in gain/loss allocation ──────────
