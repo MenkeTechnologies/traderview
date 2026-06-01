@@ -213,6 +213,9 @@ use traderview_expense::abandoned_property_handling::{
     check as check_abandoned_property_handling, AbandonedPropertyInput,
     AbandonedPropertyResult,
 };
+use traderview_expense::right_to_counsel_eviction::{
+    check as check_right_to_counsel_eviction, RightToCounselInput, RightToCounselResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -420,6 +423,7 @@ pub fn router() -> Router<AppState> {
         .route("/immigration-status-protection", axum::routing::post(immigration_status_protection_route))
         .route("/prevailing-party-attorney-fees", axum::routing::post(prevailing_party_attorney_fees_route))
         .route("/abandoned-property-handling", axum::routing::post(abandoned_property_handling_route))
+        .route("/right-to-counsel-eviction", axum::routing::post(right_to_counsel_eviction_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3232,6 +3236,38 @@ async fn abandoned_property_handling_route(
         ));
     }
     Ok(Json(check_abandoned_property_handling(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State/municipal right-to-counsel eviction landlord notice compliance.
+//
+// Mounted at POST /api/rental/right-to-counsel-eviction. Three regimes:
+// NewYorkCity (NYC Admin Code § 26-1301 + Local Law 136 of 2017 —
+// FIRST-IN-THE-NATION tenant RTC; 200% FPL income threshold for full
+// representation; BRIEF SERVICES AVAILABLE TO ALL tenants regardless of
+// income; landlord must include RTC notice in eviction petition; applies
+// to Housing Court + NYCHA administrative proceedings only); Washington
+// (RCW 59.18.640 / RCW 59.18.057 + SB 5160 eff. 2021 — FIRST STATEWIDE
+// tenant RTC; 200% FPL income threshold OR public-assistance receipt as
+// alternative eligibility path; 14-day pay-or-quit notice must contain
+// SPECIFIC STATUTORY FORM LANGUAGE about legal aid + dispute resolution
+// centers + appointed counsel); Default (no statewide or municipal RTC;
+// tenant must self-represent or retain private counsel). Distinct from
+// eviction_diversion_program (pre-filing mediation duty) — this module
+// addresses the right to counsel DURING the eviction proceeding itself.
+// ---------------------------------------------------------------------------
+
+async fn right_to_counsel_eviction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RightToCounselInput>,
+) -> Result<Json<RightToCounselResult>, ApiError> {
+    if b.tenant_household_income_cents < 0 || b.federal_poverty_line_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(check_right_to_counsel_eviction(&b)))
 }
 
 // ---------------------------------------------------------------------------
