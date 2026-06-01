@@ -2511,6 +2511,24 @@ Mounted at `POST /api/calc/section-213`. Twenty-eight tests pin: **7.5% AGI floo
 
 Mounted at `POST /api/calc/section-219`. Twenty-six tests pin: **Traditional 2026 under 50 no workplace plan full deduction**; **Traditional 2026 age 50 catch-up adds $1,100 → $8,600**; **Traditional 2024 age 50 catch-up was $1,000** (year-aware regression — pre-SECURE-2.0 statutory $1,000); **Traditional Single covered above $91K → no deduction but still $7,500 contribution permitted** (backdoor Roth setup); **Traditional Single covered at $81K boundary full deduction**; **Traditional Single covered at $86K midpoint partial phaseout**; **Traditional MFJ covered above $149K → no deduction**; **Traditional MFJ spouse-only-covered widened phaseout** (§ 219(g)(7) $242K-$252K regression); **Traditional MFJ neither covered → no phaseout at $500K income**; **Roth Single 2026 below $153K full contribution**; **Roth Single 2026 above $168K NO contribution** + 6% excise on full $7,500 = $450 excise; **Roth MFJ 2026 above $252K no contribution**; **Roth MFJ 2026 $247K midpoint partial**; **Roth MFS 2026 $0-$10K phaseout**; **Roth MFS 2026 above $10K no contribution**; **earned income caps contribution** ($3K earned → $3K limit even with $7,500 statutory cap; $4,500 excess); **excess contribution triggers 6% excise**; **age 49 no catch-up**; **age 50 boundary catch-up applies** (≥ strict); **citations pin § 219(b)(5) + § 219(g) + § 408A(c)(3) + § 4973**; **negative inputs clamped**; **Roth at $153K low-end boundary full contribution**; **Roth at $168K high-end fully phased out**; **Traditional above phaseout backdoor-Roth-eligible** (regression — deduction zero but contribution allowed); **Roth-vs-Traditional distinct phaseout behavior** (regression-critical — same $200K MAGI Single + covered: Traditional allows $7,500 nondeductible contribution; Roth allows $0); **year-aware 2025 $7,000 base limit**.
 
+`traderview-expense::section_221` is the **IRC §221 student loan interest deduction module** — universal for traders and landlords still paying off education debt. § 221(a) provides an **above-the-line deduction** of up to **$2,500** for interest paid on qualified education loans — available even without itemizing. The $2,500 cap is **statutory** (§ 221(b)(1)) and does NOT inflation-adjust.
+
+**2026 MAGI phaseout** (§ 221(b)(2) per Rev. Proc. 2025-XX):
+
+| Filing status | Phaseout range |
+|---------------|----------------|
+| Single / HoH / QW | **$85,000-$100,000** ($15K window) |
+| Married Filing Jointly / QW | **$175,000-$205,000** ($30K window) |
+| **Married Filing Separately** | **EXCLUDED** under § 221(e)(2) — cannot claim regardless of MAGI |
+
+**2025 MAGI phaseout**: Single $80K-$95K; MFJ $165K-$195K.
+
+**MFS exclusion is regression-critical**: § 221(e)(2) bars married-filing-separately taxpayers from claiming the deduction entirely — different from §219 (Traditional IRA) where MFS gets a $75K threshold and §164 SALT cap (MFS at $20K). § 221 MFS = $0 always.
+
+**Statutory $2,500 cap pin**: same $2,500 in 2025, 2026, and forever — does not inflation-adjust unlike most other tax limits.
+
+Mounted at `POST /api/calc/section-221`. Twenty-one tests pin: **single 2026 under phaseout full $2,500**; **single 2026 at $85K boundary full** (≤ strict); **single 2026 at $100K boundary zero**; **single 2026 in phaseout midpoint $92.5K → $1,250** (50% × $2,500); **single 2026 interest below cap** ($1,500 paid → $1,500 not $2,500); **MFJ 2026 under $175K full deduction**; **MFJ 2026 at $205K high-end zero**; **MFJ 2026 in phaseout midpoint $190K → $1,250**; **MFS excluded zero deduction** + § 221(e)(2) citation (regression-critical); **HoH uses single phaseout range**; **QW uses MFJ phaseout range** (regression — QW gets joint-status treatment); **year-aware 2025 single $80K-$95K**; **year-aware 2025 MFJ $165K-$195K**; **statutory $2,500 cap does NOT inflation-adjust** (regression-critical statutory pin — 2025 + 2026 both $2,500); **negative inputs clamped**; **zero interest zero deduction**; **citations pin authorities** (§ 221(a) + (b)(1) + (b)(2) + (e)(2)); **one dollar above phaseout low starts phaseout** (off-by-one); **one dollar above phaseout high zero deduction**; **interest below cap phaseout proportional** ($1,000 paid + midpoint → $500); **worked example single $98K → $333 allowed** (close to phaseout high end).
+
 `traderview-expense::section_223` is the **IRC §223 Health Savings Account (HSA) module** — triple tax-advantaged: contributions deductible above-the-line under §223(a), earnings grow tax-free, withdrawals for qualified medical expenses tax-free. Universal for any trader or landlord with HDHP coverage. To contribute, the taxpayer must be covered by a High Deductible Health Plan meeting the §223(c)(2) three-prong test (minimum deductible + capped out-of-pocket maximum + no payment for non-preventive care before deductible).
 
 **2026 inflation-adjusted amounts** (Rev. Proc. 2025-19):

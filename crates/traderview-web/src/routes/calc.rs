@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-170",           post(section_170_route))
         .route("/calc/section-219",           post(section_219_route))
+        .route("/calc/section-221",           post(section_221_route))
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
@@ -1918,6 +1919,32 @@ async fn section_219_route(
         ));
     }
     Ok(Json(traderview_expense::section_219::compute(&b)))
+}
+
+// ── §221 student loan interest deduction (above-the-line) ────────────
+// Mounted at /api/calc/section-221. §221(a) above-the-line deduction
+// up to $2,500 for interest paid on qualified education loans;
+// §221(b)(1) STATUTORY $2,500 cap does NOT inflation-adjust;
+// §221(b)(2) MAGI phaseout — 2026 single/HoH $85K-$100K + MFJ
+// $175K-$205K + 2025 single $80K-$95K + MFJ $165K-$195K; §221(e)(2)
+// EXCLUDES Married Filing Separately filers entirely. Above-the-line
+// = available even without itemizing.
+
+async fn section_221_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_221::Section221Input>,
+) -> Result<Json<traderview_expense::section_221::Section221Result>, ApiError> {
+    if b.interest_paid_cents < 0 || b.modified_agi_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1990, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_221::compute(&b)))
 }
 
 // ── §223 Health Savings Accounts (HSAs) — triple-tax-advantaged ──────
