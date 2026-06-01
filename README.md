@@ -1298,6 +1298,27 @@ Mounted at `POST /api/rental/advance-rent-limit-check`. Thirty-one tests pin: **
 
 Mounted at `POST /api/rental/fire-sprinkler-disclosure-check`. Eighteen tests pin: **2 regime classifications** (NY + default AL/CA/FL/TX/WA/DC/WY/MA/NJ/IL); **NY all 4 compliance facets met** (notice in lease + bold face + maintenance date + system present); **NY no notice non-compliant** with diagnostic; **NY notice NOT bold face non-compliant** (regression target — bold-face prong independently checked); **NY no maintenance date non-compliant when system present**; **NY no sprinkler system → no maintenance-date requirement** (regression — conditional structure); default state no-disclosure-required; default state no-notice still compliant (no obligation); **2 citation regression targets** (NY § 231-a + "BOLD FACE TYPE" + 2014-12-03; "NO statutory penalty" pin); **51-state coverage**; non-empty citations; **2 single-state-uniqueness invariants** (NY-only sprinkler-notice / NY-only bold-face-required); NY compliant note mentions regime; default state note says "no statutory disclosure obligation"; lowercase state code normalizes.
 
+`traderview-expense::bedbug_extermination_cost` is the **state bedbug extermination cost / treatment-responsibility compliance table** — distinct from existing `bedbug_disclosure` (which covers initial disclosure of past infestation at lease signing). This module addresses who pays when an infestation is discovered MID-TENANCY, what the tenant must do to cooperate, and whether retaliation protection kicks in when the tenant reports.
+
+**Three regimes**:
+
+| Regime | States | Investigation window | Follow-up required | Retaliation window | Licensed pest control |
+|--------|--------|-----------------------|---------------------|---------------------|------------------------|
+| `CaliforniaAB551Comprehensive` | CA | None | **Yes** (§ 1954.604) | **180 days** (§ 1942.5) | No |
+| `MaineLandlordEradicationStatutory` | ME | **5 days** (§ 6021-A) | No | None | **Yes** |
+| `DefaultImpliedWarrantyOfHabitability` | 48 other states + DC | None | No | None | No |
+
+**CA AB 551 (2017) is the most detailed regime**: Civ. Code §§ 1954.600-1954.605 plus § 1942.5 create three interlocking protections —
+- § 1954.602: landlord may NOT show / rent / lease a vacant unit known to have a current bed bug infestation.
+- § 1954.604: landlord must schedule follow-up and maintenance treatments until eradicated.
+- § 1942.5: 180-day retaliation protection from tenant's good-faith bedbug report (no eviction / rent raise / service reduction).
+
+**ME § 6021-A imposes the only sharp investigation window** (5 days post-tenant report) and the only licensed-pest-control requirement. Maine also creates a tenant re-treatment-cost liability when the tenant recklessly or intentionally introduced bedbugs — the only state in this table with that allocation rule.
+
+**Default-regime states** (NY, FL, TX, MA, NJ, etc.) apply the common-law implied warranty of habitability (Restatement 2d Property § 5.5) — landlord generally pays unless tenant introduction is proven; tenant has a common-law duty to cooperate with treatment. No statutory windows or fixed protections.
+
+Mounted at `POST /api/rental/bedbug-extermination-cost-check`. Thirty tests pin: **3 regime classifications** (CA / ME + default AL/NY/TX/FL/MA/WA/DC/WY); **CA full compliance baseline**; **CA no follow-up treatments non-compliant** (regression — § 1954.604 required); **CA § 1954.602 vacant-unit prohibition violation**; **CA 100-day retaliation window active**; **CA day-181 retaliation window expired** (regression — strict ≤ 180); **CA retaliation window requires good-faith report** (regression — not just timing); **ME 5-day window satisfied when engaged within window**; **ME day-6 no engagement window NOT met**; **ME unlicensed pest control non-compliant** (regression — only ME has this prong); **ME tenant reckless introduction creates re-treatment liability**; **ME no follow-up treatments still compliant** (regression — distinguishes ME from CA); default state no statutory windows; **default state vacant-unit prohibition not statutory** (regression — only CA has § 1954.602); **3 citation regression targets** (CA AB 551 2017 + § 1942.5 + § 1954.602 + "180-day"; ME § 6021-A + "5 days" + "licensed pest control"; default "Restatement 2d Property § 5.5"); **51-state coverage**; non-empty citations; **5 single-state-uniqueness invariants** (CA-only AB 551 / ME-only eradication-statutory / CA-only vacant-unit-prohibition / CA-only retaliation-window / ME-only licensed-pest-control-required); CA non-compliant note mentions § 1954.602; ME non-compliant note mentions investigation window; lowercase state code normalizes.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:

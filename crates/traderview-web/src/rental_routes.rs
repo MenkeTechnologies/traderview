@@ -191,6 +191,9 @@ use traderview_expense::advance_rent_limit::{
 use traderview_expense::fire_sprinkler_disclosure::{
     check as check_fire_sprinkler, FireSprinklerDisclosureInput, FireSprinklerDisclosureResult,
 };
+use traderview_expense::bedbug_extermination_cost::{
+    check as check_bedbug_extermination, BedbugExterminationInput, BedbugExterminationResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -354,6 +357,7 @@ pub fn router() -> Router<AppState> {
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
         .route("/advance-rent-limit-check", axum::routing::post(advance_rent_limit_check_route))
         .route("/fire-sprinkler-disclosure-check", axum::routing::post(fire_sprinkler_disclosure_check_route))
+        .route("/bedbug-extermination-cost-check", axum::routing::post(bedbug_extermination_cost_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2934,6 +2938,31 @@ async fn fire_sprinkler_disclosure_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_fire_sprinkler(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State bedbug extermination cost / treatment-responsibility check
+//
+// Mounted at POST /api/rental/bedbug-extermination-cost-check. Three
+// regimes: CaliforniaAB551Comprehensive (Cal. Civ. Code §§
+// 1954.600-1954.605 AB 551 2017 + § 1942.5 — § 1954.602 vacant-unit
+// prohibition + § 1954.604 follow-up treatments + 180-day retaliation
+// protection); MaineLandlordEradicationStatutory (Me. Stat. tit. 14
+// § 6021-A eff. 2010 — 5-day investigation window + licensed pest
+// control + tenant re-treatment liability if reckless introduction);
+// DefaultImpliedWarrantyOfHabitability (48 other states + DC,
+// common-law per Restatement 2d Property § 5.5).
+// ---------------------------------------------------------------------------
+
+async fn bedbug_extermination_cost_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<BedbugExterminationInput>,
+) -> Result<Json<BedbugExterminationResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_bedbug_extermination(&b)))
 }
 
 // ---------------------------------------------------------------------------
