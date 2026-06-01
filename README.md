@@ -4178,6 +4178,29 @@ The `ImprovementType` enum exposes the exclusion categories explicitly so the ca
 
 Mounted at `POST /api/calc/section-168-e6`. Eighteen tests pin: interior nonresidential qualifies as QIP; QIP 2024 60% bonus year 1 ($60k + $2k = $62k); QIP 2022 100% bonus full year 1 ($100k); QIP 2023 80% bonus phase-down ($81k); QIP 2027 zero bonus phase-down ($5k year 1); building enlargement excluded → 39-year; elevator/escalator excluded; internal structural framework excluded; residential rental not QIP by definition; **improvement in same year as building placed in service not QIP** (must be AFTER); improvement before building placed in service not QIP; excluded category uses 39-year MACRS ($1,282 year 1); no bonus election → MACRS half-year only ($5k); bonus phase-down 2023-2027 each year exact; helper returns true only for interior nonresidential; CARES Act fix verified for years 2018-2021 (15-year recovery); note distinguishes QIP path vs excluded path; total deduction equals bonus + MACRS invariant.
 
+`traderview-expense::section_168k` is the **IRC §168(k) bonus depreciation module with OBBBA 100% permanent restoration** — universal for landlords + traders + business buying §1245 property. Distinct from `section_179` first-year expensing which has dollar caps + income limits + phaseout — §168(k) has NO dollar cap, NO income limit, NO phaseout. The two work together: §179 first, then §168(k) on the remainder, then MACRS on what remains.
+
+**Rate schedule** (placed-in-service year):
+
+| Period | Rate | Citation |
+|--------|------|----------|
+| Pre-2018 (pre-TCJA) | 50% | § 168(k)(6) (pre-TCJA) |
+| TCJA 2018-2022 | **100%** | § 168(k)(6) (TCJA boost) |
+| 2023 (TCJA phasedown begins) | 80% | § 168(k)(6) phasedown |
+| 2024 | 60% | § 168(k)(6) phasedown |
+| 2025 (pre-OBBBA — property placed before 2025-01-20) | 40% | § 168(k)(6) phasedown |
+| 2026 (pre-OBBBA hypothetical) | 20% | § 168(k)(6) phasedown |
+| 2027+ (pre-OBBBA hypothetical) | 0% | § 168(k)(6) sunset |
+| **OBBBA permanent (acquired AND placed in service after 2025-01-19)** | **100% PERMANENTLY** | **OBBBA § 70302** |
+
+**OBBBA § 70302 effective date is critical**: property must be BOTH acquired AND placed in service AFTER **2025-01-19** to qualify for the permanent 100%. Property acquired BEFORE 2025-01-20 + placed in service AFTER falls back to the pre-OBBBA phasedown schedule (20% in 2026, 0% in 2027+).
+
+**Transition election** (§ 168(k)(7) under OBBBA): for the FYE-after-2025-01-19 year, taxpayer may ELECT to deduct **40%** (or **60% for long-production-period property / certain aircraft**) instead of the permanent 100%. Election made by the due date of the federal return for the year including 2025-01-20.
+
+**Qualified property** (§ 168(k)(2)): § 1245-type tangible property with MACRS recovery period **≤ 20 years**; computer software; qualified film/TV/live theatrical productions; specified plants; water utility property; **qualified improvement property** (post-CARES Act 2020 fix). **Used property** eligible if no prior use by the taxpayer (TCJA 2017 expansion preserved by OBBBA).
+
+Mounted at `POST /api/calc/section-168k`. Twenty-two tests pin: **OBBBA 2026 100% permanent**; **pre-OBBBA 2024 60%**; **pre-OBBBA 2023 80%**; **pre-OBBBA 2025 phasedown 40%** (placed in service before 2025-01-20); **at 2025-01-19 boundary pre-OBBBA** (strict greater-than required); **at 2025-01-20 OBBBA permanent 100% applies**; **OBBBA transition election 40% 2025** + § 168(k)(7) citation; **OBBBA transition election 60% long-production**; **OBBBA no-transition-election 2025 full 100%**; **transition election NOT available for 2026** (regression — only FYE-after-2025-01-19 year qualifies); **prior use disqualifies** + § 168(k)(2) citation; **MACRS 25-year disqualifies**; **MACRS 20-year qualifies** (≤ strict); **pre-2018 50% rate**; **TCJA 2018-2022 100% all 5 years** (multi-year invariant); **pre-OBBBA 2026 would-have-been 20%** (acquired before cutoff → phasedown applies); **pre-OBBBA 2027 zero** (sunset); **OBBBA 2027 back to 100% permanent** (regression — OBBBA permanent eliminates the pre-OBBBA 2027 zero); **acquisition before cutoff placed after does NOT get OBBBA** (regression — both dates required); **placed before cutoff acquired after does NOT get OBBBA** (symmetric regression); **negative cost clamped**; **citations pin authorities** (OBBBA § 70302 + "PERMANENT 100%" + transition-election + phasedown + § 168(k)(2)).
+
 `traderview-expense::section_168g` is the **IRC §168(g) Alternative Depreciation System (ADS) + §163(j)(7)(B) tradeoff analyzer** — the natural companion to iter 16's `section_163j`. A landlord with high mortgage interest hitting the §163(j) 30%-of-ATI cap can elect to be an **electing real property trade or business** under §163(j)(7)(B): full business interest deductibility (no §163(j) cap), BUT must use slower ADS depreciation on all real property forever — the election is **IRREVOCABLE**.
 
 ADS recovery periods (§168(g)(2)): **30 years** residential (post-TCJA; 40 years pre-2018), **40 years** non-residential, **20 years** for Qualified Improvement Property at electing RPTBs, plus personal-property classes (5/7/15 years). Method is **straight-line** (no double-declining acceleration). Convention is **mid-month** for real property, **half-year** for personal property. Bonus depreciation per §168(k)(2)(D)(i) is NOT allowed on ADS property — another giveup beyond the longer recovery period.

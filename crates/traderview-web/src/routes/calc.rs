@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1296",          post(section_1296_route))
         .route("/calc/section-1341",          post(section_1341_route))
         .route("/calc/section-168g",          post(section_168g_route))
+        .route("/calc/section-168k",          post(section_168k_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/section-164",           post(section_164_route))
         .route("/calc/section-165h",          post(section_165h_route))
@@ -2379,6 +2380,44 @@ async fn section_168g_route(
         ));
     }
     Ok(Json(traderview_expense::section_168g::compute(&b)))
+}
+
+// ── §168(k) bonus depreciation (post-OBBBA 100% permanent) ──────────
+// Mounted at /api/calc/section-168k. § 168(k)(1) additional first-year
+// depreciation deduction; § 168(k)(2) qualified property (MACRS ≤ 20
+// years + no prior use); § 168(k)(6) pre-OBBBA TCJA phasedown rate
+// schedule (100% 2018-2022, 80% 2023, 60% 2024, 40% 2025, 20% 2026,
+// 0% 2027+); OBBBA § 70302 permanently restores 100% for property
+// acquired AND placed in service after 2025-01-19 — eliminating the
+// TCJA phasedown's 2026-2027 step-down years. Transition election
+// permits 40% (60% long-production/aircraft) for FYE-after-2025-01-19
+// year. Used property eligible if no prior use by taxpayer (TCJA
+// 2017 expansion preserved by OBBBA). Distinct from § 179 expensing
+// which has dollar caps; § 168(k) has no dollar cap, no income limit,
+// no phaseout — works alongside § 179 (§ 179 first, then § 168(k) on
+// remainder, then MACRS).
+
+async fn section_168k_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_168k::Section168KInput>,
+) -> Result<Json<traderview_expense::section_168k::Section168KResult>, ApiError> {
+    if b.property_cost_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "property_cost_cents must be non-negative".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.acquisition_year)
+        || !(1..=12).contains(&b.acquisition_month)
+        || !(1..=31).contains(&b.acquisition_day)
+        || !(1990..=2100).contains(&b.placed_in_service_year)
+        || !(1..=12).contains(&b.placed_in_service_month)
+        || !(1..=31).contains(&b.placed_in_service_day)
+    {
+        return Err(ApiError::BadRequest(
+            "acquisition + placed_in_service dates must be valid".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_168k::compute(&b)))
 }
 
 // ── §163(j)(7)(B) electing-RPTB tradeoff analyzer ────────────────────
