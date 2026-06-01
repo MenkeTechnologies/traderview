@@ -65,6 +65,7 @@ pub mod lease_disclosures;
 pub mod lease_succession;
 pub mod lease_termination_notice;
 pub mod lease_translation;
+pub mod lock_change_between_tenancies;
 pub mod lockout_penalties;
 pub mod manual_entry;
 pub mod meals_50;

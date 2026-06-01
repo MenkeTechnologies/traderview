@@ -284,6 +284,10 @@ use traderview_expense::firearms_in_rental_unit::{
     check as check_firearms_in_rental_unit, CheckResult as FirearmsRentalResult,
     Input as FirearmsRentalInput,
 };
+use traderview_expense::lock_change_between_tenancies::{
+    check as check_lock_change_between_tenancies, CheckResult as LockChangeResult,
+    Input as LockChangeInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -510,6 +514,7 @@ pub fn router() -> Router<AppState> {
         .route("/religious-display-doorpost", axum::routing::post(religious_display_doorpost_route))
         .route("/asbestos-disclosure", axum::routing::post(asbestos_disclosure_route))
         .route("/firearms-in-rental-unit", axum::routing::post(firearms_in_rental_unit_route))
+        .route("/lock-change-between-tenancies", axum::routing::post(lock_change_between_tenancies_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3975,6 +3980,49 @@ async fn firearms_in_rental_unit_route(
     Json(b): Json<FirearmsRentalInput>,
 ) -> Result<Json<FirearmsRentalResult>, ApiError> {
     Ok(Json(check_firearms_in_rental_unit(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord lock-change / rekey / security-device compliance
+// check for new-tenant turnover.
+//
+// Mounted at POST /api/rental/lock-change-between-tenancies. Six
+// regimes: Texas (Tex. Prop. Code § 92.156(a) — security device
+// operated by key/card/combination shall be rekeyed by landlord at
+// landlord's expense not later than 7th day after each tenant
+// turnover date + § 92.156(b) tenant-requested additional rekeying
+// at tenant expense — STRONGEST mandatory rekey-between-tenancies
+// statute); California (Cal. Civ. Code § 1941.3(a)(1) landlord must
+// install and maintain operable deadbolt lock on each main swinging
+// entry door + § 1941.3(a)(2) bolt extension at least 13/16 inch
+// beyond strike edge into doorjamb — installation + maintenance not
+// rekey-between-tenancies); Illinois (765 ILCS 5/12 + Chicago RLTO
+// + local statutes — landlord shall change or rekey locks ON OR
+// BEFORE the day new tenant moves in — STRICTEST TIMING same-day);
+// Virginia (Va. Code § 55.1-1221 — landlord shall provide locks AND
+// peepholes on each rental dwelling unit); NewYork (no statewide NY
+// lock-change requirement; NYC Housing Maintenance Code § 27-2043
+// may impose specific peephole standards in NYC); Default (no
+// statewide rekeying requirement; common-law best practice without
+// enforceable mandate). Distinct from lockout_penalties (unlawful
+// self-help lockouts during tenancy) and dv_termination (domestic-
+// violence emergency lock change during tenancy).
+// ---------------------------------------------------------------------------
+
+async fn lock_change_between_tenancies_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LockChangeInput>,
+) -> Result<Json<LockChangeResult>, ApiError> {
+    if b.days_since_prior_tenant_move_out > 100_000
+        || b.days_since_new_tenant_move_in > 100_000
+        || b.days_from_move_in_to_rekey > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "day counters look invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_lock_change_between_tenancies(&b)))
 }
 
 // ---------------------------------------------------------------------------

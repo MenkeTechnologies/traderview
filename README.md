@@ -2366,6 +2366,31 @@ States WITHOUT a carve-out don't override: setting `violence_by_co_tenant = true
 
 Mounted at `POST /api/rental/dv-termination-check`. Twenty-four tests pin: 51-row coverage; CA 14-day exact boundary + 13-day shortfall; TX 30-day boundary; **IL 3-day strictest band**; WA end-of-month with year-rollover and short-Feb handling (calendar-anchored math regression targets); WA Jan-31 boundary; TX co-tenant violence waives notice; WA landlord violence waives notice; **CA without co-tenant carve-out doesn't waive** (7-day shortfall pinned); documentation sufficient with only protective order; documentation insufficient when all three false; CA 180-day freshness window inside/outside; no-freshness states accept any-age documentation; 15 no-statute states flagged correctly with VAWA-only note; unknown state errors; case-insensitive lookup; sorted `all_states()`; non-empty citations; notice-before-incident negative freshness window; end-of-month boundary same-day; shortfall zero when compliant; shortfall reported only for Days regime not EndOfCurrentMonth (note text carries the explanation instead).
 
+`traderview-expense::lock_change_between_tenancies` is the **state landlord lock-change / rekey / security-device compliance check for new-tenant turnover** — operational concern for every landlord between tenancies. Tenant safety topic distinct from `lockout_penalties` (which addresses unlawful self-help lockouts during tenancy) and `dv_termination` (which addresses domestic-violence emergency lock change during tenancy). This module addresses the BETWEEN-TENANCIES lock change / security device installation duty.
+
+**Six regimes** diverge along three axes:
+
+| Regime | Authority | Mandatory rekey | Deadline | At landlord expense | Specific security device |
+|--------|-----------|------------------|----------|----------------------|---------------------------|
+| `Texas` | Tex. Prop. Code § 92.156(a) | **YES** | **7 days** from move-in | **YES** (§ 92.156 requires landlord pays; tenant pays only § 92.156(b) additional rekey) | No |
+| `California` | Cal. Civ. Code § 1941.3(a)(1)–(2) | No | n/a | n/a | **Deadbolt** (13/16 inch bolt extension into doorjamb) |
+| `Illinois` | 765 ILCS 5/12 + Chicago RLTO | **YES** | **0 days** (same-day) | **YES** | No |
+| `Virginia` | Va. Code § 55.1-1221 | No | n/a | n/a | **Locks AND peepholes** |
+| `NewYork` | No statewide mandate | No | n/a | n/a | NYC Housing Maintenance Code § 27-2043 may impose peephole standards |
+| `Default` | None | No | n/a | n/a | None |
+
+**Illinois is stricter than Texas on timing.** Same-day rekey (0 days) vs Texas 7-day window. Pinned by `illinois_one_day_after_move_in_violation` (1 day post-move-in violates IL but not TX) and the comparative invariant `illinois_stricter_than_texas_timing_invariant`.
+
+**Texas § 92.156(a) requires landlord to bear the rekeying expense.** Charging the tenant for the between-tenancy rekey violates the statute (although § 92.156(b) permits tenant-requested ADDITIONAL rekeying at tenant expense). Pinned by `texas_charged_tenant_expense_violation` and the 6-regime invariant `only_tx_il_require_at_landlord_expense_invariant` (TX + IL only; CA + VA + NY + Default not).
+
+**California § 1941.3 covers DEADBOLT INSTALLATION + maintenance, not rekeying between tenancies.** § 1941.3(a)(1) requires an operable deadbolt on each main swinging entry door; § 1941.3(a)(2) specifies the bolt must extend at least 13/16 of an inch beyond the strike edge into the doorjamb. Pinned by `california_operable_deadbolt_with_spec_compliant`, `california_missing_deadbolt_violation`, and `california_deadbolt_extension_below_spec_violation`.
+
+**Virginia § 55.1-1221 mandates BOTH locks AND peepholes.** Missing peephole is a standalone violation. Pinned by `virginia_missing_peephole_violation` and the 6-regime invariant `only_ca_and_va_require_specific_security_device_invariant` (CA + VA only).
+
+**Texas 7-day boundary truth table:** day 0, 6, 7 = compliant; day 8 = violation. Pinned by `texas_boundary_7_versus_8_days_truth_table_invariant`.
+
+Mounted at `POST /api/rental/lock-change-between-tenancies`. Twenty-two tests pin: **TX within 7 days at landlord expense compliant + at 7-day boundary compliant + past 7-day deadline violation + landlord did not rekey violation + charged tenant expense violation**; **CA operable deadbolt with spec compliant + missing deadbolt violation + extension below spec violation** (§ 1941.3(a)(2) 13/16 inch); **IL same-day rekey compliant + 1 day after move-in violation + did not rekey violation**; **VA locks and peephole compliant + missing peephole violation**; **NY no statewide mandate compliant** (even with no rekeying); **Default no mandate compliant regardless** (no deadbolt + no peephole + no rekey); **only-TX-and-IL-impose-mandatory-rekey 6-regime invariant**; **only-CA-and-VA-require-specific-security-device 6-regime invariant**; **Illinois stricter than Texas timing invariant** (1 day post-move-in violates IL but not TX); **only-TX-IL-require-at-landlord-expense 6-regime invariant**; **citation pins authority per regime**; **sibling-module note across all 6 regimes** (UX-text regression for lockout_penalties + dv_termination + BETWEEN-TENANCIES scope); **TX boundary 7 vs 8 days truth table 4-cell invariant** (0/6/7/8 days).
+
 `traderview-expense::lockout_penalties` is the **state-specific self-help eviction penalty table** — sibling to `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Self-help eviction (lockout, utility shutoff, removal of tenant property without court order) is universal landlord exposure — every state prohibits it — but the dollar consequences vary by 10× across jurisdictions.
 
 **Seven distinct penalty regimes** are present in the table:
