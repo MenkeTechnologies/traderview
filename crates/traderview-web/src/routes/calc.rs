@@ -91,6 +91,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-7521",          post(section_7521_route))
         .route("/calc/section-7811",          post(section_7811_route))
+        .route("/calc/section-6501",          post(section_6501_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -2828,6 +2829,29 @@ async fn section_162f_route(
         ));
     }
     Ok(Json(traderview_expense::section_162f::compute(&b)))
+}
+
+// ── §6501 limitations on assessment + collection (ASED) ─────────────
+// Mounted at /api/calc/section-6501. § 6501(a) 3-year default ASED
+// from filing date; § 6501(b)(1) early-filed return deemed filed on
+// statutory due date; § 6501(c)(1) UNLIMITED for false/fraudulent
+// return with intent to evade tax (clear-and-convincing burden);
+// § 6501(c)(2) UNLIMITED for willful attempt to evade; § 6501(c)(3)
+// UNLIMITED for no return filed (3-year clock starts only upon
+// filing); § 6501(c)(4) Form 872 consent extension + IRM 25.6.22
+// three-rights disclosure requirement; § 6501(e)(1)(A)(i) 6-year for
+// >25% gross-income omission; § 6501(e)(1)(B) 6-year for basis
+// overstatement (post-2015 Surface Transportation Act amendment
+// overruling Home Concrete & Supply v. United States, 132 S. Ct.
+// 1836 (2012)). Trader-critical defensive shield against IRS audit
+// reach-back on wash-sale disallowances, § 1256 mark-to-market,
+// § 988 currency, § 1202 QSBS holding-period determinations.
+
+async fn section_6501_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6501::Section6501Input>,
+) -> Result<Json<traderview_expense::section_6501::Section6501Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6501::check(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────
