@@ -114,6 +114,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6112",          post(section_6112_route))
         .route("/calc/section-6662a",         post(section_6662a_route))
         .route("/calc/section-6694",          post(section_6694_route))
+        .route("/calc/section-6695",          post(section_6695_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -3239,6 +3240,41 @@ async fn section_6694_route(
         ));
     }
     Ok(Json(traderview_expense::section_6694::compute(&b)))
+}
+
+// ── § 6695 preparer information return penalties ───────────────────
+// Mounted at /api/calc/section-6695. Direct sibling to § 6694
+// (substantive position penalty) — covers PROCEDURAL failures
+// by the preparer. Five per-failure subsections (a)-(e) at $60
+// each (2025; max $31,500/year per subsection): copy to taxpayer,
+// signature, PTIN, retention, info return. Higher-tier
+// per-failure $635: § 6695(f) refund check negotiation; § 6695(g)
+// due diligence on credits (EITC, CTC/ACTC/ODC, AOTC, HOH) —
+// max combined per return = $2,540 ($635 × 4). Treas. Reg.
+// § 1.6695-2 requires Form 8867 + worksheet + knowledge
+// requirement + 3-year retention. 2025 amounts per Rev. Proc.
+// 2024-40 inflation adjustments.
+
+async fn section_6695_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6695::Section6695Input>,
+) -> Result<Json<traderview_expense::section_6695::Section6695Result>, ApiError> {
+    if b.per_failure_penalty_cents < 0 || b.per_failure_penalty_cents > 1_000_000 {
+        return Err(ApiError::BadRequest(
+            "per_failure_penalty_cents out of range".into(),
+        ));
+    }
+    if b.annual_max_cap_cents < 0 || b.annual_max_cap_cents > 100_000_000_000 {
+        return Err(ApiError::BadRequest(
+            "annual_max_cap_cents out of range".into(),
+        ));
+    }
+    if b.higher_tier_penalty_cents < 0 || b.higher_tier_penalty_cents > 10_000_000 {
+        return Err(ApiError::BadRequest(
+            "higher_tier_penalty_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6695::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

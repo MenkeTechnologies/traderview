@@ -5620,6 +5620,45 @@ Pinned by `three_unreasonable_position_paths_truth_table` (4-cell sweep — base
 
 Mounted at `POST /api/calc/section-6694`. Twenty-seven tests pin: **no understatement no penalty**; **undisclosed with substantial authority no penalty**; **undisclosed without substantial authority penalty**; **disclosed with reasonable basis no penalty**; **disclosed without reasonable basis penalty**; **tax shelter more-likely-than-not no penalty**; **tax shelter without more-likely-than-not penalty**; **reasonable cause excuses § 6694(a)**; **fee-based 50% exceeds minimum** ($5K on $10K fee); **fee-based 50% low fee floor applies** ($1K floor on $500 fee); **willful understatement engages § 6694(b)**; **reckless disregard engages § 6694(b)**; **no understatement no § 6694(b) even if willful**; **fee-based 75% exceeds minimum** ($7,500 on $10K fee); **fee-based 75% low fee floor applies** ($5K floor on $1K fee); **both (a) and (b) trigger no stacking** ($75K total on $100K fee); **only (a) no stacking total equals (a)**; **only (b) no stacking total equals (b)**; **(b) penalty strictly higher than (a) invariant** (5× floor; 1.5× percentage); **three unreasonable-position paths truth table** (4-cell sweep — baseline + 3 paths); **shelter supersedes substantial authority invariant**; **penalty constants invariant** ($1K / 50% / $5K / 75%); **citation pins all subsections** (§ 6694 + § 6694(a) + (a)(2)(A)/(B)/(C) + (a)(3) + (b) + (b)(2)(A)/(B) + (b)(3) + § 1.6694-1/-2/-3 + § 6662(d)(2)(B) + § 6662A + § 7701(a)(36)); **sibling cluster note present** (UX-text regression for § 6695 + § 6700 + § 6701 + § 6662 + § 6662A + § 6707A + § 475(f) + § 1091 trader positions); **defensive negative preparer fee clamped**; **zero fee floor still applies** (floor $1K wins on $0 fee); **defensive huge fee no overflow** ($100M fee → $50M penalty via saturating math).
 
+`traderview-expense::section_6695` is the **IRC § 6695 preparer information return penalties module** — direct sibling to `section_6694` (preparer substantive position penalty, iter 254). Where § 6694 punishes UNREASONABLE POSITIONS on the return, § 6695 punishes PROCEDURAL FAILURES by the preparer — failure to sign, failure to furnish copy to taxpayer, failure to retain records, failure to exercise due diligence on credit eligibility determinations. Together § 6694 + § 6695 cover both substantive and procedural sides of preparer liability. 2025 amounts per Rev. Proc. 2024-40 inflation adjustments.
+
+**Per-failure penalties — $60 each (2025), max $31,500/year per subsection**:
+
+| Subsection | Failure |
+|------------|---------|
+| § 6695(a) | Failure to furnish copy of return or claim to taxpayer |
+| § 6695(b) | Failure to sign return or claim |
+| § 6695(c) | Failure to furnish PTIN identifying number |
+| § 6695(d) | Failure to retain copy or list (3-year retention) |
+| § 6695(e) | Failure to file correct information returns (Forms 1099 series for preparer payments) |
+
+**Higher-tier per-failure penalties — $635 each (2025)**:
+
+| Subsection | Failure |
+|------------|---------|
+| § 6695(f) | Negotiation/endorsement of refund check by preparer (no annual cap) |
+| § 6695(g) | Failure to exercise due diligence on EITC / CTC-ACTC-ODC / AOTC / HOH (4 independent categories; max combined per return = $2,540) |
+
+**§ 6695(g) due diligence — Treas. Reg. § 1.6695-2(b) requires**:
+1. Complete and submit **Form 8867** (Paid Preparer's Earned Income Credit Checklist);
+2. Compute credit using applicable worksheet;
+3. Knowledge requirement — preparer cannot know or have reason to know information is incorrect;
+4. Retain records for **3 years**.
+
+**§ 6695(g) four-category multiplier** — single return claiming all four (EITC + CTC + AOTC + HOH) generates up to $2,540 in due diligence penalties. Pinned by `all_four_categories_on_same_return_2540_max` (1 + 1 + 1 + 1 failures = $2,540), `single_eitc_due_diligence_failure_635`, `ctc_failure_only_engages_g`, `aotc_failure_only_engages_g`, and `hoh_failure_only_engages_g`.
+
+**Per-failure penalties (a)-(e)** — $60 each up to annual cap of $31,500 per subsection. 525 failures × $60 = $31,500 exactly (cap-boundary); 1,000 failures × $60 = $60,000 → capped at $31,500. Each subsection caps INDEPENDENTLY. Pinned by `single_a_failure_60_dollars` through `single_e_failure_60_dollars` (5 subsection tests), `cap_525_a_failures_at_31500` (exact-cap boundary), `cap_1000_a_failures_at_max` (over-cap clamps), and `each_subsection_caps_independently` (3 × $31,500 = $94,500 across three subsections).
+
+**§ 6695(f) refund check negotiation — no annual cap**. Unlike the per-failure subsections, the refund-check-negotiation penalty has no maximum cap. 100 refund checks negotiated × $635 = $63,500 (no clamping). Pinned by `single_refund_check_negotiation_635_dollars` and `refund_check_no_annual_cap`.
+
+**Parameterized amounts for non-2025 years** — module accepts `per_failure_penalty_cents`, `annual_max_cap_cents`, and `higher_tier_penalty_cents` inputs to support any tax year. Pinned by `parameterized_2024_amounts` ($60/$30,000 2024) and `parameterized_2024_higher_tier` ($600 2024).
+
+**Multi-regime invariants** — `higher_tier_exceeds_per_failure_invariant` ($635 = ~10× $60); `section_6695g_max_equals_4x_higher_tier_invariant` ($2,540 = 4 × $635); `five_per_failure_subsections_truth_table` (each of (a)-(e) generates $60 on single failure); `constants_2025_invariant` ($60 / $31,500 / $635 / $2,540 all verified).
+
+**Sibling cluster note** — every result references § 6694 (preparer substantive position), § 6700 (promoter penalties), § 6701 (aiding and abetting), and taxpayer-side companions § 6662 + § 6662A + § 6707A. Pinned by `sibling_cluster_note_present` (UX-text regression for 7-statute cluster + Form 8867).
+
+Mounted at `POST /api/calc/section-6695`. Twenty-eight tests pin: **no failures no penalty**; **single (a)/(b)/(c)/(d)/(e) failure $60** (5 subsection tests); **525 (a) failures at exact $31,500 cap**; **1000 (a) failures cap at $31,500 max**; **each subsection caps independently** (3 × $31,500); **single refund check negotiation $635**; **refund check no annual cap** (100 × $635 = $63,500); **single EITC due diligence failure $635**; **all four (g) categories on same return $2,540 max**; **CTC failure only engages (g)**; **AOTC failure only engages (g)**; **HOH failure only engages (g)**; **combined penalty sums all subsections** ($60 + $120 + $635 + $635 = $1,450); **parameterized 2024 amounts** ($60/$30,000 2024); **parameterized 2024 higher tier** ($600 2024); **higher tier exceeds per failure invariant** (~10× ratio); **§ 6695(g) max equals 4× higher tier invariant** ($2,540 = 4 × $635); **five per-failure subsections truth table** (each generates $60); **2025 constants invariant** ($60 / $31,500 / $635 / $2,540); **citation pins all subsections** (§ 6695 + (a)/(b)/(c)/(d)/(e)/(f)/(g) + § 1.6695-1/-2 + Form 8867 + Rev. Proc. 2024-40); **sibling cluster note present** (UX-text regression for § 6694 + § 6700 + § 6701 + § 6662 + § 6662A + § 6707A + Form 8867); **defensive negative counts clamped**; **defensive negative per-failure clamped**; **extreme count no overflow** (100K × $635 = $63.5M via saturating math).
+
 `traderview-expense::section_1374` is the **IRC §1374 S-corporation built-in gains (BIG) tax module** — the integrity tax that prevents a C-corp from escaping corporate-level tax on pre-conversion appreciation by simply electing S-corp status. When a C-corp converts, its built-in gains remain exposed to corporate-level tax for a **5-year recognition period** under § 1374(d)(7), permanently set by the **PATH Act of 2015** (down from 10 years originally, then 7 years, then 5). The tax rate is the highest §11(b) corporate rate — **21% post-TCJA** — applied to net recognized built-in gain ([Beancount.io §1374 guide](https://beancount.io/blog/2026/05/10/section-1374-built-in-gains-tax-c-corp-s-corp-conversion-five-year-recognition-period-guide), [Cornell LII 26 U.S.C. § 1374](https://www.law.cornell.edu/uscode/text/26/1374)).
 
 **NUBIG (Net Unrealized Built-In Gain) at conversion** is the LIFETIME ceiling on what can ever be taxed under §1374:
