@@ -2131,6 +2131,30 @@ Each boundary individually pinned: `sept_30_election_3_month_deferral_eligible` 
 
 Mounted at `POST /api/calc/section-444`. Eighteen tests pin: **all 3 eligible fiscal-year-end boundaries individually** (Sept 30 / Oct 31 / Nov 30 = 3/2/1 months); Aug 31 4-month violates with DEFERRAL LIMIT EXCEEDED note; **Dec 31 proposed equals required no election needed**; **Jan 31 wraps to 11-month deferral** (modular arithmetic edge); **§7519 partnership payment $95k** ($1M × 3/12 × 38%); S-corp same as partnership; **PSC no §7519 but §280H applies** (deduction limit flag set); no §7519 when election unavailable; Nov election yields $31,666 (smaller 1-month deferral); **higher rate yields higher §7519 payment** (40% → $102,500); note describes election-available with mechanism; PSC note describes §280H + employee-owners; note describes deferral-limit-exceeded; citation mentions all 6 relevant authorities (§444(a), §444(b)(2), §7519, §280H, §1.444-1T, Form 8752, May 15); zero income zero §7519 payment; very large income ($1B → $95M §7519) precision path.
 
+`traderview-expense::section_3406` is the **IRC §3406 backup withholding module** — universal rule for any trader or business making "reportable payments" (interest, dividends, rents, royalties, non-employee compensation, broker proceeds, attorney fees, etc.). When any of four statutory triggers fires, the payor MUST withhold **24%** of the payment and remit it to the IRS. The 24% rate is tied to the "fourth lowest rate of tax applicable under § 1(c)" per § 3406(b)(1)(A); the rate was 28% pre-TCJA and 31% earlier ([Cornell LII 26 U.S.C. § 3406](https://www.law.cornell.edu/uscode/text/26/3406), [IRS Publication 1281](https://www.irs.gov/pub/irs-pdf/p1281.pdf)).
+
+**§3406(a) four trigger conditions** — any one fires 24% backup withholding:
+
+| Trigger              | § 3406(a)(1) | Description                                                                |
+|----------------------|--------------|----------------------------------------------------------------------------|
+| **A — TIN missing** | (A)          | Payee fails to furnish TIN to payor in required manner (missing Form W-9)  |
+| **B — IRS incorrect TIN notice** | (B) | IRS notifies payor via CP 2100 / CP 2100A (BWH-B program) that TIN is incorrect AND payee has not responded |
+| **C — Notified underreporting**  | (C) | IRS-notified payee underreporting (BWH-C program); **interest / dividend payments ONLY** |
+| **D — Certification failure**    | (D) | Payee certification failure under § 3406(d) (e.g., missing perjury statement) |
+
+**C trigger is uniquely limited to interest and dividend payments** — pinned by `c_trigger_fires_for_interest` + `c_trigger_fires_for_dividends` + `c_trigger_does_not_fire_for_rent` (regression) + `c_trigger_does_not_fire_for_non_employee_comp` (regression).
+
+**A trigger applies to all 10 reportable payment types** — sweep pinned by `all_payment_types_subject_to_a_trigger` (Interest / Dividends / Rent / Royalties / NonEmployeeCompensation / BrokerProceeds / Barter / AttorneyFees / FishingBoatPayments / Other all trigger A withholding when TIN missing).
+
+**Trigger evaluation in statutory order**: module evaluates A → B → C → D and returns the first one that fires. Multiple simultaneous triggers fall to the earlier letter. Pinned by `tin_not_furnished_takes_priority_over_b_notice` (A beats B) + `b_notice_takes_priority_over_c_notice` (B beats C) + `c_notice_takes_priority_over_d_trigger` (C beats D).
+
+**24% rate yields known amounts**:
+- $10k payment → $2,400 withheld + $7,600 net to payee
+- $100k payment → $24,000 withheld + $76,000 net to payee
+- $1B payment → $240M withheld (precision path)
+
+Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no withholding** (full payment to payee); **A trigger TIN-not-furnished triggers 24% withholding** ($10k → $2,400); **B trigger IRS-notified incorrect TIN** triggers withholding; **C trigger fires for interest** + dividends (load-bearing); **C trigger does NOT fire for rent** + non-employee comp (regression); **D trigger certification failure** triggers withholding; **3 trigger precedence pins** (A > B, B > C, C > D); **withholding rate 24%** (2400bp); withholding at $100k payment = $24k; **$1B precision** = $240M withheld; zero payment zero withholding; **all 10 payment types subject to A trigger** sweep; triggered note describes trigger + 24%; untriggered note describes no trigger; **citation mentions all 4 trigger subsections** + § 3406(b)(1)(A) rate + CP 2100 + Publication 1281.
+
 `traderview-expense::section_382` is the **IRC §382 NOL limitation module** — the load-bearing rule after any M&A transaction involving a loss corporation. Where §172 controls whether NOLs CAN be deducted in principle, §382 controls HOW MUCH per year once an ownership change has fired. An "ownership change" under §382(g) occurs when 5%+ shareholders' aggregate percentage has increased by more than 50 percentage points over their lowest percentage in the rolling 3-year testing period; the trivial-percentage public is aggregated into a single shareholder group.
 
 **§382(b)(1) annual limitation** = corporation FMV at the change date × applicable long-term tax-exempt rate. The rate is the highest of the federal long-term tax-exempt rates published in the 3 months preceding the change. As a current data point, the **February 2026 long-term tax-exempt rate was 3.56%** ([Moss Adams, 2024](https://www.mossadams.com/articles/2024/04/offset-tax-liability-with-section-382)). A $10M corporation at 3.56% yields only **$356k/year** of usable pre-change NOLs — the basis for the rule's reputation as "death by limitation" for shell-purchase NOL trafficking schemes.

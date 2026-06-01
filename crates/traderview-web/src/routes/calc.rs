@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
+        .route("/calc/section-3406",          post(section_3406_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1588,6 +1589,26 @@ async fn section_444_route(
         ));
     }
     Ok(Json(traderview_expense::section_444::compute(&b)))
+}
+
+// ── §3406 backup withholding ────────────────────────────────────────
+// Mounted at /api/calc/section-3406. §3406(a)(1)(A) TIN-not-furnished
+// trigger; §3406(a)(1)(B) IRS-notified-incorrect-TIN trigger (BWH-B
+// program, CP 2100 / CP 2100A); §3406(a)(1)(C) notified-payee
+// underreporting trigger (BWH-C, interest/dividend only);
+// §3406(a)(1)(D) payee-certification-failure trigger; §3406(b)(1)(A)
+// 24% rate (4th lowest §1(c) rate, post-TCJA).
+
+async fn section_3406_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_3406::Section3406Input>,
+) -> Result<Json<traderview_expense::section_3406::Section3406Result>, ApiError> {
+    if b.payment_amount_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "payment_amount_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_3406::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
