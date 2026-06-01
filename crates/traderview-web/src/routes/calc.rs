@@ -145,6 +145,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-704c",          post(section_704c_route))
         .route("/calc/section-721",           post(section_721_route))
+        .route("/calc/section-731",           post(section_731_route))
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
@@ -1359,6 +1360,35 @@ async fn section_721_route(
         ));
     }
     Ok(Json(traderview_expense::section_721::compute(&b)))
+}
+
+// ── § 731 partnership distribution gain/loss recognition ────────────
+// Mounted at /api/calc/section-731. Direct sibling to § 721
+// (contribution non-recognition, iter 264) — completes the
+// partnership contribution/distribution cycle. § 731(a)(1) gain
+// recognition only to extent MONEY distributed exceeds partner's
+// outside basis (applies to current AND liquidating). § 731(a)(2)
+// LOSS recognition only on LIQUIDATING distribution when partner
+// receives only money + § 751 hot assets + inventory. § 731(b)
+// partnership-level non-recognition. § 731(c) marketable
+// securities treated as money for gain calculation; § 731(c)(3)
+// exceptions for investment partnerships + contribution rollover
+// + reduction-of-net-gain rule. Sibling cluster: § 721 + § 732 +
+// § 733 + § 736 + § 751 + § 754 + § 707(c).
+
+async fn section_731_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_731::Section731Input>,
+) -> Result<Json<traderview_expense::section_731::Section731Result>, ApiError> {
+    if b.money_distributed_cents > 1_000_000_000_000
+        || b.marketable_securities_fmv_distributed_cents > 1_000_000_000_000
+        || b.partner_outside_basis_cents > 1_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "money_distributed_cents, marketable_securities_fmv_distributed_cents, or partner_outside_basis_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_731::compute(&b)))
 }
 
 // ── §704(c) pre-contribution built-in gain/loss allocation ──────────
