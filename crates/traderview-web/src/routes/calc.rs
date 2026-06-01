@@ -128,6 +128,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6111",          post(section_6111_route))
         .route("/calc/section-6112",          post(section_6112_route))
         .route("/calc/section-6662a",         post(section_6662a_route))
+        .route("/calc/section-6663",          post(section_6663_route))
         .route("/calc/section-6664",          post(section_6664_route))
         .route("/calc/section-6672",          post(section_6672_route))
         .route("/calc/section-6694",          post(section_6694_route))
@@ -3886,6 +3887,33 @@ async fn section_6662a_route(
         ));
     }
     Ok(Json(traderview_expense::section_6662a::compute(&b)))
+}
+
+// ── § 6663 civil fraud penalty (75%) ────────────────────────────────
+// Mounted at /api/calc/section-6663. § 6663(a) 75% penalty on portion
+// of underpayment attributable to fraud; § 6663(b) burden-shift rule —
+// once IRS proves any portion as fraud, ENTIRE underpayment treated as
+// fraud unless taxpayer carves out by preponderance; § 6663(c) joint
+// return innocent spouse exception — penalty does not apply to spouse
+// whose conduct did not contribute (cross-reference § 6015); § 6662(b)(7)
+// non-stacking with accuracy-related penalty (mutually exclusive on
+// same dollar); § 7454(a) IRS bears CLEAR AND CONVINCING burden of
+// proof (heightened standard greater than preponderance, less than
+// beyond reasonable doubt); Spies v. United States, 317 U.S. 492 (1943)
+// badges of fraud doctrine (9-badge enumeration); § 6501(c)(1) UNLIMITED
+// ASED when fraud established; § 6651(f) parallel 75% failure-to-file
+// penalty; 11 U.S.C. § 523(a)(1)(C) NONDISCHARGEABLE in personal
+// bankruptcy; Spies-Daly doctrine permits parallel civil + criminal
+// prosecution under § 7201 / § 7206; IRM 25.1.6 Civil Fraud procedural
+// manual. § 6664(c)(1) reasonable-cause defense theoretically applies
+// but rarely succeeds. Natural sibling to section_6664 + section_6501 +
+// section_6502 + section_6212.
+
+async fn section_6663_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6663::Section6663Input>,
+) -> Result<Json<traderview_expense::section_6663::Section6663Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6663::check(&b)))
 }
 
 // ── § 6664 reasonable cause + good faith defense ────────────────────
