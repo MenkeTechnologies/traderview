@@ -92,6 +92,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-1033",          post(section_1033_route))
         .route("/calc/section-481",           post(section_481_route))
+        .route("/calc/section-530",           post(section_530_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-280b",          post(section_280b_route))
         .route("/calc/section-280e",          post(section_280e_route))
@@ -1717,6 +1718,36 @@ async fn section_481_route(
     Json(b): Json<traderview_expense::section_481::Section481Input>,
 ) -> Result<Json<traderview_expense::section_481::Section481Result>, ApiError> {
     Ok(Json(traderview_expense::section_481::compute(&b)))
+}
+
+// ── §530 Coverdell Education Savings Accounts (ESA) ──────────────────
+// Mounted at /api/calc/section-530. §530(b)(1)(A)(ii) $2,000 statutory
+// annual contribution limit per beneficiary (unchanged since 2002; does
+// NOT inflation-adjust); §530(b)(1)(A)(i) beneficiary must be under
+// age 18 for contributions; §530(c) MAGI phaseout 95K-110K single +
+// 190K-220K MFJ; §530(d)(7) special-needs beneficiary exception waives
+// both age limits; §530(d)(8) age-30 distribution requirement (waived
+// for special needs); §4973 6% excise tax on excess imposed on the
+// BENEFICIARY (not contributor) annually. Sibling to section_223 (HSA)
+// and section_219 (IRA) tax-favored savings vehicles.
+
+async fn section_530_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_530::Section530Input>,
+) -> Result<Json<traderview_expense::section_530::Section530Result>, ApiError> {
+    if b.contributor_modified_agi_cents < 0
+        || b.aggregate_contributions_for_beneficiary_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1990, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_530::compute(&b)))
 }
 
 // ── §1031(f) related-party 2-year clawback ───────────────────────────

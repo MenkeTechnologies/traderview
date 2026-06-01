@@ -2664,6 +2664,31 @@ Each rate boundary pinned: `pre_obbba_gilti_50_pct_deduction` + `pre_obbba_fdii_
 
 Mounted at `POST /api/calc/section-250`. Twenty tests pin: **pre-OBBBA GILTI 50% deduction** ($1M × 50% = $500k); **pre-OBBBA FDII 37.5% deduction** ($500k × 37.5% = $187,500); **pre-OBBBA effective GILTI rate 10.5%** (1050bp); pre-OBBBA effective FDII rate 13.125% (1312bp); **pre-OBBBA DTIR 10% of QBAI** ($2M QBAI → $200k DTIR + reduced GILTI to $800k); **pre-OBBBA FTC 80%** ($100k taxes → $80k FTC); **post-OBBBA NCTI 40% deduction**; **post-OBBBA FDDEI 33.34% deduction**; **post-OBBBA effective NCTI rate 12.6%**; **post-OBBBA effective FDDEI rate 14%**; **post-OBBBA DTIR eliminated** (regression); **post-OBBBA FTC 90%**; year 2025 pre-OBBBA + 2026 post-OBBBA boundary; **pre-OBBBA note uses GILTI/FDII labels**; **post-OBBBA note uses NCTI/FDDEI labels + DTIR elimination call-out**; citation mentions TCJA § 14202 + One Big Beautiful Bill Act + NCTI + FDDEI; $1B precision; zero income zero deduction.
 
+`traderview-expense::section_530` is the **IRC §530 Coverdell Education Savings Account (ESA) module** — tax-favored education savings vehicle for trader/landlord parents and grandparents. Contributions are NOT deductible (unlike § 219 IRA + § 223 HSA siblings) but earnings grow tax-free and qualified withdrawals for K-12 and post-secondary education expenses are tax-free. Distinct from § 529 plans which are administered separately.
+
+**§ 530(b)(1)(A)(ii) statutory cap = $2,000/year per beneficiary** — UNCHANGED SINCE 2002. Does NOT inflation-adjust. The $2,000 cap is AGGREGATE across all contributors (parent + grandparent + others combined). Sibling to `section_219` IRA $1,000 catch-up + `section_221` student loan interest $2,500 cap — all three are statutory amounts that don't inflation-adjust unlike most other tax limits.
+
+**Beneficiary age limits**:
+
+| Requirement | Limit | Special-needs waiver |
+|-------------|-------|----------------------|
+| Contribution eligibility (§ 530(b)(1)(A)(i)) | Under age 18 | Yes (§ 530(d)(7)) |
+| Distribution deadline (§ 530(d)(8)) | Age 30 | Yes (§ 530(d)(7)) |
+
+**MAGI phaseout** (§ 530(c)) over $15K window (unmarried) / $30K (joint):
+
+| Filing status | Phaseout range |
+|---------------|----------------|
+| Single / HoH / QW | $95,000-$110,000 |
+| Married Filing Jointly / QW | $190,000-$220,000 |
+| MFS | Uses single-status range |
+
+**Statutory cap pinning**: $2,000 stays $2,000 in 2025 + 2026 + 2030 + every future year unless Congress amends. (Note: § 529 plans got a separate K-12 limit increase from $10K to $20K for 2026 under OBBBA; Coverdell ESAs did NOT receive any parallel increase.)
+
+**§ 4973 6% excise tax** on excess contributions imposed on the BENEFICIARY (not the contributor) annually each year the excess remains in the account. Distinguishes Coverdell from IRA/HSA where the contributor bears the excise.
+
+Mounted at `POST /api/calc/section-530`. Twenty-two tests pin: **single under $95K full $2,000 contribution**; **single at $95K boundary full** (≤ strict); **single at $110K boundary zero**; **single midpoint $102.5K half = $1,000**; **MFJ under $190K full $2,000** + phaseout range invariant; **MFJ at $220K zero**; **beneficiary age 18 not eligible without special needs** (regression — strict under-18 unless waived); **beneficiary age 17 eligible**; **beneficiary age 30 with special needs still eligible** (§ 530(d)(7) waiver); **excess contribution 6% excise** ($3,000 contributed → $1,000 excess → $60 excise); **no excess at $2,000 cap boundary** (≤ strict); **one cent above cap triggers excise** (off-by-one); **statutory $2,000 cap does NOT inflation-adjust** (regression-critical 2025/2026/2030 same-cap invariant); **MFJ phaseout midpoint $205K = $1,000** (50% × $2K); **HoH uses single phaseout range**; **QW uses MFJ phaseout range**; **MFS uses single range** (regression — same as section_221 distinguishing pattern); **citations pin authorities** (§ 530(b)(1)(A)(ii) + $2,000 + unchanged since 2002 + § 530(c) + § 530(d)(7) + § 4973); **negative inputs clamped**; **beneficiary 18 with special needs eligible**; **high excess high excise** ($10K → $8K excess → $480 excise); **worked example grandparent at $105K MAGI** ($666.67 reduced contribution; $2K × 5/15 truncated).
+
 `traderview-expense::section_59a` is the **IRC §59A Base Erosion and Anti-Abuse Tax (BEAT) module** — the TCJA anti-base-erosion minimum tax targeting large US multinationals that deduct payments to foreign related parties. Added by TCJA P.L. 115-97 § 14401 effective 2018; substantially modified by the One Big Beautiful Bill Act (OBBBA) of 2025 effective for tax years beginning after 2025-12-31.
 
 **Applicability gates** — three gates must all be met (categorically excluded entities short-circuit before gates):
