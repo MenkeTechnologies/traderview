@@ -35,6 +35,7 @@ pub mod fair_chance_housing;
 pub mod fire_sprinkler_disclosure;
 pub mod flood_disclosure;
 pub mod drug_eviction;
+pub mod eviction_diversion_program;
 pub mod eviction_notices;
 pub mod eviction_record_sealing;
 pub mod foreclosure_tenant_rights;

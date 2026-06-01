@@ -198,6 +198,9 @@ use traderview_expense::rent_increase_notice_period::{
 use traderview_expense::demolition_tenant_notice::{
     check as check_demolition_tenant_notice, DemolitionNoticeInput, DemolitionNoticeResult,
 };
+use traderview_expense::eviction_diversion_program::{
+    check as check_eviction_diversion_program, DiversionProgramInput, DiversionProgramResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -401,6 +404,7 @@ pub fn router() -> Router<AppState> {
         .route("/window-guard-requirements", axum::routing::post(window_guard_requirements_route))
         .route("/rent-increase-notice-period", axum::routing::post(rent_increase_notice_period_route))
         .route("/demolition-tenant-notice", axum::routing::post(demolition_tenant_notice_route))
+        .route("/eviction-diversion-program", axum::routing::post(eviction_diversion_program_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3090,6 +3094,38 @@ async fn demolition_tenant_notice_route(
         ));
     }
     Ok(Json(check_demolition_tenant_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State/municipal eviction-diversion-program landlord pre-filing
+// mediation compliance check.
+//
+// Mounted at POST /api/rental/eviction-diversion-program. Three regimes:
+// Philadelphia (Phila Code § 9-811 — landlord must apply for and be
+// approved for the EDP + participate in good faith ≥ 30 days + provide
+// tenant notice; imminent-physical-harm carve-out; applies to virtually
+// all eviction grounds since 2022 amendments; tenant defense + sua
+// sponte dismissal for noncompliance; non-waivable); NewJersey (NJ DCA
+// Eviction Diversion Program — enroll + 14-day notice of mediation
+// right to tenant + dispute resolution center + 45-day wait IF tenant
+// schedules mediation + good-faith participation; tenant-default carve-
+// out: if tenant doesn't schedule within 14 days landlord may proceed);
+// Default (no mandatory pre-filing mediation, court-level voluntary
+// mediation may exist). Distinct from eviction_notices (notice period
+// landlord must give tenant before filing).
+// ---------------------------------------------------------------------------
+
+async fn eviction_diversion_program_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DiversionProgramInput>,
+) -> Result<Json<DiversionProgramResult>, ApiError> {
+    if b.days_since_enrollment > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_enrollment looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_eviction_diversion_program(&b)))
 }
 
 // ---------------------------------------------------------------------------
