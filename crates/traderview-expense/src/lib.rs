@@ -25,6 +25,7 @@ pub mod deposit_return_windows;
 pub mod dv_termination;
 pub mod entry_notice;
 pub mod disposition;
+pub mod drug_eviction;
 pub mod eviction_notices;
 pub mod eviction_record_sealing;
 pub mod foreclosure_tenant_rights;

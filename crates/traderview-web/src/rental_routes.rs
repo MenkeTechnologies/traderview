@@ -149,6 +149,9 @@ use traderview_expense::smoke_free_housing::{
 use traderview_expense::tenant_data_privacy::{
     check as check_tenant_privacy, PrivacyInput, PrivacyResult,
 };
+use traderview_expense::drug_eviction::{
+    check as check_drug_eviction, DrugEvictionInput, DrugEvictionResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -298,6 +301,7 @@ pub fn router() -> Router<AppState> {
         .route("/submetering-check", axum::routing::post(submetering_check_route))
         .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
         .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
+        .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2492,6 +2496,29 @@ async fn tenant_privacy_check_route(
         ));
     }
     Ok(Json(check_tenant_privacy(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Federal HUD One-Strike + state drug-eviction compliance check
+//
+// Mounted at POST /api/rental/drug-eviction-check. Federal floor:
+// 42 U.S.C. § 1437d(l)(6) for public housing + § 1437f for Section 8
+// vouchers/certificates; Rucker (2002) strict-liability for
+// household/guest activity. State just-cause regime:
+// StateJustCauseListsCriminalActivity (CA Civ. Code § 1946.2 TPA, OR
+// SB 608, WA RCW 59.18.650, NJ Anti-Eviction Act § 2A:18-61.1(n));
+// ContractGovernsPrivateMarket elsewhere.
+// ---------------------------------------------------------------------------
+
+async fn drug_eviction_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DrugEvictionInput>,
+) -> Result<Json<DrugEvictionResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_drug_eviction(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -999,6 +999,36 @@ Pinned by `ca_under_25m_revenue_under_100k_consumers_not_subject` (small landlor
 
 Mounted at `POST /api/rental/tenant-privacy-check`. Twenty-six tests pin: **IL biometric use without consent violates** ($10k exposure for 10 tenants); **IL biometric with consent complies**; **IL intentional violation 5× damages** ($50k); IL no biometric no violation; **IL BIPA has no revenue threshold** (even $100k revenue landlord subject); **CA under $25M revenue + under 100k consumers NOT subject**; **CA over $25M revenue triggers**; **CA 100k consumers triggers**; **CA DSAR within 45 days complies / 46 days violates** (boundary); CA DSAR not responded violates; **VA 100k residents triggers VCDPA**; **CO under 100k residents not subject**; **DE 35k residents triggers** (lower threshold); MD lower threshold than CA; **TX no state privacy law no compliance required** (even with biometric in use); NY no comprehensive state law; **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (IL only BIPA / 8 states comprehensive / IL only damages); unknown state falls back to no law; lowercase normalizes; IL violation note mentions BIPA + dollar amount; CA subject note describes DSAR response.
 
+`traderview-expense::drug_eviction` is the **federal HUD One-Strike + state drug-related eviction compliance table** — drug-related eviction sits at the intersection of federal HUD authority (public housing + Section 8) and state just-cause eviction statutes (private market). Federal floor under **42 U.S.C. § 1437d(l)(6)** is the famous "One-Strike" rule — authorizing eviction of any tenant whose household member, guest, or person under their control engages in drug-related criminal activity, regardless of the tenant's personal knowledge or culpability ([Federal Register — 1999 One-Strike Final Rule](https://www.federalregister.gov/documents/1999/07/23/99-18801/one-strike-screening-and-eviction-for-drug-abuse-and-other-criminal-activity)).
+
+**Federal floor (42 U.S.C. § 1437d(l)(6))**:
+- Any criminal activity threatening health, safety, or peaceful enjoyment by other tenants, OR
+- Any drug-related criminal activity ON OR OFF the premises (public housing) / ON OR NEAR (Section 8)
+- Engaged in by "covered person": tenant, household member, guest, or person under tenant's control
+- Shall be cause for termination of tenancy
+
+Originally enacted in the Anti-Drug Abuse Act of 1988. **Dept. of Housing & Urban Development v. Rucker, 535 U.S. 125 (2002)** confirmed strict liability — tenant need not be aware of the household member's or guest's activity. PHAs have **wide discretion** to evict; HUD policy encourages individualized circumstances review; the 2024 "Reducing Barriers to HUD-Assisted Housing" proposed rule would further require mitigation analysis ([Federal Register 2024 Reducing Barriers proposed rule](https://www.federalregister.gov/documents/2024/04/10/2024-06218/reducing-barriers-to-hud-assisted-housing)).
+
+**Two regimes for state private-market overlay**:
+
+| Regime                                       | States       | Source                                                                |
+|----------------------------------------------|--------------|-----------------------------------------------------------------------|
+| **StateJustCauseListsCriminalActivity**      | CA, OR, WA, NJ | Cal. Civ. Code § 1946.2 (TPA 2019/AB 1482); Or. ORS Ch. 90 (SB 608 of 2019); Wash. RCW 59.18.650 (SSB 5160 of 2021); N.J.S.A. 2A:18-61.1(n) (Anti-Eviction Act) |
+| **ContractGovernsPrivateMarket**             | 46 other states + DC | No statewide just-cause statute enumerating criminal activity; lease provisions govern |
+
+**Federal One-Strike strict liability under Rucker** — when household member or guest commits drug activity, the tenant CAN be evicted even if they had no knowledge of the activity. Pinned by `pha_household_member_activity_strict_liability_applies` + `pha_guest_off_premises_still_triggers_strict_liability` (off-premises activity by guest still triggers). Tenant's OWN activity is not strict-liability (they're aware): `pha_tenant_self_activity_not_strict_liability`.
+
+**On-or-off premises scope**: federal rule explicitly covers drug activity ON OR OFF the premises. Pinned by `pha_off_premises_drug_activity_still_triggers_one_strike` (TenantOffPremises path triggers).
+
+**HUD discretion + 2024 mitigation rule**: when PHA hasn't considered mitigating factors, module surfaces `mitigation_analysis_recommended: true`. Pinned by `pha_mitigation_recommended_when_not_considered` + `pha_mitigation_considered_no_recommendation_flag`.
+
+**State just-cause overlay for private market**: CA, OR, WA, NJ statutes explicitly enumerate criminal activity as just cause. Private-market landlords in other 46 states + DC operate under contract — lease can authorize eviction for drug activity, and most leases do. Pinned by all 4 just-cause states individually + `tx_private_market_contract_governs` + `ny_private_market_contract_governs` (regression — eviction still authorized via lease).
+
+**Module invariants** (1 pinned):
+- Exactly 4 states (CA + OR + WA + NJ) on StateJustCauseListsCriminalActivity regime (`state_just_cause_regime_only_ca_or_wa_nj`)
+
+Mounted at `POST /api/rental/drug-eviction-check`. Twenty-two tests pin: **PHA tenant drug activity authorizes eviction**; **PHA off-premises drug activity still triggers One-Strike**; **PHA household member activity triggers strict liability** under Rucker; **PHA guest off-premises strict liability** (off-premises + non-tenant covered); PHA tenant self-activity not strict liability; **PHA mitigation recommended when not considered** + considered no recommendation; **Section 8 voucher drug activity authorizes eviction**; **CA private market authorizes drug eviction** + OR + WA + NJ (4-state sweep); **TX private market contract governs** + NY contract governs (regression); **no drug activity no eviction authorized**; **51-state coverage**; non-empty citations; **state-just-cause-regime only 4 states** invariant; unknown state falls back to contract; lowercase normalizes; **Rucker strict liability mentioned in PHA note**; citation mentions both federal (§ 1437d(l)(6) + Rucker) and state (§ 1946.2 for CA).
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
