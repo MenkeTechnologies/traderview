@@ -74,6 +74,7 @@ pub mod recurring;
 pub mod radon_disclosure;
 pub mod rent_control;
 pub mod rent_credit_reporting;
+pub mod rent_escrow;
 pub mod renters_insurance;
 pub mod roommate_authorization;
 pub mod rent_receipts;

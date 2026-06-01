@@ -204,6 +204,9 @@ use traderview_expense::lease_succession::{
 use traderview_expense::rent_credit_reporting::{
     check as check_rent_credit_reporting, RentCreditReportingInput, RentCreditReportingResult,
 };
+use traderview_expense::rent_escrow::{
+    check as check_rent_escrow, RentEscrowInput, RentEscrowResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -371,6 +374,7 @@ pub fn router() -> Router<AppState> {
         .route("/crime-victim-termination-check", axum::routing::post(crime_victim_termination_check_route))
         .route("/lease-succession-check", axum::routing::post(lease_succession_check_route))
         .route("/rent-credit-reporting-check", axum::routing::post(rent_credit_reporting_check_route))
+        .route("/rent-escrow-check", axum::routing::post(rent_escrow_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -3056,6 +3060,31 @@ async fn rent_credit_reporting_check_route(
         ));
     }
     Ok(Json(check_rent_credit_reporting(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant rent escrow / withholding-into-court compliance check
+//
+// Mounted at POST /api/rental/rent-escrow-check. Five regimes:
+// MarylandRentEscrowAct (Md. Real Prop. § 8-211 — 30-day
+// reasonableness presumption); MassachusettsCounterclaimDefense
+// (Mass. G.L. c. 239 § 8A — fair use/occupation value into court
+// via eviction counterclaim); NewJerseyMariniHearingAdministrator
+// (N.J.S.A. 2A:42-85 + Marini v. Ireland 1970 — must deposit ALL
+// unpaid rent + court-appointed administrator); ColoradoLimited-
+// Withholding (C.R.S. § 38-12-507 — entire-rent withholding bar);
+// NoStatutoryRentEscrowFramework (46 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn rent_escrow_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentEscrowInput>,
+) -> Result<Json<RentEscrowResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_rent_escrow(&b)))
 }
 
 // ---------------------------------------------------------------------------
