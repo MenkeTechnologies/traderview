@@ -1147,6 +1147,58 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_704d` is the **IRC §704(d) partner basis limitation module** — completes the partner loss-limitation trio with `section_465` (at-risk) and `section_469` (passive activity losses). Sequential application order for partnership losses:
+
+| Order | Section          | Limit                                | Module                |
+|-------|------------------|--------------------------------------|-----------------------|
+| 1     | **§704(d)**      | Outside basis                        | **section_704d** (this) |
+| 2     | §465             | At-risk amount                       | section_465           |
+| 3     | §469             | Passive activity loss                | section_469           |
+| 4     | §461(l)          | Excess business loss (TCJA)          | (downstream)          |
+
+Each limit applies to the loss surviving the prior limit. A loss may be ALLOWED under §704(d) but SUSPENDED under §465 (e.g., partner has basis from nonrecourse liabilities but no economic at-risk amount).
+
+**§704(d)(1) general rule**: a partner's distributive share of partnership loss is allowed only to the extent of the partner's adjusted basis in the partnership interest (outside basis) at the end of the partnership year. Excess losses carry forward indefinitely until the partner has sufficient basis in a subsequent year.
+
+**Outside basis formula** (per the partnership year):
+
+```text
+  Beginning basis
+  + Capital contributions
+  + Share of partnership income
+  + §752 liability increases (recourse + nonrecourse)
+  - §752 liability decreases
+  - Distributions received
+  - Allocated partnership losses (limited by basis)
+```
+
+**§752 liability allocation** (caller pre-computes):
+
+- **Recourse**: partner bears economic risk of loss (EROL) → full liability amount increases that partner's basis
+- **Nonrecourse**: no partner bears EROL → allocated by share of equity in securing property + minimum-gain shares
+
+**Nonrecourse vs at-risk distinction is load-bearing.** Nonrecourse liabilities INCREASE outside basis under §704(d) but generally do NOT increase at-risk amount under §465. A loss may pass §704(d) (basis available from nonrecourse) and fail §465 (no economic risk on those liabilities). Pinned by `nonrecourse_basis_exceeds_at_risk_amount` ($10k basis + $100k nonrecourse = $110k §704(d) basis; downstream §465 would not include the $100k).
+
+**§731(a)(1) distributions in excess of basis trigger gain.** When distributions exceed basis, outside basis goes negative; module flags this with note mentioning §731(a)(1) gain recognition (caller responsible for actual gain reporting on Form 4797 / Schedule D). Pinned by `distributions_exceeding_basis_trigger_731_gain_note` ($50k basis - $80k distributions = -$30k, note mentions §731(a)(1)).
+
+**Defensive basis clamping at zero** prevents negative outside basis from being used for loss absorption. The compute clamps `basis_for_loss_absorption` at zero so even pathological inputs produce sane results. Pinned by `outside_basis_after_loss_never_negative`.
+
+**Five outside-basis components** independently pinned:
+
+| Component                                   | Direction | Test                                          |
+|---------------------------------------------|-----------|-----------------------------------------------|
+| Capital contributions                       | +         | `capital_contributions_increase_basis`        |
+| Share of partnership income                 | +         | `share_of_partnership_income_increases_basis` |
+| Recourse liability increase (§752)          | +         | `recourse_liability_increase_under_752`       |
+| Nonrecourse liability increase              | +         | `nonrecourse_liability_increase_also_in_basis` |
+| Liability decrease / distributions          | −         | `liability_decrease_reduces_basis`, `distributions_reduce_basis` |
+
+**Complex combination test** demonstrates the full formula: $50k + $30k contributions + $10k income + $40k recourse + $20k nonrecourse - $5k decrease - $25k distributions = $120k basis. Pinned by `complex_combination_all_basis_components`.
+
+**Prior-year suspended losses combine with current losses** before the basis cap is applied. Pinned by `prior_carryforward_combined_with_current_loss` ($20k current + $20k prior = $40k absorbed under $50k basis, $10k remaining) + `prior_carryforward_alone_absorbed_into_current_basis` + `prior_carryforward_partial_absorption_with_current`.
+
+Mounted at `POST /api/calc/section-704d`. Twenty-one tests pin: loss within basis full allowance; loss exceeds basis partial + suspension; prior carryforward combines with current; capital contributions / share of income / recourse §752 / nonrecourse §752 / liability decrease / distributions each individually pinned as basis components; **§731(a)(1) distributions-in-excess-of-basis gain note**; zero basis no loss allowed; zero loss no-op; **complex combination demonstrating full outside-basis formula**; basis exact match no remaining no suspension; **nonrecourse basis exceeds at-risk amount** (load-bearing §704(d) vs §465 conceptual distinction); $1B precision case; note describes binding path; note describes satisfied path mentions §465 + §469 downstream; outside basis after loss never negative; prior carryforward alone / partial.
+
 `traderview-expense::section_465` is the **IRC §465 at-risk rules module** — pairs with `section_469` (passive activity losses) to complete the loss-limitation framework for any trader, partner, or S corp shareholder with leveraged positions. §465 applies FIRST (limits to amount at risk), then §469 applies (limits by passive activity character).
 
 **§465(a) general rule**: deductible loss is limited to the amount the taxpayer has "at risk" in the activity at year-end.

@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-465",           post(section_465_route))
+        .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
@@ -842,6 +843,34 @@ async fn section_408A_d3_route(
         ));
     }
     Ok(Json(traderview_expense::section_408A_d3::compute(&b)))
+}
+
+// ── §704(d) partner basis limitation ─────────────────────────────────
+// Mounted at /api/calc/section-704d. Outside basis = beginning + cap
+// contributions + share of income + §752 liability increases -
+// §752 liability decreases - distributions. Loss allowed ≤ basis;
+// excess carries forward indefinitely. Sequential pre-§465/§469/
+// §461(l) limitation.
+
+async fn section_704d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_704d::Section704dInput>,
+) -> Result<Json<traderview_expense::section_704d::Section704dResult>, ApiError> {
+    if b.capital_contributions_this_year < Decimal::ZERO
+        || b.share_of_partnership_income < Decimal::ZERO
+        || b.share_of_recourse_liabilities_increase < Decimal::ZERO
+        || b.share_of_nonrecourse_liabilities_increase < Decimal::ZERO
+        || b.share_of_recourse_liabilities_decrease < Decimal::ZERO
+        || b.share_of_nonrecourse_liabilities_decrease < Decimal::ZERO
+        || b.distributions_received < Decimal::ZERO
+        || b.allocated_partnership_loss < Decimal::ZERO
+        || b.prior_year_suspended_loss < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs other than beginning basis must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_704d::compute(&b)))
 }
 
 // ── §465 at-risk rules ───────────────────────────────────────────────
