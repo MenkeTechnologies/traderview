@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1374",          post(section_1374_route))
+        .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -1333,6 +1334,23 @@ async fn section_1374_route(
         ));
     }
     Ok(Json(traderview_expense::section_1374::compute(&b)))
+}
+
+// ── §475(c)(2) dealer-in-securities classification ──────────────────
+// Mounted at /api/calc/section-475c2. Returns one of Dealer /
+// TraderWithMtmElection / TraderWithoutMtmElection / Investor based
+// on the §475(c)(2) two-prong dealer test (customer + inventory
+// prongs), Treas. Reg. §1.475(c)-1 negligible-sales exception, IRS
+// Topic 429 trader case-law criteria (short-term profit motive,
+// substantial activity, continuous & regular), and §475(f) election
+// status. Drives downstream wash-sale, $3k capital loss cap, and
+// ordinary-vs-capital character treatment across the system.
+
+async fn section_475c2_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_475c2::Section475c2Input>,
+) -> Result<Json<traderview_expense::section_475c2::Section475c2Result>, ApiError> {
+    Ok(Json(traderview_expense::section_475c2::compute(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
