@@ -38,6 +38,7 @@ pub mod lead_disclosure;
 pub mod lease_auto_renewal;
 pub mod lease_disclosures;
 pub mod lease_termination_notice;
+pub mod lease_translation;
 pub mod lockout_penalties;
 pub mod manual_entry;
 pub mod meals_50;

@@ -125,6 +125,9 @@ use traderview_expense::tenant_topa::{
 use traderview_expense::lease_auto_renewal::{
     check as check_lease_auto_renewal, AutoRenewalInput, AutoRenewalResult,
 };
+use traderview_expense::lease_translation::{
+    check as check_lease_translation, TranslationInput, TranslationResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -266,6 +269,7 @@ pub fn router() -> Router<AppState> {
         .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
         .route("/topa-check", axum::routing::post(tenant_topa_check_route))
         .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
+        .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2266,6 +2270,27 @@ async fn lease_auto_renewal_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_lease_auto_renewal(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State mandatory lease translation requirement check
+//
+// Mounted at POST /api/rental/lease-translation-check. Three regimes:
+// MandatoryTranslationFiveLanguages (CA Civ. Code § 1632 -- Spanish /
+// Chinese / Tagalog / Vietnamese / Korean residential leases > 1
+// month; failure = tenant rescission right); EnglishRequiredTrans-
+// lationsNotBinding (FL); NoStateTranslationRequirement elsewhere.
+// ---------------------------------------------------------------------------
+
+async fn lease_translation_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TranslationInput>,
+) -> Result<Json<TranslationResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_lease_translation(&b)))
 }
 
 // ---------------------------------------------------------------------------

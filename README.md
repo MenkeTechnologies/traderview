@@ -770,6 +770,43 @@ Sources: [Fla. Stat. § 83.575 (FindLaw)](https://codes.findlaw.com/fl/title-vi-
 
 Mounted at `POST /api/rental/auto-renewal-check`. Twenty-nine tests pin: **FL compliant with 20-day notice + fees listed**; **FL 14-day before-window violates / 15-day exact boundary complies / 30-day exact boundary complies / 31-day after-window violates** (4 boundary pins); FL missing fees listing violates (regression against WI); **FL no notice at all unenforceable** with UNENFORCEABLE note; **WI compliant + WI does NOT require fees listing** (regression target); **NY 15-30 day window complies / NY outside-window violates**; **IL 30-60 day window with 45-day complies / 29-day below minimum violates / 30-day exact / 60-day exact / 61-day above max violates** (4 boundary pins); **IL clause not clear-and-conspicuous violates** (state-specific); **NoState 6-state sweep** (TX/CA/MA/OR/DC/OH always enforceable); **no auto-renewal clause → no disclosure required**; **51-state coverage**; non-empty citations; **4 invariants** (FL+WI+NY share regime / IL unique regime / FL unique fees-listing / IL unique clear-conspicuous); unknown state falls back; lowercase normalizes; FL violation note lists fees issue; enforceable note describes 15-30 day window satisfaction.
 
+`traderview-expense::lease_translation` is the **state mandatory lease translation requirement compliance table** — when a landlord-trader leases to a non-English-speaking tenant, California's Civ. Code § 1632 is uniquely strict in the country and grants the tenant a CONTRACT RESCISSION RIGHT if the translation rule is violated. Three regimes:
+
+| Regime                                          | States | Source                                                                |
+|-------------------------------------------------|--------|-----------------------------------------------------------------------|
+| **MandatoryTranslationFiveLanguages**           | CA     | Cal. Civ. Code § 1632 — residential lease > 1 month negotiated PRIMARILY in **Spanish, Chinese, Tagalog, Vietnamese, or Korean** requires complete accurate translation BEFORE execution; failure = tenant right to rescind contract + restitution ([Cal. Civ. Code § 1632 (LegInfo)](https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=CIV&sectionNum=1632.), [Bornstein Law — CA Translation Act](https://bornstein.law/california-translation-act-for-landlords/)) |
+| **EnglishRequiredTranslationsNotBinding**       | FL     | Florida — English required for legal contracts; translations are courtesy copies but not binding (Fla. Stat. § 636.015 narrow exception for prepaid health / discount plan orgs only — NOT residential leases) ([Maspons — English Language Requirement in FL](https://maspons.com/the-english-language-requirement-in-florida-for-legal-documents/)) |
+| **NoStateTranslationRequirement**               | 48 other states + DC | No state-level private-landlord translation mandate; federal FHA limited English proficiency (LEP) guidance applies to FEDERALLY-FUNDED housing only |
+
+**California's exact 5-language list** is pinned as the load-bearing distinguishing feature:
+
+1. Spanish
+2. Chinese
+3. Tagalog
+4. Vietnamese
+5. Korean
+
+These are the only 5 languages covered by § 1632. Russian, Arabic, Hindi, Japanese, Punjabi, etc. are NOT covered. Pinned by `ca_covered_languages_exactly_5` invariant + `ca_other_foreign_language_no_requirement` (regression target) + individual sweep for each of the 5 covered languages.
+
+**Three statutory scope tests under CA § 1632** (all must be present for the requirement to apply):
+
+1. Lease must be **RESIDENTIAL** (not commercial)
+2. Lease duration must be **MORE THAN 1 month** (excludes day-rentals, weekly rentals)
+3. Negotiation must have been PRIMARILY in one of the 5 covered languages (English-only negotiations don't trigger)
+
+Each scope test independently exits via `not required`. Pinned by `ca_non_residential_lease_outside_scope`, `ca_short_term_lease_one_month_outside_scope` + `ca_two_month_lease_within_scope`, and `ca_english_lease_no_translation_required`.
+
+**Two CA failure modes** both trigger the tenant rescission right:
+
+- Landlord provided NO translation at all (`ca_spanish_no_translation_provided_rescission_right`)
+- Landlord provided translation AFTER lease execution (`ca_translation_after_execution_violates`) — § 1632 specifically requires translation BEFORE execution so consumer can review terms in their primary language
+
+**Module invariants** (2 separately pinned):
+- CA only on MandatoryTranslationFiveLanguages regime (`ca_unique_mandatory_translation_regime`)
+- FL only on EnglishRequiredTranslationsNotBinding regime (`fl_unique_english_required_regime`)
+
+Mounted at `POST /api/rental/lease-translation-check`. Twenty-four tests pin: **CA Spanish lease with translation complies**; **all 5 covered languages individually required** (Chinese, Tagalog, Vietnamese, Korean sweep); **CA English lease no translation required**; **CA other-foreign-language not covered** (regression — only 5 listed languages covered); **CA no-translation-provided triggers rescission right** with TENANT MAY RESCIND note; **CA translation-after-execution violates** (before-execution requirement); **CA short-term 1-month lease outside scope** + 2-month within scope (boundary); **CA non-residential lease outside scope**; **FL no translation mandate** + "translations are courtesy copies but not binding" note; **NoStateTranslationRequirement 7-state sweep** (TX/NY/IL/WA/MA/OR/DC always compliant); **51-state coverage**; non-empty citations; **2 regime-uniqueness invariants** (CA / FL); unknown state falls back; lowercase normalizes; **CA covered languages exactly 5** invariant; CA violation note describes RESCIND; CA compliant note describes § 1632 SATISFIED.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
