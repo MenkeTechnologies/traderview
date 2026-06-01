@@ -312,6 +312,10 @@ use traderview_expense::flag_display_right::{
     check as check_flag_display_right, CheckResult as FlagDisplayResult,
     Input as FlagDisplayInput,
 };
+use traderview_expense::written_lease_requirement::{
+    check as check_written_lease_requirement, CheckResult as WrittenLeaseResult,
+    Input as WrittenLeaseInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -545,6 +549,7 @@ pub fn router() -> Router<AppState> {
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
         .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
         .route("/flag-display-right", axum::routing::post(flag_display_right_route))
+        .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4239,6 +4244,35 @@ async fn flag_display_right_route(
     Json(b): Json<FlagDisplayInput>,
 ) -> Result<Json<FlagDisplayResult>, ApiError> {
     Ok(Json(check_flag_display_right(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State written-vs-oral lease requirement compliance check.
+//
+// Mounted at POST /api/rental/written-lease-requirement. Universal
+// U.S. floor: Statute of Frauds requires leases of real property
+// for term exceeding ONE YEAR to be in writing. Leases of ONE YEAR
+// or LESS may be oral. Five regimes: NewYork (N.Y. Gen. Oblig. Law
+// § 5-703 + part-performance exception + N.Y. Gen. Bus. Law
+// § 5-702 Plain Language Law for separate content requirement);
+// Illinois (740 ILCS 80/2 + UNIQUE case-law conversion: oral lease
+// > 1 year treated as year-to-year tenancy terminable on 60-day
+// written notice); California (Cal. Civ. Code § 1624(a)(3) +
+// § 1971); Washington (RCW 59.18.230 + RCW 64.04.010); Default
+// (universal UCC § 2A-201 + state common-law one-year rule).
+// ---------------------------------------------------------------------------
+
+async fn written_lease_requirement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<WrittenLeaseInput>,
+) -> Result<Json<WrittenLeaseResult>, ApiError> {
+    if b.lease_term_days > 50 * 365 {
+        return Err(ApiError::BadRequest(
+            "lease_term_days looks invalid (>50 years)".into(),
+        ));
+    }
+    Ok(Json(check_written_lease_requirement(&b)))
 }
 
 // ---------------------------------------------------------------------------
