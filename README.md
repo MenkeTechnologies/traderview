@@ -2683,6 +2683,31 @@ Mounted at `POST /api/calc/section-6654`. Twenty-four tests pin: **de minimis $1
 
 Mounted at `POST /api/calc/section-6662`. Twenty-four tests pin: **individual threshold max(10% × correct_tax, $5k)** ($500k correct tax → $50k threshold; $30k correct tax → $5k floor); **corporate threshold $10k floor when correct tax low** ($50k correct → $10k floor); **corporate threshold capped at $10M** ($1B correct → 10% = $100M but capped at $10M); **negligence triggers 20%** ($10k × 20% = $2k); **substantial understatement triggers 20%** ($100k × 20% = $20k); **under-threshold no trigger**; **valuation at 150% substantial misstatement** (20%); 149% no trigger (strict ≥ 150%); **valuation at 200% gross misstatement triggers 40% rate** ($100k underpayment × 40% = $40k); 300% still 40%; **economic substance failure has NO §6664(c) defense** (regression target — even with reasonable cause asserted, penalty stands); **undisclosed foreign asset has NO §6664(c) defense**; reasonable cause zeros substantial understatement penalty; reasonable cause zeros negligence; reasonable cause zeros gross-valuation 40% penalty (when available); **gross valuation beats substantial understatement for rate** (highest-rate wins); **no stacking** — negligence + gross valuation still capped at 40% (not 60%); no trigger → zero penalty; **citation mentions all 9 relevant authorities** (§6662(a) + (h) + (b) + (d) + §6664(c) + §7701(o) + 200% + 150% + "no stacking"); note describes "EXCEEDED" when threshold breached; note says "UNAVAILABLE" for economic-substance defense; **$1B precision** ($1B × 20% = $200M); **$500M underpayment gross valuation precision** ($500M × 40% = $200M).
 
+`traderview-expense::section_170` is the **IRC §170 charitable contribution deduction module (individual)** — addresses the broad §170(b) per-category AGI ceilings + the NEW OBBBA-imposed 0.5% AGI floor effective 2026. Sibling to `section_170e` (built-in-gain ordinary-income reduction for appreciated property). This module addresses the percentage-of-AGI limits and the floor; `section_170e` addresses the FMV-vs-basis amount calculation for property donations.
+
+**Per-category AGI ceilings** (§ 170(b)(1)):
+
+| Category | Ceiling | Citation |
+|----------|---------|----------|
+| Cash to public charity | **60% AGI** (made PERMANENT by OBBBA) | § 170(b)(1)(G) |
+| Non-cash to public charity | 50% AGI | § 170(b)(1)(A) |
+| Capital-gain property to public OR cash to 30%-limit org | 30% AGI | § 170(b)(1)(B)/(C) |
+| Capital-gain property to private foundation | 20% AGI | § 170(b)(1)(D) |
+
+**OBBBA 2026 changes** (eff. tax years beginning after 2025-12-31):
+
+| Change | Mechanic | Citation |
+|--------|----------|----------|
+| **0.5% AGI floor for itemizers** | Aggregate charitable deduction reduced by 0.5% × AGI; blocked amount carries forward 5 years | § 170(b)(1)(I), OBBBA § 70425 |
+| **Non-itemizer above-the-line deduction** | $1,000 single / $2,000 MFJ for CASH to public charity only | § 170(p), OBBBA eff. 2026 |
+| **60% cash ceiling made permanent** | Was scheduled to revert to 50% | § 170(b)(1)(G) |
+
+**5-year carryforward** under §170(d)(1): both ceiling-blocked AND floor-blocked amounts carry forward 5 succeeding tax years.
+
+**$500K-AGI itemizer worked example** (Blue J): $500K AGI, $10K cash to public charity. 60% cap = $300K (not binding). 0.5% floor = $2,500. Allowed = $10K − $2,500 = $7,500 deduction + $2,500 carryforward.
+
+Mounted at `POST /api/calc/section-170`. Twenty tests pin: **itemizer 2026 cash under 0.5% floor → no deduction** (regression — all blocked + full carryforward); **itemizer 2026 cash above floor partial deduction**; **itemizer 2025 no floor full deduction** (year-aware regression — pre-OBBBA); **itemizer 2026 above 60% cash cap carries forward** + 0.5% floor stacks on top; **itemizer 2026 capital-gain property 30% cap** + floor; **non-itemizer 2026 above-the-line $1,000 single** + § 170(p) citation; **non-itemizer 2026 max caps at $1,000 single**; **non-itemizer 2026 MFJ $2,000 max**; **non-itemizer 2025 no deduction** (regression — § 170(p) not yet effective); **itemizer 2026 at 0.5% boundary all blocked** (≤ strict); **itemizer 2026 just above floor $1 allowed** (off-by-one regression); **$500K AGI worked example $7,500 allowed**; **$500K AGI 2025 no floor full $10K**; **MFJ QW uses joint $2,000 max**; **HoH uses single $1,000 max** (regression — HoH not granted MFJ-level); **negative inputs clamped**; **zero AGI zero floor**; **citations pin authorities** (§ 170(b)(1) + OBBBA § 70425 + § 170(b)(1)(I) + § 170(d)(1) + § 170(p)); **ceiling-then-floor both carry forward**; **OBBBA floor effective only 2026+** (2-year × 3-year multi-year boundary invariant — 2024/2025 no floor; 2026/2027/2030 floor applies).
+
 `traderview-expense::section_170e` is the **IRC §170(e) appreciated-property charitable contribution module** — the single highest-frequency tax-planning move for successful traders. Donate winners to charity, deduct FMV (or basis on specific paths), pay NO capital gain tax on the embedded appreciation. Independent of §1091 wash sale (gifts aren't sales, no replacement-period concern).
 
 **Six rule paths** cover every combination of property kind × charity type × basis-election flag:

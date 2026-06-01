@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
+        .route("/calc/section-170",           post(section_170_route))
         .route("/calc/section-219",           post(section_219_route))
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
@@ -1854,6 +1855,39 @@ async fn section_213_route(
         ));
     }
     Ok(Json(traderview_expense::section_213::compute(&b)))
+}
+
+// ── §170 charitable contribution deduction (post-OBBBA 2026 changes) ──
+// Mounted at /api/calc/section-170. §170(a) general deduction;
+// §170(b)(1) per-category AGI ceilings (60% cash to public charity made
+// permanent by OBBBA + 50% non-cash to public + 30% capital-gain
+// property or cash to 30%-limit orgs + 20% capital-gain property to
+// private foundations); §170(b)(1)(I) OBBBA §70425 0.5% AGI FLOOR for
+// itemizers eff. tax years after 2025-12-31 (amounts below floor carry
+// forward 5 years); §170(p) OBBBA non-itemizer above-the-line deduction
+// $1,000 single / $2,000 MFJ for cash to public charity only eff. 2026;
+// §170(d)(1) 5-year carryforward for ceiling-blocked + floor-blocked.
+// Sibling to section_170e (built-in-gain ordinary-income reduction).
+
+async fn section_170_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_170::Section170Input>,
+) -> Result<Json<traderview_expense::section_170::Section170Result>, ApiError> {
+    if b.agi_cents < 0
+        || b.cash_to_public_charity_cents < 0
+        || b.capital_gain_property_to_public_charity_cents < 0
+        || b.cash_to_private_foundation_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.year) {
+        return Err(ApiError::BadRequest(
+            "year must be in [1990, 2100]".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_170::compute(&b)))
 }
 
 // ── §219 IRA contribution deduction + Roth phaseout ──────────────────
