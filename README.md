@@ -1790,6 +1790,46 @@ Mounted at `POST /api/rental/hoa-rental-restriction`. Twenty-one tests pin: **Fl
 
 Mounted at `POST /api/rental/rent-acceleration-enforceability`. Twenty-three tests pin: **California residential presumed invalid no rebuttal** ($0 enforceable); **California residential rebutted capped at actual damages**; **California commercial reasonable enforceable with mitigation** ($6M - $1M offset = $5M); **California commercial unreasonable void as penalty** (acceleration > 2× actual damages); **New York commercial enforceable with PV discount**; **New York commercial no PV discount violation**; **New York commercial unconscionable conduct void**; **New York residential falls back to penalty doctrine**; **New York residential unreasonable void** ($120K vs $10K → void); **default reasonable with PV enforceable**; **default unreasonable void as penalty**; **default no PV discount violation even when reasonable**; **default mitigation not attempted violation**; **only California residential has presumption invariant** (3-regime sweep); **only New York commercial skips mitigation invariant** (Holy Properties); **PV discount required outside California invariant**; **unconscionable conduct voids all regimes for commercial**; **mitigation offset reduces recovery** ($60K - $40K = $20K); **mitigation offset exceeds acceleration zero recovery** (saturating at $0); **citation pins all regime authorities** (§ 1671 + § 1671(b) + § 1671(d) + § 1951.2 + Holy Properties 87 N.Y.2d 130 (1995) + Restatement Contracts § 356 + Property § 12.1); **sibling distinction note present** (UX-text regression for `duty_to_mitigate_damages` + `late_fee_caps` + `lease_cure_period` + `holdover_tenant_damages` + structural CA/NY/Default divergence); **defensive negative acceleration clamped**; **defensive negative mitigation offset clamped**.
 
+`traderview-expense::tenant_in_foreclosure_protection` is the **tenant-in-foreclosure protections module** — what notice and timing must a successor in interest provide to existing tenants when a residential property is foreclosed? Trader-critical for landlord-investors purchasing foreclosed properties — buying property with existing bona fide tenants triggers a federal floor plus state-specific overlays. Three regimes built on the federal PTFA baseline, with California adding pre-sale posting requirements and New York extending protections to non-named and rent-regulated tenants.
+
+**Three regimes**:
+
+| Regime | Authority | Distinctive feature |
+|--------|-----------|---------------------|
+| Federal PTFA (Default) | Pub. L. 111-22 § 702 (restored permanently by Pub. L. 115-174 § 304, eff. June 23, 2018) | National floor — greater of 90 days OR lease remainder |
+| California | Cal. Civ. Code § 2924.8 + § 1161b | Pre-sale notice posting + first-class mailing; § 2924.8(d) **$100 infraction** for tearing down notice within 72 hours |
+| New York | N.Y. RPAPL § 1305 | § 1305(4) preserves additional rights for rent-control/stabilization/subsidy tenants AND tenants not named in foreclosure action |
+
+**PTFA bona fide tenant — three-prong test** (BOTH first conditions + the conjunctive rent test):
+
+| Prong | Rule |
+|-------|------|
+| (1) | Tenant is NOT the mortgagor or mortgagor's spouse, parent, or child |
+| (2) | Lease is an arm's-length transaction |
+| (3) | Rent is NOT substantially less than fair market rent (UNLESS reduced/subsidized by federal, state, or local program) |
+
+All three required. Pinned by `bona_fide_baseline_all_prongs_pass`, `mortgagor_family_disqualifies`, `non_arms_length_disqualifies`, `rent_substantially_below_market_disqualifies`, `subsidy_rescues_below_market_rent` (subsidy rescues the third prong even when rent is substantially below market), and `bona_fide_prongs_truth_table` (8-cell sweep — only the all-three-true cell engages bona fide status).
+
+**PTFA notice timing — greater of 90 days or lease remainder**:
+
+| Scenario | Notice period |
+|----------|---------------|
+| Bona fide + written lease + lease remaining ≥ 90 days | Lease remainder |
+| Bona fide + written lease + lease remaining < 90 days | 90 days minimum |
+| Bona fide + no lease (month-to-month) | 90 days minimum |
+| Non-bona-fide tenant | No PTFA notice protection (state law still applies) |
+| Owner-occupant buyer primary residence | 90 days minimum (lease early-terminated) |
+
+Pinned by `bona_fide_with_lease_gets_lease_end` (180 days remaining → 180 days), `bona_fide_lease_below_90_days_gets_90`, `bona_fide_no_lease_gets_90_days_only`, `non_bona_fide_no_notice_period`, `owner_occupant_exception_engages`, `early_eviction_violation_before_90_day_window` (eviction within 90-day window flagged as PTFA violation), `day_90_passed_no_ptfa_window_violation`, and `ptfa_90_day_floor_all_regimes_invariant` (3-regime sweep confirms 90-day minimum is universal floor).
+
+**California § 2924.8** layers pre-sale notice posting + first-class mailing addressed to "Resident of property subject to foreclosure sale" on top of PTFA. Failure to post + mail violates procedural prerequisites. § 2924.8(d) makes it an INFRACTION to tear down the posted notice within 72 hours of posting — $100 fine (applies to person who tore it down, NOT to landlord). § 1161b parallels PTFA for unlawful detainer post-foreclosure proceedings. Pinned by `california_pre_sale_notice_posted_compliant`, `california_pre_sale_notice_missing_violation`, `california_tear_down_infraction_engages`, `california_tear_down_only_applies_in_california`, and `only_california_has_tear_down_infraction_invariant` (3-regime sweep).
+
+**New York RPAPL § 1305** mirrors PTFA's greater-of-90-or-lease-end rule. § 1305(4) preserves additional rights for (a) federally subsidized tenants, (b) rent-control/rent-stabilization tenants, and (c) tenants NOT NAMED in the foreclosure action. These tenants retain ALL pre-foreclosure protections layered ON TOP of § 1305 + PTFA floor. Pinned by `new_york_rent_control_preserves_additional_rights`, `new_york_not_named_in_foreclosure_preserves_rights`, `new_york_preservation_only_in_ny` (CA + Default ignore NY-specific fields), `new_york_no_preservation_when_neither_condition_met`, and `only_new_york_preserves_additional_rights_invariant` (3-regime sweep).
+
+**Sibling distinction note** — every result references siblings `foreclosure_tenant_rights`, `mid_tenancy_ownership_change`, and `eviction_notices`. Federal PTFA creates a national FLOOR (90-day notice + lease-end honoring for bona fide tenants); state law adds CEILING when more protective. Pinned by `sibling_distinction_note_present` (UX-text regression).
+
+Mounted at `POST /api/rental/tenant-in-foreclosure-protection`. Twenty-nine tests pin: **bona fide baseline all prongs pass**; **mortgagor family disqualifies**; **non-arms-length disqualifies**; **rent substantially below market disqualifies**; **subsidy rescues below-market rent**; **bona fide with lease gets lease end** (180 days); **bona fide lease below 90 days gets 90**; **bona fide no lease gets 90 days only**; **non bona fide no notice period**; **owner occupant exception engages**; **early eviction violation before 90-day window**; **day 90 passed no PTFA window violation**; **California pre-sale notice posted compliant**; **California pre-sale notice missing violation**; **California tear-down infraction engages**; **California tear-down only applies in California**; **New York rent control preserves additional rights**; **New York not named in foreclosure preserves rights**; **New York preservation only in NY**; **New York no preservation when neither condition met**; **PTFA 90-day floor all regimes invariant** (3-regime sweep); **bona fide prongs truth table** (8-cell sweep — only all-three-true cell engages); **only California has tear-down infraction invariant** (3-regime sweep); **only New York preserves additional rights invariant** (3-regime sweep); **citation pins all regime authorities** (Pub. L. 111-22 § 702 + Pub. L. 115-174 § 304 + § 2924.8 + § 2924.8(a)/(d) + § 1161b + RPAPL § 1305 + § 1305(2)/(4) + June 23, 2018 effective date); **sibling distinction note present** (UX-text regression for `foreclosure_tenant_rights` + `mid_tenancy_ownership_change` + `eviction_notices` + national-FLOOR concept); **defensive negative lease remaining clamped** (negative → 0 → 90-day fallback); **defensive negative days since notice no violation** (notice not yet served); **CA tear-down fine constant** ($100 = 10,000 cents; 72-hour window; PTFA 90 days).
+
 `traderview-expense::plain_language_lease` is the **state plain-language lease / consumer-contract requirement compliance table** — only 4 states have enacted statutes specifically requiring residential leases to be written in clear, readable language understandable to the average tenant. The 1970s consumer-protection movement produced the original wave: CT (1979, U.S. pioneer), NY (1978-effective), NJ (1981), PA (1993). The 46 other states + DC rely on common-law unconscionability + contract-of-adhesion doctrines.
 
 **Five regimes** with sharply different remedies:

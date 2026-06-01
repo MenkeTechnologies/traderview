@@ -340,6 +340,10 @@ use traderview_expense::rent_acceleration_enforceability::{
     check as check_rent_acceleration, CheckResult as RentAccelerationResult,
     Input as RentAccelerationInput,
 };
+use traderview_expense::tenant_in_foreclosure_protection::{
+    check as check_tenant_foreclosure_protection,
+    CheckResult as TenantForeclosureResult, Input as TenantForeclosureInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -580,6 +584,7 @@ pub fn router() -> Router<AppState> {
         .route("/portable-tenant-screening-report", axum::routing::post(portable_tenant_screening_report_route))
         .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
+        .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4512,6 +4517,42 @@ async fn rent_acceleration_enforceability_route(
         ));
     }
     Ok(Json(check_rent_acceleration(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant in foreclosure protections.
+//
+// Mounted at POST /api/rental/tenant-in-foreclosure-protection.
+// Three regimes for notice + timing requirements when a successor
+// in interest (foreclosure buyer) evicts existing tenants: (1)
+// Federal PTFA — Protecting Tenants at Foreclosure Act (Pub. L.
+// 111-22 § 702, restored permanently by Pub. L. 115-174 § 304
+// effective June 23, 2018): bona fide tenants get greater of 90
+// days OR lease remainder; owner-occupant primary residence
+// exception terminates lease early but 90-day notice still
+// required; (2) California — Cal. Civ. Code § 2924.8 + § 1161b:
+// adds pre-sale posting + first-class mailing requirement,
+// $100 infraction under § 2924.8(d) for tearing down notice
+// within 72 hours; (3) New York — N.Y. RPAPL § 1305: adds
+// § 1305(4) preservation of pre-existing rent-control/rent-
+// stabilization/subsidy rights AND extends protections to
+// tenants not named in foreclosure action. Federal PTFA is
+// national FLOOR; state law adds ceiling when more protective.
+// ---------------------------------------------------------------------------
+
+async fn tenant_in_foreclosure_protection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantForeclosureInput>,
+) -> Result<Json<TenantForeclosureResult>, ApiError> {
+    if b.lease_remaining_days > 50 * 365
+        || b.days_since_foreclosure_notice > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "lease_remaining_days or days_since_foreclosure_notice out of range".into(),
+        ));
+    }
+    Ok(Json(check_tenant_foreclosure_protection(&b)))
 }
 
 // ---------------------------------------------------------------------------

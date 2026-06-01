@@ -133,6 +133,7 @@ pub mod str_regulation;
 pub mod sublet_consent;
 pub mod submetering_rules;
 pub mod tenant_abandonment;
+pub mod tenant_in_foreclosure_protection;
 pub mod tenant_cannabis_use_protection;
 pub mod tenant_data_privacy;
 pub mod tenant_death_termination;
