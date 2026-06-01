@@ -5405,6 +5405,41 @@ All five required; failure of any element defeats prosecution. Pinned by `sectio
 
 Mounted at `POST /api/calc/section-7206`. Twenty-nine tests pin: **§ 7206(1) all five elements authorizes prosecution**; **§ 7206(1) missing any element no prosecution**; **§ 7206(1) five-element truth table** (32-cell sweep e1 × e2 × e3 × e4 × e5); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek not asserted no Cheek engagement**; **Cheek case note describes subjective belief test**; **Cheek only defeats when successful and asserted** (4-cell sweep); **individual max fine $250K** (18 U.S.C. § 3571); **corporation max fine $500K**; **maximum imprisonment always 3 years** (5-subsection invariant); **§ 7206(1)/(2)/(3)/(4) six-year SOL** (§ 6531); **§ 7206(5) three-year SOL**; **SOL truth table per subsection** (5-subsection sweep); **§ 7206(2) aiding full elements authorizes**; **§ 7206(2) aiding missing aid no prosecution**; **§ 7206(2) aiding missing willfulness no prosecution**; **§ 7206(2) Cheek defeats aiding**; **§ 7206(2) aiding element note describes reach** (preparers + advisors + third parties even when taxpayer-signer innocent); **§ 6663 civil parallel always available** (Spies-Daly doctrine); **unlimited ASED cross-reference note** (§ 6501(c)(1)); **§ 7491 burden shifts excluded note** (BEYOND REASONABLE DOUBT); **CFIA 18 U.S.C. § 3571 supersedes note**; **IRM 9.1.3 note present**; **citation pins all subsections** (§§ 7206(1)/(2)/(3)/(4)/(5) + § 6531 + § 6663 + § 6501(c)(1) + § 6501(c)(2) + 18 U.S.C. § 3571 + Cheek + IRM 9.1.3); **five subsections routed correctly**; **elements count zero when no elements**; **elements count increments per element**; **§ 7206(1) five-element note present** (5/5 satisfied note).
 
+`traderview-expense::section_7212` is the **IRC § 7212 attempts to interfere with administration of internal revenue laws (criminal felony)** module — pairs with `section_7201` (5-year evasion felony), `section_7202` (5-year trust-fund-tax felony), `section_7203` (1-year misdemeanor failure to file), `section_7206` (3-year felony perjury), and `section_7434` (civil damages for fraudulent information return). 3-year FELONY for corruptly OR by force/threats impeding IRS administration + $250K individual / $500K corporation fine under 18 U.S.C. § 3571.
+
+**§ 7212(a) two clauses**:
+
+| Clause | Test | Marinello required |
+|--------|------|----------------------|
+| Officer-specific | Corruptly OR force/threats endeavors to intimidate/impede IRS officer in official capacity | NO |
+| Omnibus | Corruptly OR force/threats obstructs due administration of Title 26 | YES |
+
+**Officer-specific clause three-element test** (BEYOND REASONABLE DOUBT):
+
+1. Use of FORCE OR THREATS OF FORCE (or corrupt action)
+2. To INTIMIDATE, IMPEDE, OR OBSTRUCT
+3. Officer or employee of US acting in OFFICIAL CAPACITY under Title 26
+
+Pinned by `officer_specific_three_element_truth_table` (8-cell sweep).
+
+**Omnibus clause three-element test + Marinello nexus**:
+
+1. CORRUPTLY ACTED (or force/threats)
+2. With INTENT TO SECURE UNLAWFUL BENEFIT
+3. OBSTRUCTED or impeded DUE ADMINISTRATION of Title 26
+
+PLUS **Marinello v. United States, 138 S. Ct. 1101 (2018) nexus** to known pending OR reasonably foreseeable proceeding. Marinello narrowed omnibus clause to EXCLUDE routine non-compliance with tax code requirements absent the proceeding-nexus. Pinned by `omnibus_without_marinello_nexus_defeats` and `marinello_routine_noncompliance_carveout_note_when_missing`.
+
+**§ 7212(a) threats-only downgrade**. When offense is committed ONLY by threats of force (no actual force + no corrupt act), penalty reduces to: fine up to $3,000 + imprisonment up to **1 YEAR (misdemeanor)**. Otherwise: fine up to $5,000 (superseded by 18 U.S.C. § 3571 to $250K individual / $500K corporation) + imprisonment up to **3 YEARS (felony)**. Pinned by `threats_only_with_intimidation_engages_misdemeanor_path` and `imprisonment_1_year_when_misdemeanor_threats_only`.
+
+**"Corrupt" defined** — judicial gloss: act performed with INTENTION TO SECURE AN UNLAWFUL BENEFIT.
+
+**§ 6531 criminal SOL** — general **3-year** criminal SOL applies to § 7212 (NOT extended 6-year as for § 7201 / § 7203 / § 7206(1)-(4)). Notable shorter window. Pinned by `criminal_sol_3_years_general`.
+
+**Spies-Daly parallel civil consequences**. § 7212 prosecution does not bar § 6663 civil fraud + § 6672 TFRP + other civil penalties arising from underlying conduct. § 6501(c)(1) UNLIMITED ASED for fraud if proven.
+
+Mounted at `POST /api/calc/section-7212`. Thirty-two tests pin: **officer-specific full authorizes felony**; **officer-specific missing force defeats**; **officer-specific missing intimidation defeats**; **officer-specific missing official capacity defeats**; **omnibus full with Marinello authorizes felony**; **omnibus without Marinello nexus defeats** (routine non-compliance carveout); **omnibus missing corrupt defeats**; **omnibus missing unlawful benefit defeats**; **omnibus missing obstruction defeats**; **threats-only pathway engages misdemeanor**; **threats-only with intimidation engages misdemeanor path** (1-year + $100K individual); **threats-only individual max fine $100K**; **threats-only corporation max fine $200K**; **felony individual max fine $250K** (18 U.S.C. § 3571); **felony corporation max fine $500K**; **corrupt act alone does not trigger threats-only**; **Marinello nexus satisfied note present when satisfied**; **Marinello routine noncompliance carveout note when missing**; **corrupt definition note present** (INTENTION TO SECURE UNLAWFUL BENEFIT); **criminal SOL 3 years general** (§ 6531); **parallel civil consequences note present** (§ 6663 + § 6672 + § 6501(c)(1)); **citation pins all authorities** (§§ 7212(a)/(b) + 6531 + 6663 + 6672 + 6501(c)(1) + 18 U.S.C. § 3571 + Marinello + IRM 9.1.3); **officer-specific three-element truth table** (8-cell sweep); **omnibus Marinello required alongside three elements**; **imprisonment 3 years when felony**; **imprisonment 1 year when misdemeanor threats-only**; **CFIA 18 U.S.C. § 3571 supersedes note when felony**; **threats-only downgrade note when misdemeanor**; **prosecution authorized note describes pathway** (FELONY vs misdemeanor); **two clauses note always present** (officer-specific + omnibus); **IRM 9.1.3 note present**; **clause target routing distinct** (officer-specific vs omnibus notes).
+
 `traderview-expense::section_7201` is the **IRC § 7201 attempt to evade or defeat tax (apex criminal felony)** module — the most severe criminal tax statute in the Code. Pairs with `section_7206` (fraud and false statements / tax perjury — 3-year felony) and `section_6663` (civil fraud 75% penalty). 5-year felony with $250K individual / $500K corporation fine under 18 U.S.C. § 3571 (supersedes § 7201's original $100K cap). Natural sibling to `section_6501` (§ 6501(c)(1)/(c)(2) unlimited ASED for fraud), `section_6664` (reasonable cause defense), and `section_7491` (burden shifts excluded for criminal cases).
 
 **§ 7201 four-element test** (government bears BEYOND REASONABLE DOUBT burden):

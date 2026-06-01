@@ -91,6 +91,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7201",          post(section_7201_route))
         .route("/calc/section-7202",          post(section_7202_route))
         .route("/calc/section-7203",          post(section_7203_route))
+        .route("/calc/section-7212",          post(section_7212_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7434",          post(section_7434_route))
@@ -2906,6 +2907,32 @@ async fn section_7203_route(
     Json(b): Json<traderview_expense::section_7203::Section7203Input>,
 ) -> Result<Json<traderview_expense::section_7203::Section7203Result>, ApiError> {
     Ok(Json(traderview_expense::section_7203::check(&b)))
+}
+
+// ── §7212 attempts to interfere with administration (felony) ────────
+// Mounted at /api/calc/section-7212. Criminal FELONY (3-year cap)
+// + $250K individual / $500K corporation fine (18 U.S.C. § 3571
+// supersedes original $5K cap). Two clauses: officer-specific
+// (corruptly OR by force/threats endeavors to intimidate or
+// impede IRS officer/employee in official capacity) + omnibus
+// (any other way corruptly OR by force/threats obstructs or
+// impedes due administration of Title 26). § 7212(a) threats-only
+// downgrade: when offense committed ONLY by threats of force
+// (no actual force + no corrupt act), 1-year misdemeanor +
+// $3K fine. Marinello v. United States, 138 S. Ct. 1101 (2018)
+// — omnibus clause requires NEXUS to known pending OR reasonably
+// foreseeable proceeding (routine non-compliance with tax code
+// requirements absent nexus does NOT constitute § 7212 violation).
+// 'Corrupt' = act performed with INTENTION TO SECURE UNLAWFUL
+// BENEFIT. § 6531 general 3-year criminal SOL applies (not 6).
+// Spies-Daly parallel civil § 6663 fraud + § 6672 TFRP + § 6501
+// (c)(1) UNLIMITED ASED for fraud. IRM 9.1.3.
+
+async fn section_7212_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7212::Section7212Input>,
+) -> Result<Json<traderview_expense::section_7212::Section7212Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7212::check(&b)))
 }
 
 // ── §7206 fraud and false statements (criminal felony) ──────────────
