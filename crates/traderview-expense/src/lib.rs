@@ -18,6 +18,7 @@ pub mod boa;
 pub mod carpet_replacement_useful_life;
 pub mod chase;
 pub mod contractor_1099;
+pub mod cooling_requirements;
 pub mod cosigner_rules;
 pub mod cost_segregation;
 pub mod damage_deduction_itemization;

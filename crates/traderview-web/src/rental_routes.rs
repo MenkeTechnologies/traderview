@@ -252,6 +252,10 @@ use traderview_expense::damage_deduction_itemization::{
     check as check_damage_deduction_itemization, CheckResult as DamageDeductionResult,
     Input as DamageDeductionInput,
 };
+use traderview_expense::cooling_requirements::{
+    check as check_cooling_requirements, CheckResult as CoolingRequirementsResult,
+    Input as CoolingRequirementsInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -470,6 +474,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-identification-disclosure", axum::routing::post(landlord_identification_disclosure_route))
         .route("/reasonable-accommodation-modification", axum::routing::post(reasonable_accommodation_modification_route))
         .route("/damage-deduction-itemization", axum::routing::post(damage_deduction_itemization_route))
+        .route("/cooling-requirements", axum::routing::post(cooling_requirements_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3635,6 +3640,46 @@ async fn damage_deduction_itemization_route(
         ));
     }
     Ok(Json(check_damage_deduction_itemization(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State + municipal landlord cooling / maximum-indoor-temperature /
+// AC-installation compliance check.
+//
+// Mounted at POST /api/rental/cooling-requirements. Six regimes:
+// ArizonaPhoenix (A.R.S. § 33-1364 cooling-as-essential-service + 5-
+// day cure period + Phoenix City Code 82°F refrigerated AC max / 86°F
+// evaporative cooler max in habitable rooms); ArizonaTucson (parallel
+// 82°F cap); Dallas (Dallas City Code Chapter 27 refrigerated air —
+// indoor ≤ outdoor − 20°F during April 1 to November 1; Tex. Prop.
+// Code § 92.052 7-day repair window); NYCCoolHomes (N.Y.C. Admin.
+// Code Cool Homes for All Int 0994-2024 — tenant request begins
+// 2028-03-01; enforcement begins 2030-01-01; bedrooms ≤ 78°F when
+// outdoor > 82°F during June 15 to September 15; 60-day landlord
+// response window for installation requests); California (Cal. Civ.
+// Code § 1941.1 implied warranty covers existing cooling — no
+// statewide maximum-temperature cap or install mandate); Default (no
+// statewide cooling requirement).
+// ---------------------------------------------------------------------------
+
+async fn cooling_requirements_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CoolingRequirementsInput>,
+) -> Result<Json<CoolingRequirementsResult>, ApiError> {
+    if b.day_of_year == 0 || b.day_of_year > 366 {
+        return Err(ApiError::BadRequest(
+            "day_of_year must be in 1..=366".into(),
+        ));
+    }
+    if b.days_since_written_notice > 100_000
+        || b.days_since_tenant_request_for_install > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "day-since-notice counters look invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_cooling_requirements(&b)))
 }
 
 // ---------------------------------------------------------------------------
