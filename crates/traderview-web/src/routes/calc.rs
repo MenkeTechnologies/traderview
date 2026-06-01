@@ -115,6 +115,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6662a",         post(section_6662a_route))
         .route("/calc/section-6694",          post(section_6694_route))
         .route("/calc/section-6695",          post(section_6695_route))
+        .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -3275,6 +3276,40 @@ async fn section_6695_route(
         ));
     }
     Ok(Json(traderview_expense::section_6695::compute(&b)))
+}
+
+// ── § 6700 promoter penalties for abusive tax shelter promotion ────
+// Mounted at /api/calc/section-6700. Third member of the preparer
+// + promoter penalty cluster (after § 6694 + § 6695). Two-prong
+// structure: § 6700(a)(1) promoter status (organizes/sells plan
+// or arrangement) + § 6700(a)(2)(A) false/fraudulent statement
+// with scienter (50% gross income penalty per AJCA 2004), or
+// § 6700(a)(2)(B) + § 6700(b)(1) gross valuation overstatement
+// exceeding 200% threshold with direct relationship to
+// deduction/credit ($1,000 floor or lesser-of-gross-income).
+// Penalty applies REGARDLESS of participant reliance or actual
+// underreporting. Sibling cluster: § 6694 + § 6695 + § 6701
+// (aiding/abetting) + § 7408 (injunction remedy). Effective
+// since January 1, 1990; substantially amended by AJCA 2004
+// Pub. L. 108-357 § 818.
+
+async fn section_6700_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6700::Section6700Input>,
+) -> Result<Json<traderview_expense::section_6700::Section6700Result>, ApiError> {
+    if b.gross_income_from_activity_cents < 0
+        || b.gross_income_from_activity_cents > 1_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "gross_income_from_activity_cents out of range".into(),
+        ));
+    }
+    if b.stated_value_cents > 1_000_000_000_000 || b.correct_value_cents > 1_000_000_000_000 {
+        return Err(ApiError::BadRequest(
+            "stated_value_cents or correct_value_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6700::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
