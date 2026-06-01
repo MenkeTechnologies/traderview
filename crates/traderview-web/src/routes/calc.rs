@@ -96,6 +96,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1278",          post(section_1278_route))
         .route("/calc/section-1271",          post(section_1271_route))
         .route("/calc/section-1272",          post(section_1272_route))
+        .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2668,6 +2669,38 @@ async fn section_1272_route(
         ));
     }
     Ok(Json(traderview_expense::section_1272::compute(&b)))
+}
+
+// ── §1273 OID definition + issue price determination ─────────────
+// Mounted at /api/calc/section-1273. Definitional anchor for the
+// OID cluster. § 1273(a)(1) OID = excess of stated redemption price
+// at maturity over issue price. § 1273(a)(2) SRPM = amount fixed by
+// last modification of purchase agreement. § 1273(a)(3) DE MINIMIS
+// — raw OID strictly less than ¼ of 1% × SRPM × complete years to
+// maturity treated as ZERO (same factor as § 1278(a)(2)(C) market
+// discount). § 1273(b)(1) publicly offered cash issue = initial
+// offering price to public. § 1273(b)(2) non-public cash = price
+// paid by first buyer. § 1273(b)(3) traded debt (issued for property
+// where debt OR property is publicly traded) = FMV of debt
+// instrument. § 1273(b)(4) residual case = SRPM minus OID (caller-
+// supplied OID typically from § 1274 AFR imputation). § 1273(b)(5)
+// "property" includes services and right to use property.
+
+async fn section_1273_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1273::Section1273Input>,
+) -> Result<Json<traderview_expense::section_1273::Section1273Result>, ApiError> {
+    if b.stated_redemption_price_at_maturity_cents < 0
+        || b.initial_public_offering_price_cents < 0
+        || b.first_buyer_price_cents < 0
+        || b.fmv_of_debt_instrument_cents < 0
+        || b.residual_oid_amount_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1273::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

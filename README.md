@@ -4193,6 +4193,38 @@ The **§1092(c)(4)(B) qualified covered call (QCC) exception** is the load-beari
 
 Mounted at `POST /api/calc/section-1092`. Seventeen tests pin: loss fully deferred when gain on offset exceeds loss (5k gain + 2k loss → all 2k deferred, 0 recognized); loss partially deferred when gain less than loss (2k gain + 5k loss → 2k deferred, 3k recognized); no gain on offset full loss recognized (still flags holding-period suspension because it's still a straddle); loss-on-disposed-at-zero no-op; QCC exception fully qualified recognizes loss with holding period preserved; **QCC disqualified at exactly 30 days** (boundary — strict `>` boundary); QCC qualified at 31 days; QCC disqualified when underlying not publicly traded; QCC disqualified when strike deep ITM; multiple offsetting legs sum their unrecognized gains; **unrealized LOSS on offsetting leg doesn't count negative** (only positive unrecognized gains feed the deferral pool, losses ignored); loss exactly equal to gain fully deferred; no-offsetting-legs degenerate case handled; note distinguishes QCC path from normal straddle path; holding-period suspension only for non-QCC straddle; empty legs no-op; QCC short-circuit runs before offsetting-gain calculation (even a $90k gain doesn't change the QCC outcome).
 
+`traderview-expense::section_1273` is the **IRC §1273 OID-definition + issue-price-determination module** — the definitional anchor for the OID cluster. § 1272 (current inclusion) and § 1278 (market discount) both cross-reference § 1273 for the underlying numbers. Companion to `section_1271` (retirement), `section_1272` (current inclusion), `section_1276`/`section_1277`/`section_1278` (market discount trilogy). Five modules now cover the full OID + market-discount-bond statutory cluster.
+
+**§ 1273(a) — three operative paragraphs**:
+
+| Paragraph | Statute | Rule |
+|-----------|---------|------|
+| § 1273(a)(1) | 26 U.S.C. § 1273(a)(1) | **OID definition** — excess of stated redemption price at maturity over issue price |
+| § 1273(a)(2) | 26 U.S.C. § 1273(a)(2) | **Stated redemption price at maturity** — amount fixed by last modification of purchase agreement |
+| § 1273(a)(3) | 26 U.S.C. § 1273(a)(3) | **De minimis** — raw OID < ¼ of 1% × SRPM × complete years → treated as ZERO |
+
+**§ 1273(b) — four issue-price determination paths**:
+
+| Path | Statute | Issue price |
+|------|---------|-------------|
+| § 1273(b)(1) | 26 U.S.C. § 1273(b)(1) | **Publicly offered for cash** — initial offering price to the public |
+| § 1273(b)(2) | 26 U.S.C. § 1273(b)(2) | **Non-public cash** — price paid by first buyer |
+| § 1273(b)(3) | 26 U.S.C. § 1273(b)(3) | **Traded debt** (issued for property; debt or property publicly traded) — FMV of debt instrument |
+| § 1273(b)(4) | 26 U.S.C. § 1273(b)(4) | **Residual cases** — SRPM minus OID (caller-supplied OID typically from § 1274 AFR imputation) |
+| § 1273(b)(5) | 26 U.S.C. § 1273(b)(5) | **"Property" definition** — includes services and right to use property |
+
+**§ 1273(a)(3) de minimis uses the SAME formula as § 1278(a)(2)(C) market-discount de minimis.** The ¼ of 1% per year factor is shared — `DE_MINIMIS_NUMERATOR = 25`, `DE_MINIMIS_DENOMINATOR = 10_000`. Pinned by `de_minimis_uses_same_factor_as_section_1278_invariant` (constants match) and the strict-less-than boundary invariant `de_minimis_strictly_less_than_invariant` (3 boundary cells: threshold−1, threshold, threshold+1).
+
+**Issue-class determines the issue-price source.** Same SRPM + years + all class-specific inputs supplied; the result varies by class only. Pinned by `issue_class_determines_issue_price_source_invariant` (4 classes × identical input combination → 4 different issue prices: $900 publicly offered, $850 non-public cash, $800 traded debt, $880 residual).
+
+**§ 1273(b)(4) residual case caps issue price at zero where caller-supplied OID exceeds SRPM.** Defensive against caller error — issue_price clamps at zero rather than going negative. Pinned by `residual_caller_oid_exceeds_srpm_clamps_at_zero_issue_price` (caller-supplied OID $1500 > SRPM $1000 → IP $0, raw OID = SRPM $1000).
+
+**Statutory-OID-zero invariant.** Across 45 cells (3 SRPM × 5 IPO × 3 years for publicly offered), statutory OID = 0 iff either no raw OID OR de minimis applies. Otherwise statutory equals raw. Pinned by `statutory_oid_zero_iff_either_no_raw_or_de_minimis_invariant`.
+
+**§ 1273(a)(3) threshold scales linearly with years to maturity.** A $1000 1-year bond has $2.50 threshold; a $1000 20-year bond has $50 threshold. Same raw OID ($10) is NOT de minimis for the 1-year bond ($10 > $2.50 → discount applies) but IS de minimis for the 20-year bond ($10 < $50 → ZERO). Pinned by `de_minimis_scales_with_years`.
+
+Mounted at `POST /api/calc/section-1273`. Nineteen tests pin: **publicly offered SRPM $1000 IPO $850 5yr OID $150**; **de minimis below threshold zero OID**; **de minimis at threshold boundary does NOT apply** (strict less-than); **de minimis just below threshold applies**; **de minimis scales with years** (1-year vs 20-year); **publicly offered uses IPO price** (ignores other inputs); **non-public cash uses first-buyer price**; **traded debt uses FMV**; **residual uses SRPM minus caller OID**; **residual caller OID exceeds SRPM clamps at zero issue price** (defensive); **issue price equals SRPM no OID**; **issue price above SRPM no OID** (premium issuance); **issue class determines issue price source invariant** (4 classes × identical inputs); **de minimis strictly less than invariant** (3 boundary cells); **statutory OID zero iff either no raw or de minimis invariant** (45 cells); **citation pins subsection per class** (§ 1273(b)(1)/(b)(2)/(b)(3)/(b)(4) + § 1273(a)(1) + (a)(3) on all non-zero paths); **de minimis uses same factor as § 1278 invariant** (constants check); **zero years to maturity zero threshold full OID** (edge); **class-specific note documents issue price source** (UX-text regression for each of 4 § 1273(b) paths).
+
 `traderview-expense::section_1272` is the **IRC §1272 current-inclusion-of-original-issue-discount (OID) module** — the "phantom income" rule that bondholders of OID instruments face. § 1272(a)(1) requires the holder of any OID debt instrument to recognize accrued OID in gross income EACH YEAR regardless of whether cash was received. Direct companion to `section_1271` (retirement — § 1271(c) cross-references § 1272 for no-double-inclusion), `section_1276`/`section_1277`/`section_1278` (market-discount-bond trilogy — § 1278(a)(2)(B) revised-issue-price uses § 1272(a) accrual), and the matching § 163(e) issuer-side deduction.
 
 **Seven operative paths**:
