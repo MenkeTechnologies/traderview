@@ -62,6 +62,7 @@ pub mod home_office;
 pub mod late_fee_caps;
 pub mod late_payment_grace_period;
 pub mod lead_disclosure;
+pub mod lease_assignment_consent;
 pub mod lease_auto_renewal;
 pub mod lease_copy_delivery;
 pub mod lease_disclosures;

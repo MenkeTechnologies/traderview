@@ -320,6 +320,10 @@ use traderview_expense::holdover_tenant_damages::{
     check as check_holdover_tenant_damages, CheckResult as HoldoverTenantResult,
     Input as HoldoverTenantInput,
 };
+use traderview_expense::lease_assignment_consent::{
+    check as check_lease_assignment_consent, CheckResult as LeaseAssignmentResult,
+    Input as LeaseAssignmentInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -555,6 +559,7 @@ pub fn router() -> Router<AppState> {
         .route("/flag-display-right", axum::routing::post(flag_display_right_route))
         .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
         .route("/holdover-tenant-damages", axum::routing::post(holdover_tenant_damages_route))
+        .route("/lease-assignment-consent", axum::routing::post(lease_assignment_consent_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4315,6 +4320,45 @@ async fn holdover_tenant_damages_route(
         ));
     }
     Ok(Json(check_holdover_tenant_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Lease assignment consent — landlord consent rules for tenant
+// assignment of a residential lease.
+//
+// Mounted at POST /api/rental/lease-assignment-consent. Distinct
+// from sublet_consent module (subleasing leaves tenant on the
+// hook; assignment fully transfers the leasehold). Four regimes:
+// (1) NewYork — N.Y. Real Prop. Law § 226-b draws a sharp
+// structural distinction between sublease (4+ unit buildings,
+// statutory reasonable-consent right with 30-day deemed-consent
+// rule on landlord silence) and assignment (landlord may
+// unconditionally withhold consent BUT if refusal is unreasonable,
+// landlord MUST RELEASE the tenant on 30 days notice — the only
+// state regime with a structural exit valve); (2) California —
+// Cal. Civ. Code § 1995.260 implies reasonableness when the lease
+// consent clause is silent on standard, codifying Kendall v.
+// Ernest Pestana, Inc. (40 Cal. 3d 488, 1985); NOT retroactive to
+// leases executed before September 23, 1983 (pre-statute rule
+// allows unreasonable withholding); (3) Restatement (Second) of
+// Property § 15.2 — default rule of FREE ASSIGNABILITY absent
+// restriction; restrictions strictly construed against the
+// landlord; (4) LeaseControls modern-majority rule — consent
+// clause enforced as written; Texas + Illinois + Massachusetts
+// commercial context.
+// ---------------------------------------------------------------------------
+
+async fn lease_assignment_consent_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseAssignmentInput>,
+) -> Result<Json<LeaseAssignmentResult>, ApiError> {
+    if b.tenant_request_pending_days > 100_000 {
+        return Err(ApiError::BadRequest(
+            "tenant_request_pending_days out of range".into(),
+        ));
+    }
+    Ok(Json(check_lease_assignment_consent(&b)))
 }
 
 // ---------------------------------------------------------------------------
