@@ -172,6 +172,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1041",          post(section_1041_route))
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-172",           post(section_172_route))
+        .route("/calc/section-195",           post(section_195_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
         .route("/calc/section-1091",          post(section_1091_route))
@@ -906,6 +907,34 @@ async fn section_172_route(
         ));
     }
     Ok(Json(traderview_expense::section_172::compute(&b)))
+}
+
+// ── §195 startup expenditures — election to deduct $5k first-year ───
+// (phased out dollar-for-dollar above $50k startup costs, fully phased
+// at $55k) plus 180-month amortization of the remainder beginning with
+// the month active trade or business begins. § 195(c)(1) excludes
+// amounts deductible under §§ 163(a), 164, 174. § 195(d) automatic
+// election per T.D. 9542 (Sept. 8, 2011) — caller passes
+// `affirmative_capitalization_election = true` to opt OUT of the
+// default deduction treatment. Trader-relevant for new TTS-elected
+// LLCs and prop-trading entities organizing pre-launch operations.
+async fn section_195_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_195::Section195Input>,
+) -> Result<Json<traderview_expense::section_195::Section195Result>, ApiError> {
+    if b.total_startup_expenditures_cents < -10_000_000_000
+        || b.total_startup_expenditures_cents > 10_000_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "total_startup_expenditures_cents out of plausible range".into(),
+        ));
+    }
+    if b.months_active_in_first_year > 12 {
+        return Err(ApiError::BadRequest(
+            "months_active_in_first_year must be 0..=12".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_195::compute(&b)))
 }
 
 // ── §170(e) charitable contribution of appreciated property ─────────
