@@ -131,6 +131,9 @@ use traderview_expense::lease_translation::{
 use traderview_expense::rent_receipts::{
     check as check_rent_receipts, ReceiptInput, ReceiptResult,
 };
+use traderview_expense::repair_and_deduct::{
+    check as check_repair_and_deduct, RepairDeductInput, RepairDeductResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -274,6 +277,7 @@ pub fn router() -> Router<AppState> {
         .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
         .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
         .route("/rent-receipt-check", axum::routing::post(rent_receipt_check_route))
+        .route("/repair-deduct-check", axum::routing::post(repair_and_deduct_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2320,6 +2324,36 @@ async fn rent_receipt_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_rent_receipts(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant repair-and-deduct / rent escrow / habitability remedy
+//
+// Mounted at POST /api/rental/repair-deduct-check. Four regimes:
+// SelfHelpRepairAndDeduct (CA 1 month + max 2/year; TX greater of
+// $500 or 1 month; MA 4 months (highest in country); WA 1 month +
+// 30-day notice; IL greater of $500 or 1 month; others default 1
+// month); CourtOrderedRentEscrowOnly (MD § 8-211 -- no self-help,
+// court-ordered escrow only on substantial-threat finding);
+// CommonLawMariniDoctrine (NJ Marini v. Ireland -- withheld rent
+// must be deposited with court at trial); NoticeThenWithholdOr-
+// Terminate (FL § 83.56(1) -- 7-day notice required).
+// ---------------------------------------------------------------------------
+
+async fn repair_and_deduct_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RepairDeductInput>,
+) -> Result<Json<RepairDeductResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_dollars < 0 || b.repair_costs_paid_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_dollars and repair_costs_paid_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_repair_and_deduct(&b)))
 }
 
 // ---------------------------------------------------------------------------
