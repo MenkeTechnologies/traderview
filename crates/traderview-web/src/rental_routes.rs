@@ -119,6 +119,9 @@ use traderview_expense::utility_shutoff::{
 use traderview_expense::adverse_action_notice::{
     check as check_adverse_action, AdverseActionInput, AdverseActionResult,
 };
+use traderview_expense::tenant_topa::{
+    check as check_tenant_topa, TopaInput, TopaResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -258,6 +261,7 @@ pub fn router() -> Router<AppState> {
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
         .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
+        .route("/topa-check", axum::routing::post(tenant_topa_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2211,6 +2215,30 @@ async fn adverse_action_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_adverse_action(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant Opportunity to Purchase Act (TOPA) compliance check
+//
+// Mounted at POST /api/rental/topa-check. Four regimes:
+// AllSalesGeneralTopa (D.C. Code § 42-3404.02 + § 42-3404.08 -- all
+// residential sales, 15-day window, foreclosure/tax/bankruptcy
+// exempt); NarrowResidentialTopa (MD HB 693 of 2024 -- 3-or-fewer
+// units); ForeclosureOnlyPriority (CA SB 1079 of 2020 -- 1-4 unit
+// SFR foreclosure only, 15/45 day priority bid); NoStateTopa
+// elsewhere (local ordinances may apply, e.g., MA H.1260/S.786
+// pending statewide opt-in).
+// ---------------------------------------------------------------------------
+
+async fn tenant_topa_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TopaInput>,
+) -> Result<Json<TopaResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_tenant_topa(&b)))
 }
 
 // ---------------------------------------------------------------------------
