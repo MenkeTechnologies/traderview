@@ -67,6 +67,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
         .route("/calc/section-1367",          post(section_1367_route))
+        .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
@@ -1898,6 +1899,27 @@ async fn section_1367_route(
     Json(b): Json<traderview_expense::section_1367::Section1367Input>,
 ) -> Result<Json<traderview_expense::section_1367::Section1367Result>, ApiError> {
     Ok(Json(traderview_expense::section_1367::compute(&b)))
+}
+
+// ── § 1368 S-corp distributions ─────────────────────────────────────
+// Mounted at /api/calc/section-1368. Direct sibling to § 1367
+// (basis adjustments). § 1368(b) governs S-corps without
+// accumulated E&P: tax-free basis reduction then capital gain.
+// § 1368(c) four-step ordering for S-corps with E&P: AAA tax-free
+// → E&P dividend → remaining-basis tax-free → capital gain.
+// § 1368(e)(1)(C) net-negative-adjustment rule excludes net
+// negative from AAA-available calculation for distribution
+// purposes. § 1368(e)(3) election with unanimous shareholder
+// consent reverses (c)(1) and (c)(2) — distribute E&P first as
+// dividends (used to purge E&P for § 1375 PII tax avoidance).
+// Form 1120-S Schedule M-2 tracks AAA + E&P year over year.
+// Sibling cluster: § 1361 + § 1366 + § 1367 + § 1374 + § 1375.
+
+async fn section_1368_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1368::Section1368Input>,
+) -> Result<Json<traderview_expense::section_1368::Section1368Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1368::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────
