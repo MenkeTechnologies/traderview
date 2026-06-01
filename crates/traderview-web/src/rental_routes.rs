@@ -195,6 +195,9 @@ use traderview_expense::window_guard_requirements::{
 use traderview_expense::rent_increase_notice_period::{
     check as check_rent_increase_notice_period, RentIncreaseNoticeInput, RentIncreaseNoticeResult,
 };
+use traderview_expense::demolition_tenant_notice::{
+    check as check_demolition_tenant_notice, DemolitionNoticeInput, DemolitionNoticeResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -397,6 +400,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
         .route("/window-guard-requirements", axum::routing::post(window_guard_requirements_route))
         .route("/rent-increase-notice-period", axum::routing::post(rent_increase_notice_period_route))
+        .route("/demolition-tenant-notice", axum::routing::post(demolition_tenant_notice_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3058,6 +3062,34 @@ async fn rent_increase_notice_period_route(
         ));
     }
     Ok(Json(check_rent_increase_notice_period(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State demolition-tenant-notice landlord compliance check.
+//
+// Mounted at POST /api/rental/demolition-tenant-notice. Four regimes:
+// CaliforniaEllisAct (Cal. Govt Code § 7060.4(a) 120-day notice for
+// standard tenants + § 7060.4(b) 365-day extension for tenants ≥ 62 OR
+// disabled AND ≥ 1 year residency); Oregon (ORS 90.427 90-day landlord-
+// cause termination + ORS 90.323(3) first-year prohibition no termination
+// in first 12 months); Washington (RCW 59.18.650 120-day notice for
+// substantial-rehab / change-of-use / demolition); Default (no statewide
+// statute, lease + just-cause-eviction control). Distinct from
+// owner_move_in_eviction (landlord MOVES IN to unit) and
+// tenant_relocation_assistance (DOLLAR amount owed).
+// ---------------------------------------------------------------------------
+
+async fn demolition_tenant_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DemolitionNoticeInput>,
+) -> Result<Json<DemolitionNoticeResult>, ApiError> {
+    if b.tenant_age > 150 {
+        return Err(ApiError::BadRequest(
+            "tenant_age looks invalid (>150)".into(),
+        ));
+    }
+    Ok(Json(check_demolition_tenant_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------
