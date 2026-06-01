@@ -85,6 +85,7 @@ pub mod submetering_rules;
 pub mod tenant_abandonment;
 pub mod tenant_data_privacy;
 pub mod tenant_death_termination;
+pub mod tenant_organizing;
 pub mod tenant_topa;
 pub mod utility_shutoff;
 pub mod schedule_e;

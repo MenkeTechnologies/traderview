@@ -173,6 +173,9 @@ use traderview_expense::owner_move_in_eviction::{
 use traderview_expense::lease_copy_delivery::{
     check as check_lease_copy_delivery, LeaseCopyDeliveryInput, LeaseCopyDeliveryResult,
 };
+use traderview_expense::tenant_organizing::{
+    check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -330,6 +333,7 @@ pub fn router() -> Router<AppState> {
         .route("/late-payment-grace-period-check", axum::routing::post(late_payment_grace_period_check_route))
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
+        .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2745,6 +2749,31 @@ async fn lease_copy_delivery_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_lease_copy_delivery(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant right-to-organize / tenant association protection check
+//
+// Mounted at POST /api/rental/tenant-organizing-check. Five regimes:
+// NewYorkAffirmativeRoomAccess (NY RPL § 230 — landlord must provide
+// common-room meeting space at NO COST); DistrictColumbiaStrongCivil-
+// Penalty (DC § 42-3505.06 — $10,000 per-violation penalty + business
+// license suspension + attorney fees); NewJerseyOrganizerProtection
+// (N.J.S.A. 2A:42-10.10 — reprisal-against-organizer damages action);
+// CaliforniaRetaliatoryEvictionDefense (Cal. Civ. Code § 1942.5(d) —
+// 180-day protected window); NoStatewideTenantOrganizingProtection
+// (46 other states; general anti-retaliation may apply).
+// ---------------------------------------------------------------------------
+
+async fn tenant_organizing_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantOrganizingInput>,
+) -> Result<Json<TenantOrganizingResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_tenant_organizing(&b)))
 }
 
 // ---------------------------------------------------------------------------
