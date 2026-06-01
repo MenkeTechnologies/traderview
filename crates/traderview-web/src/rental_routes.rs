@@ -192,6 +192,9 @@ use traderview_expense::rent_payment_method::{
 use traderview_expense::window_guard_requirements::{
     check as check_window_guard_requirements, WindowGuardInput, WindowGuardResult,
 };
+use traderview_expense::rent_increase_notice_period::{
+    check as check_rent_increase_notice_period, RentIncreaseNoticeInput, RentIncreaseNoticeResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -393,6 +396,7 @@ pub fn router() -> Router<AppState> {
         .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
         .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
         .route("/window-guard-requirements", axum::routing::post(window_guard_requirements_route))
+        .route("/rent-increase-notice-period", axum::routing::post(rent_increase_notice_period_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3024,6 +3028,36 @@ async fn window_guard_requirements_route(
         ));
     }
     Ok(Json(check_window_guard_requirements(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State rent-increase notice-period landlord compliance check.
+//
+// Mounted at POST /api/rental/rent-increase-notice-period. Four regimes:
+// CaliforniaAb1482 (Cal. Civ. Code § 827(b)(1) 30 days for ≤10% increase
+// + § 827(b)(3) 90 days for >10% strict-greater-than two-tier;
+// Civ. Code § 1947.12 AB 1482 rent cap caps most increases at 5%+CPI
+// or 10% whichever lower making 90-day tier uncommon); Washington (RCW
+// 59.18.140 amended May 2025 — uniform 90-day notice with carve-out for
+// subsidized tenancies 30 days; RCW 59.18.720 7%+CPI or 10% cap out-of-
+// scope); Oregon (ORS 90.323 90-day notice + first-year prohibition no
+// increase in first 12 months of non-week-to-week tenancy + once-per-
+// 12-month rule); Default (no statewide statute — lease terms control).
+// Distinct from late_payment_grace_period (tenant late payment) and
+// advance_rent_limit (amount cap).
+// ---------------------------------------------------------------------------
+
+async fn rent_increase_notice_period_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentIncreaseNoticeInput>,
+) -> Result<Json<RentIncreaseNoticeResult>, ApiError> {
+    if b.increase_basis_points > 100_000 {
+        return Err(ApiError::BadRequest(
+            "increase_basis_points looks invalid (>100000 = 1000%)".into(),
+        ));
+    }
+    Ok(Json(check_rent_increase_notice_period(&b)))
 }
 
 // ---------------------------------------------------------------------------
