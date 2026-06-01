@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
+        .route("/calc/section-1361",          post(section_1361_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
@@ -1612,6 +1613,24 @@ async fn section_1259_route(
     Json(b): Json<traderview_expense::section_1259::Section1259Input>,
 ) -> Result<Json<traderview_expense::section_1259::Section1259Result>, ApiError> {
     Ok(Json(traderview_expense::section_1259::compute(&b)))
+}
+
+// ── §1361 S-corp eligibility 6-prong test ──────────────────────────
+// Mounted at /api/calc/section-1361. §1361(b)(1) eligibility prongs:
+// (A) domestic corporation + (B) not ineligible corp under
+// §1361(b)(2) (financial institutions reserve method / insurance
+// Subchapter L / FSC / DISC) + (C) ≤ 100 shareholders after
+// §1361(c)(1) family attribution + (D) shareholders limited to
+// individuals / qualifying estates / qualifying trusts (no
+// partnerships / no non-S corps) + (E) no nonresident alien
+// shareholders + (F) only one class of stock (voting-rights
+// differences ARE permitted; economic differences NOT).
+
+async fn section_1361_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1361::Section1361Input>,
+) -> Result<Json<traderview_expense::section_1361::Section1361Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1361::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────

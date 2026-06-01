@@ -3054,6 +3054,32 @@ The **§1259(c)(3)(A) safe harbor** lets a hedge escape if ALL three conditions 
 
 Mounted at `POST /api/calc/section-1259`. Nineteen tests pin: classic short-against-box triggers + $30k LTCG + $80k basis step-up + new holding period from hedge date; short-term holding yields STCG; **exactly one year is short-term** (leap-year-safe calendar math); safe harbor with all three conditions = no trigger; safe harbor failures (missing 60-day window / risk reduction / late close) each trigger; loss position no trigger (§1259(b)(1) requires appreciation); break-even no trigger; §1256 contract exempt under §1259(c)(3)(C); NoCoveredTransaction no trigger; offsetting NPC triggers; forward / futures / combined positions each trigger; basis step-up equals gain recognized invariant; safe harbor preserves original basis + no new holding period; appreciation = FMV - basis; loss position with failed safe harbor still no trigger.
 
+`traderview-expense::section_1361` is the **IRC §1361 S-corporation eligibility 6-prong test module** — trader-relevant for active traders who structure their trading activity through an S corporation (commonly paired with `mtm_475f` §475(f) trader election). §1361(b)(1) sets out the small-business-corporation eligibility test; failing ANY prong results in either inability to elect S status under §1362(a) or termination of an existing S election. §1361(b)(2) carves out 4 categorically ineligible corporation types.
+
+**§1361(b)(1) six eligibility prongs** — all must be met:
+
+| Prong | Requirement | Authority |
+|-------|-------------|-----------|
+| (A) | **Domestic** corporation | §1361(b)(1)(A) |
+| (B) | Not an "ineligible corporation" | §1361(b)(2) |
+| (C) | ≤ **100 shareholders** (after §1361(c)(1) family attribution) | §1361(b)(1)(C) |
+| (D) | Shareholders limited to individuals + qualifying estates + qualifying trusts + certain exempt orgs | §1361(b)(1)(D) |
+| (E) | **No** nonresident alien shareholders (even ONE share terminates) | §1361(b)(1)(E) |
+| (F) | Only **one class of stock** outstanding (voting-rights differences ARE permitted; economic differences are NOT) | §1361(b)(1)(F) |
+
+**§1361(b)(2) ineligible corporation types** (4 categorical bars):
+- Financial institutions using the §585 reserve method for bad debts
+- Insurance companies subject to Subchapter L
+- Foreign sales corporations (§922) and DISCs
+
+**§1361(c)(1) family attribution** — treats "members of a family" as ONE shareholder for the 100-shareholder cap. Family = common ancestor + lineal descendants + spouses/former spouses of common ancestor or any descendant. A single family with 200 members + 50 unrelated shareholders = 1 + 50 = **51 effective shareholders**, well under the cap. Each family member must independently meet the permissible-shareholder requirements.
+
+**§1361(c)(2) permitted trusts** — grantor trust, ESBT (electing small business trust), QSST (qualified subchapter S trust), voting trust, certain testamentary trusts. Other trust forms terminate the S election.
+
+**Prong-failure priority ordering**: when multiple prongs fail simultaneously, the module reports the highest-priority failure first: (A) domestic → (B) ineligible corp type → (C) count → (D) type → (E) NRA → (F) classes. This matches the IRS audit-presentation order.
+
+Mounted at `POST /api/calc/section-1361`. Twenty tests pin: **baseline qualifies** (50 effective shareholders, all 6 prongs pass); **foreign corp fails domestic prong**; **3 ineligible-corp-type failures** (financial institution reserve method + insurance Subchapter L + foreign sales corp / DISC); **exactly 100 shareholders qualifies** (boundary); **101 shareholders fails** (strict ≤ 100); **family attribution collapses 50 members to 1** (50 family + 49 non-family = 50 effective); **family attribution lets large family avoid cap** (200 family + 50 non-family = 51 effective); **partnership shareholder fails** §1361(b)(1)(D); **NRA shareholder fails** even one share; **two classes of stock fails**; **domestic failure short-circuits other failures** (regression — highest priority wins); **financial institution short-circuits count failure**; **count failure reported before NRA failure** (priority ordering); citation mentions all 6 prongs + §1361(c)(1) + §1361(c)(2); **citation mentions voting-rights differences ARE permitted** (regression — common confusion); note qualifying path mentions "qualifies as S corporation"; note failure path describes §1361(b)(1)(E) + nonresident alien; note reports effective shareholder count post-§1361(c)(1).
+
 `traderview-expense::section_1374` is the **IRC §1374 S-corporation built-in gains (BIG) tax module** — the integrity tax that prevents a C-corp from escaping corporate-level tax on pre-conversion appreciation by simply electing S-corp status. When a C-corp converts, its built-in gains remain exposed to corporate-level tax for a **5-year recognition period** under § 1374(d)(7), permanently set by the **PATH Act of 2015** (down from 10 years originally, then 7 years, then 5). The tax rate is the highest §11(b) corporate rate — **21% post-TCJA** — applied to net recognized built-in gain ([Beancount.io §1374 guide](https://beancount.io/blog/2026/05/10/section-1374-built-in-gains-tax-c-corp-s-corp-conversion-five-year-recognition-period-guide), [Cornell LII 26 U.S.C. § 1374](https://www.law.cornell.edu/uscode/text/26/1374)).
 
 **NUBIG (Net Unrealized Built-In Gain) at conversion** is the LIFETIME ceiling on what can ever be taxed under §1374:
