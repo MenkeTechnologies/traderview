@@ -1250,6 +1250,35 @@ Pinned by `forfeiture_with_valid_election_no_refund_per_83b2`, `forfeiture_witho
 
 Mounted at `POST /api/calc/section-83b`. Twenty-four tests pin: timely election within 30 days valid; **day 0 / day 30 / day 31 boundaries** (the three bright-line cases); no election falls back to §83(a); founder grant election savings (−$9.99); election with full $50 appreciation → full LTCG; no-election same appreciation → ordinary $9.99 + LTCG $40 split; election sale within 1 year STCG; **365 vs 366-day boundary**; no-election sale at 17 months from vesting → LTCG; no-election STCG path; FMV grant above paid creates ordinary at grant; **election-was-wrong** (positive savings number); negative ordinary clamps to zero; not-yet-sold returns no gain; election before grant invalid (pathological pin); **very large grant precision** ($0.0001 → $5000); day-31 late election uses vesting basis (not grant); note describes 30-day deadline explicitly ("day 14/30"); forfeiture with valid election + §83(b)(2) call-out in note (UX-text regression target); forfeiture without election clean.
 
+`traderview-expense::section_83i` is the **IRC §83(i) qualified equity grant 5-year income-tax deferral module** — TCJA addition (P.L. 115-97) and the natural companion to §83(b). Where §83(b) ACCELERATES income to grant date to lock in low FMV, §83(i) DEFERS income away from the vesting/exercise date — up to 5 years — so the employee can wait out the private→public transition before owing federal income tax on illiquid stock. Directly relevant to any pre-IPO startup employee receiving NQSOs or RSUs.
+
+**§83(i)(2)(C) eligible corporation** test (both required):
+
+1. No stock of the corporation (or any predecessor) was readily tradable on an established securities market in any preceding year.
+2. The corporation has a written equity incentive plan under which ≥ **80% of all US employees** are granted stock options or RSUs with the SAME RIGHTS AND PRIVILEGES to receive qualified stock.
+
+**§83(i)(3)(B) excluded employees** (any of these → election unavailable; family attribution applies):
+
+| Exclusion                          | Look-back window                          |
+|------------------------------------|-------------------------------------------|
+| 1% owner                           | Current or any of **10 preceding** calendar years |
+| CEO or CFO                         | Current or any of **10 preceding** taxable years |
+| One of 4 highest compensated officers | Current or any of **10 preceding** taxable years |
+
+**§83(i)(1)(B) deferral end triggers** (earliest of these ends deferral):
+
+- 5 years from option exercise / RSU settlement (statutory maximum)
+- Stock becomes readily tradable on an established securities market (IPO trigger)
+- Stock is transferred to the employer (buyback / cash-out)
+- Employee revokes the §83(i) election
+- Employee becomes an excluded employee (e.g., promoted to CFO mid-deferral)
+
+**FICA NEVER deferred** — §83(i) only defers federal income tax. Social Security (6.2%) and Medicare (1.45%) employment taxes per §3121 are owed at the normal §83(a) vesting/exercise date and the employer must withhold them then. This is the single most easily missed feature of §83(i); the module surfaces FICA owed via `fica_due_at_vesting` regardless of eligibility outcome ([IRS Notice 2018-97](https://www.irs.gov/pub/irs-drop/n-18-97.pdf), [Trucker Huss 2018 analysis](https://www.truckerhuss.com/2018/01/new-section-83i-of-the-internal-revenue-code-qualified-equity-grant-programs-permit-employees-to-elect-to-defer-income-taxes-on-stock-options-or-rsus/)).
+
+**§83(i)(4)(A) 30-day election window** — strict bright-line: election must be filed within 30 days after the substantial vesting / exercise date. Day 30 complies; day 31 voids the election. Pinned by `election_window_day_30_exactly_complies` + `election_window_day_31_violates`.
+
+Mounted at `POST /api/calc/section-83i`. Twenty-one tests pin: **eligible baseline → 5-year deferral active** (vest 2025-01-15 → end 2030-01-15); **FICA $76,500 due immediately** ($500k × 15.3%) despite income-tax deferral; FICA at employee-only 7.65% rate path ($500k × 7.65% = $38,250); **all 3 §83(i)(3)(B) exclusions individually disqualify** (1% owner / CEO-CFO / top-4 paid); corp not private disqualifies; **plan failing 80% broad-based disqualifies**; stock already tradable disqualifies; **30-day window: day 30 exact complies / day 31 voids**; election before vesting void; **IPO trigger ends deferral early** + revocation overrides 5y + employer buyback ends + employee-promoted-to-CFO mid-deferral ends; **earliest-of-multiple-triggers wins** (5y vs IPO 2026 vs revocation 2027 → IPO); **FICA still due even when employee excluded** (§3121 independent of §83(i)); recognition year set only when eligible; **5-year endpoint uses calendar months not days** (leap-year boundary 2024-02-29 + 60 months = 2029-02-28 via `Months::new(60)`); note describes eligible path including FICA total.
+
 `traderview-expense::section_172` is the **IRC §172 Net Operating Loss deduction module** — foundational rule for every business taxpayer including sole-proprietor traders, S-corp shareholders, partnership flow-through partners, and corporations. When deductions exceed gross income, §172 lets the excess offset taxable income in other years.
 
 **Three statutory regimes classified by NOL year:**

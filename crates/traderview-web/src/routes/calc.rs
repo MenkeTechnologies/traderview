@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
+        .route("/calc/section-83i",           post(section_83i_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
@@ -1021,6 +1022,38 @@ async fn section_382_route(
         ));
     }
     Ok(Json(traderview_expense::section_382::compute(&b)))
+}
+
+// ── §83(i) qualified equity grant 5-year income-tax deferral ────────
+// Mounted at /api/calc/section-83i. TCJA addition; defers federal
+// income tax (NOT FICA) up to 5 years on NQSO exercise / RSU vesting
+// for eligible employees of eligible private corporations. §83(i)(2)(C)
+// eligible-corp test (no tradable stock + 80% broad-based written
+// plan); §83(i)(3)(B) excluded-employee exclusions (1% owner, CEO/CFO,
+// top-4 paid in current or any 10 prior years); §83(i)(1)(B) deferral
+// end triggers (5y max, IPO/tradable, buyback, revocation, becoming
+// excluded — earliest wins); §83(i)(4)(A) 30-day election window.
+
+async fn section_83i_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_83i::Section83iInput>,
+) -> Result<Json<traderview_expense::section_83i::Section83iResult>, ApiError> {
+    if b.deferred_income_amount < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "deferred_income_amount must be >= 0".into(),
+        ));
+    }
+    if b.fmv_at_vesting_for_fica < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "fmv_at_vesting_for_fica must be >= 0".into(),
+        ));
+    }
+    if b.as_of_date < b.vesting_or_exercise_date {
+        return Err(ApiError::BadRequest(
+            "as_of_date must be on or after vesting_or_exercise_date".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_83i::compute(&b)))
 }
 
 // ── §408(m) collectibles in IRA ──────────────────────────────────────
