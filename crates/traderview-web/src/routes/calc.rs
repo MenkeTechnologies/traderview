@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
+        .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -1758,6 +1759,30 @@ async fn section_3406_route(
         ));
     }
     Ok(Json(traderview_expense::section_3406::compute(&b)))
+}
+
+// ── §331 shareholder gain/loss in corporate complete liquidation ─
+// Mounted at /api/calc/section-331. §331(a) treats liquidating
+// distribution as in full payment for stock (§1001 exchange);
+// §331(b) §301 dividend rules inapplicable; capital character when
+// stock is capital asset (§1221); §332 corporate-parent 80%/80%
+// (§1504(a)(2)) non-recognition exception + §334(b) carryover
+// basis; §334(a) shareholder basis in non-cash property = FMV;
+// partial liquidations fall to §302 redemption analysis.
+
+async fn section_331_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_331::Section331Input>,
+) -> Result<Json<traderview_expense::section_331::Section331Result>, ApiError> {
+    if b.adjusted_basis_in_stock_dollars < 0
+        || b.cash_received_dollars < 0
+        || b.fmv_non_cash_property_received_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_331::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
