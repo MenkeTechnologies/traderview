@@ -6,6 +6,7 @@
 //! discipline as the Webull parser in `traderview-import`. Inferring columns
 //! from documentation produces wrong column maps; only a real file is the spec.
 
+pub mod abandoned_property_handling;
 pub mod adverse_action_notice;
 pub mod advance_rent_limit;
 pub mod amazon;

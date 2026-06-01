@@ -209,6 +209,10 @@ use traderview_expense::prevailing_party_attorney_fees::{
     check as check_prevailing_party_attorney_fees, PrevailingPartyFeesInput,
     PrevailingPartyFeesResult,
 };
+use traderview_expense::abandoned_property_handling::{
+    check as check_abandoned_property_handling, AbandonedPropertyInput,
+    AbandonedPropertyResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -415,6 +419,7 @@ pub fn router() -> Router<AppState> {
         .route("/eviction-diversion-program", axum::routing::post(eviction_diversion_program_route))
         .route("/immigration-status-protection", axum::routing::post(immigration_status_protection_route))
         .route("/prevailing-party-attorney-fees", axum::routing::post(prevailing_party_attorney_fees_route))
+        .route("/abandoned-property-handling", axum::routing::post(abandoned_property_handling_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3193,6 +3198,40 @@ async fn prevailing_party_attorney_fees_route(
         ));
     }
     Ok(Json(check_prevailing_party_attorney_fees(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State abandoned-tenant-personal-property landlord compliance check.
+//
+// Mounted at POST /api/rental/abandoned-property-handling. Four regimes:
+// California (Cal. Civ. Code §§ 1980-1991 — § 1983 Notice of Right to
+// Reclaim Abandoned Property; § 1984 15-day personal-delivery / 18-day
+// first-class-mail clock; § 1988 $700 threshold — under $700 landlord
+// may keep or dispose, at or above $700 MUST conduct public auction with
+// proceeds less storage/auction expenses going to county treasury);
+// Texas (Tex. Prop. Code §§ 54.044 + 92.0081 — § 54.044 broad authority
+// to remove contents on abandonment; § 92.0081 30-day notice by BOTH
+// first-class mail AND certified mail return-receipt required before
+// sale); Washington (RCW 59.18.310 — 45-day waiting period when total
+// value ≥ $250 OR property includes personal papers/family pictures/
+// keepsakes; 7-day waiting period when value < $250 AND no keepsakes
+// — keepsake carve-out forces 45-day rule regardless of value);
+// Default (common-law abandonment with reasonable notice + disposal).
+// Distinct from tenant_abandonment (when tenant has vacated and landlord
+// may declare unit abandoned) — this module addresses BELONGINGS.
+// ---------------------------------------------------------------------------
+
+async fn abandoned_property_handling_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<AbandonedPropertyInput>,
+) -> Result<Json<AbandonedPropertyResult>, ApiError> {
+    if b.total_property_value_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "total_property_value_cents must be non-negative".into(),
+        ));
+    }
+    Ok(Json(check_abandoned_property_handling(&b)))
 }
 
 // ---------------------------------------------------------------------------
