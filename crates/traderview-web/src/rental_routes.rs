@@ -451,6 +451,10 @@ use traderview_expense::lease_nondisparagement_prohibition::{
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
+use traderview_expense::tenant_rights_statement_disclosure::{
+    check as check_tenant_rights_statement_disclosure, TenantRightsStatementInput,
+    TenantRightsStatementResult,
+};
 use traderview_expense::plain_language_lease::{
     check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
 };
@@ -654,6 +658,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
+        .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
@@ -3316,6 +3321,35 @@ async fn tenant_organizing_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_organizing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_rights_statement_disclosure: Tenant Rights Statement disclosure —
+// when must a residential landlord distribute the official state-prepared
+// Statement of Tenants' Rights and Responsibilities? Mounted at POST
+// /api/rental/tenant-rights-statement-disclosure. Four regimes: (1) New
+// Jersey Truth in Renting Act N.J.S.A. §§ 46:8-43 to 46:8-50: DCA
+// publishes bilingual English+Spanish Statement updated ANNUALLY; landlord
+// must distribute within 30 DAYS of publication to existing tenants + at or
+// prior to occupancy for new tenants + post in prominent accessible
+// location; applies to buildings > 2 units (or non-owner-occupied > 3
+// units); no tenant waiver permitted; treble damages under N.J.S.A.
+// 56:8-1 (Consumer Fraud Act). (2) Maryland Md. Code, Real Property §
+// 8-208: limited tenant-rights notice; county / municipal supplements
+// extend coverage. (3) New York: HSTPA of 2019 imposes discrete-disclosure
+// mandates but NO statutory annual-distribution mandate; DHCR + AG guides
+// voluntary. (4) Default: no statewide mandate; municipal ordinances may
+// impose (Chicago, San Francisco). Distinct from `lease_disclosures`
+// (mandated lease content), `plain_language_lease` (lease readability),
+// and `landlord_identification_disclosure` (party-identification).
+// ---------------------------------------------------------------------------
+
+async fn tenant_rights_statement_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantRightsStatementInput>,
+) -> Result<Json<TenantRightsStatementResult>, ApiError> {
+    Ok(Json(check_tenant_rights_statement_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
