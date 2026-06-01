@@ -96,6 +96,7 @@ pub mod right_to_dry;
 pub mod reps_qualification;
 pub mod rules;
 pub mod schedule_d;
+pub mod security_camera_disclosure;
 pub mod security_deposit_caps;
 pub mod senior_disabled_protection;
 pub mod service_animal;

@@ -223,6 +223,9 @@ use traderview_expense::tenant_cannabis_use_protection::{
 use traderview_expense::snow_removal_responsibility::{
     check as check_snow_removal_responsibility, SnowRemovalInput, SnowRemovalResult,
 };
+use traderview_expense::security_camera_disclosure::{
+    check as check_security_camera_disclosure, SecurityCameraInput, SecurityCameraResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -433,6 +436,7 @@ pub fn router() -> Router<AppState> {
         .route("/right-to-counsel-eviction", axum::routing::post(right_to_counsel_eviction_route))
         .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
         .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
+        .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3337,6 +3341,33 @@ async fn snow_removal_responsibility_route(
         ));
     }
     Ok(Json(check_snow_removal_responsibility(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State security-camera and surveillance landlord disclosure / consent
+// compliance check.
+//
+// Mounted at POST /api/rental/security-camera-disclosure. Four regimes:
+// California (Cal. Penal Code § 632 — 2-PARTY consent for audio recording
+// of confidential communications; $2,500 per-violation civil penalty +
+// criminal exposure up to 1 year county jail or state prison; video
+// allowed in common areas but never inside private unit); NewYork (NY
+// Civil Rights Law § 52-a + NY Penal Law § 250.00 — 1-PARTY consent for
+// audio; video allowed in lobbies/elevators/laundry/mailrooms; Civil
+// Rights Law § 52-a creates private right of action for backyard
+// recreational video without written consent); Texas (Tex. Penal Code
+// § 16.02 — 1-PARTY consent for audio; most landlord-friendly regime);
+// Default (18 U.S.C. § 2511 federal Wiretap Act 1-party consent
+// baseline; video inside private unit always barred under reasonable-
+// expectation-of-privacy doctrine).
+// ---------------------------------------------------------------------------
+
+async fn security_camera_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SecurityCameraInput>,
+) -> Result<Json<SecurityCameraResult>, ApiError> {
+    Ok(Json(check_security_camera_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
