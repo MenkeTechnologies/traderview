@@ -98,6 +98,9 @@ use traderview_expense::str_regulation::{
 use traderview_expense::pet_fees::{
     check as check_pet_fees, PetFeeInput, PetFeeResult,
 };
+use traderview_expense::eviction_record_sealing::{
+    check as check_eviction_sealing, EvictionSealingInput, EvictionSealingResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -230,6 +233,7 @@ pub fn router() -> Router<AppState> {
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
+        .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2004,6 +2008,33 @@ async fn pet_fees_check_route(
         ));
     }
     Ok(Json(check_pet_fees(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State eviction record sealing / "clean slate" compliance check
+//
+// Mounted at POST /api/rental/eviction-sealing-check. Four-regime
+// table: AutomaticSealing (CA 60-day mask, CT 30-day favorable-outcome
+// auto-seal, NV 31-day, MD 60-day non-removal, MN same-day expunge);
+// TenantPetitionOnly (WA, OR, IL, DC); PandemicPeriodOnly (NJ A 4463);
+// NoStateRule (most states). Federal FCRA 15 U.S.C. § 1681c 7-year
+// floor always applies for tenant screening reports.
+// ---------------------------------------------------------------------------
+
+async fn eviction_sealing_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<EvictionSealingInput>,
+) -> Result<Json<EvictionSealingResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.days_since_filing_or_qualifying_event < 0 {
+        return Err(ApiError::BadRequest(
+            "days_since_filing_or_qualifying_event must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_eviction_sealing(&b)))
 }
 
 // ---------------------------------------------------------------------------
