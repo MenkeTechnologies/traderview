@@ -35,6 +35,7 @@ pub mod home_office;
 pub mod late_fee_caps;
 pub mod lead_disclosure;
 pub mod lease_disclosures;
+pub mod lease_termination_notice;
 pub mod lockout_penalties;
 pub mod manual_entry;
 pub mod meals_50;

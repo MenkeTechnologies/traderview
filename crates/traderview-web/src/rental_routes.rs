@@ -101,6 +101,9 @@ use traderview_expense::pet_fees::{
 use traderview_expense::eviction_record_sealing::{
     check as check_eviction_sealing, EvictionSealingInput, EvictionSealingResult,
 };
+use traderview_expense::lease_termination_notice::{
+    check as check_termination_notice, NoticeInput, NoticeResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -234,6 +237,7 @@ pub fn router() -> Router<AppState> {
         .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
         .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
+        .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2035,6 +2039,34 @@ async fn eviction_sealing_check_route(
         ));
     }
     Ok(Json(check_eviction_sealing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord-side lease termination / non-renewal notice check
+//
+// Mounted at POST /api/rental/termination-notice-check. Four regimes:
+// TieredByTenancyLength (NY RPL § 226-c 30/60/90; CA CCP § 1946.1
+// 30/60); JustCauseAfterTwelveMonths (OR SB 608, CA AB 1482 -- no
+// no-cause termination after 12mo without qualifying cause);
+// StatewideJustCauseAlways (WA RCW 59.18.650, NJ Anti-Eviction Act);
+// StandardThirtyDay (most other states). Also pins rent-increase
+// notice tiers (CA: 30d <=10% / 90d >10%; OR: 90d <=10% / 180d >10%).
+// ---------------------------------------------------------------------------
+
+async fn termination_notice_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<NoticeInput>,
+) -> Result<Json<NoticeResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.notice_days_given < 0 {
+        return Err(ApiError::BadRequest(
+            "notice_days_given must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_termination_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------
