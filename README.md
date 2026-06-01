@@ -3088,6 +3088,26 @@ For 2026+, caller passes `small_business_threshold_override` with the current IR
 
 Mounted at `POST /api/calc/section-163j`. Fifteen tests pin: standard 30% cap partial deduction ($50k expense, $100k ATI → $30k deducted, $20k carries); expense below cap fully deducted; business interest income raises cap dollar-for-dollar; prior carryforward stacks; small-business under threshold fully exempt; at threshold exactly still exempt (≤ not <); $1 over loses exemption; **threshold table** 2020-2025 each year exact; caller override beats embedded table; negative ATI caps 30% at zero (only BI income + floor plan in cap); no-expense no-op; floor plan financing adds to cap; multi-year chain absorbs carryforward when ATI rises; full-deduction note vs carries-forward note.
 
+`traderview-expense::section_165d` is the **IRC §165(d) wagering loss deduction module with OBBBA 2025 90% limitation** — relevant when derivative positions or prediction-market activity is characterized as wagering rather than capital-asset trading. The **One Big Beautiful Bill Act (P.L. 119-21, signed 2025-07-04)** amended §165(d) for tax years beginning after 2025-12-31 to limit deductible losses to **90% of losses incurred** while preserving the historical winnings cap. Both amateur and professional gamblers affected.
+
+**Two regimes by year**:
+
+| Tax year | Loss deduction formula | Effect |
+|----------|------------------------|--------|
+| Pre-2026 | min(losses, winnings) | 100% of losses up to winnings; break-even = $0 tax |
+| 2026+ (post-OBBBA) | min(0.90 × losses, winnings) | **Phantom-income problem**: break-even at $3k/$3k creates $300 taxable income |
+
+**Phantom-income example** (post-OBBBA 2026):
+- Winnings $3,000; losses $3,000 → economic break-even.
+- 90% × $3,000 = $2,700 adjusted losses; deduction $2,700 (under winnings cap).
+- Net taxable wagering income = $3,000 − $2,700 = **$300 phantom income** despite zero economic profit.
+
+**§162 trade-or-business expense carve-out preserved**: OBBBA did NOT eliminate the professional-gambler expense deduction under §162. Travel, entry fees, supplies, and other business expenses remain fully deductible separately from the §165(d) loss cap. This is the key distinguishing input from amateur gamblers.
+
+**Itemized deduction scope**: §165(d) is a Schedule A itemized deduction (Schedule C for professional). With TCJA's expanded standard deduction made permanent by OBBBA, only ~14% of taxpayers itemize in 2026 — so the §165(d) deduction benefit is concentrated among high-income gamblers.
+
+Mounted at `POST /api/calc/section-165d`. Twenty-one tests pin: **pre-OBBBA 2025 100% loss-up-to-winnings** ($3k win + $4k loss → $3k deduction; net $0); pre-OBBBA losses below winnings fully deductible ($10k win + $4k loss → $4k deduction); **post-OBBBA 2026 90% limitation** ($3k win + $4k loss → 90% × $4k = $3,600 adjusted, capped at $3k; net $0); **post-OBBBA break-even creates phantom income** ($3k/$3k → 90% × $3k = $2,700 deductible + $300 phantom income); **post-OBBBA losses below winnings still 90% limited** ($100k win + $10k loss → $9k deduction, not $10k); year 2025 pre-OBBBA / 2026 post-OBBBA / future 2030 still post-OBBBA boundary pins; **professional gambler §162 expenses deductible separately** ($100k win + $50k loss + $20k §162 → $45k §165(d) + $20k §162 = $65k total, $35k net); **amateur receives no §162 even if expense input provided** (regression target — module forces zero for amateurs); **professional with §162 can drive net taxable below zero** ($10k win + $5k loss + $8k §162 → −$2,500 net); zero winnings/losses no-op; negative inputs clamped; **$1B precision case** ($1B win + $800M loss → $720M deduction); **5 citation regression targets** (§165(d) + "One Big Beautiful Bill" + P.L. 119-21 + 2025-07-04 + "90% of losses" + "phantom-income" + §162 carve-out); pre-OBBBA note says "pre-OBBBA 100% loss-up-to-winnings"; post-OBBBA note says "post-OBBBA 2025 90% loss limitation"; note for professional describes path; note for amateur says "no §162".
+
 `traderview-expense::section_165g` is the **IRC §165(g) worthless securities deduction module** — the rule every trader needs when a portfolio holding goes to zero mid-year. Stock or bond held as a capital asset that becomes **wholly worthless** during the taxable year is deemed sold on the **last day of the taxable year** under §165(g)(1), generating a capital loss whose ST/LT character depends on the deemed holding period through Dec 31. Three escape hatches into ordinary-loss treatment can bypass the §1211 capital-loss net-on-net limitation.
 
 **§165(g)(2) definition of "security"** — covers all four trader-relevant instruments:

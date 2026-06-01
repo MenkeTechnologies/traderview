@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-121d",          post(section_121d_route))
         .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/section-163j",          post(section_163j_route))
+        .route("/calc/section-165d",          post(section_165d_route))
         .route("/calc/section-165g",          post(section_165g_route))
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-988",           post(section_988_route))
@@ -466,6 +467,21 @@ async fn section_163j_route(
         ));
     }
     Ok(Json(traderview_expense::section_163j::compute(&b)))
+}
+
+// ── §165(d) wagering loss deduction ─────────────────────────────────
+// Mounted at /api/calc/section-165d. Pre-OBBBA: 100% of losses up
+// to winnings; post-OBBBA (P.L. 119-21 signed 2025-07-04 eff. 2026):
+// 90% of losses + still capped at winnings; phantom-income emerges
+// when 90% × losses < winnings ≤ losses; §162 trade-or-business
+// expense carve-out preserved for professional gamblers; itemized
+// Schedule A (Schedule C for professional).
+
+async fn section_165d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_165d::Section165dInput>,
+) -> Result<Json<traderview_expense::section_165d::Section165dResult>, ApiError> {
+    Ok(Json(traderview_expense::section_165d::compute(&b)))
 }
 
 // ── §165(g) worthless securities deduction ──────────────────────────
