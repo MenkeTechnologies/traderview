@@ -1428,6 +1428,45 @@ Mounted at `POST /api/rental/demolition-tenant-notice`. Twenty-six tests pin: **
 
 Mounted at `POST /api/rental/death-in-unit-disclosure`. Twenty-three tests pin: **CA natural-death within 3 years must disclose** (CA-only — natural causes are covered); **CA at 36-month boundary still within window** (regression — ≤ strict); **CA at 37 months outside window** + "37 months ago" note regression; **CA HIV/AIDS carve-out not disclosable**; **CA direct-inquiry misrep overrides 3-year window** (50-year-old death + lie = actionable under § 1710.2(b)); **CA direct-inquiry truthful response compliant**; **CA HIV/AIDS direct-inquiry lie STILL actionable** (regression — § 1710.2(b) override on top of § 1710.2(a)(1) carve-out); **SD homicide within 12 months must disclose**; **SD natural-death not disclosable** (regression — SD's narrower cause coverage); **SD homicide outside 12 months not disclosable**; **SD at 12-month boundary within window**; **SD no direct-inquiry override** (regression — § 1710.2(b) is CA-only); **AK homicide within 12 months must disclose** + AS 08.88.615 citation; **AK natural-cause not disclosable**; **default regime no obligation** + "caveat emptor" citation; **no-death no-obligation across all 4 regimes** (1-test 4-regime invariant); **CA longest lookback window** (CA 36 > SD 12 = AK 12); **CA broadest cause coverage** (natural causes only covered by CA); **state routing CA/SD/AK/Default** (NY → Default, TX → Default); **state routing case-insensitive**; **CA-only direct-inquiry-misrep override** (single-test 4-regime invariant: only CA returns `direct_inquiry_misrep_exposure: true`); **citations pin authorities** (§ 1710.2(a) + HIV/AIDS + § 43-4-44 + 12-month + 08.88.615 + agent disclosure); **CA required-disclosure compliant when no direct inquiry**.
 
+`traderview-expense::military_ordnance_disclosure` is the **state landlord former-federal-or-state-ordnance-location disclosure compliance check** — specialized hazard-disclosure topic prompted by the December 10, 1983 Tierra Santa tragedy in San Diego where a live munition exploded in a residential area that was formerly a U.S. military ordnance location, killing two residents. California responded with Cal. Civ. Code § 1940.7, the only statute of its kind. Rounds out the hazard-disclosure cluster alongside `asbestos_disclosure`, `lead_disclosure`, `mold_disclosure`, `radon_disclosure`, `flood_disclosure`, `meth_contamination_disclosure`, `bedbug_disclosure`, `fire_sprinkler_disclosure`, and `death_in_unit_disclosure`.
+
+**Three regimes**:
+
+| Regime | Authority | Disclosure mandate | Trigger |
+|--------|-----------|----------------------|---------|
+| `California` | Cal. Civ. Code § 1940.7 | **YES** | Actual knowledge + within 1 mile |
+| `FederalMMRP` | 10 U.S.C. § 2710 + § 2701 (Defense Environmental Restoration Program / FUDS database) | No (public information only) | n/a |
+| `Default` | None | No (common-law latent-defect may apply) | n/a |
+
+**Cal. Civ. Code § 1940.7 — actual-knowledge AND within-1-mile**:
+
+| Subsection | Statute | Rule |
+|------------|---------|------|
+| § 1940.7(a) | Cal. Civ. Code § 1940.7(a) | **Legislative findings** — Tierra Santa tragedy of December 10, 1983 |
+| § 1940.7(b) | Cal. Civ. Code § 1940.7(b) | **Prospective tenant** — written notice prior to execution of rental agreement |
+| § 1940.7(c) | Cal. Civ. Code § 1940.7(c) | **Grandfathered tenancies** in existence on January 1, 1990 — notice as soon as practicable |
+| § 1940.7(d)(1) | Cal. Civ. Code § 1940.7(d)(1) | **"Former federal or state ordnance location"** — area identified by federal or state government as once used for military training and may contain potentially explosive munitions |
+| § 1940.7(d)(2) | Cal. Civ. Code § 1940.7(d)(2) | **"Neighborhood area"** — within ONE MILE of the residential dwelling |
+
+**The disclosure trigger requires BOTH actual knowledge AND within-1-mile.** A 4-cell truth table:
+
+| Actual knowledge | Within 1 mile | Trigger fired |
+|--------------------|----------------|----------------|
+| No | No | No |
+| No | Yes | No |
+| Yes | No | No |
+| **Yes** | **Yes** | **YES** |
+
+Pinned by the invariant `disclosure_trigger_requires_actual_knowledge_AND_within_1_mile_invariant` (4 cells).
+
+**Constructive knowledge is NOT enough.** § 1940.7 imposes the disclosure obligation only where the landlord has ACTUAL KNOWLEDGE of the former ordnance location. Constructive knowledge, duty to investigate, or imputed knowledge does not trigger the statute. Pinned by `california_no_actual_knowledge_trigger_not_fired` and the UX-text note `california_constructive_knowledge_not_triggered_note`.
+
+**Locations beyond 1 mile fall outside the neighborhood area.** § 1940.7(d)(2) precisely defines "neighborhood area" as within ONE MILE of the residential dwelling. A former ordnance site 1.1 miles away — even with landlord's actual knowledge — does not trigger the duty. Pinned by `california_actual_knowledge_but_location_beyond_1_mile_no_trigger`.
+
+**Federal FUDS database is public but creates no landlord disclosure duty.** The DoD/Army Corps of Engineers maintains a Formerly Used Defense Sites inventory under 10 U.S.C. § 2710. It's public information that informs the California actual-knowledge analysis but does not impose an independent federal mandate on landlords. Pinned by `federal_mmrp_no_landlord_disclosure_mandate`.
+
+Mounted at `POST /api/rental/military-ordnance-disclosure`. Eighteen tests pin: **CA actual knowledge within 1 mile with notice compliant**; **CA actual knowledge no notice violation** (§ 1940.7(b)); **CA no actual knowledge trigger not fired** (compliant with no duty); **CA actual knowledge but beyond 1 mile no trigger**; **CA grandfathered tenant practicable notice compliant** (§ 1940.7(c)); **CA grandfathered tenant no practicable notice violation**; **federal MMRP no landlord disclosure mandate**; **Default no statutory mandate**; **Default even with actual knowledge no violation**; **CA definitional notes present** (§ 1940.7(d)(1) + (d)(2)); **CA constructive knowledge not triggered UX-text note**; **only-California-mandates-disclosure 3-regime invariant**; **disclosure trigger requires actual knowledge AND within 1 mile 4-cell invariant**; **non-California regimes never trigger invariant**; **citation pins authority per regime**; **sibling-module note across all 3 regimes** (UX-text regression for hazard-disclosure cluster); **neighborhood radius constant 1 mile invariant**; **legislative findings cite Tierra Santa in California path** (UX-text regression).
+
 `traderview-expense::meth_contamination_disclosure` is the **state methamphetamine-contamination landlord disclosure compliance check** — sits adjacent to `lead_disclosure`, `mold_disclosure`, `bedbug_disclosure`, `radon_disclosure`, and `flood_disclosure` in the suite of substance-/hazard-specific disclosure tables. Three states ship statutory regimes with explicit ug/100cm² remediation standards; the rest rely on the federal FHA material-defect doctrine. The defining axis between the regulated regimes is **whether remediation extinguishes the disclosure obligation** (yes in CO + AZ; **no** in MT, the regression-critical distinguisher).
 
 **Four regimes** with distinct contamination thresholds and post-remediation obligation extinguishment:

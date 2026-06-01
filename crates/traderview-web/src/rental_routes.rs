@@ -292,6 +292,10 @@ use traderview_expense::landlord_lien_prohibition::{
     check as check_landlord_lien_prohibition, CheckResult as LandlordLienResult,
     Input as LandlordLienInput,
 };
+use traderview_expense::military_ordnance_disclosure::{
+    check as check_military_ordnance_disclosure, CheckResult as MilitaryOrdnanceResult,
+    Input as MilitaryOrdnanceInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -520,6 +524,7 @@ pub fn router() -> Router<AppState> {
         .route("/firearms-in-rental-unit", axum::routing::post(firearms_in_rental_unit_route))
         .route("/lock-change-between-tenancies", axum::routing::post(lock_change_between_tenancies_route))
         .route("/landlord-lien-prohibition", axum::routing::post(landlord_lien_prohibition_route))
+        .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4060,6 +4065,33 @@ async fn landlord_lien_prohibition_route(
     Json(b): Json<LandlordLienInput>,
 ) -> Result<Json<LandlordLienResult>, ApiError> {
     Ok(Json(check_landlord_lien_prohibition(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord former-federal-or-state-ordnance-location
+// disclosure compliance check.
+//
+// Mounted at POST /api/rental/military-ordnance-disclosure. Three
+// regimes: California (Cal. Civ. Code § 1940.7 — landlord with
+// ACTUAL KNOWLEDGE of former federal or state ordnance location
+// WITHIN ONE MILE of residential dwelling shall give WRITTEN
+// NOTICE to prospective tenant PRIOR TO execution of rental
+// agreement; for tenancies in existence on January 1, 1990 notice
+// as soon as practicable; prompted by December 10, 1983 Tierra
+// Santa tragedy in San Diego); FederalMMRP (10 U.S.C. § 2710 +
+// § 2701 federal Military Munitions Response Program / DoD-USACE
+// FUDS public inventory; no general federal landlord disclosure
+// mandate); Default (no statutory landlord disclosure mandate;
+// common-law latent-defect disclosure may apply where landlord
+// has actual knowledge).
+// ---------------------------------------------------------------------------
+
+async fn military_ordnance_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MilitaryOrdnanceInput>,
+) -> Result<Json<MilitaryOrdnanceResult>, ApiError> {
+    Ok(Json(check_military_ordnance_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
