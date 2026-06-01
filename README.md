@@ -5342,6 +5342,47 @@ Both forms covered by § 7201; charging instrument identifies which. Pinned by `
 
 Mounted at `POST /api/calc/section-7201`. Thirty-one tests pin: **full four elements authorizes felony**; **maximum imprisonment 5 years**; **individual max fine $250K** (18 U.S.C. § 3571); **corporation max fine $500K**; **missing deficiency defeats prosecution**; **missing willfulness defeats prosecution**; **missing affirmative act defeats prosecution**; **missing substantial amount defeats prosecution**; **mere omission defeats affirmative act** (Spies doctrine — § 7203 reaches omissions but § 7201 does not); **Spies indicia count zero when none present**; **all seven Spies indicia count**; **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek case note describes subjective belief test**; **Sansone evasion of assessment note present** (380 U.S. 343 (1965)); **Sansone evasion of payment note when payment form**; **four-element truth table** (16-cell sweep across all four elements); **criminal SOL 6 years** (§ 6531); **§ 6663 civil parallel always available** (Spies-Daly doctrine); **unlimited ASED triggered when prosecution authorized** (§ 6501(c)(1)); **unlimited ASED not triggered when prosecution not authorized**; **§ 7491 burden shifts excluded note** (BEYOND REASONABLE DOUBT); **CFIA 18 U.S.C. § 3571 supersedes note**; **IRM 9.1.3 note present**; **citation pins all authorities** (§§ 7201/6531/6663/6501(c)(1)/(c)(2)/7206 + 18 U.S.C. § 3571 + Spies + Sansone + Cheek + IRM 9.1.3); **affirmative act with omission flag still defeats**; **Cheek only defeats when successful and asserted** (4-cell sweep); **negative deficiency treated as no deficiency**; **Spies indicia truth table count** (7-indicium sweep); **pairs with § 7206 citation reference**; **four-element count increments per element**.
 
+`traderview-expense::section_7203` is the **IRC § 7203 willful failure to file return, supply information, or pay tax (criminal misdemeanor)** module — completes the criminal tax statute trio with `section_7201` (5-year felony apex / attempt to evade) and `section_7206` (3-year felony / fraud and false statements / tax perjury). Criminal MISDEMEANOR with 1-year imprisonment cap + $100K individual / $200K corporation fine under 18 U.S.C. § 3571 (supersedes § 7203's original $25K / $100K caps).
+
+**The critical distinction**: § 7203 reaches MERE OMISSIONS where § 7201 requires AFFIRMATIVE ACTS. A willful failure to file alone is § 7203 misdemeanor; the same failure coupled with affirmative acts of concealment (double books, false entries, destruction of records, concealment of assets) elevates to § 7201 felony under Spies v. United States, 317 U.S. 492 (1943).
+
+**§ 7203 reaches four distinct failures**:
+
+| Failure type | Civil parallel | Unlimited ASED |
+|--------------|------------------|------------------|
+| Failure to FILE | § 6651(a)(1) 5%/month up to 25% | YES (§ 6501(c)(3) no-return-filed) |
+| Failure to PAY | § 6651(a)(2) 0.5%/month | NO |
+| Failure to SUPPLY INFORMATION | — | NO |
+| Failure to KEEP RECORDS | — | NO |
+
+**§ 7203 three-element test** (government bears BEYOND REASONABLE DOUBT burden):
+
+1. Person was REQUIRED BY LAW to file return / pay tax / supply information / keep records
+2. FAILURE to do so at the time required by law
+3. WILLFULNESS — voluntary intentional violation of a known legal duty
+
+All three required; failure of any defeats prosecution. Pinned by `three_element_truth_table` (8-cell sweep across all three elements).
+
+**Penalties**:
+- Imprisonment up to **1 YEAR** (misdemeanor cap)
+- Fine $100K individual / $200K corporation under 18 U.S.C. § 3571
+- BOTH imprisonment and fine permitted
+- Costs of prosecution
+
+**§ 6050I felony elevation exception**. Where the willful violation involves § 6050I (cash transaction reporting, $10,000 threshold), the misdemeanor is ELEVATED to FELONY: **5 YEARS imprisonment** + same fine framework. Pinned by `section_6050i_felony_engagement_5_year_imprisonment` and `section_6050i_truth_table`.
+
+**Spies elevation to § 7201**. A willful failure coupled with AFFIRMATIVE ACTS of concealment (double set of books, false entries, destruction of records, concealment of assets, covering up income sources, handling affairs to avoid usual records — see `section_7201`) elevates the charge from § 7203 misdemeanor to § 7201 felony. Government routinely charges § 7201 whenever affirmative-act indicia exist. Pinned by `affirmative_acts_elevation_to_7201_warranted`, `no_affirmative_acts_no_elevation`, `affirmative_acts_truth_table`.
+
+**Cheek defense — Cheek v. United States, 498 U.S. 192 (1991)**. A GENUINE GOOD-FAITH BELIEF that one isn't required to file negates the willfulness element, EVEN IF THAT BELIEF IS OBJECTIVELY UNREASONABLE. Subjective belief test — broader than the § 7201 / § 7206 Cheek standard because objectively unreasonable beliefs can still defeat § 7203 willfulness. NOT a defense for disagreement with the law (constitutional challenges, tax-protester arguments). Pinned by `cheek_only_defeats_when_successful_and_asserted` (4-cell sweep) and `cheek_case_objectively_unreasonable_belief_note`.
+
+**§ 6531 criminal SOL** — 6 years for § 7203 (same as § 7201, § 7206(1)-(4); contrast with § 7206(5) 3-year SOL).
+
+**Parallel civil penalties + UNLIMITED ASED**. § 7203 prosecution does NOT bar civil § 6651(a)(1) failure-to-file penalty (5% per month, up to 25%) or § 6651(a)(2) failure-to-pay penalty (0.5% per month). Spies-Daly doctrine permits parallel civil + criminal. **§ 6501(c)(3) UNLIMITED ASED applies to no-return-filed cases** — IRS may assess at any time. Pinned by `unlimited_ased_engaged_for_failure_to_file_with_no_return`.
+
+**§ 7491 burden shifts do NOT apply to criminal prosecutions** — government bears beyond-reasonable-doubt burden.
+
+Mounted at `POST /api/calc/section-7203`. Thirty-three tests pin: **full three elements authorizes prosecution**; **individual max fine $100K** (18 U.S.C. § 3571); **corporation max fine $200K**; **missing required by law defeats prosecution**; **missing failure at time defeats prosecution**; **missing willfulness defeats prosecution**; **three-element truth table** (8-cell sweep); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek case objectively unreasonable belief note**; **§ 6050I felony engagement 5-year imprisonment**; **no § 6050I violation 1-year imprisonment**; **affirmative acts elevation to § 7201 warranted** (Spies); **no affirmative acts no elevation**; **criminal SOL 6 years** (§ 6531); **failure to file engages § 6651(a)(1) parallel**; **failure to pay engages § 6651(a)(2) parallel**; **failure to supply engages neither parallel**; **failure to keep records engages neither parallel**; **unlimited ASED engaged for failure to file with no return** (§ 6501(c)(3)); **unlimited ASED not engaged for failure to pay**; **Spies-Daly parallel civil note present** (§ 6651(a)(1) + (a)(2)); **§ 7491 burden shifts excluded note**; **IRM 9.1.3 note present**; **citation pins all authorities** (§§ 7203/6050I/6531/6651(a)(1)/(a)(2)/6501(c)(3)/7201/7206 + 18 U.S.C. § 3571 + Spies + Cheek + IRM 9.1.3); **four failure types routed correctly**; **Cheek only defeats when successful and asserted** (4-cell sweep); **three-element count increments per element**; **CFIA 18 U.S.C. § 3571 supersedes note**; **distinction from § 7201 note present**; **failure type routed in note**; **affirmative acts truth table** (2-cell sweep); **§ 6050I truth table** (2-cell sweep imprisonment 1 vs 5 years).
+
 `traderview-expense::section_7811` is the **IRC § 7811 Taxpayer Assistance Orders (TAOs)** module — administrative equitable remedy available when an IRS action or inaction is causing or about to cause "significant hardship" to the taxpayer. The National Taxpayer Advocate (NTA) has independent statutory authority under § 7811 to order the IRS to release property, take action, or refrain from taking action. Distinct from `section_6330`/`section_6320` (CDP — pre-action 30-day notice + Tax Court review), `section_7430` (attorney fees against IRS), and `section_6402` (refund offsets) — TAO is a parallel administrative pathway available alongside these judicial remedies.
 
 **Five-input compliance framework**:

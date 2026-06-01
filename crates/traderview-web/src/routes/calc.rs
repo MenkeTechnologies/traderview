@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
         .route("/calc/section-7201",          post(section_7201_route))
+        .route("/calc/section-7203",          post(section_7203_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7491",          post(section_7491_route))
@@ -2837,6 +2838,39 @@ async fn section_7201_route(
     Json(b): Json<traderview_expense::section_7201::Section7201Input>,
 ) -> Result<Json<traderview_expense::section_7201::Section7201Result>, ApiError> {
     Ok(Json(traderview_expense::section_7201::check(&b)))
+}
+
+// ── §7203 willful failure to file / pay / supply info (misdemeanor) ─
+// Mounted at /api/calc/section-7203. Criminal MISDEMEANOR (1-year
+// imprisonment cap) + $100K individual / $200K corporation fine
+// (18 U.S.C. § 3571 supersedes § 7203 original $25K/$100K caps).
+// Distinct from § 7201 5-year felony (requires affirmative acts)
+// and § 7206 3-year felony (perjury). § 7203 reaches MERE
+// OMISSIONS (failure to file return + failure to pay tax +
+// failure to supply information + failure to keep records);
+// Spies v. United States, 317 U.S. 492 (1943) — willful omission
+// COUPLED with affirmative acts elevates to § 7201. Three-element
+// test (BEYOND REASONABLE DOUBT): (1) required by law to file /
+// pay / supply / keep records + (2) failure at time required +
+// (3) WILLFULNESS. Cheek v. United States, 498 U.S. 192 (1991) —
+// genuine good-faith subjective belief negates willfulness EVEN
+// IF OBJECTIVELY UNREASONABLE; NOT a defense for constitutional
+// challenges or tax-protester arguments. § 6050I FELONY
+// EXCEPTION (cash reporting >$10K) elevates to 5 YEARS
+// imprisonment. § 6531 criminal SOL 6 years. § 6651(a)(1) civil
+// failure-to-file penalty (5%/month up to 25%) + § 6651(a)(2)
+// civil failure-to-pay penalty (0.5%/month) PARALLEL prosecution
+// permitted per Spies-Daly. § 6501(c)(3) UNLIMITED ASED when no
+// return filed. § 7491 burden shifts do NOT apply to criminal
+// cases. IRM 9.1.3. Completes criminal tax statute trio with
+// section_7201 (felony 5-year apex) and section_7206 (3-year
+// felony / perjury).
+
+async fn section_7203_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7203::Section7203Input>,
+) -> Result<Json<traderview_expense::section_7203::Section7203Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7203::check(&b)))
 }
 
 // ── §7206 fraud and false statements (criminal felony) ──────────────
