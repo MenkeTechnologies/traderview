@@ -448,6 +448,10 @@ use traderview_expense::lease_waiver_enforceability::{
     CheckResult as LeaseWaiverEnforceabilityResult,
     Input as LeaseWaiverEnforceabilityInput,
 };
+use traderview_expense::landlord_repair_response_timeframe::{
+    check as check_landlord_repair_response_timeframe, LandlordRepairResponseInput,
+    LandlordRepairResponseResult,
+};
 use traderview_expense::landlord_retaliation_damages::{
     check as check_landlord_retaliation_damages,
     CheckResult as LandlordRetaliationDamagesResult,
@@ -757,6 +761,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
+        .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/landlord-security-device-obligations", axum::routing::post(landlord_security_device_obligations_route))
         .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
@@ -5529,6 +5534,33 @@ async fn landlord_security_device_obligations_route(
     Json(b): Json<LandlordSecurityDeviceInput>,
 ) -> Result<Json<LandlordSecurityDeviceResult>, ApiError> {
     Ok(Json(check_landlord_security_device_obligations(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// landlord_repair_response_timeframe: Mandatory landlord-paid written-
+// response timeframe for tenant repair requests. Mounted at POST /api/
+// rental/landlord-repair-response-timeframe. Four regimes: (1) Texas
+// Tex. Prop. Code §§ 92.052(d) + 92.056 + 92.0563 — reasonable time
+// presumed at 7 days (168 hours) for normal conditions or as soon as
+// practicable for emergencies + § 92.0563 repair-and-deduct cap greater
+// of one month's rent or $500. (2) Illinois Chicago RLTO § 5-12-110(d)
+// — 14 days (336 hours) for ordinary repairs or 72 hours for
+// emergencies + pro-rata rent withholding + lease termination + repair-
+// and-deduct. (3) Washington RCW 59.18.070 — tiered response: 24 hours
+// for no heat/water/electricity/imminent threat; 72 hours for major
+// appliances/plumbing; 10 days (240 hours) for other conditions. (4)
+// Default — common-law implied warranty of habitability per Hilder v.
+// St. Peter + Javins v. First National Realty Corp. Distinct from
+// `repair_and_deduct` + `habitability_remedies` + `landlord_security_
+// device_obligations`.
+// ---------------------------------------------------------------------------
+
+async fn landlord_repair_response_timeframe_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordRepairResponseInput>,
+) -> Result<Json<LandlordRepairResponseResult>, ApiError> {
+    Ok(Json(check_landlord_repair_response_timeframe(&b)))
 }
 
 // ---------------------------------------------------------------------------
