@@ -103,6 +103,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6045a",         post(section_6045a_route))
         .route("/calc/section-1297",          post(section_1297_route))
         .route("/calc/section-1298",          post(section_1298_route))
+        .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2882,6 +2883,43 @@ async fn section_1298_route(
         ));
     }
     Ok(Json(traderview_expense::section_1298::compute(&b)))
+}
+
+// ── §6038D Form 8938 foreign financial asset reporting ───────────
+// Mounted at /api/calc/section-6038d. Trader-critical for anyone
+// with offshore brokerage accounts + foreign mutual fund holdings
+// (PFICs covered by § 1297/1298) + foreign retirement accounts +
+// foreign-issued bonds + interests in foreign entities. § 6038D(a)
+// requires individuals to attach Form 8938 if aggregate value of
+// specified foreign financial assets exceeds threshold under
+// § 6038D(b). Treas. Reg. § 1.6038D-2 tiers thresholds by filing
+// status + residency. § 6038D(c) required information includes
+// institution name + address + account number + issuer info +
+// maximum value of asset during taxable year. § 6038D(d) $10,000
+// initial penalty per failure to disclose. § 6038D(e) continuing
+// $10,000 per 30-day period after 90-day IRS notice grace, capped
+// at $50,000. § 6038D(g) reasonable-cause-AND-not-willful-neglect
+// exception. Distinct from FinCEN Form 114 (FBAR) Bank Secrecy Act
+// filing under 31 U.S.C. § 5314 with separate threshold and
+// penalty regime.
+
+async fn section_6038d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6038d::Section6038DInput>,
+) -> Result<Json<traderview_expense::section_6038d::Section6038DResult>, ApiError> {
+    if b.aggregate_value_year_end_cents < 0
+        || b.aggregate_value_any_time_during_year_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.days_since_irs_notice > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_irs_notice looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6038d::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

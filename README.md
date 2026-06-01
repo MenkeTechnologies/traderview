@@ -2775,6 +2775,46 @@ The basis + previously-taxed-income (PTI) machinery is the non-obvious part. Eac
 
 Mounted at `POST /api/calc/section-1295`. Eighteen tests pin: year-1 inclusion preserves character (ordinary stays ordinary, LTCG stays LTCG); basis steps up by total inclusion; PTI account year-end equals total inclusion when no distribution; distribution fully absorbed by PTI no taxable dividend; distribution exceeds PTI excess taxable as dividend ($5k PTI pool + $8k dist = $5k PTI absorbed + $3k taxable); prior PTI carries into current year ($10k prior + $5k current pool absorbs $8k dist with $7k remaining); basis decreases by PTI distribution only; **basis doesn't decrease for taxable dividend portion** (the $3k dividend doesn't touch basis); multi-year chain basis + PTI evolve correctly; zero inclusion + zero distribution no-op; negative PFIC earnings treated as zero (§1293 includes only positives); character preserved (key advantage over §1296 ordinary-only); PTI never negative; basis never negative; note text distinguishes distribution vs no-distribution paths; ordinary-only PFIC still includes ordinary; LTCG-only PFIC still includes LTCG.
 
+`traderview-expense::section_6038d` is the **IRC §6038D Form 8938 foreign-financial-asset reporting module** — trader-critical for anyone with offshore brokerage accounts, foreign mutual fund holdings (PFICs covered by `section_1297` + `section_1298`), foreign retirement accounts, foreign-issued bonds, or interests in foreign entities. § 6038D requires individuals to attach Form 8938 disclosing such assets when aggregate value crosses the applicable filing threshold. Distinct from FinCEN Form 114 (FBAR) — both regimes often apply to the same taxpayer but have separate thresholds, content requirements, and penalty regimes.
+
+**§ 6038D operative provisions**:
+
+| Subsection | Statute | Rule |
+|------------|---------|------|
+| § 6038D(a) | 26 U.S.C. § 6038D(a) | **General rule** — individual must attach Form 8938 if foreign financial assets exceed threshold |
+| § 6038D(b) | 26 U.S.C. § 6038D(b) | **Threshold** — statutory baseline $50,000; tiered by Treas. Reg. § 1.6038D-2 |
+| § 6038D(c) | 26 U.S.C. § 6038D(c) | **Required information** — institution + issuer info + maximum value during year |
+| § 6038D(d) | 26 U.S.C. § 6038D(d) | **$10,000 initial penalty** per failure to disclose |
+| § 6038D(e) | 26 U.S.C. § 6038D(e) | **Continuing penalty** $10,000 per 30-day period after 90-day IRS notice grace, capped at $50,000 |
+| § 6038D(g) | 26 U.S.C. § 6038D(g) | **Reasonable-cause exception** — no penalty if reasonable cause AND not willful neglect |
+
+**Treas. Reg. § 1.6038D-2 tiered thresholds**:
+
+| Filing status | Year-end | Any time during year |
+|----------------|-----------|----------------------|
+| Single / MFS Domestic | $50,000 | $75,000 |
+| Married Filing Jointly Domestic | $100,000 | $150,000 |
+| Single / MFS Abroad | $200,000 | $300,000 | 
+| Married Filing Jointly Abroad | $400,000 | $600,000 |
+
+**Filing required iff EITHER threshold exceeded.** Year-end value > threshold OR any-time-during-year value > threshold triggers Form 8938. Exactly at threshold does NOT trigger (statute reads "exceeds"). Pinned by `single_domestic_year_end_just_above_50k_requires_filing`, `single_domestic_year_end_exactly_50k_no_filing_required`, `single_domestic_any_time_above_75k_requires_filing`, and the 5-cell truth-table invariant `filing_required_iff_either_threshold_exceeded_invariant`.
+
+**§ 6038D(e) continuing penalty caps at $50,000.** After IRS notice of failure, $10,000 accrues per 30-day period (or fraction thereof). The 90-day post-notice GRACE period is the critical boundary: within 90 days, no continuing penalty. Day 91+ engages the 30-day accrual. Periods are computed via `div_ceil` so even one day past grace = one full $10k period. Maximum continuing penalty caps at $50,000 regardless of duration. Pinned by `within_90_day_grace_no_continuing_penalty`, `at_90_day_boundary_no_continuing_penalty`, `day_91_one_period_continuing_penalty_10k`, `day_120_two_periods_continuing_penalty_20k`, `day_121_three_periods_started_continuing_penalty_20k`, `continuing_penalty_caps_at_50k`, `continuing_penalty_caps_at_50k_for_extreme_delay`, and the cap invariant `continuing_penalty_capped_at_50k_invariant` (4 day-counts confirmed at cap).
+
+**§ 6038D(g) reasonable-cause exception requires BOTH**:
+1. Reasonable cause for the failure
+2. NOT due to willful neglect
+
+Both prongs must hold. Reasonable cause + willful neglect = penalty still applies. 4-cell truth table pinned by `reasonable_cause_excuses_only_when_no_willful_neglect_invariant`.
+
+**Total penalty = initial + continuing.** Initial $10,000 (§ 6038D(d)) plus continuing accrual (§ 6038D(e)) capped at $50,000 = maximum exposure $60,000 per year of failure. Pinned by `continuing_penalty_caps_at_50k` ($10k initial + $50k continuing = $60k total).
+
+**§ 6038D and FBAR (31 U.S.C. § 5314 + 31 CFR § 1010.350) are separate regimes.** Form 8938 is an income-tax filing under Title 26 attached to the 1040; FinCEN Form 114 (FBAR) is a Bank Secrecy Act filing under Title 31 filed separately to FinCEN. Different thresholds ($50k+ tiered for § 6038D; $10k aggregate for FBAR). Both filings often apply to the same taxpayer. Pinned by `fbar_distinction_note_present` (UX-text regression).
+
+**§ 6038D companion to § 1297 + § 1298 PFIC cluster.** Many foreign assets trigger BOTH § 6038D Form 8938 AND § 1298(f) Form 8621 filings. The asset value goes on Form 8938; the PFIC-status analysis goes on Form 8621. Pinned by `pfic_companion_note_present` (UX-text regression).
+
+Mounted at `POST /api/calc/section-6038d`. Twenty-seven tests pin: **single domestic below threshold no filing**; **year-end just above $50k requires filing**; **year-end exactly $50k no filing (statute reads "exceeds")**; **any-time above $75k requires filing**; **MFJ domestic threshold $100k/$150k**; **single abroad $200k/$300k**; **MFJ abroad $400k/$600k**; **filing required not filed $10k penalty**; **filing required and complete no penalty**; **filed but incomplete violation** (§ 6038D(c)); **within 90-day grace no continuing penalty**; **at 90-day boundary no continuing penalty**; **day 91 one period $10k continuing**; **day 120 two periods $20k**; **day 121 three periods $20k** (div_ceil math); **continuing penalty caps at $50k** ($60k max total); **extreme delay still capped at $50k**; **reasonable cause without willful neglect excuses**; **reasonable cause with willful neglect does not excuse**; **willful neglect alone does not excuse**; **filing required iff either threshold exceeded 5-cell invariant**; **reasonable cause excuses only when no willful neglect 4-cell invariant**; **continuing penalty capped at $50k 4-cell invariant** (200/500/1000/10000 days); **thresholds per filing status invariant** (4 filing statuses × 2 thresholds); **citation pins all subsections**; **FBAR distinction note present** (UX-text regression for 31 U.S.C. § 5314); **PFIC companion note present** (UX-text regression for § 1297 + § 1298 + Form 8621 trio).
+
 `traderview-expense::section_1298` is the **IRC §1298 PFIC attribution + special rules + annual reporting module** — direct companion to `section_1297` (PFIC classification — which cross-references § 1298(b)(1) purging election in § 1297(d)). Where § 1297 defines what makes a foreign corporation a PFIC, § 1298 governs WHEN a U.S. person is treated as OWNING PFIC stock indirectly (through corporations, partnerships, trusts, estates, or options), the PURGING ELECTION mechanism, the pledge-as-security deemed-disposition trap, and Form 8621 annual reporting.
 
 **§ 1298(a) — three attribution rules**:
