@@ -689,6 +689,37 @@ Mounted at `POST /api/rental/renters-insurance-check`. Twenty-four tests pin: **
 
 Mounted at `POST /api/rental/utility-shutoff-check`. Twenty-six tests pin: **CA 10 days × $100 = $1,000 penalty**; **CA 1-day minimum floor $250**; CA 3-day boundary ($300 > $250 minimum); CA attorney fees recoverable; **WA 30 days × $100 = $3,000**; WA no minimum floor (1 day = $100); **TX flat $1k + 1 month rent**; TX duration-independent flat penalty; **FL 3 months rent when higher than actual** ($6k > $500 actual); **FL actual damages when higher than rent multiple** ($10k > $3k); **NY punitive + treble + criminal all available**; NY actual damages form statutory base; **OR general-prohibition no specific penalty** (only actual damages, no attorney fees, no punitives); **bona-fide repair exception blocks violation** (CA); no-shutoff no-violation; **51-state coverage**; non-empty citations; **4 regime-uniqueness invariants** (CA+WA / TX / FL / NY); unknown state falls back to general; lowercase normalizes; **CA note describes per-day math** ("10 day", "$100/day"); TX note describes flat + rent path; **NY note describes PUNITIVE + TREBLE + criminal path**.
 
+`traderview-expense::adverse_action_notice` is the **tenant adverse action notice compliance table (federal FCRA + state add-ons)** — when a landlord denies an applicant, requires a higher deposit, requires a cosigner, or otherwise takes unfavorable action based on a consumer report (credit, criminal, eviction history), **FCRA § 615 (15 U.S.C. § 1681m)** requires a written notice with specific federally-mandated elements. Three states (CA, WA, NY) layer additional state-specific content requirements on top. Two regimes:
+
+| Regime                       | States                  | Source                                                                |
+|------------------------------|-------------------------|-----------------------------------------------------------------------|
+| **StateAddsRequirements**    | CA, WA, NY              | Cal. Civ. Code § 1785.20.5 + § 1786 ICRA (specific reason + but-for + 12-point font); Wash. RCW 59.18.257 + RCW 19.182.110 (specific reason + but-for analysis); N.Y. GBL § 380-b (written notice with stated reasons + tenant screening report copy delivery) |
+| **FederalFcraOnly**          | 47 other states + DC    | FCRA § 615 (15 U.S.C. § 1681m) floor only; no state-added content requirements ([FTC Using Consumer Reports guide](https://www.ftc.gov/business-guidance/resources/using-consumer-reports-what-landlords-need-know)) |
+
+**FCRA § 615 required elements** (federal floor — all five must be present in the written notice):
+
+1. Statement that adverse action was taken
+2. **Name, address, and telephone number** of the consumer reporting agency (CRA) that supplied the report
+3. Statement that the **CRA did NOT make the adverse decision** and cannot explain why
+4. Notice of applicant's right to obtain a **FREE copy of the report within 60 days** from the CRA
+5. Notice of applicant's right to **dispute inaccurate information** with the CRA
+
+**What constitutes "adverse action"** triggering the notice — the model includes 5 explicit AdverseActionType variants: `DenialOfApplication`, `HigherDeposit`, `HigherRent`, `CosignerRequired`, `ConditionalShorterTerm`, plus `None`. The notice obligation triggers only when (a) the type is not None AND (b) `consumer_report_contributed_to_decision: true`. Adverse action taken without consumer report contribution (e.g., insufficient income on application alone) does NOT trigger FCRA § 615 ([CFPB on tenant screening report denials](https://www.consumerfinance.gov/ask-cfpb/what-should-i-do-if-my-rental-application-is-denied-because-of-a-tenant-screening-report-en-2105/)).
+
+**California's three additional requirements** are the strictest in the country: (1) the notice must specify the SPECIFIC reason for the adverse action (not just "based on consumer report"); (2) but-for reason analysis required; (3) credit check disclosure must be in 12-point font separately. Pinned by `only_ca_has_formatting_requirements` invariant.
+
+**Washington requires specific reason + but-for analysis** but NOT formatting standards — distinguished from California in `wa_missing_formatting_does_not_violate`.
+
+**New York requires specific reason ONLY** — does not impose but-for analysis or formatting requirements — pinned by `ny_specific_reason_required_but_for_not` (which separately verifies that missing but-for in NY still complies but missing specific-reason violates).
+
+**Module invariants** (2 separately pinned):
+- StateAddsRequirements regime contains only CA + WA + NY (`state_adds_regime_only_3_states`).
+- Only CA has formatting standards (`only_ca_has_formatting_requirements`).
+
+**No fixed timing pin**: FCRA § 615 specifies only "reasonable time" — module does NOT invent a specific day count. Industry best practice is 5 business days from decision.
+
+Mounted at `POST /api/rental/adverse-action-check`. Twenty-one tests pin: **TX FCRA-only minimum satisfies** (no state additions); TX missing CRA contact violates; TX missing 60-day-free-copy right violates; **CA FCRA-only minimum violates state additions** (3 state-specific elements missing flagged separately); CA fully compliant passes; **CA HigherDeposit type triggers notice requirement**; **WA missing but-for violates**; **WA missing formatting does NOT violate** (not a WA requirement — distinguishes from CA); **NY specific reason required but but-for not** (missing but-for complies in NY; missing specific-reason violates); **None adverse action type no notice required**; **adverse action without consumer report contribution no FCRA trigger**; **51-state coverage**; non-empty citations; **StateAddsRequirements regime only 3 states** invariant; **only CA has formatting requirements** invariant; unknown state falls back to FCRA-only; lowercase normalizes; **CosignerRequired triggers notice**; HigherRent triggers notice; note compliant includes regime label; note violation lists missing elements.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:

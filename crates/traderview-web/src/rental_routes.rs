@@ -116,6 +116,9 @@ use traderview_expense::renters_insurance::{
 use traderview_expense::utility_shutoff::{
     check as check_utility_shutoff, ShutoffInput, ShutoffResult,
 };
+use traderview_expense::adverse_action_notice::{
+    check as check_adverse_action, AdverseActionInput, AdverseActionResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -254,6 +257,7 @@ pub fn router() -> Router<AppState> {
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
+        .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2184,6 +2188,29 @@ async fn utility_shutoff_check_route(
         ));
     }
     Ok(Json(check_utility_shutoff(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant adverse action notice compliance check (federal FCRA + state)
+//
+// Mounted at POST /api/rental/adverse-action-check. Two regimes:
+// StateAddsRequirements (CA Civ. Code § 1785.20.5 + § 1786 ICRA --
+// specific reason + but-for + 12-point formatting; WA RCW 59.18.257 +
+// RCW 19.182.110 -- specific reason + but-for; NY GBL § 380-b --
+// specific reason); FederalFcraOnly (FCRA § 615 / 15 U.S.C. § 1681m
+// floor only -- CRA contact info, CRA-did-not-decide disclosure,
+// 60-day free copy right, dispute right).
+// ---------------------------------------------------------------------------
+
+async fn adverse_action_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<AdverseActionInput>,
+) -> Result<Json<AdverseActionResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_adverse_action(&b)))
 }
 
 // ---------------------------------------------------------------------------
