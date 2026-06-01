@@ -5275,6 +5275,49 @@ Mounted at `POST /api/calc/section-7521`. Twenty-nine tests pin: **tax determina
 
 Mounted at `POST /api/calc/section-7430`. Twenty-seven tests pin: **substantively prevailed individual within net worth awards fees** (2026 $260/hr × 100 hrs = $26K); **IRS position substantially justified defeats prevailing party**; **individual net worth above $2M disqualifies**; **individual net worth at $2M boundary satisfied**; **business entity net worth $7M ceiling uniquely higher** ($5M qualifies); **business entity net worth above $7M disqualifies**; **employee count above 500 disqualifies regardless of net worth**; **employee count at 500 satisfied** (boundary); **administrative remedies not exhausted zeros fee award**; **qualified offer engages when QO liability ≥ judgment**; **qualified offer does not engage when QO liability < judgment**; **qualified offer rule bypasses substantial justification defense**; **hourly cap 2026 is $260**; **hourly cap 2025 is $250**; **hourly cap pre-1996 falls back to $125 base**; **max fees calculation = hourly cap × hours**; **citation pins all subsections + 28 U.S.C. § 2412(d)(2)(B) + § 301.7430-2 + Rev. Proc. 2025-32 + IRM 35.10.1**; **business entity $7M uniquely higher than individual $2M invariant** ($3M test); **note describes 2026 $260/hour cap**; **substantively prevailed but not exhausted zeros fees**; **qualified offer rule only engaged when offer made**; **employee count at 501 uniquely disqualifies**; **negative net worth satisfies test** (defensive); **qualified offer exactly at judgment engages rule** (≥ boundary); **qualified offer one cent below judgment does not engage** (< boundary); **not prevailing zeros fee award**; **three gating tests all must pass for fee award invariant** (net worth + employee count + exhaustion).
 
+`traderview-expense::section_7434` is the **IRC § 7434 civil damages for fraudulent filing of information returns** module — trader-relevant CIVIL remedy when a third party (employer, broker, payor) willfully files a fraudulent W-2, 1099, or other information return against the taxpayer. Distinct from criminal statutes (`section_7201` evasion, `section_7202` collection failure, `section_7203` failure to file, `section_7206` perjury), civil fraud (`section_6663`), and TFRP (`section_6672`). § 7434 is a VICTIM'S civil cause of action, not a government enforcement tool.
+
+**Trader-relevant scenarios**:
+- Broker files incorrect 1099-B inflating proceeds → triggers wash-sale / § 1256 / § 988 false deficiency notices
+- Employer files false W-2 inflating wages → triggers SE-tax / FICA-tax false deficiency
+- Payor files fake 1099-NEC inflating payments
+- Retaliatory false W-2 / 1099 from former employer
+
+**Statutory elements** (preponderance of evidence civil burden):
+
+1. Any PERSON (defendant)
+2. WILLFULLY FILED a fraudulent information return
+3. Information return was FRAUDULENT
+4. With respect to payments purported to be made to any other person (the plaintiff-taxpayer)
+
+All four required. Pinned by `civil_action_authorized_truth_table` (8-cell sweep willful × fraudulent × misstatement).
+
+**§ 7434(b) damages — greater of**:
+
+| Component | Recovery |
+|-----------|------------|
+| Statutory minimum | $5,000 |
+| OR Actual damages | Sum of actual incurred |
+| PLUS court costs | Recovered |
+| PLUS attorney fees | At court's discretion |
+
+Pinned by `statutory_minimum_5000_when_actual_below`, `actual_damages_when_above_5000_minimum`, `court_costs_recovered_when_authorized`, `attorney_fees_recovered_when_awarded`, `attorney_fees_zero_when_not_awarded`, `total_recovery_sums_three_components`, `statutory_minimum_5000_is_5000`.
+
+**Derolf v. Risinger Bros. misclassification carveout** — most courts hold that misclassification as INDEPENDENT CONTRACTOR (1099-MISC / 1099-NEC instead of W-2) does NOT give a § 7434 cause of action when the dollar amount is otherwise correct. Plaintiff must allege **FRAUDULENT AMOUNT MISSTATEMENT**, not merely wrong form classification. Critical scope limitation. Pinned by `derolf_misclassification_carveout_defeats_action` and `amount_misstatement_with_misclassification_still_authorizes` (amount misstatement saves claim even when misclassification also alleged).
+
+**§ 7434(d) statute of limitations — later of**:
+
+- **6 YEARS** after filing of the fraudulent information return, OR
+- **1 YEAR** after the date the fraudulent return would have been discovered by exercise of reasonable care
+
+Pinned by `sol_within_6_year_satisfied`, `sol_at_6_year_boundary_expired`, `sol_satisfied_under_1_year_discovery_even_if_over_6_filing`, `sol_at_1_year_discovery_boundary_expired_if_over_6_filing`, `sol_truth_table_filing_x_discovery` (12-cell sweep).
+
+**§ 7434(e) — plaintiff must provide copy of complaint to Secretary** (IRS notice) upon filing civil action.
+
+**Trader-tax-defense leverage** — § 7434 civil judgment provides COLLATERAL-ESTOPPEL leverage in any subsequent Tax Court / refund litigation arising from the fraudulent 1099 / W-2 deficiency notice. The judgment establishes the information return's falsity as a matter of preclusion in tax controversy.
+
+Mounted at `POST /api/calc/section-7434`. Thirty-one tests pin: **full claim authorizes civil action**; **statutory minimum $5,000 when actual below**; **actual damages when above $5,000 minimum**; **court costs recovered when authorized**; **attorney fees recovered when awarded**; **attorney fees zero when not awarded**; **total recovery sums three components**; **no willful filing defeats action**; **no fraudulent return defeats action**; **Derolf misclassification carveout defeats action** (1099 instead of W-2 without amount misstatement); **amount misstatement with misclassification still authorizes**; **SOL within 6-year satisfied**; **SOL at 6-year boundary expired**; **SOL satisfied under 1-year discovery even if over 6 filing**; **SOL at 1-year discovery boundary expired if over 6 filing**; **SOL truth table filing × discovery** (12-cell sweep); **expired SOL defeats action**; **citation pins subsections and Derolf** (§§ 7434(a)/(b)/(c)/(d)/(e)/(f) + Derolf v. Risinger Bros.); **return type routed in note** (W-2 + 1099-B + 1099-NEC + 1099-MISC + 1099-DIV + 1099-INT); **cause of action note describes § 7434(a)**; **notice to Secretary note present** (§ 7434(e) IRS notice); **collateral estoppel note present** (Tax Court leverage); **negative actual damages clamped to zero**; **negative court costs clamped to zero**; **negative attorney fees clamped to zero**; **six information return types routed correctly**; **damages note describes greater-of rule** (§ 7434(b)); **SOL note describes later-of rule** (§ 7434(d)); **civil action authorized truth table** (8-cell sweep willful × fraudulent × misstatement); **statutory minimum $5,000 is $5,000**; **full recovery note describes total**.
+
 `traderview-expense::section_7491` is the **IRC § 7491 burden of proof shifts to Secretary** module — civil procedural defense that flips the burden of proof from taxpayer to IRS once taxpayer satisfies threshold requirements. Distinct from `section_6664` (reasonable cause + good faith defense to penalties), § 7454(a) (fraud-burden specific to § 6663 + accumulated earnings), and `section_6663` (civil fraud penalty). Highly relevant for aggressive § 1256 mark-to-market, § 988 currency, § 1202 QSBS holding-period, and § 475(f) trader-tax-status disputes.
 
 **Three burden-shift subsections**:

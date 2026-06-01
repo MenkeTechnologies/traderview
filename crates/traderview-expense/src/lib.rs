@@ -308,6 +308,7 @@ pub mod section_7201;
 pub mod section_7202;
 pub mod section_7203;
 pub mod section_7206;
+pub mod section_7434;
 pub mod section_7491;
 pub mod section_7502;
 pub mod section_7521;

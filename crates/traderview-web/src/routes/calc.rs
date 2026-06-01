@@ -93,6 +93,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7203",          post(section_7203_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
+        .route("/calc/section-7434",          post(section_7434_route))
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
@@ -2938,6 +2939,34 @@ async fn section_7206_route(
     Json(b): Json<traderview_expense::section_7206::Section7206Input>,
 ) -> Result<Json<traderview_expense::section_7206::Section7206Result>, ApiError> {
     Ok(Json(traderview_expense::section_7206::check(&b)))
+}
+
+// ── §7434 civil damages for fraudulent information return ──────────
+// Mounted at /api/calc/section-7434. Trader-relevant CIVIL remedy
+// when third party (employer / broker / payor) willfully files
+// fraudulent W-2 / 1099 / other information return against
+// taxpayer. § 7434(a) cause of action; § 7434(b) damages — greater
+// of $5,000 OR actual damages + court costs + court's-discretion
+// attorney fees; § 7434(d) statute of limitations — later of 6
+// years from filing OR 1 year from reasonable discovery; § 7434(e)
+// plaintiff must provide complaint copy to Secretary (IRS notice).
+// Derolf v. Risinger Bros. misclassification carveout — most
+// courts hold misclassification (1099 instead of W-2) without
+// amount misstatement does NOT support § 7434 claim; plaintiff
+// must allege FRAUDULENT AMOUNT MISSTATEMENT. Trader-relevant
+// scenarios: broker files incorrect 1099-B inflating proceeds;
+// employer files false W-2; payor files fake 1099-NEC; retaliatory
+// false W-2 / 1099 from former employer. Civil judgment provides
+// collateral-estoppel leverage in Tax Court / refund litigation
+// arising from fraudulent 1099 / W-2 deficiency notice. Distinct
+// from criminal statutes (§§ 7201 / 7202 / 7203 / 7206), civil
+// fraud (§ 6663), and TFRP (§ 6672).
+
+async fn section_7434_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7434::Section7434Input>,
+) -> Result<Json<traderview_expense::section_7434::Section7434Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7434::check(&b)))
 }
 
 // ── §7491 burden of proof shifts to Secretary ───────────────────────
