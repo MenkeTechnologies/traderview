@@ -397,6 +397,10 @@ use traderview_expense::landlord_retaliation_damages::{
     CheckResult as LandlordRetaliationDamagesResult,
     Input as LandlordRetaliationDamagesInput,
 };
+use traderview_expense::landlord_tenant_recording_consent::{
+    check as check_landlord_tenant_recording_consent, RecordingConsentInput,
+    RecordingConsentResult,
+};
 use traderview_expense::last_month_rent_offset::{
     check as check_last_month_rent_offset,
     CheckResult as LastMonthRentOffsetResult,
@@ -666,6 +670,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
+        .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
         .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
         .route("/emotional-support-animal-documentation", axum::routing::post(emotional_support_animal_documentation_route))
         .route("/lease-nondisparagement-prohibition", axum::routing::post(lease_nondisparagement_prohibition_route))
@@ -5023,6 +5028,30 @@ async fn landlord_retaliation_damages_route(
         ));
     }
     Ok(Json(check_landlord_retaliation_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// landlord_tenant_recording_consent: Audio recording consent for landlord-
+// tenant interactions. Two regimes: AllPartyConsent (CA, DE, FL, IL, MD,
+// MA, MT, NV, NH, PA, WA — 11 states; both parties must consent to
+// private-conversation recording) vs OnePartyConsent (federal 18 U.S.C.
+// § 2511(2)(d) floor + 39 states + DC; one-party consent sufficient).
+// Federal third-party-device rule: landlord installing device to record
+// tenant conversations to which landlord is NOT a party violates § 2511
+// regardless of state regime — one-party consent only protects a party.
+// In-unit recording without all-party consent universally unlawful due
+// to tenant's reasonable expectation of privacy. § 2511(4) criminal
+// penalty up to 5 yrs + $250K; § 2520(c) civil $10K statutory minimum.
+// Distinct from tenant_data_privacy, landlord_harassment, security_
+// camera_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn landlord_tenant_recording_consent_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RecordingConsentInput>,
+) -> Result<Json<RecordingConsentResult>, ApiError> {
+    Ok(Json(check_landlord_tenant_recording_consent(&b)))
 }
 
 // ---------------------------------------------------------------------------
