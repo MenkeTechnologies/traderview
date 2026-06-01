@@ -20,6 +20,7 @@ pub mod chase;
 pub mod contractor_1099;
 pub mod cosigner_rules;
 pub mod cost_segregation;
+pub mod credit_check_authorization;
 pub mod death_in_unit_disclosure;
 pub mod demolition_tenant_notice;
 pub mod crime_victim_termination;

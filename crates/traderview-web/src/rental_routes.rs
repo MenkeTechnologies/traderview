@@ -234,6 +234,9 @@ use traderview_expense::pre_move_out_inspection::{
     check as check_pre_move_out_inspection, PreMoveOutInspectionInput,
     PreMoveOutInspectionResult,
 };
+use traderview_expense::credit_check_authorization::{
+    check as check_credit_check_authorization, CreditCheckInput, CreditCheckResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -447,6 +450,7 @@ pub fn router() -> Router<AppState> {
         .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
         .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
         .route("/pre-move-out-inspection", axum::routing::post(pre_move_out_inspection_route))
+        .route("/credit-check-authorization", axum::routing::post(credit_check_authorization_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3445,6 +3449,37 @@ async fn pre_move_out_inspection_route(
         ));
     }
     Ok(Json(check_pre_move_out_inspection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State credit-check authorization and disclosure landlord compliance.
+//
+// Mounted at POST /api/rental/credit-check-authorization. Three regimes:
+// Washington (RCW 59.18.257 — four-prong pre-screening disclosure
+// requirement: types of information accessed + denial criteria + CRA
+// name/address/tenant rights + reusable-screening-report acceptance;
+// cost-recovery permitted only if disclosure provided; $100/violation
+// + attorney fees + court costs); California (Cal. Civ. Code § 1950.6
+// — application-screening fee cap ~$60 inflation-adjusted in 2024;
+// itemized receipt required upon request; unused-portion refund
+// required; $100 civil penalty); Default (15 U.S.C. § 1681b(a)(3)(F)
+// FCRA tenant-screening permissible purpose baseline; no written
+// authorization required for tenant screening — § 1681b(b) employment-
+// purpose only). Distinct from adverse_action_notice (post-denial
+// notice AFTER the report is used) and application_fees (fee dollar cap).
+// ---------------------------------------------------------------------------
+
+async fn credit_check_authorization_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CreditCheckInput>,
+) -> Result<Json<CreditCheckResult>, ApiError> {
+    if b.screening_fee_charged_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "screening_fee_charged_cents must be non-negative".into(),
+        ));
+    }
+    Ok(Json(check_credit_check_authorization(&b)))
 }
 
 // ---------------------------------------------------------------------------
