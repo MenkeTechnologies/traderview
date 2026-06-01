@@ -104,6 +104,9 @@ use traderview_expense::eviction_record_sealing::{
 use traderview_expense::lease_termination_notice::{
     check as check_termination_notice, NoticeInput, NoticeResult,
 };
+use traderview_expense::occupancy_standards::{
+    check as check_occupancy, OccupancyInput, OccupancyResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -238,6 +241,7 @@ pub fn router() -> Router<AppState> {
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
         .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
         .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
+        .route("/occupancy-check", axum::routing::post(occupancy_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2067,6 +2071,28 @@ async fn termination_notice_check_route(
         ));
     }
     Ok(Json(check_termination_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Federal + state occupancy standards check (HUD Keating + state overlay)
+//
+// Mounted at POST /api/rental/occupancy-check. Four regimes:
+// SqftPerOccupantFormula (NY 80 sqft/person, MA 150+100); CA "2+1"
+// (2 per bedroom + 1 additional); NoMoreRestrictiveThanTwoPerBedroom
+// (OR ORS 90.262); HudKeatingDefault (everywhere else). Federal floor:
+// FHA § 3604 familial-status pretext violation overrides any
+// state-formula compliance.
+// ---------------------------------------------------------------------------
+
+async fn occupancy_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<OccupancyInput>,
+) -> Result<Json<OccupancyResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_occupancy(&b)))
 }
 
 // ---------------------------------------------------------------------------

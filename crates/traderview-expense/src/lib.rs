@@ -45,6 +45,7 @@ pub mod mold_disclosure;
 pub mod mlp_ubti;
 pub mod mtm_475f;
 pub mod niit;
+pub mod occupancy_standards;
 pub mod normalize;
 pub mod pet_fees;
 pub mod qbi;
