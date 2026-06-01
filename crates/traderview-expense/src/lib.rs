@@ -118,6 +118,7 @@ pub mod section_465;
 pub mod section_469;
 pub mod section_475c2;
 pub mod section_691;
+pub mod section_704c;
 pub mod section_704d;
 pub mod section_754;
 pub mod section_7872;

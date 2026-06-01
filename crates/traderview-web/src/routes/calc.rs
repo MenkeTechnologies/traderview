@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
+        .route("/calc/section-704c",          post(section_704c_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
@@ -924,6 +925,30 @@ async fn section_704d_route(
         ));
     }
     Ok(Json(traderview_expense::section_704d::compute(&b)))
+}
+
+// ── §704(c) pre-contribution built-in gain/loss allocation ──────────
+// Mounted at /api/calc/section-704c. §704(c)(1)(A) gain allocation on
+// disposition; §704(c)(1)(B) 7-year anti-mixing-bowl (distribution to
+// other partner); §737 reverse (contributor receives other property);
+// §704(c)(1)(C) built-in loss restriction (AJCA 2004 §833(a)); three
+// allocation methods (traditional / curative / remedial).
+
+async fn section_704c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_704c::Section704cInput>,
+) -> Result<Json<traderview_expense::section_704c::Section704cResult>, ApiError> {
+    if b.pre_contribution_built_in_gain < Decimal::ZERO
+        || b.pre_contribution_built_in_loss < Decimal::ZERO
+        || b.disposition_gain_realized < Decimal::ZERO
+        || b.other_property_received_fmv < Decimal::ZERO
+        || b.contributor_outside_basis < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_704c::compute(&b)))
 }
 
 // ── §754 election + §743(b) inside basis adjustment ─────────────────
