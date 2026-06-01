@@ -127,6 +127,7 @@ pub mod rent_credit_reporting;
 pub mod rent_escrow;
 pub mod rent_increase_notice_period;
 pub mod rent_payment_method;
+pub mod residential_lease_arbitration_clause;
 pub mod right_to_counsel_eviction;
 pub mod renters_insurance;
 pub mod roommate_authorization;

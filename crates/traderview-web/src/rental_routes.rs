@@ -401,6 +401,9 @@ use traderview_expense::landlord_possession_delivery::{
     CheckResult as LandlordPossessionDeliveryResult,
     Input as LandlordPossessionDeliveryInput,
 };
+use traderview_expense::residential_lease_arbitration_clause::{
+    check as check_residential_arbitration, ArbitrationClauseInput, ArbitrationClauseResult,
+};
 use traderview_expense::lease_waiver_enforceability::{
     check as check_lease_waiver_enforceability,
     CheckResult as LeaseWaiverEnforceabilityResult,
@@ -686,6 +689,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
+        .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
         .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
@@ -5056,6 +5060,32 @@ async fn lease_waiver_enforceability_route(
     Json(b): Json<LeaseWaiverEnforceabilityInput>,
 ) -> Result<Json<LeaseWaiverEnforceabilityResult>, ApiError> {
     Ok(Json(check_lease_waiver_enforceability(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// residential_lease_arbitration_clause: Pre-dispute arbitration clause
+// enforceability in residential leases. Three regimes: California (Cal.
+// Civ. Code § 1953(a)(4) traditional void rule for procedural-rights
+// waivers — eroded by Brooks v. Greystar Real Estate Partners (S.D.
+// Cal. 2024) FAA preemption analysis); NewJersey (N.J.S.A. 2A:23B-1 +
+// Atalese v. U.S. Legal Services Group (220 N.J. 220, 2014) requires
+// EXPLICIT judicial-forum-waiver language); Default (9 U.S.C. §§ 1/2/4
+// Federal Arbitration Act + AT&T Mobility v. Concepcion (563 U.S. 333,
+// 2011) + Epic Systems v. Lewis (584 U.S. 497, 2018) class-action
+// waiver enforcement). Universal Speak Out Act of 2022 (117 Stat. 2192)
+// bars pre-dispute arbitration for sexual harassment / sexual assault
+// claims regardless of state regime. 9 U.S.C. § 2 savings clause
+// permits unconscionability + duress / misrepresentation defenses
+// (Concepcion permits state-law defenses applied neutrally). Distinct
+// from lease_waiver_enforceability.
+// ---------------------------------------------------------------------------
+
+async fn residential_lease_arbitration_clause_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ArbitrationClauseInput>,
+) -> Result<Json<ArbitrationClauseResult>, ApiError> {
+    Ok(Json(check_residential_arbitration(&b)))
 }
 
 // ---------------------------------------------------------------------------
