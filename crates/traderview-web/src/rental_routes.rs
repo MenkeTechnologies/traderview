@@ -92,6 +92,9 @@ use traderview_expense::soi_protection::{
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
+use traderview_expense::senior_disabled_protection::{
+    check as check_senior_disabled, SeniorDisabledCheckInput, SeniorDisabledCheckResult,
+};
 use traderview_expense::service_animal::{
     check as check_service_animal, ServiceAnimalCheckInput, ServiceAnimalCheckResult,
 };
@@ -217,6 +220,7 @@ pub fn router() -> Router<AppState> {
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
+        .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
         // 1099-NEC contractor $600 threshold tracker
         .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
         // State deposit-return window compliance check
@@ -1891,6 +1895,21 @@ async fn eviction_notice_check_route(
         return Err(ApiError::BadRequest("state required".into()));
     }
     Ok(Json(check_eviction_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State senior + disabled tenant protection check
+// ---------------------------------------------------------------------------
+
+async fn senior_disabled_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SeniorDisabledCheckInput>,
+) -> Result<Json<SeniorDisabledCheckResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_senior_disabled(&b)))
 }
 
 // ---------------------------------------------------------------------------

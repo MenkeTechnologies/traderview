@@ -384,6 +384,47 @@ Exclusions modeled:
 
 Mounted at `POST /api/rental/1099-nec-report`. Eighteen tests pin: single vendor under $600 no 1099; **exactly $600 triggers** (≥, not >); $599.99 no 1099; multiple payments aggregate to threshold ($250 × 3 = $750 triggers); all-card payments excluded (note mentions 1099-K); mixed card + check counts only non-card portion ($400 card + $400 check = $400 qualifying, no trigger); over-threshold mixed ($400 card + $700 check = $700 qualifying, triggers); corporation vendor excluded; attorney corporation STILL triggers (§6045(f)); materials-only no 1099; mixed materials + services counts only services portion; year filter excludes other years; empty input no-op; multiple vendors aggregated separately; threshold override replaces $600 default; case-insensitive "CARD" method match; latest_payment date reflects max across the year; total_qualifying_payments aggregates across vendors requiring 1099.
 
+`traderview-expense::senior_disabled_protection` is the **state + municipal senior + disabled tenant protection table** — specialized protection regimes for at-risk tenant populations. Distinct from general just-cause eviction (which applies to all tenants in covered states) and federal FHA (which prohibits disability discrimination but doesn't provide age-based or income-based housing protection).
+
+**Four regimes** across 51 jurisdictions:
+
+| Regime                                  | States                                     |
+|-----------------------------------------|--------------------------------------------|
+| **Statewide condo-conversion protection** | NJ (uniquely on this regime)             |
+| **Municipal rent-increase exemption**   | NY (NYC SCRIE/DRIE, uniquely)              |
+| **Just-cause covers all (no carve-out)** | CA / CT / DC / IL / OR / PA / WA          |
+| **No specific statute**                 | 42 other states (federal FHA only)         |
+
+**NJ Senior Citizens & Disabled Protected Tenancy Act (N.J.S.A. § 2A:18-61.22, 1982) is strongest in the country.** Eligible tenants get up to **40 years** of protection from eviction due to condominium / cooperative conversion. Hudson County tenants get PERMANENT protection.
+
+**Five NJ eligibility requirements**:
+
+| Requirement              | Threshold                                       |
+|--------------------------|-------------------------------------------------|
+| Age                      | 62+ (or disabled at any age)                    |
+| Income                   | ≤ $50,000 OR 3× county per capita (whichever greater) |
+| Building size            | 5+ rental units                                 |
+| Tenancy length           | 1+ year residency OR > 1-year lease term       |
+| Principal residence      | Required                                        |
+
+The compute fn independently checks each requirement, flags individual failures in `reasons_not_eligible`, and only returns `eligible_for_protection: true` when ALL five are satisfied. Pinned by `nj_eligible_senior_qualifies` (canonical 70-year-old + $40k + 20-unit + 10-year tenant) + each disqualification independently pinned: `nj_age_61_disqualifies_non_disabled` + `nj_income_50001_disqualifies` + `nj_4_unit_building_disqualifies` + `nj_short_tenancy_disqualifies`.
+
+**Income boundary at $50,000 exact**: equal qualifies, $50,001 disqualifies. Pinned by `nj_income_50k_exact_boundary_qualifies` + `nj_income_50001_disqualifies`.
+
+**Disabled tenants qualify at any age** under NJ + CT + DC + IL + PA. Disability bypasses the age threshold. Pinned by `nj_disabled_qualifies_at_any_age` (30-year-old disabled tenant qualifies under NJ).
+
+**Multiple disqualifications stack**. Five-prong eligibility means up to 4 simultaneous disqualifications can be listed (age + income + building + tenancy). Pinned by `nj_multiple_disqualifications_listed`.
+
+**NYC SCRIE/DRIE is uniquely on Municipal Rent-Increase Exemption regime.** NYC Admin Code § 26-509(b)(2) (SCRIE for age 62+) and § 26-405(m)(1) (DRIE for disabled). Future rent increases are locked / credited back to landlord as property tax abatement. Protection is **permanent** (no max_protection_years). Pinned by `ny_scrie_drie_no_max_protection_permanent` + `ny_only_state_with_municipal_rent_increase_exemption` (sweep across 50 other states).
+
+**NJ is the only state with the 40-year statutory cap.** Pinned by `nj_only_state_with_40_year_protection_or_below` (sweep verifying every other state has `max_protection_years: None`).
+
+**CA AB 1482 has NO senior carve-out.** Despite being a comprehensive tenant-protection statute, AB 1482 applies to ALL tenants equally with no age-based or income-based carve-outs. Classification as `JustCauseCoversNoCarveOut` is correct — the regime applies but doesn't require senior-specific eligibility tests. Pinned by `ca_just_cause_no_senior_carveout` (50-year-old non-disabled high-income tenant still gets statute_available=true and eligible_for_protection=true).
+
+**Just-cause-no-carve-out 7-state sweep** pinned by `just_cause_no_carveout_states_pinned` (CA / CT / DC / IL / OR / PA / WA).
+
+Mounted at `POST /api/rental/senior-disabled-check`. Twenty-two tests pin: 51-row coverage; **NJ canonical eligible senior** (all 5 prongs pass); **each of NJ's 5 disqualification paths individually pinned** (age 61, income $50,001, 4-unit building, 0-year tenancy, multi-disqualification stack); **NJ income $50k exact boundary** qualifies; **NJ disabled at any age** qualifies; **NY SCRIE/DRIE permanent (no max_years)**; CA just-cause no carve-out; TX no specific statute; CT § 47a-23c age-62 qualifies (no income gate); PA § 250.504-A age-62 qualifies; unknown state errors; case-insensitive; sorted all_states; non-empty citations; **NJ-only StatewideConversionProtection sweep**; **NY-only MunicipalRentIncreaseExemption sweep**; **7-state JustCauseCoversNoCarveOut regime sweep**; **NJ-only 40-year cap sweep** across 50 other states.
+
 `traderview-expense::service_animal` is the **federal FHA + state service animal / ESA accommodation compliance table** — common landlord trap. Federal Fair Housing Act mandates reasonable accommodation for assistance animals regardless of "no pets" policy and prohibits pet deposits/fees. State additions impose anti-fraud documentation requirements after the post-2015 ESA letter mill problem.
 
 **Federal floor (universal across all 51 jurisdictions):**
