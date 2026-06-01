@@ -4032,6 +4032,52 @@ Mounted at `POST /api/calc/section-72t`. Twenty-five tests pin: **pre-59½ no ex
 
 Mounted at `POST /api/calc/section-7701`. Twenty-two tests pin: **single-member LLC defaults to disregarded entity**; **multi-member LLC defaults to partnership**; LP defaults to partnership; general partnership defaults to partnership; **domestic corporation statute is per-se corporation**; **foreign per-se list is per-se**; **per-se corp Form 8832 election irrelevant** (regression — already corporation); **single-member LLC elects to C corp** (via Form 8832); **multi-member LLC elects to C corp**; **foreign eligible entity can elect**; **lockout NOT binding after 60 months** (boundary regression target); **lockout binding at 59 months** (regression — strict ≥ 60); **lockout binding at 0 months → 60 months remaining**; **> 50% ownership change waives lockout** (regression target — even at month 0); **per-se corp cannot change classification** (eligible_to_elect = false); eligible entity with no recent election can elect; **citation mentions all 8 relevant authorities** (§7701 + § 301.7701-2 + § 301.7701-3 + Form 8832 + "60-month" + "1997-01-01" + §1361 + §351 + § 301.7701-2(b)(8) foreign per-se list); note describes default path + multi-member path + election path; note describes lockout months remaining.
 
+`traderview-expense::section_7704` is the **IRC §7704 publicly-traded-partnership corporate-treatment module** — trader-critical for any investor holding master limited partnerships (MLPs) or other publicly traded partnerships. § 7704(a) treats a PTP as a CORPORATION for federal tax purposes (losing pass-through status and triggering double taxation) UNLESS § 7704(c) qualifying-income exception applies (90% qualifying income). Pairs with `section_7701` (check-the-box entity classification) and `mlp_ubti` (UBTI for tax-exempt MLP investors).
+
+**§ 7704(b) PTP definition — two prongs**:
+
+| Prong | Statute | Test |
+|-------|---------|------|
+| § 7704(b)(1) | 26 U.S.C. § 7704(b)(1) | Interests traded on established securities market (NYSE, NASDAQ, etc.) |
+| § 7704(b)(2) | 26 U.S.C. § 7704(b)(2) | Interests readily tradable on secondary market or substantial equivalent thereof |
+
+Either prong → PTP.
+
+**§ 7704(c) qualifying-income exception** has TWO requirements that BOTH must hold:
+
+| Subsection | Statute | Requirement |
+|------------|---------|-------------|
+| § 7704(c)(1) | 26 U.S.C. § 7704(c)(1) | **Continuous compliance** — met 90% test every taxable year beginning after 1987-12-31 |
+| § 7704(c)(2) | 26 U.S.C. § 7704(c)(2) | **90% threshold** — qualifying income ≥ 90% of gross income for the year |
+
+**§ 7704(d)(1) seven qualifying-income categories**:
+
+- (A) Interest
+- (B) Dividends
+- (C) Real property rents
+- (D) Gain from sale or disposition of real property
+- (E) Income/gains from mineral or natural-resource activities (oil, gas, minerals, timber, fertilizer, geothermal, industrial-source CO2, alcohol fuels)
+- (F) Gain from sale or disposition of capital asset held for qualifying-income production
+- (G) Commodities income for certain partnerships + § 1221(a)(1) inventory
+
+**§ 7704(e) inadvertent-termination relief** requires ALL THREE prongs:
+
+1. **Inadvertent failure** to meet the gross-income test
+2. **Corrective steps** taken within a reasonable time after discovery
+3. **Agreement** to make adjustments required by the Secretary
+
+All three must hold; the 8-combo invariant `inadvertent_relief_requires_all_3_prongs_8_combo_invariant` confirms only (true, true, true) yields relief.
+
+**The 90% test is INCLUSIVE at the boundary.** Qualifying income of exactly 90.00% (9,000 basis points) passes; 89.99% (8,999 bp) fails. Pinned by `ptp_at_exact_90_pct_boundary_passes_test`, `ptp_just_below_90_pct_fails_test`, and the boundary invariant `ninety_pct_boundary_strict_at_threshold_invariant` (3 boundary cells: 8999, 9000, 9001 bp).
+
+**The § 7704(c) exception requires BOTH § 7704(c)(1) continuous compliance AND § 7704(c)(2) 90% threshold.** Failing either drops the partnership into § 7704(a) corporate treatment (absent § 7704(e) relief). Pinned by `exception_requires_both_90_pct_and_continuous_compliance_invariant` (4-cell truth table).
+
+**§ 7704(e) relief preserves pass-through even when 90% test fails.** Where the failure was inadvertent, corrective steps were taken, and the partnership agreed to required adjustments, the Secretary may treat the partnership as continuing to meet the test. Pinned by `ptp_failed_test_but_all_3_relief_prongs_satisfied_pass_through_preserved` and `relief_does_not_engage_when_test_already_satisfied` (relief is a CURE for failure, not redundant with success).
+
+**Non-PTP partnerships are entirely outside § 7704 scope.** Even with 0% qualifying income, a non-publicly-traded partnership retains pass-through status under subchapter K. Pinned by `not_publicly_traded_section_7704_inapplicable` and the 12-cell invariant `not_ptp_never_treated_as_corporation_invariant` (6 QI levels × 2 continuous-compliance flags).
+
+Mounted at `POST /api/calc/section-7704`. Twenty tests pin: **not publicly traded § 7704 inapplicable**; **established securities market is PTP**; **readily tradable secondary market is PTP**; **PTP with 95% qualifying income passes test**; **PTP at exact 90% boundary passes test**; **PTP just below 90% fails test**; **PTP with 50% qualifying income fails test**; **PTP passes current test fails continuous compliance**; **PTP failed test but all 3 relief prongs satisfied pass-through preserved**; **relief requires all 3 prongs (inadvertent + corrective + agreement)**; **relief does not engage when test already satisfied** (regression — no double-counting); **zero gross income zero QI percentage**; **QI exceeds gross clamps at 100%** (defensive); **negative QI clamps at zero** (defensive); **PTP status independent of trading market 2-prong invariant**; **exception requires both 90% and continuous compliance 4-cell invariant**; **inadvertent relief requires all 3 prongs 8-combo invariant**; **90% boundary strict at threshold 3-cell invariant** (8999/9000/9001 bp); **not PTP never treated as corporation 12-cell invariant** (6 QI levels × 2 continuous-compliance flags); **citation pins subsections per outcome** (exception: § 7704(c)(1)–(c)(2) + § 7704(d)(1); corporate: § 7704(a) + § 7704(b); relief: § 7704(e) + § 7704(b)).
+
 `traderview-expense::section_7872` is the **IRC §7872 below-market loan module** — the family sweetheart loan trap. When a trader lends to family, child, or controlled entity at below-AFR rates, the IRS imputes the missing interest as if charged at the Applicable Federal Rate. Forgone interest becomes income to the lender AND deemed transferred back as gift / compensation / dividend depending on the relationship.
 
 **AFR brackets by loan term** under §1274(d):

@@ -98,6 +98,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1272",          post(section_1272_route))
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1281",          post(section_1281_route))
+        .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2725,6 +2726,36 @@ async fn section_1281_route(
     Json(b): Json<traderview_expense::section_1281::Section1281Input>,
 ) -> Result<Json<traderview_expense::section_1281::Section1281Result>, ApiError> {
     Ok(Json(traderview_expense::section_1281::compute(&b)))
+}
+
+// ── §7704 publicly traded partnership corporate treatment ────────
+// Mounted at /api/calc/section-7704. Trader-critical for any
+// investor holding master limited partnerships (MLPs) or PTPs.
+// §7704(a) general rule treats PTP as CORPORATION losing pass-
+// through status — unless §7704(c) exception applies. §7704(b)
+// PTP definition has two prongs: (1) interests traded on
+// established securities market OR (2) readily tradable on
+// secondary market. §7704(c)(1) requires continuous compliance
+// with 90% test every taxable year beginning after 1987-12-31.
+// §7704(c)(2) 90% qualifying-income test. §7704(d)(1) seven
+// qualifying-income categories: (A) interest + (B) dividends +
+// (C) real property rents + (D) gain from real property + (E)
+// mineral/natural-resource income + (F) qualifying capital asset
+// gain + (G) commodities income. §7704(e) inadvertent-termination
+// relief requires all three prongs: (i) inadvertent failure +
+// (ii) corrective steps within reasonable time + (iii) agreement
+// to required adjustments.
+
+async fn section_7704_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7704::Section7704Input>,
+) -> Result<Json<traderview_expense::section_7704::Section7704Result>, ApiError> {
+    if b.gross_income_total_cents < 0 || b.qualifying_income_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_7704::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
