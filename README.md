@@ -5405,6 +5405,55 @@ All three required; failure of any defeats prosecution. Pinned by `three_element
 
 Mounted at `POST /api/calc/section-7203`. Thirty-three tests pin: **full three elements authorizes prosecution**; **individual max fine $100K** (18 U.S.C. § 3571); **corporation max fine $200K**; **missing required by law defeats prosecution**; **missing failure at time defeats prosecution**; **missing willfulness defeats prosecution**; **three-element truth table** (8-cell sweep); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek case objectively unreasonable belief note**; **§ 6050I felony engagement 5-year imprisonment**; **no § 6050I violation 1-year imprisonment**; **affirmative acts elevation to § 7201 warranted** (Spies); **no affirmative acts no elevation**; **criminal SOL 6 years** (§ 6531); **failure to file engages § 6651(a)(1) parallel**; **failure to pay engages § 6651(a)(2) parallel**; **failure to supply engages neither parallel**; **failure to keep records engages neither parallel**; **unlimited ASED engaged for failure to file with no return** (§ 6501(c)(3)); **unlimited ASED not engaged for failure to pay**; **Spies-Daly parallel civil note present** (§ 6651(a)(1) + (a)(2)); **§ 7491 burden shifts excluded note**; **IRM 9.1.3 note present**; **citation pins all authorities** (§§ 7203/6050I/6531/6651(a)(1)/(a)(2)/6501(c)(3)/7201/7206 + 18 U.S.C. § 3571 + Spies + Cheek + IRM 9.1.3); **four failure types routed correctly**; **Cheek only defeats when successful and asserted** (4-cell sweep); **three-element count increments per element**; **CFIA 18 U.S.C. § 3571 supersedes note**; **distinction from § 7201 note present**; **failure type routed in note**; **affirmative acts truth table** (2-cell sweep); **§ 6050I truth table** (2-cell sweep imprisonment 1 vs 5 years).
 
+`traderview-expense::section_7202` is the **IRC § 7202 willful failure to collect or pay over tax (criminal felony)** module — criminal counterpart to `section_6672` Trust Fund Recovery Penalty (civil 100% personal liability). Criminal FELONY with 5-year imprisonment cap + $250K individual / $500K corporation fine under 18 U.S.C. § 3571 (supersedes § 7202's original $10K cap). Pairs with `section_7201` (5-year felony / attempt to evade), `section_7206` (3-year felony / fraud and false statements / tax perjury), and `section_7203` (1-year misdemeanor / willful failure to file/pay) to complete the trader-tax criminal statute constellation.
+
+**The critical pairing with § 6672**: same conduct (willful failure to pay over trust fund taxes by a responsible person) gives rise to BOTH a § 6672 100% civil penalty AND a § 7202 5-year felony. Spies-Daly doctrine permits parallel civil + criminal. Critical trader-business operational risk for any entity with W-2 employees — LLC with employees, S-corp with shareholder-employees, C-corp.
+
+**§ 7202 four-element test** (government bears BEYOND REASONABLE DOUBT burden):
+
+| Element | Test |
+|---------|------|
+| 1 | DUTY to collect, account for, or pay over tax (typically payroll taxes) |
+| 2 | WILLFUL failure to perform the duty |
+| 3 | AMOUNT REQUIRED to be withheld and paid |
+| 4 | Defendant was a RESPONSIBLE PERSON (status, duty, AND authority) |
+
+All four required; failure of any defeats prosecution. Pinned by `four_element_truth_table` (16-cell sweep across all four elements).
+
+**Trust fund taxes reached by § 7202**:
+
+| Tax category | Citation | Reached |
+|--------------|----------|----------|
+| Federal income tax withheld from employee wages | § 3402 | YES (trust fund) |
+| Employee FICA share (Social Security + Medicare) | § 3101 | YES (trust fund) |
+| Federal Unemployment Tax | § 3301 (FUTA) | YES |
+| Employer FICA match | § 3111 | NO (separate framework) |
+| Sales and excise taxes | — | NO |
+
+Pinned by `trust_fund_taxes_note_lists_three_categories` and `employer_fica_match_excluded_note`.
+
+**Responsible person standard — same as § 6672**. Status, duty, AND authority to avoid the employer's default in collection or payment of taxes. Criminal liability depends on the person's duties, position, involvement in company operations, and extent of control over financial resources. Includes officers, directors, members, shareholders, payroll managers with check-signing authority. Pinned by `responsible_person_standard_same_as_6672_note` and `responsible_person_status_engages_with_element_4`.
+
+**Willfulness standard** — voluntary, intentional violation of a known legal duty. NO requirement to prove evil or bad intent. An act founded in good intent that voluntarily and intentionally violates a known legal duty supports willfulness. Same Cheek defense available — Cheek v. United States, 498 U.S. 192 (1991) good-faith subjective belief negates willfulness, EVEN IF OBJECTIVELY UNREASONABLE. Pinned by `willfulness_no_evil_intent_required_note`, `cheek_only_defeats_when_successful_and_asserted` (4-cell sweep), and `cheek_case_objectively_unreasonable_belief_note`.
+
+**Penalties**:
+- Imprisonment up to **5 YEARS** (same as § 7201)
+- Fine $250K individual / $500K corporation (18 U.S.C. § 3571 supersedes original $10K cap)
+- BOTH imprisonment and fine permitted
+- Costs of prosecution
+
+**§ 6531 criminal SOL** — 6 years for § 7202 (same as § 7201, § 7203, § 7206(1)-(4)).
+
+**Parallel civil consequences**:
+- **§ 6672 Trust Fund Recovery Penalty** (100% of unpaid trust fund taxes) routinely imposed alongside § 7202 prosecution — same responsible person test
+- **§ 6651(a)(2)** civil failure-to-pay penalty (0.5% per month)
+- **11 U.S.C. § 523(a)(7)** — § 6672 TFRP NONDISCHARGEABLE in personal bankruptcy
+- **§ 7491 burden shifts do NOT apply** to criminal prosecutions (BEYOND REASONABLE DOUBT burden)
+
+Pinned by `parallel_6672_tfrp_always_available`, `parallel_6672_tfrp_imposed_engages_nondischargeable_note`, `parallel_6651_a_2_failure_to_pay_always_available`, `section_7491_burden_shifts_excluded_note`.
+
+Mounted at `POST /api/calc/section-7202`. Thirty tests pin: **full four elements authorizes felony**; **individual max fine $250K** (18 U.S.C. § 3571); **corporation max fine $500K**; **missing duty defeats prosecution**; **missing willfulness defeats prosecution**; **missing amount required defeats prosecution**; **missing responsible person defeats prosecution**; **four-element truth table** (16-cell sweep); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek only defeats when successful and asserted** (4-cell sweep); **Cheek case objectively unreasonable belief note**; **willfulness no evil intent required note**; **trust fund taxes note lists three categories** (§ 3402 + § 3101 + § 3301); **employer FICA match excluded note** (§ 3111 NOT REACHED); **responsible person standard same as § 6672 note**; **criminal SOL 6 years** (§ 6531); **parallel § 6672 TFRP always available** (Spies-Daly doctrine); **parallel § 6672 TFRP imposed engages nondischargeable note** (11 U.S.C. § 523(a)(7)); **no parallel TFRP no nondischargeable note**; **parallel § 6651(a)(2) failure-to-pay always available**; **§ 7491 burden shifts excluded note**; **CFIA 18 U.S.C. § 3571 supersedes note**; **IRM 9.1.3 note present**; **IRM 8.25.1 TFRP note present**; **citation pins all authorities** (§§ 7202/6672/6531/6651(a)(2)/3402/3101/3301/3111 + 18 U.S.C. § 3571 + 11 U.S.C. § 523(a)(7) + Cheek + IRM 9.1.3 + IRM 8.25.1); **distinction from § 6672 note describes parallel**; **four-element count increments per element**; **responsible person status engages with element 4**; **pairs with § 6672 civil counterpart**.
+
 `traderview-expense::section_7811` is the **IRC § 7811 Taxpayer Assistance Orders (TAOs)** module — administrative equitable remedy available when an IRS action or inaction is causing or about to cause "significant hardship" to the taxpayer. The National Taxpayer Advocate (NTA) has independent statutory authority under § 7811 to order the IRS to release property, take action, or refrain from taking action. Distinct from `section_6330`/`section_6320` (CDP — pre-action 30-day notice + Tax Court review), `section_7430` (attorney fees against IRS), and `section_6402` (refund offsets) — TAO is a parallel administrative pathway available alongside these judicial remedies.
 
 **Five-input compliance framework**:

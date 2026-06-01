@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
         .route("/calc/section-7201",          post(section_7201_route))
+        .route("/calc/section-7202",          post(section_7202_route))
         .route("/calc/section-7203",          post(section_7203_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
@@ -2838,6 +2839,39 @@ async fn section_7201_route(
     Json(b): Json<traderview_expense::section_7201::Section7201Input>,
 ) -> Result<Json<traderview_expense::section_7201::Section7201Result>, ApiError> {
     Ok(Json(traderview_expense::section_7201::check(&b)))
+}
+
+// ── §7202 willful failure to collect or pay over tax (felony) ───────
+// Mounted at /api/calc/section-7202. Criminal FELONY (5-year
+// imprisonment cap) + $250K individual / $500K corporation fine
+// (18 U.S.C. § 3571 supersedes § 7202's original $10K cap).
+// Criminal counterpart to § 6672 Trust Fund Recovery Penalty (civil
+// 100%). Same conduct triggers BOTH § 7202 felony and § 6672
+// 100% civil penalty per Spies-Daly doctrine. Four-element test
+// (BEYOND REASONABLE DOUBT): (1) duty to collect / account for /
+// pay over tax + (2) WILLFUL failure (voluntary intentional
+// violation of known legal duty + no evil/bad intent required) +
+// (3) amount required to be withheld and paid + (4) defendant was
+// a RESPONSIBLE PERSON (status, duty, AND authority to avoid
+// default; same standard as § 6672). Trust fund taxes reached:
+// § 3402 income withholding + § 3101 employee FICA (Social
+// Security + Medicare) + § 3301 FUTA; NOT REACHED: § 3111 employer
+// FICA match. Cheek v. United States, 498 U.S. 192 (1991)
+// good-faith subjective belief defeats willfulness. § 6531
+// criminal SOL 6 years. Parallel civil: § 6672 TFRP (100%) +
+// § 6651(a)(2) failure-to-pay (0.5%/month) + 11 U.S.C. § 523(a)(7)
+// NONDISCHARGEABLE in bankruptcy. § 7491 burden shifts do NOT
+// apply to criminal cases. IRM 9.1.3 + IRM 8.25.1. Pairs with
+// section_6672 (civil counterpart) + section_7201 (felony evasion)
+// + section_7203 (misdemeanor failure to file) + section_7206
+// (felony perjury). Critical trader-business operational risk for
+// any entity with W-2 employees.
+
+async fn section_7202_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7202::Section7202Input>,
+) -> Result<Json<traderview_expense::section_7202::Section7202Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7202::check(&b)))
 }
 
 // ── §7203 willful failure to file / pay / supply info (misdemeanor) ─
