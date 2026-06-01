@@ -12,7 +12,8 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # false: rapid pushes queue; avoids cancelling release-build mid-matrix
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -90,7 +91,7 @@ jobs:
       - run: cargo clippy --workspace --all-targets --locked --exclude traderview-desktop
 
   release-build:
-    name: Release Build (${{ matrix.target }})
+    name: Release Build
     needs: [check, test]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
