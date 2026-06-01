@@ -94,6 +94,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1276",          post(section_1276_route))
         .route("/calc/section-1277",          post(section_1277_route))
         .route("/calc/section-1278",          post(section_1278_route))
+        .route("/calc/section-1271",          post(section_1271_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2600,6 +2601,41 @@ async fn section_1278_route(
         ));
     }
     Ok(Json(traderview_expense::section_1278::compute(&b)))
+}
+
+// ── §1271 retirement of debt instruments treated as sale/exchange ─
+// Mounted at /api/calc/section-1271. §1271(a)(1) general rule
+// amounts received on retirement of any debt instrument considered
+// amounts received in exchange therefor — default capital character.
+// §1271(a)(2) intent-to-call OID instruments — gain up to OID
+// (reduced by §1271(c) prior-year inclusions) recharacterized as
+// ordinary income; carve-outs for tax-exempt obligations and
+// premium-buyers. §1271(a)(3) short-term government obligations
+// ≤1 year to maturity — gain up to ratable share of acquisition
+// discount recharacterized as ordinary. §1271(a)(4) short-term
+// nongovernment obligations — gain up to ratable share of OID
+// recharacterized as ordinary. §1271(b) natural-person issuer
+// exception — § 1271 does not apply to obligations issued by
+// natural persons before June 9, 1997. §1271(c) no double
+// inclusion — § 1271, § 1272, and § 1286 do not require inclusion
+// of amounts previously includible in gross income.
+
+async fn section_1271_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1271::Section1271Input>,
+) -> Result<Json<traderview_expense::section_1271::Section1271Result>, ApiError> {
+    if b.purchase_price_cents < 0
+        || b.redemption_amount_cents < 0
+        || b.original_issue_discount_cents < 0
+        || b.oid_previously_included_cents < 0
+        || b.acquisition_discount_cents < 0
+        || b.ratable_short_term_accrual_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1271::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
