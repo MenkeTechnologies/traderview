@@ -58,6 +58,7 @@ pub mod recurring;
 pub mod radon_disclosure;
 pub mod rent_control;
 pub mod renters_insurance;
+pub mod rent_receipts;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
 pub mod reps_qualification;

@@ -128,6 +128,9 @@ use traderview_expense::lease_auto_renewal::{
 use traderview_expense::lease_translation::{
     check as check_lease_translation, TranslationInput, TranslationResult,
 };
+use traderview_expense::rent_receipts::{
+    check as check_rent_receipts, ReceiptInput, ReceiptResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -270,6 +273,7 @@ pub fn router() -> Router<AppState> {
         .route("/topa-check", axum::routing::post(tenant_topa_check_route))
         .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
         .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
+        .route("/rent-receipt-check", axum::routing::post(rent_receipt_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2291,6 +2295,31 @@ async fn lease_translation_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_lease_translation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State rent receipt requirement check
+//
+// Mounted at POST /api/rental/rent-receipt-check. Four regimes:
+// MandatoryReceiptEveryPayment (NY RPL § 235-e HSTPA 2019 -- every
+// payment regardless of method); MandatoryReceiptCashPaymentsOnly
+// (CA Civ. Code § 1499, MD Real Prop. § 8-208, NJ Truth-in-Renting,
+// IL Chicago RLTO -- cash payments only); ReceiptUponTenantRequest
+// (WA RCW 59.18.063 -- only when tenant requests);
+// NoStateReceiptRequirement elsewhere (including MA whose receipt
+// rule applies only to security deposit + last month rent under
+// Ch. 186 § 15B, tracked elsewhere).
+// ---------------------------------------------------------------------------
+
+async fn rent_receipt_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ReceiptInput>,
+) -> Result<Json<ReceiptResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_rent_receipts(&b)))
 }
 
 // ---------------------------------------------------------------------------
