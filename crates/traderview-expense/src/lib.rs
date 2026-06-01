@@ -127,6 +127,7 @@ pub mod religious_display_doorpost;
 pub mod rent_acceleration_enforceability;
 pub mod rent_control;
 pub mod rent_control_lease_disclosure;
+pub mod rent_overcharge_recovery;
 pub mod rent_credit_reporting;
 pub mod rent_escrow;
 pub mod rent_increase_notice_period;

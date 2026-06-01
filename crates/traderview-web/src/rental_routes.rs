@@ -63,6 +63,10 @@ use traderview_expense::rent_control::{
 use traderview_expense::rent_control_lease_disclosure::{
     check as check_rent_control_disclosure, RentControlDisclosureInput, RentControlDisclosureResult,
 };
+use traderview_expense::rent_overcharge_recovery::{
+    check as check_rent_overcharge_recovery, RentOverchargeRecoveryInput,
+    RentOverchargeRecoveryResult,
+};
 use traderview_expense::entry_notice::{
     compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
 };
@@ -752,6 +756,7 @@ pub fn router() -> Router<AppState> {
         // State rent control / rent-increase compliance check
         .route("/rent-increase-check", axum::routing::post(rent_increase_check_route))
         .route("/rent-control-lease-disclosure", axum::routing::post(rent_control_lease_disclosure_route))
+        .route("/rent-overcharge-recovery", axum::routing::post(rent_overcharge_recovery_route))
         // State habitability remedies available to tenants
         .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
         // State security deposit cap compliance check
@@ -6221,6 +6226,37 @@ async fn rent_control_lease_disclosure_route(
     Json(b): Json<RentControlDisclosureInput>,
 ) -> Result<Json<RentControlDisclosureResult>, ApiError> {
     Ok(Json(check_rent_control_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rent_overcharge_recovery: Rent overcharge recovery in rent-stabilized /
+// rent-controlled buildings — when a landlord charges rent in excess of
+// the legal regulated rent, what statutory procedure and damages attach?
+// Mounted at POST /api/rental/rent-overcharge-recovery. Three regimes:
+// (1) New York HSTPA of 2019 (N.Y. Laws 2019, ch. 36) most aggressive
+// framework: 6-YEAR lookback (extended from 4) + TREBLE DAMAGES MANDATORY
+// on willful overcharge (made non-discretionary) + attorney fees + costs
+// + interest NON-DISCRETIONARY + fraud exception extends lookback further
+// when landlord falsifies records or fails to register with DHCR + tenant
+// may file with DHCR or court under § 26-516. (2) DC RACA D.C. Code §§
+// 42-3502.01 to 42-3502.20 — Rental Housing Commission administers
+// overcharge procedure + treble damages available for willful + cross-
+// references tenant_topa for TOPA. (3) Default — no statewide
+// rent-stabilization framework; common-law restitution per Restatement
+// (Third) of Restitution and Unjust Enrichment § 1 + municipal
+// ordinances (Berkeley, San Francisco, Los Angeles, Oakland, Santa
+// Monica, Newark, Hoboken, Jersey City). Distinct from siblings
+// `rent_control` (broad regulatory framework), `rent_control_lease_
+// disclosure` (initial disclosure mandate), `rent_increase_notice_
+// period`, `rent_acceleration_enforceability`.
+// ---------------------------------------------------------------------------
+
+async fn rent_overcharge_recovery_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentOverchargeRecoveryInput>,
+) -> Result<Json<RentOverchargeRecoveryResult>, ApiError> {
+    Ok(Json(check_rent_overcharge_recovery(&b)))
 }
 
 // ---------------------------------------------------------------------------
