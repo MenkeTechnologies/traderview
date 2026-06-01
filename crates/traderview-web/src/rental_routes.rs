@@ -358,6 +358,11 @@ use traderview_expense::landlord_possession_delivery::{
     CheckResult as LandlordPossessionDeliveryResult,
     Input as LandlordPossessionDeliveryInput,
 };
+use traderview_expense::lease_waiver_enforceability::{
+    check as check_lease_waiver_enforceability,
+    CheckResult as LeaseWaiverEnforceabilityResult,
+    Input as LeaseWaiverEnforceabilityInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -602,6 +607,7 @@ pub fn router() -> Router<AppState> {
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
+        .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4686,6 +4692,32 @@ async fn landlord_possession_delivery_route(
         ));
     }
     Ok(Json(check_landlord_possession_delivery(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Lease waiver clause enforceability.
+//
+// Mounted at POST /api/rental/lease-waiver-enforceability. Three
+// regimes for when a lease-drafted waiver clause is void: (1)
+// New York — N.Y. Gen. Oblig. Law § 5-321: narrow scope, voids
+// only landlord-negligence exculpatory clauses (applies to BOTH
+// residential and commercial leases); (2) California — Cal. Civ.
+// Code § 1953: broad scope, voids 6 categories of residential
+// tenant rights waivers (§ 1950.5 + § 1954 rights, future cause
+// of action, notice/hearing rights, procedural rights including
+// jury trial, duty of care, cumulative remedies); (3) Default —
+// common-law analysis: enforceable if knowing + voluntary +
+// public policy permits; Restatement (Second) of Contracts § 178
+// test. Distinct from sibling modules landlord_harassment,
+// habitability_remedies, quiet_enjoyment, plain_language_lease.
+// ---------------------------------------------------------------------------
+
+async fn lease_waiver_enforceability_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseWaiverEnforceabilityInput>,
+) -> Result<Json<LeaseWaiverEnforceabilityResult>, ApiError> {
+    Ok(Json(check_lease_waiver_enforceability(&b)))
 }
 
 // ---------------------------------------------------------------------------
