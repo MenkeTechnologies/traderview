@@ -3176,6 +3176,33 @@ Pre-§871(m), non-US persons used total-return swaps and other equity derivative
 
 Mounted at `POST /api/calc/section-871m`. Seventeen tests pin: short-term delta 0.85 subject to §871(m) at 30% ($200 × 30% = $60 withheld, $140 net); short-term delta exactly 0.80 subject (boundary); short-term delta 0.79 NOT subject; long-term delta 0.90 (2-year LEAPS) NOT subject (needs 1.0); long-term delta exactly 1.0 subject; US-person recipient not subject (short-circuit first); non-dividend-paying underlying skips §871(m); 15% treaty rate overrides statutory 30%; treaty rate zero full exemption ($200 net to recipient); treaty rate above 1.0 clamps; delta above 1.0 clamps; delta negative clamped to zero not subject; zero dividend equivalent no-withholding path; **short-term boundary at exactly 365 days uses short-term threshold**; **long-term boundary at 366 days uses long-term threshold**; note distinguishes subject vs inapplicable paths; US-person short-circuit runs first (even with other bad facts).
 
+`traderview-expense::section_911` is the **IRC §911 foreign earned income exclusion module** — trader-relevant for U.S. citizens / lawful permanent residents who relocate abroad while continuing to earn income from services performed in the foreign country. §911 lets qualified individuals **exclude** foreign earned income up to an inflation-adjusted ceiling (**2025: $130,000; 2026: $132,900**) plus a housing exclusion capped at 30% of the FEIE.
+
+**§911(d)(1) qualified individual** — must satisfy ONE of two tests:
+
+| Test | Authority | Requirement |
+|------|-----------|-------------|
+| Bona fide residence | §911(d)(1)(A) | U.S. citizen + bona fide resident of foreign country for uninterrupted period including at least one full tax year |
+| Physical presence | §911(d)(1)(B) | U.S. citizen or LPR + ≥ **330 full days** present in foreign country during any 12-consecutive-month period |
+
+**Two exclusions stack**:
+
+```
+§911(a)(1) FEIE = min(foreign earned income, inflation_cap)
+§911(d)(7) Base Housing Amount = 16% × inflation_cap
+§911(c)(2) Housing Cap = 30% × inflation_cap
+§911(a)(2) Housing Exclusion = min(max(housing_expenses − base, 0), cap)
+Total §911 Exclusion = FEIE + Housing Exclusion
+```
+
+**§911(b)(1) eligible income definition** — services performed in a foreign country during the qualified-individual period. Categorically EXCLUDED from FEIE: interest, dividends, capital gains, pension distributions, and amounts paid by the U.S. government. A trader earning ETF dividends abroad gets ZERO §911 benefit on those dividends — only on actual services-performed compensation.
+
+**Married-couple stacking**: each spouse who qualifies INDEPENDENTLY may claim the full FEIE. 2025 MFJ stacked = $260,000; 2026 = $265,800.
+
+**Inflation-adjustment numbers** for the relevant years (caller-supplied so the module is year-agnostic): 2024 $126,500; 2025 $130,000; 2026 $132,900 (Rev. Proc. 2025-32).
+
+Mounted at `POST /api/calc/section-911`. Twenty-three tests pin: **physical presence 330 days qualifies** (boundary); **329 days does NOT qualify** (strict ≥ 330); **bona fide residence qualifies regardless of day count**; **bona fide residence takes precedence when both apply** (regression target — priority ordering); **income below FEIE → full exclusion** ($100k income excluded, $0 net); **income above FEIE capped** ($200k income → $132,900 excluded, $67,100 net); **income exactly at FEIE → full exclusion**; **base housing 16% × FEIE** (2026: $21,264); **housing cap 30% × FEIE** (2026: $39,870); **housing expenses below base → no exclusion** ($20,000 < $21,264 base); **housing expenses between base and cap → excess excluded** ($35,000 − $21,264 = $13,736); **housing expenses above cap → capped at 30%** ($100k → $39,870 capped); **U.S. government income zeroes eligible income** (regression — §911(b)(1) bar); not-qualified individual → zero exclusion; **2025 FEIE $130,000 + base $20,800 + cap $39,000** (inflation-adjustment pin); 2026 FEIE $132,900; **total exclusion combines income and housing** ($150k income + $35k housing → $132,900 + $13,736 = $146,636); **citation mentions all 8 relevant authorities** (§911(a)(1) + §911(a)(2) + §911(b)(1) + §911(c)(2) + §911(d)(1)(A) + §911(d)(1)(B) + §911(d)(2)(B) + §911(d)(7) + "330 full days" + "16%" + "30%" + "$130,000" + "$132,900"); note describes qualifying test path; note describes bona fide path; note describes US-gov bar "TRIGGERED"; **$10M precision** ($172,770 total exclusion capped).
+
 `traderview-expense::section_864b2` is the **IRC §864(b)(2) trader / investor safe harbor module** — the rule that lets non-US persons trade US securities through US brokers without being treated as engaged in a US trade or business. Without §864(b)(2), every gain would be **Effectively Connected Income** (ECI) under §871/§882, taxed on a net basis at graduated rates with US return filing required. The safe harbor pulls trader-style activity entirely outside the US tax net for non-US persons.
 
 The classification follows a strict four-factor short-circuit chain:

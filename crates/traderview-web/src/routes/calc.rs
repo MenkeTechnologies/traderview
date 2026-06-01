@@ -94,6 +94,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
+        .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
@@ -1395,6 +1396,30 @@ async fn section_871m_route(
         ));
     }
     Ok(Json(traderview_expense::section_871m::compute(&b)))
+}
+
+// ── §911 foreign earned income exclusion ─────────────────────────────
+// Mounted at /api/calc/section-911. §911(a)(1) FEIE inflation-indexed
+// (2025 $130k / 2026 $132,900 caller-supplied year-agnostic) + §911(a)(2)
+// housing exclusion + §911(b)(1) foreign earned income definition (no
+// US-gov / passive / pension) + §911(c)(2) housing cap 30% × FEIE +
+// §911(d)(1)(A) bona fide residence test + §911(d)(1)(B) physical
+// presence test ≥ 330 full days + §911(d)(7) base housing 16% × FEIE.
+
+async fn section_911_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_911::Section911Input>,
+) -> Result<Json<traderview_expense::section_911::Section911Result>, ApiError> {
+    if b.feie_inflation_adjusted_cap_dollars < 0
+        || b.foreign_earned_income_dollars < 0
+        || b.housing_expenses_dollars < 0
+        || b.physical_presence_days_in_12_month_period > 366
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs and days in 12-month period ≤ 366 required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_911::compute(&b)))
 }
 
 // ── §1092 straddle loss deferral ──────────────────────────────────────
