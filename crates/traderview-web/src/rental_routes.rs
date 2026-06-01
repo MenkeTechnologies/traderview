@@ -201,6 +201,10 @@ use traderview_expense::demolition_tenant_notice::{
 use traderview_expense::eviction_diversion_program::{
     check as check_eviction_diversion_program, DiversionProgramInput, DiversionProgramResult,
 };
+use traderview_expense::immigration_status_protection::{
+    check as check_immigration_status_protection, ImmigrationProtectionInput,
+    ImmigrationProtectionResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -405,6 +409,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-increase-notice-period", axum::routing::post(rent_increase_notice_period_route))
         .route("/demolition-tenant-notice", axum::routing::post(demolition_tenant_notice_route))
         .route("/eviction-diversion-program", axum::routing::post(eviction_diversion_program_route))
+        .route("/immigration-status-protection", axum::routing::post(immigration_status_protection_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3126,6 +3131,34 @@ async fn eviction_diversion_program_route(
         ));
     }
     Ok(Json(check_eviction_diversion_program(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State immigration-status tenant protection landlord compliance check.
+//
+// Mounted at POST /api/rental/immigration-status-protection. Three regimes:
+// CaliforniaAb291 (Cal. Civ. Code §§ 1940.05/1940.2/1940.3/1942.5 — AB 291
+// 2017 — prohibits disclosure to immigration/law enforcement + threats of
+// disclosure + eviction based on status + retaliation; § 1940.3 CA-only
+// application-inquiry prong; judicial-warrant carve-out under § 1940.2
+// permits disclosure under judge-signed warrant or subpoena in criminal
+// investigation; $2,000 per-violation civil penalty + AG/DA criminal
+// prosecution + actual damages + attorney fees); Illinois (765 ILCS 755/
+// Immigrant Tenant Protection Act eff. 2019-08-23 — prohibits disclosure
+// + threats + eviction + retaliation based on status; NO application-
+// inquiry prong; NO judicial-warrant carve-out; NO criminal prosecution;
+// $2,000 per-violation + actual damages + attorney fees + equitable
+// relief); Default (no statewide statute; 42 U.S.C. § 3604 FHA national-
+// origin discrimination may apply but does NOT specifically address
+// immigration-status threats).
+// ---------------------------------------------------------------------------
+
+async fn immigration_status_protection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ImmigrationProtectionInput>,
+) -> Result<Json<ImmigrationProtectionResult>, ApiError> {
+    Ok(Json(check_immigration_status_protection(&b)))
 }
 
 // ---------------------------------------------------------------------------
