@@ -5550,6 +5550,44 @@ Pinned by individual exclusion-blocks tests for all eight prongs plus `each_excl
 
 Mounted at `POST /api/calc/section-7345`. Twenty-five tests pin: **baseline seriously delinquent certification engaged**; **debt below threshold no certification**; **debt at threshold exactly not exceeding** (statute reads "exceeds"); **debt one cent above threshold engages**; **lien without exhausted remedies no engagement**; **levy alone satisfies collection action**; **no lien no levy no engagement**; eight individual exclusion-blocks tests (installment agreement, OIC, innocent spouse, CDP, bankruptcy, identity theft, disaster area, CNC); **multiple exclusions listed individually** (3 simultaneous exclusions); **all three engagement conditions required truth table** (8-cell sweep); **each exclusion independently blocks certification invariant** (8-prong sweep); **threshold constants invariant** ($66K 2025 > $50K 2015; 30-day reversal); **parameterized threshold 2024 value** ($62K — confirms inflation-adjustment parameterization); **citation pins all subsections** (§ 7345 + § 7345(b)(1) + § 7345(b)(1)(A)/(B) + § 7345(b)(2) + § 7345(c)/(d)/(e) + FAST Act § 32101 + December 4, 2015 + § 6159 + § 7122 + § 6015 + § 6320 + § 6330 + § 6323 + § 6331 + CP508C + CP508R); **sibling modules note present** (UX-text regression for § 6011 + § 6651 + § 6654 + § 6662 + § 6707A + FAST Act origin); **defensive negative debt no engagement**; **defensive negative threshold clamped to zero**; **zero debt no engagement**.
 
+`traderview-expense::section_6694` is the **IRC § 6694 tax return preparer penalty module** — direct preparer liability for understatements of taxpayer liability, layered on top of taxpayer-side penalties under § 6662 / § 6662A / § 6707A. Trader-critical because trader-CPAs commonly take aggressive positions on Schedule D, mark-to-market § 475(f) elections, wash-sale aggregation under § 1091, and partnership K-1 allocations. Sibling to the preparer + promoter penalty cluster: § 6695 (preparer information return penalties), § 6700 (promoter penalties), § 6701 (aiding and abetting understatement).
+
+**§ 6694 two-tier penalty structure**:
+
+| Subsection | Trigger | Penalty | Reasonable cause exception |
+|------------|---------|---------|----------------------------|
+| § 6694(a) | Understatement due to unreasonable position | Greater of $1,000 OR 50% of preparer fee | § 6694(a)(3) — yes, if reasonable cause + good faith |
+| § 6694(b) | Willful understatement OR reckless/intentional disregard | Greater of $5,000 OR 75% of preparer fee | None — no exception available |
+
+**§ 6694(a)(2) — three unreasonable-position paths** (any one engages):
+
+| Prong | Statute | Trigger |
+|-------|---------|---------|
+| (A) | § 6694(a)(2)(A) | Position NOT disclosed + NO substantial authority |
+| (B) | § 6694(a)(2)(B) | Position DISCLOSED + NO reasonable basis |
+| (C) | § 6694(a)(2)(C) | Tax shelter / § 6662A reportable transaction + NOT more-likely-than-not |
+
+Standards of authority (per Treasury regulations):
+- **Substantial authority**: ~35-40% probability of sustaining the position
+- **Reasonable basis**: ≥ 20% probability (lower than substantial authority)
+- **More likely than not**: > 50% probability (required for shelter/reportable cases)
+
+Pinned by `three_unreasonable_position_paths_truth_table` (4-cell sweep — baseline + 3 paths), `undisclosed_with_substantial_authority_no_penalty`, `undisclosed_without_substantial_authority_penalty`, `disclosed_with_reasonable_basis_no_penalty`, `disclosed_without_reasonable_basis_penalty`, `tax_shelter_more_likely_than_not_no_penalty`, `tax_shelter_without_more_likely_than_not_penalty`, and `shelter_supersedes_substantial_authority_invariant` (even with substantial authority, shelter requires more-likely-than-not).
+
+**§ 6694(a)(3) reasonable-cause + good-faith exception**. No § 6694(a) penalty if it is shown that, considering all facts and circumstances, the understatement was due to reasonable cause AND the preparer acted in good faith. Note: this exception is NOT available for § 6694(b) penalties. Pinned by `reasonable_cause_excuses_6694a`.
+
+**§ 6694(a) penalty math** — greater of $1,000 floor OR 50% of preparer fee. Low-fee preparers hit the floor; high-fee preparers pay percentage. Pinned by `fee_based_50_percent_exceeds_minimum` ($10K fee → $5K penalty) and `fee_based_50_percent_low_fee_floor_applies` ($500 fee × 50% = $250 < $1K floor → floor wins).
+
+**§ 6694(b) willful or reckless conduct — no reasonable-cause exception**. Higher floor ($5,000) and higher percentage (75%). § 6694(b)(2)(A) — willful understatement; § 6694(b)(2)(B) — reckless or intentional disregard of rules/regulations. Pinned by `willful_understatement_engages_6694b`, `reckless_disregard_engages_6694b`, `no_understatement_no_6694b_even_if_willful` (must be an actual understatement), `fee_based_75_percent_exceeds_minimum` ($10K fee → $7,500 penalty), and `fee_based_75_percent_low_fee_floor_applies` (floor $5K wins on $1K fee).
+
+**§ 6694(b)(3) no-stacking coordination**. When both (a) and (b) trigger, total penalty = max of the two (not sum). § 6694(b)(3) explicitly reduces (b) by any (a) already imposed on the same return. Pinned by `both_a_and_b_trigger_no_stacking` ($100K fee → (a) = $50K, (b) = $75K, total = $75K), `only_a_no_stacking_total_equals_a`, and `only_b_no_stacking_total_equals_b`.
+
+**Multi-regime invariants** — `b_penalty_strictly_higher_than_a_invariant` ($5K = 5× $1K floor; 75% = 1.5× 50%); `penalty_constants_invariant` (all four constants verified); `three_unreasonable_position_paths_truth_table` (4-cell exhaustive sweep over the three (a) paths plus baseline).
+
+**Sibling cluster note** — every result references § 6695 (preparer info-return penalties), § 6700 (promoter penalties), § 6701 (aiding/abetting), § 6662 (taxpayer accuracy), § 6662A (reportable-transaction-understatement), § 6707A (disclosure failure), § 7701(a)(36) (preparer definition), plus trader-specific position categories (§ 475(f), § 1091, partnership K-1). Pinned by `sibling_cluster_note_present` (UX-text regression for 7-statute cluster + trader-position references).
+
+Mounted at `POST /api/calc/section-6694`. Twenty-seven tests pin: **no understatement no penalty**; **undisclosed with substantial authority no penalty**; **undisclosed without substantial authority penalty**; **disclosed with reasonable basis no penalty**; **disclosed without reasonable basis penalty**; **tax shelter more-likely-than-not no penalty**; **tax shelter without more-likely-than-not penalty**; **reasonable cause excuses § 6694(a)**; **fee-based 50% exceeds minimum** ($5K on $10K fee); **fee-based 50% low fee floor applies** ($1K floor on $500 fee); **willful understatement engages § 6694(b)**; **reckless disregard engages § 6694(b)**; **no understatement no § 6694(b) even if willful**; **fee-based 75% exceeds minimum** ($7,500 on $10K fee); **fee-based 75% low fee floor applies** ($5K floor on $1K fee); **both (a) and (b) trigger no stacking** ($75K total on $100K fee); **only (a) no stacking total equals (a)**; **only (b) no stacking total equals (b)**; **(b) penalty strictly higher than (a) invariant** (5× floor; 1.5× percentage); **three unreasonable-position paths truth table** (4-cell sweep — baseline + 3 paths); **shelter supersedes substantial authority invariant**; **penalty constants invariant** ($1K / 50% / $5K / 75%); **citation pins all subsections** (§ 6694 + § 6694(a) + (a)(2)(A)/(B)/(C) + (a)(3) + (b) + (b)(2)(A)/(B) + (b)(3) + § 1.6694-1/-2/-3 + § 6662(d)(2)(B) + § 6662A + § 7701(a)(36)); **sibling cluster note present** (UX-text regression for § 6695 + § 6700 + § 6701 + § 6662 + § 6662A + § 6707A + § 475(f) + § 1091 trader positions); **defensive negative preparer fee clamped**; **zero fee floor still applies** (floor $1K wins on $0 fee); **defensive huge fee no overflow** ($100M fee → $50M penalty via saturating math).
+
 `traderview-expense::section_1374` is the **IRC §1374 S-corporation built-in gains (BIG) tax module** — the integrity tax that prevents a C-corp from escaping corporate-level tax on pre-conversion appreciation by simply electing S-corp status. When a C-corp converts, its built-in gains remain exposed to corporate-level tax for a **5-year recognition period** under § 1374(d)(7), permanently set by the **PATH Act of 2015** (down from 10 years originally, then 7 years, then 5). The tax rate is the highest §11(b) corporate rate — **21% post-TCJA** — applied to net recognized built-in gain ([Beancount.io §1374 guide](https://beancount.io/blog/2026/05/10/section-1374-built-in-gains-tax-c-corp-s-corp-conversion-five-year-recognition-period-guide), [Cornell LII 26 U.S.C. § 1374](https://www.law.cornell.edu/uscode/text/26/1374)).
 
 **NUBIG (Net Unrealized Built-In Gain) at conversion** is the LIFETIME ceiling on what can ever be taxed under §1374:

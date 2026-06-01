@@ -113,6 +113,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6111",          post(section_6111_route))
         .route("/calc/section-6112",          post(section_6112_route))
         .route("/calc/section-6662a",         post(section_6662a_route))
+        .route("/calc/section-6694",          post(section_6694_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -3212,6 +3213,32 @@ async fn section_6662a_route(
         ));
     }
     Ok(Json(traderview_expense::section_6662a::compute(&b)))
+}
+
+// ── § 6694 tax return preparer penalties ────────────────────────────
+// Mounted at /api/calc/section-6694. § 6694(a) unreasonable-
+// position penalty: greater of $1,000 OR 50% of preparer fee.
+// Three trigger paths under § 6694(a)(2): (A) undisclosed +
+// no substantial authority; (B) disclosed but no reasonable
+// basis; (C) tax shelter / § 6662A reportable transaction
+// without more-likely-than-not standard. § 6694(a)(3) reasonable-
+// cause + good-faith exception. § 6694(b) willful or reckless
+// conduct: greater of $5,000 OR 75% of fee; no reasonable-cause
+// exception. § 6694(b)(3) no-stacking — (b) replaces (a) when
+// both trigger. Sibling preparer + promoter penalty cluster:
+// § 6695 + § 6700 + § 6701. Taxpayer-side companions: § 6662
+// + § 6662A + § 6707A.
+
+async fn section_6694_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6694::Section6694Input>,
+) -> Result<Json<traderview_expense::section_6694::Section6694Result>, ApiError> {
+    if b.preparer_fee_cents < 0 || b.preparer_fee_cents > 1_000_000_000_000 {
+        return Err(ApiError::BadRequest(
+            "preparer_fee_cents out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6694::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
