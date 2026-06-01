@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1045",          post(section_1045_route))
         .route("/calc/section-121",           post(section_121_route))
         .route("/calc/section-121d",          post(section_121d_route))
+        .route("/calc/section-132",           post(section_132_route))
         .route("/calc/reps-qualification",    post(reps_qualification_route))
         .route("/calc/section-163j",          post(section_163j_route))
         .route("/calc/section-165d",          post(section_165d_route))
@@ -2260,4 +2261,29 @@ async fn section_121d_route(
         ));
     }
     Ok(Json(traderview_expense::section_121d::compute(&b)))
+}
+
+// ── §132 fringe benefits exclusion ───────────────────────────────────
+// Mounted at /api/calc/section-132. §132(a) 8 fringe-benefit
+// exclusion categories: (1) no-additional-cost + (2) qualified
+// employee discount (services 20% / goods gross-profit %) + (3)
+// working condition + (4) de minimis + (5) qualified transportation
+// (§132(f) 2026 $340/mo each for parking and transit) + (6)
+// qualified moving PERMANENTLY SUSPENDED by OBBBA 2025 P.L. 119-21
+// except armed forces / intelligence community + (7) retirement
+// planning + (8) military base realignment.
+
+async fn section_132_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_132::Section132Input>,
+) -> Result<Json<traderview_expense::section_132::Section132Result>, ApiError> {
+    if b.fringe_value_dollars < 0
+        || b.parking_monthly_cap_dollars < 0
+        || b.transit_monthly_cap_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_132::compute(&b)))
 }

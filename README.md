@@ -3500,6 +3500,39 @@ Three carve-outs / haircuts the module handles end-to-end:
 
 Fifteen tests pin: single full qualifier under cap → full exclusion; MFJ $500k cap; over-cap portion taxable LTCG; failed 2-year tests with no §121(b)(4) reason → fully disqualified with reason list; health-reason pro-rates cap to $125k at 12 months; job-move pro-rates to $187,500 at 18 months; §121(b)(4) uses lesser of owned/used months; once-every-2-years blocks; §121(b)(5) NQU proportional reduction with exact day-count math; §121(d)(6) recapture before exclusion (LTCG=0 if cap absorbs, recapture still taxable); loss on sale not excludable but recognized; MFS uses $250k (not half of MFJ); combined recapture + NQU + over-cap all stack into `total_taxable_gain`; zero post-2008 ownership skips NQU; note text full-exclusion path.
 
+`traderview-expense::section_132` is the **IRC §132 fringe benefits exclusion module** — trader-relevant for W-2 employees of trading firms who receive employer-provided fringe benefits. §132(a) enumerates 8 categories of fringes excluded from gross income. OBBBA 2025 (P.L. 119-21) made the TCJA-era §132(g) moving-expense-reimbursement suspension PERMANENT (with newly added intelligence-community exception alongside the existing armed-forces exception).
+
+**8 excludable fringe categories**:
+
+| Category | Sub-section | Limit |
+|----------|-------------|-------|
+| No-additional-cost service | §132(a)(1) | Same line of business, no substantial cost |
+| Qualified employee discount | §132(a)(2) | Services: **20%** / Goods: gross-profit % |
+| Working condition fringe | §132(a)(3) | Would be §162/§167 deductible if employee paid |
+| De minimis fringe | §132(a)(4) | So small accounting unreasonable |
+| Qualified transportation fringe | §132(a)(5) / §132(f) | **2026: $340/month** each for parking and transit (separately) |
+| Qualified moving expense reimbursement | §132(a)(6) | **PERMANENTLY SUSPENDED by OBBBA 2025** except armed forces PCS and intelligence community |
+| Qualified retirement planning services | §132(a)(7) | Investment advice to plan participants |
+| Qualified military base realignment/closure fringe | §132(a)(8) | Narrow |
+
+**§132(f) qualified transportation fringe monthly caps** (Rev. Proc. inflation-adjusted, caller-supplied year-agnostic):
+
+| Year | Parking | Transit / vanpool |
+|------|---------|---------------------|
+| 2024 | $315 | $315 |
+| 2025 | $325 | $325 |
+| 2026 | **$340** | **$340** |
+
+The two categories are SEPARATELY capped (not aggregated). A commuter using BOTH parking AND transit can exclude $340 + $340 = **$680/month** in 2026 — a key planning point for high-cost-of-living trader-employees in NYC, SF, Boston, DC.
+
+**§132(g) OBBBA permanent suspension**: TCJA temporarily suspended §132(g) qualified moving expense reimbursement (and the §217 deduction) through 2025. OBBBA 2025 made the suspension PERMANENT for all civilian taxpayers. EXCEPTIONS that survive:
+- U.S. Armed Forces active-duty members moving on permanent change of station (PCS) orders
+- **U.S. intelligence community members** (newly added by OBBBA — expanding the exception)
+
+**§132(c) discount cap arithmetic**: when the discount percentage exceeds the cap, the excludable amount is calculated as `value × (cap_pct / discount_pct)`. Services discount at 40% with $100 value → excludable = $100 × (20% / 40%) = $50; taxable $50.
+
+Mounted at `POST /api/calc/section-132`. Twenty-two tests pin: **no-additional-cost / working-condition / de-minimis / retirement-planning fully excludable** (capless categorical paths); **services discount at exactly 20% fully excludable**; **services discount at 40% partial taxable** ($100 × 20%/40% = $50 excludable + $50 taxable); **goods discount at gross-profit % fully excludable**; **goods discount above gross-profit % partial taxable** ($100 × 25%/50% = $50 excludable); **parking at 2026 cap $340 fully excludable**; **parking above $340 cap partial taxable** ($500 → $340 excludable + $160 taxable); transit at 2026 cap $340 fully excludable; **both parking and transit combined cap $680** (regression — separately capped, not aggregated); **year 2025 parking cap $325** (inflation pin); **§132(a)(6) moving expense civilian PERMANENTLY suspended** ($5k taxable, regression); **§132(a)(6) armed-forces/intelligence-community fully excludable** ($5k excludable, regression target — OBBBA exception); negative fringe value clamped to zero; **8 citation regression targets** (all 8 §132(a) categories mentioned individually); **citation mentions 2024 $315 + 2025 $325 + 2026 $340** inflation amounts; **citation mentions OBBBA PERMANENTLY SUSPENDED + armed forces + intelligence community**; note moving-suspended describes "PERMANENTLY suspended by OBBBA 2025"; note transportation describes cap applied; $1M de minimis precision.
+
 `traderview-expense::section_121d` is the **dedicated IRC §121(d)(2) + §121(d)(3) divorce special rules module** — companion to `section_121` for divorce-specific scenarios. When a married couple divorces, two §121(d) provisions let the ex-spouse who **moved out** still claim the §121 principal-residence exclusion on a later sale, even after years of non-occupation, by tacking the other spouse's ownership/use periods and attributing the home-occupying ex-spouse's use ([Cornell LII 26 U.S.C. § 121](https://www.law.cornell.edu/uscode/text/26/121), [LegalClarity — § 1041 + § 121 Property Transfers](https://legalclarity.org/the-tax-rules-for-property-transfers-under-irc-section-1041/)).
 
 **§121(d)(2) holding-period tacking** — when a residence is transferred under § 1041(a) (a tax-free spouse-to-spouse transfer incident to divorce), the transferee's OWNERSHIP period for § 121 purposes includes the transferor's prior ownership period. The receiving ex-spouse immediately counts every month the OTHER ex-spouse previously owned the home, letting them meet the 2-year ownership test without waiting out a new clock.
