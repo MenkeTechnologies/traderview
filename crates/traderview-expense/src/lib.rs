@@ -81,6 +81,7 @@ pub mod rent_receipts;
 pub mod repair_and_deduct;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
+pub mod right_to_dry;
 pub mod reps_qualification;
 pub mod rules;
 pub mod schedule_d;

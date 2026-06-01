@@ -207,6 +207,9 @@ use traderview_expense::rent_credit_reporting::{
 use traderview_expense::rent_escrow::{
     check as check_rent_escrow, RentEscrowInput, RentEscrowResult,
 };
+use traderview_expense::right_to_dry::{
+    check as check_right_to_dry, RightToDryInput, RightToDryResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -375,6 +378,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-succession-check", axum::routing::post(lease_succession_check_route))
         .route("/rent-credit-reporting-check", axum::routing::post(rent_credit_reporting_check_route))
         .route("/rent-escrow-check", axum::routing::post(rent_escrow_check_route))
+        .route("/right-to-dry-check", axum::routing::post(right_to_dry_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -3085,6 +3089,30 @@ async fn rent_escrow_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_rent_escrow(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State tenant "right to dry" clothesline / drying-rack check
+//
+// Mounted at POST /api/rental/right-to-dry-check. Two regimes:
+// CaliforniaTenantClotheslineRight (Cal. Civ. Code § 1940.20 added
+// by AB 1448 eff. 2015-09-08 — tenant may use clothesline / drying
+// rack in private leased area subject to no-interference + no-
+// health-safety-hazard + building-code/HOA-compliance gates);
+// NoStatewideTenantClotheslineRight (49 other states + DC — most
+// have "right to dry" statutes but they apply to HOA/condo
+// covenants only and do NOT extend to landlord-tenant rentals).
+// ---------------------------------------------------------------------------
+
+async fn right_to_dry_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RightToDryInput>,
+) -> Result<Json<RightToDryResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_right_to_dry(&b)))
 }
 
 // ---------------------------------------------------------------------------

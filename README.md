@@ -1398,6 +1398,25 @@ Mounted at `POST /api/rental/rent-credit-reporting-check`. Twenty-two tests pin:
 
 Mounted at `POST /api/rental/rent-escrow-check`. Thirty-one tests pin: **5 regime classifications** (MD / MA / NJ / CO + default AL/CA/FL/NY/TX/WA/DC/WY); **MD baseline tenant may pursue**; **MD 30-day presumption not triggered at exactly 30 days** (regression — strict > 30); **MD 31-day presumption triggered**; MD no notice / non-material defect cannot pursue; **MA counterclaim asserted may pursue**; **MA no counterclaim cannot pursue** (regression — distinguishes MA mechanism); **NJ all unpaid rent deposited may pursue**; **NJ no deposit cannot pursue** (regression target — strict ALL-unpaid-rent gate); **CO not-withholding-entire-rent may pursue**; **CO withholding entire rent blocked** (regression — only CO has this bar); default state no statutory remedy; **4 citation regression targets** (MD § 8-211 + 30 days + "Rent Escrow Act"; MA c. 239 § 8A + "rent withholding statute"; NJ 2A:42-85 + Marini v. Ireland + "court-appointed administrator" + "ALL unpaid rent"; CO 38-12-507 + "ENTIRE rent is NOT permitted"); **51-state coverage**; non-empty citations; **5 single-state-uniqueness invariants** (MD-only 30-day-presumption / MA-only counterclaim-mechanism / NJ-only court-appointed-administrator / NJ-only all-unpaid-rent-deposit / CO-only entire-rent-withholding-prohibited); MD compliant note describes regime; MA non-compliant note mentions counterclaim; lowercase state code normalizes.
 
+`traderview-expense::right_to_dry` is the **state tenant "right to dry" clothesline / drying-rack compliance table** — the broader "right to dry" movement has produced statutes in 19 states voiding HOA / condo clothesline bans, but most do NOT extend to landlord-tenant rentals. California is the only state that has explicitly extended the right to tenants via Cal. Civ. Code § 1940.20 (added by AB 1448, eff. 2015-09-08). Trader-tenants in HCOL markets get real savings on dryer energy costs.
+
+**Two regimes**:
+
+| Regime | States | Extends to tenants? | Key conditions |
+|--------|--------|----------------------|-----------------|
+| `CaliforniaTenantClotheslineRight` | CA | **Yes** (§ 1940.20 / AB 1448 2015) | Private leased area only + no maintenance interference + no health/safety hazard + building-code/HOA compliance |
+| `NoStatewideTenantClotheslineRight` | 49 other states + DC | **No** (HOA/condo statutes don't extend) | (n/a — lease governs) |
+
+**CA 4-prong compliance test** (all required for installation to be permitted):
+1. Installation in the tenant's **private leased area** (balcony, patio, dedicated yard) — common areas are excluded.
+2. Does NOT interfere with landlord's maintenance of the premises.
+3. Does NOT create a health or safety hazard.
+4. Complies with applicable building codes and any homeowner association rules.
+
+**The 19-state HOA "right to dry" list does NOT extend to tenants**: FL § 163.04, CO § 38-30-168, HI § 196-7.6, ME tit. 33 § 1521, MD Real Prop. § 2-119, VT 27 V.S.A. § 544, AZ § 33-1816, OR ORS 105.480, NM § 47-16-3.1, NV NRS 111.241, NC § 47C-2-119, and similar — these apply to deed restrictions and HOA / condo covenants only. A FL tenant cannot use these statutes against a landlord's lease prohibition.
+
+Mounted at `POST /api/rental/right-to-dry-check`. Eighteen tests pin: **CA tenant clothesline right regime + default for 49 other states**; **CA all 4 prongs met installation permitted**; **CA not private leased area not permitted** + diagnostic; **CA interferes with maintenance not permitted**; **CA health/safety hazard not permitted**; **CA non-compliant building code/HOA not permitted**; **default state FL no tenant statutory right** (regression target — § 163.04 doesn't extend to rentals); default state note mentions HOA-only; **2 citation regression targets** (CA § 1940.20 + AB 1448 + 2015-09-08 + "PRIVATE leased area" + "common areas EXCLUDED"; default mentions FL § 163.04 + "HOA / condo covenants only" + "do NOT extend to landlord-tenant rentals"); **51-state coverage**; non-empty citations; **2 single-state-uniqueness invariants** (CA-only extends-to-tenants / CA-only clothesline-regime); CA permitted note describes regime; CA multiple prong failures listed; lowercase state code normalizes.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
