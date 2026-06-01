@@ -137,6 +137,9 @@ use traderview_expense::repair_and_deduct::{
 use traderview_expense::cosigner_rules::{
     check as check_cosigner_rules, CosignerInput, CosignerResult,
 };
+use traderview_expense::mobile_home_park::{
+    check as check_mobile_home_park, MhpInput, MhpResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -282,6 +285,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-receipt-check", axum::routing::post(rent_receipt_check_route))
         .route("/repair-deduct-check", axum::routing::post(repair_and_deduct_check_route))
         .route("/cosigner-check", axum::routing::post(cosigner_rules_check_route))
+        .route("/mobile-home-park-check", axum::routing::post(mobile_home_park_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2381,6 +2385,28 @@ async fn cosigner_rules_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_cosigner_rules(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State mobile home park / manufactured housing compliance check
+//
+// Mounted at POST /api/rental/mobile-home-park-check. Three regimes:
+// JustCauseWithRentCap (CA Civ. Code § 798 + OR ORS Ch. 90 / SB 608
+// -- 90-day notice + just-cause + 10% rent cap for OR; CA local rent
+// control); NoticeAndJustCauseNoCap (FL Ch. 723 Mobile Home Act --
+// applies to parks of 10+ lots + 90-day notice + just-cause; WA RCW
+// 59.20 with 2025 amendments); GenericLandlordTenantLaw elsewhere.
+// ---------------------------------------------------------------------------
+
+async fn mobile_home_park_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MhpInput>,
+) -> Result<Json<MhpResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_mobile_home_park(&b)))
 }
 
 // ---------------------------------------------------------------------------
