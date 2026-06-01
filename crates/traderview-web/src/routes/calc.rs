@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-163d",          post(section_163d_route))
+        .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
@@ -1187,6 +1188,39 @@ async fn section_163d_route(
         ));
     }
     Ok(Json(traderview_expense::section_163d::compute(&b)))
+}
+
+// ── §163(h) home mortgage interest deduction ────────────────────────
+// Mounted at /api/calc/section-163h. Universal qualified residence
+// interest computation: $750k acquisition indebtedness cap (TCJA,
+// made permanent by OBBBA 2025 § 70108); $1M grandfathered cap for
+// pre-2017-12-16 mortgages; MFS half-caps ($375k / $500k); home
+// equity interest permanently disallowed unless acquisition use;
+// PMI premiums reinstated as deductible 2026+ per OBBBA; refinance
+// blended-cap calculation under § 163(h)(3)(F)(iii).
+
+async fn section_163h_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_163h::Section163hInput>,
+) -> Result<Json<traderview_expense::section_163h::Section163hResult>, ApiError> {
+    if b.acquisition_indebtedness_balance < Decimal::ZERO
+        || b.non_acquisition_home_equity_balance < Decimal::ZERO
+        || b.interest_paid_acquisition < Decimal::ZERO
+        || b.interest_paid_non_acquisition_home_equity < Decimal::ZERO
+        || b.mortgage_insurance_premiums_paid < Decimal::ZERO
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    if let Some(grand) = b.grandfathered_refinance_portion {
+        if grand < Decimal::ZERO {
+            return Err(ApiError::BadRequest(
+                "grandfathered_refinance_portion must be >= 0 when set".into(),
+            ));
+        }
+    }
+    Ok(Json(traderview_expense::section_163h::compute(&b)))
 }
 
 // ── §280F luxury auto depreciation cap ───────────────────────────────
