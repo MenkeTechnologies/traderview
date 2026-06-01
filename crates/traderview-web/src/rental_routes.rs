@@ -53,6 +53,10 @@ use traderview_expense::security_deposit_caps::{
     check as check_security_deposit_cap, SecurityDepositCheckInput,
     SecurityDepositCheckResult,
 };
+use traderview_expense::security_deposit_interest_statement::{
+    check as check_security_deposit_interest_statement, DepositInterestStatementInput,
+    DepositInterestStatementResult,
+};
 use traderview_expense::rent_control::{
     check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
 };
@@ -714,6 +718,7 @@ pub fn router() -> Router<AppState> {
         .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
         // State security deposit cap compliance check
         .route("/security-deposit-cap-check", axum::routing::post(security_deposit_cap_route))
+        .route("/security-deposit-interest-statement", axum::routing::post(security_deposit_interest_statement_route))
         // Federal SCRA + state military lease termination check
         .route("/military-termination-check", axum::routing::post(military_termination_route))
 }
@@ -5993,6 +5998,32 @@ async fn security_deposit_cap_route(
         ));
     }
     Ok(Json(check_security_deposit_cap(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// security_deposit_interest_statement: Mandatory annual security deposit
+// interest statement disclosure. Four regimes: Massachusetts (Mass. G.L.
+// c. 186 § 15B(2)(c)(ii) annual statement with bank name/address +
+// account number + deposit amount + interest amount + § 15B(2)(c)
+// payment-or-deduction option + § 15B(7) TRIPLE damages for willful
+// violation); NewJersey (N.J.S.A. 46:8-19(c) annual interest payment +
+// statement + 1% administrative cost allowance + § 46:8-21.1 DOUBLE
+// damages willful); Chicago (Chicago RLTO § 5-12-080(c) within 30 days
+// after end of 12-month period with deposit + interest + calculation
+// explanation + § 5-12-080(f) DOUBLE damages willful); NewYork (N.Y.
+// GOL § 7-103 trust fund + initial bank disclosure for 6+ unit
+// buildings — no annual statement requirement); Default (no statewide
+// annual statement requirement). Distinct from deposit_interest
+// (whether interest required and rate) and security_deposit_bank_
+// disclosure (initial bank location disclosure at tenancy start).
+// ---------------------------------------------------------------------------
+
+async fn security_deposit_interest_statement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DepositInterestStatementInput>,
+) -> Result<Json<DepositInterestStatementResult>, ApiError> {
+    Ok(Json(check_security_deposit_interest_statement(&b)))
 }
 
 // ---------------------------------------------------------------------------
