@@ -83,6 +83,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6213",          post(section_6213_route))
+        .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6651",          post(section_6651_route))
@@ -2537,6 +2538,36 @@ async fn section_6213_route(
         ));
     }
     Ok(Json(traderview_expense::section_6213::compute(&b)))
+}
+
+// ── §6330 Collection Due Process (CDP) for levies ───────────────────
+// Mounted at /api/calc/section-6330. § 6330(a) 30-day pre-levy notice
+// + § 6330(b) right to fair CDP hearing before IRS Appeals + § 6330(c)
+// matters at hearing (collection alternatives — § 6159 installment
+// agreement / § 7122 offer in compromise / currently not collectible
+// — + spousal defenses + underlying-liability challenge if no prior
+// opportunity) + § 6330(d)(1) 30-day Tax Court petition + § 6330(e)
+// collection suspension during pending review + § 6330(f) jeopardy /
+// state refund / Federal contractor / disqualified employment tax
+// levy exceptions. Boechler v. Commissioner (596 U.S. 199, 2022)
+// UNANIMOUSLY held § 6330(d)(1) deadline is NON-jurisdictional and
+// SUBJECT TO equitable tolling — sharp contrast to § 6213(a)
+// deficiency petition deadline (Hallmark Research Collective).
+// Trader-relevant when receiving IRS Final Notice of Intent to Levy
+// (Letter 1058 / LT-11).
+
+async fn section_6330_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6330::Section6330Input>,
+) -> Result<Json<traderview_expense::section_6330::Section6330Result>, ApiError> {
+    if b.days_from_final_notice_to_cdp_request > 100_000
+        || b.days_from_determination_to_tax_court_petition > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "day inputs out of plausible range (>100000)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6330::compute(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────
