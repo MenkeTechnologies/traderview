@@ -382,6 +382,10 @@ use traderview_expense::portable_tenant_screening_report::{
     check as check_portable_screening, CheckResult as PortableScreeningResult,
     Input as PortableScreeningInput,
 };
+use traderview_expense::hoa_fee_tenant_enforcement::{
+    check as check_hoa_fee_tenant_enforcement, HoaFeeTenantEnforcementInput,
+    HoaFeeTenantEnforcementResult,
+};
 use traderview_expense::hoa_rental_restriction::{
     check as check_hoa_rental_restriction, CheckResult as HoaRentalResult,
     Input as HoaRentalInput,
@@ -691,6 +695,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-assignment-consent", axum::routing::post(lease_assignment_consent_route))
         .route("/lease-cure-period", axum::routing::post(lease_cure_period_route))
         .route("/portable-tenant-screening-report", axum::routing::post(portable_tenant_screening_report_route))
+        .route("/hoa-fee-tenant-enforcement", axum::routing::post(hoa_fee_tenant_enforcement_route))
         .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
@@ -4882,6 +4887,35 @@ async fn hoa_rental_restriction_route(
     Json(b): Json<HoaRentalInput>,
 ) -> Result<Json<HoaRentalResult>, ApiError> {
     Ok(Json(check_hoa_rental_restriction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// HOA fee enforcement against tenant in single-family / townhome / condo
+// rentals — when can a homeowners association enforce delinquent dues
+// DIRECTLY against the tenant rather than only the owner-landlord? Mounted at
+// POST /api/rental/hoa-fee-tenant-enforcement. Four regimes: (1) Florida —
+// Fla. Stat. § 720.3085(8)(a)-(d) single-family HOA + § 718.116(11)
+// condominium: HOA may DEMAND tenant pay subsequent rent directly to
+// association when parcel owner delinquent; tenant immune from landlord
+// claim for amounts paid to association; tenant rent credit against
+// landlord-owed rent; HOA eviction authority for nonpayment after written
+// demand; demand MUST be via hand delivery OR United States mail. (2) Texas
+// — Tex. Prop. Code § 209.0064: HOA enforces ONLY against OWNER; lease
+// passthrough governed by lease terms; § 209.0064 third-party collection
+// requires written certified-mail notice to OWNER + 45-day cure. (3)
+// California — Cal. Civ. Code §§ 5650, 5710, 5715 Davis-Stirling Act: HOA
+// foreclose on owner's interest only, NOT tenant. (4) Default — owner-only
+// enforcement; federal FDCPA (15 U.S.C. § 1692) applies if third-party
+// collector hired. Distinct from `hoa_rental_restriction` (HOA's
+// restrictions ON renting).
+// ---------------------------------------------------------------------------
+
+async fn hoa_fee_tenant_enforcement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<HoaFeeTenantEnforcementInput>,
+) -> Result<Json<HoaFeeTenantEnforcementResult>, ApiError> {
+    Ok(Json(check_hoa_fee_tenant_enforcement(&b)))
 }
 
 // ---------------------------------------------------------------------------
