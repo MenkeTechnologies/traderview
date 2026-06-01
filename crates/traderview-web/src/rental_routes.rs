@@ -205,6 +205,10 @@ use traderview_expense::tenant_relocation_assistance::{
 use traderview_expense::fair_chance_housing::{
     check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
 };
+use traderview_expense::fha_design_construction::{
+    check as check_fha_design_construction, FhaDesignConstructionInput,
+    FhaDesignConstructionResult,
+};
 use traderview_expense::meth_contamination_disclosure::{
     check as check_meth_contamination_disclosure, MethDisclosureInput, MethDisclosureResult,
 };
@@ -620,6 +624,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
+        .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
         .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
         .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
@@ -3356,6 +3361,33 @@ async fn fair_chance_housing_route(
         ));
     }
     Ok(Json(check_fair_chance_housing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// fha_design_construction: Fair Housing Act design and construction
+// requirements for covered multifamily dwellings — 24 CFR § 100.205.
+// Federal accessibility requirements for new-construction multifamily
+// buildings first occupied AFTER March 13, 1991. § 100.205(c)(1)-(7)
+// seven design requirements: (1) accessible entrance on accessible
+// route, (2) accessible public/common-use areas, (3) usable doors
+// (32" clear), (4) accessible route into and through dwelling, (5)
+// environmental controls in accessible locations, (6) reinforced
+// walls for grab bars, (7) usable kitchens and bathrooms.
+// § 100.205(a) terrain-impracticality defense (burden on builder).
+// § 100.205(a) covered = 4+ units with elevator (all units) OR
+// ground-floor units in non-elevator buildings. 42 U.S.C. § 3613(c)
+// private suit damages + § 3612 HUD administrative penalty ($25,597
+// first / $63,991 repeat within 5 years, 2025 inflation-adjusted).
+// FEDERAL FLOOR — state codes (CA Title 24, MA AAB, NY HRL) may add
+// stricter requirements but cannot reduce baseline.
+// ---------------------------------------------------------------------------
+
+async fn fha_design_construction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FhaDesignConstructionInput>,
+) -> Result<Json<FhaDesignConstructionResult>, ApiError> {
+    Ok(Json(check_fha_design_construction(&b)))
 }
 
 // ---------------------------------------------------------------------------

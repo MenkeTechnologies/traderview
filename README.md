@@ -1540,6 +1540,37 @@ Mounted at `POST /api/rental/tenant-relocation-assistance`. Twenty-five tests pi
 
 Mounted at `POST /api/rental/fair-chance-housing`. Twenty-five tests pin: **NJ pre-offer inquiry violation** (inquiry_before_offer=true + conditional_offer_made=false); **NJ post-offer inquiry OK** with individualized assessment; **NJ arrest barred category**; **NJ juvenile-adjudication barred** (regression — NJ FCHA bars 4 categories); **NJ no-individualized-assessment violation** + "30-day appeal" citation regression; **NYC pre-offer inquiry violation** + "Local Law 24" citation; **NYC felony at 5-year boundary OK** (regression — ≤ 5 strict); **NYC felony 6 years outside lookback** (regression — > 5 strict); **NYC misdemeanor at 3-year boundary OK**; **NYC misdemeanor 4 years outside lookback** (regression — > 3 strict); **NYC sex-offender-registry always considerable** regardless of age (30 years old still OK); **NYC non-criminal-violation barred** + "non-criminal" citation regression (NYC-only barred category not in NJ); **NYC ACD-disposition barred** + "ACDs" citation; **CA arrest barred**; **CA no-individualized-assessment violation** + "rehabilitation" note regression + "12266" citation; **CA with individualized assessment OK**; **default FCRA 7-year arrest window expired** + "1681c" + "FCRA" citation; **default no-violation recent conviction**; **jurisdiction routing** (NJ → NJ FCHA, NY/New York + NY/NYC → NYC FCHHA, NY/Buffalo → Default, CA → CA FEHA, TX → Default); **case-insensitive jurisdiction lookup**; **NJ-only single-state-uniqueness invariant**; **NYC lookback off-by-one boundary exhaustive** (felony 5 OK / 6 expired + misdemeanor 3 OK / 4 expired in single test); **citations pin authorities** (46:8-52 + FCHA + 8-107.1 + Local Law 24 + 1786.18 + 12266 + FCRA + 1681c).
 
+`traderview-expense::fha_design_construction` is the **Fair Housing Act design and construction requirements for covered multifamily dwellings** module — 24 CFR § 100.205. Federal accessibility floor for new-construction multifamily buildings first occupied AFTER March 13, 1991. Trader-landlord operational concern when acquiring, developing, or substantially renovating a covered multifamily dwelling. Distinct from `reasonable_accommodation_modification` (individual tenant accommodation requests under FHA § 3604(f)(3)), `service_animal` (ADA/FHA service-animal framework), and `emotional_support_animal_documentation` (ESA reliability).
+
+**Seven § 100.205(c) requirements** all must be satisfied:
+
+| # | Requirement | Subsection |
+|---|-------------|------------|
+| 1 | Accessible building entrance on accessible route (terrain-impracticality defense available, burden on builder) | § 100.205(c)(1) |
+| 2 | Accessible and usable public/common-use areas (lobbies, mailboxes, parking, recreation) | § 100.205(c)(2) |
+| 3 | Usable doors (32" clear opening for wheelchair passage) | § 100.205(c)(3) |
+| 4 | Accessible route INTO AND THROUGH covered dwelling unit | § 100.205(c)(4) |
+| 5 | Light switches, outlets, thermostats, environmental controls in accessible locations | § 100.205(c)(5) |
+| 6 | Reinforced walls in bathrooms for later grab-bar installation | § 100.205(c)(6) |
+| 7 | Usable kitchens and bathrooms (wheelchair maneuverability) | § 100.205(c)(7) |
+
+**Two applicability gates** kill the rule at the door:
+
+| Gate | Effect |
+|------|--------|
+| First occupancy on or before March 13, 1991 | Grandfathered — rule does NOT apply |
+| Not a covered multifamily dwelling (< 4 units / not elevator-served / not ground-floor) | Rule does NOT apply |
+
+**Federal enforcement carries dual private + administrative paths.** 42 U.S.C. § 3613(c) private suit — actual damages + punitive + attorney fees. 42 U.S.C. § 3612 HUD administrative civil penalty — $25,597 first violation / $63,991 prior violation within 5 years (2025 inflation-adjusted). Pinned by `first_violation_penalty_25597`, `prior_violation_within_5_years_penalty_63991`, `private_suit_remedies_in_violation_note`, `no_civil_penalty_when_compliant`.
+
+**Terrain-impracticality defense is § 100.205(a)-specific to Requirement 1.** Burden is on designer/builder to prove that terrain or unusual site characteristics make the accessible building entrance impractical. The defense extends ONLY to Requirement 1 — it does NOT excuse failures on Requirements 2-7. Pinned by `missing_requirement_1_with_terrain_impracticality_no_violation`, `impracticality_defense_does_not_extend_to_other_requirements`, `impracticality_carveout_only_applies_to_requirement_1`.
+
+**All seven requirements must be satisfied — single gap defeats compliance.** Pinned by `all_seven_requirements_must_be_satisfied_invariant` (7-iteration sweep flipping each requirement to false confirms each individually breaks compliance), `all_seven_violations_accumulate_when_nothing_satisfied` (all 7 violations stack), `multiple_violations_accumulate` (3 simultaneous failures = 3 violations listed).
+
+**Federal floor — state codes may add but cannot reduce.** CA Title 24, MA Architectural Access Board (AAB), and NY Human Rights Law all add stricter accessibility requirements; the FHA design and construction baseline cannot be reduced by state law. Pinned by `federal_floor_note_always_present`.
+
+Mounted at `POST /api/rental/fha-design-construction`. Twenty-six tests pin: **full compliance passes**; **pre-March 13, 1991 grandfathered** (rule does NOT apply); **non-covered multifamily dwelling rule does not apply**; **missing Requirement 1 without impracticality violation**; **missing Requirement 1 with terrain impracticality no violation** (defense documented); **missing Requirement 2 public/common areas violation**; **missing Requirement 3 usable doors violation** (wheelchair passage); **missing Requirement 4 accessible route violation**; **missing Requirement 5 environmental controls violation** (thermostats); **missing Requirement 6 reinforced walls violation** (grab-bar); **missing Requirement 7 kitchens/bathrooms violation** (wheelchair maneuverability); **first violation penalty $25,597**; **prior violation within 5 years penalty $63,991**; **private suit remedies in violation note** (§ 3613(c) actual + punitive + attorney fees); **all seven requirements must be satisfied invariant** (7-iteration sweep); **multiple violations accumulate**; **federal floor note always present**; **citation pins subsections and authorities** (§ 3604(f)(3)(C) + § 100.205(a)/(c)(1)-(7) + Subpart D + § 3613(c) + § 3612 + HUD Design Manual); **rule applies only when post-March 13 1991 AND covered**; **note describes civil penalty for first violation** ($25,597); **note describes civil penalty for prior violation** ($63,991); **no civil penalty when compliant**; **impracticality defense does not extend to other requirements** (Req 3 still violates with Req 1 defense); **all seven violations accumulate when nothing satisfied**; **impracticality carveout only applies to Requirement 1**; **pre-March 13, 1991 with full violations remains compliant** (grandfathered building immune).
+
 `traderview-expense::demolition_tenant_notice` is the **state demolition-tenant-notice landlord compliance check** — addresses the NOTICE PERIOD a landlord must provide BEFORE a tenant must vacate for demolition. Distinct from `owner_move_in_eviction` (landlord MOVES INTO the unit) and `tenant_relocation_assistance` (DOLLAR amount owed); this module models the notice-time floor.
 
 **Four regimes**:
