@@ -226,6 +226,10 @@ use traderview_expense::snow_removal_responsibility::{
 use traderview_expense::security_camera_disclosure::{
     check as check_security_camera_disclosure, SecurityCameraInput, SecurityCameraResult,
 };
+use traderview_expense::carpet_replacement_useful_life::{
+    check as check_carpet_replacement_useful_life, CarpetReplacementInput,
+    CarpetReplacementResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -437,6 +441,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
         .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
         .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
+        .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3368,6 +3373,40 @@ async fn security_camera_disclosure_route(
     Json(b): Json<SecurityCameraInput>,
 ) -> Result<Json<SecurityCameraResult>, ApiError> {
     Ok(Json(check_security_camera_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State carpet-replacement useful-life landlord security-deposit
+// deduction compliance check.
+//
+// Mounted at POST /api/rental/carpet-replacement-useful-life. Four
+// regimes: ColoradoHb251249 (Colo. Rev. Stat. § 38-12-104 as amended
+// by HB 25-1249 eff. 2026-01-01 — STATUTORY 10-year carpet useful
+// life; landlord may not deem carpet substantially+irreparably damaged
+// unless replaced new within 10-year window; may retain only minimum
+// necessary amount); California (common-law Killough v. McManus 8-year
+// useful life); HudSection8 (HUD Handbook 4350.3 chap. 6 — 7-year
+// carpet useful life for federally-subsidized housing); Default
+// (common-law actual-damages-net-of-depreciation doctrine, 7-year
+// proxy). Section 8 voucher overrides state routing.
+// ---------------------------------------------------------------------------
+
+async fn carpet_replacement_useful_life_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CarpetReplacementInput>,
+) -> Result<Json<CarpetReplacementResult>, ApiError> {
+    if b.replacement_cost_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "replacement_cost_cents must be non-negative".into(),
+        ));
+    }
+    if b.carpet_age_years > 100 {
+        return Err(ApiError::BadRequest(
+            "carpet_age_years looks invalid (>100)".into(),
+        ));
+    }
+    Ok(Json(check_carpet_replacement_useful_life(&b)))
 }
 
 // ---------------------------------------------------------------------------

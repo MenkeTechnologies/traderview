@@ -15,6 +15,7 @@ pub mod application_fees;
 pub mod bedbug_disclosure;
 pub mod bedbug_extermination_cost;
 pub mod boa;
+pub mod carpet_replacement_useful_life;
 pub mod chase;
 pub mod contractor_1099;
 pub mod cosigner_rules;
