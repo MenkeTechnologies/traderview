@@ -425,6 +425,41 @@ The compute fn independently checks each requirement, flags individual failures 
 
 Mounted at `POST /api/rental/senior-disabled-check`. Twenty-two tests pin: 51-row coverage; **NJ canonical eligible senior** (all 5 prongs pass); **each of NJ's 5 disqualification paths individually pinned** (age 61, income $50,001, 4-unit building, 0-year tenancy, multi-disqualification stack); **NJ income $50k exact boundary** qualifies; **NJ disabled at any age** qualifies; **NY SCRIE/DRIE permanent (no max_years)**; CA just-cause no carve-out; TX no specific statute; CT § 47a-23c age-62 qualifies (no income gate); PA § 250.504-A age-62 qualifies; unknown state errors; case-insensitive; sorted all_states; non-empty citations; **NJ-only StatewideConversionProtection sweep**; **NY-only MunicipalRentIncreaseExemption sweep**; **7-state JustCauseCoversNoCarveOut regime sweep**; **NJ-only 40-year cap sweep** across 50 other states.
 
+`traderview-expense::flag_display_right` is the **state + federal tenant/owner right-to-display-flag compliance check** — federal floor under the Freedom to Display the American Flag Act of 2005 (4 U.S.C. § 5 + Pub. L. 109-243) plus state extensions. Sibling to `religious_display_doorpost` (mezuzah / religious-item display), `firearms_in_rental_unit` (2A-protected possession), and `otard_antenna_installation` (federal OTARD satellite/antenna rule). Collectively the tenant-rights-in-rental-unit display + installation cluster.
+
+**Four regimes**:
+
+| Regime | Authority | Renter coverage | Private right of action |
+|--------|-----------|-------------------|--------------------------|
+| `Federal` | 4 U.S.C. § 5 + Pub. L. 109-243 | No (owner only) | **NO** (critical limitation) |
+| `Florida` | Fla. Stat. § 720.304(2) + § 718.113 + HB 437 (2023) | **YES** — state law trumps lease | Yes |
+| `Virginia` | Va. Code § 55.1-1820 | No (owner only) | Yes |
+| `Default` | Federal Act floor only | No | n/a |
+
+**Federal Freedom to Display the American Flag Act of 2005**:
+- Applies to **condominium associations, cooperative associations, residential real estate management associations**
+- Cannot adopt or enforce policy preventing member from displaying U.S. flag on property where member has separate ownership interest OR right to exclusive possession or use
+- Reasonable time/place/manner restrictions permitted
+- **CRITICAL LIMITATION**: NO PRIVATE RIGHT OF ACTION — federal Act lacks enforcement mechanism; member/tenant cannot sue under the federal Act itself
+
+**Florida § 720.304(2) is the strongest state extension and the only regime explicitly protecting renters.** HB 437 (2023) expanded to TWO portable, removable flags. Renter coverage explicitly states "any tenant may display one portable, removable U.S. flag (and other listed flags) regardless of any covenants, restrictions, bylaws, rules, or lease provisions to the contrary." **STATE LAW EXPLICITLY TRUMPS LEASE.** Pinned by `florida_renter_us_flag_protected_with_state_law_trumping_lease`, `florida_renter_state_flag_protected`, `florida_renter_military_flag_within_size_limit_protected`, `florida_renter_pow_mia_within_size_limit_protected`, and the 4-regime invariant `only_florida_protects_renters_invariant`.
+
+**Florida 4 conditions for renter protection** — ALL must hold:
+1. Portable + removable
+2. Respectful manner of display
+3. Does not infringe on other residents
+4. Size within 4.5 × 6 feet for military / POW-MIA flags
+
+Pinned by the 8-cell truth-table invariant `florida_renter_protection_requires_all_4_conditions_invariant`.
+
+**Military / POW-MIA size limit (4.5 × 6 feet) applies only to military and POW-MIA flags.** U.S. flag and state flag have NO Florida size limit. Pinned by `military_size_limit_applies_only_to_military_and_pow_mia_invariant`.
+
+**Federal Act's lack of private right of action is the critical statutory limitation.** While the Act prohibits association restrictions, it provides no mechanism for members to sue or compel association compliance. Enforcement must proceed through other channels (state AG, public-interest litigation, or under parallel state statutes that do provide a private right of action). Pinned by `federal_act_no_private_right_of_action_note` (UX-text regression) and the 4-regime invariant `only_federal_lacks_private_right_of_action_invariant` (Federal vs FL/VA/Default all confirmed to have private right of action).
+
+**Federal Act applies only to OWNERS with separate ownership interest or right to exclusive possession/use.** Renters in associations are not covered unless a state statute (like Florida § 720.304) extends to them. Pinned by `federal_act_renter_not_directly_covered`.
+
+Mounted at `POST /api/rental/flag-display-right`. Twenty-three tests pin: **Federal Act owner U.S. flag protected**; **Federal Act renter not directly covered**; **Federal Act state flag not covered**; **Federal Act no private right of action note** (UX-text regression); **FL renter U.S. flag protected with state law trumping lease**; **FL renter state flag protected**; **FL renter military flag within size limit protected**; **FL renter military flag oversized not protected**; **FL renter POW-MIA protected**; **FL renter other flag not protected**; **FL renter non-portable not protected**; **FL renter infringes-on-others not protected**; **FL owner U.S. flag protected**; **FL restriction imposed violation**; **VA owner U.S. flag protected**; **VA renter not covered**; **Default no statutory protection**; **only-Florida-protects-renters 4-regime invariant**; **only-federal-lacks-private-right-of-action 4-regime invariant**; **military size limit applies only to military and POW-MIA 4-flag-type invariant**; **Florida renter protection requires all 4 conditions 8-cell truth-table invariant**; **citation pins authority per regime** (4 U.S.C. § 5 for Federal; § 720.304(2) for FL; § 55.1-1820 for VA); **sibling-module note across all 8 regime/ownership combos** (UX-text regression for religious_display_doorpost + firearms_in_rental_unit + otard_antenna_installation trio).
+
 `traderview-expense::firearms_in_rental_unit` is the **state landlord firearms-in-rental-unit tenant right compliance check** — strong state-by-state variation. Federal floor: **N.Y. State Rifle & Pistol Ass'n v. Bruen, 597 U.S. 1 (2022)** confirms a constitutional right to keep and bear arms in the home. Post-Bruen federal courts have struck down public-housing handgun bans (Cortland County 2024 permanent injunction). Private landlords retain general contract-based ability to restrict via lease in states without statutory tenant protection. Sibling to `religious_display_doorpost` (mezuzah/religious-display rights) as the other "tenant-rights-in-rental-unit" module.
 
 **Six regimes**:

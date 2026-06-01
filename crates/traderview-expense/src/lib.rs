@@ -42,6 +42,7 @@ pub mod ev_charger_installation;
 pub mod fair_chance_housing;
 pub mod fire_sprinkler_disclosure;
 pub mod firearms_in_rental_unit;
+pub mod flag_display_right;
 pub mod flood_disclosure;
 pub mod drug_eviction;
 pub mod eviction_diversion_program;

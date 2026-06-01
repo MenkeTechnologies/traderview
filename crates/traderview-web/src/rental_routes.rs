@@ -308,6 +308,10 @@ use traderview_expense::tenant_solar_installation::{
     check as check_tenant_solar_installation, CheckResult as TenantSolarResult,
     Input as TenantSolarInput,
 };
+use traderview_expense::flag_display_right::{
+    check as check_flag_display_right, CheckResult as FlagDisplayResult,
+    Input as FlagDisplayInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -540,6 +544,7 @@ pub fn router() -> Router<AppState> {
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
         .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
+        .route("/flag-display-right", axum::routing::post(flag_display_right_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4204,6 +4209,36 @@ async fn tenant_solar_installation_route(
     Json(b): Json<TenantSolarInput>,
 ) -> Result<Json<TenantSolarResult>, ApiError> {
     Ok(Json(check_tenant_solar_installation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State + federal tenant / owner right-to-display-flag compliance
+// check.
+//
+// Mounted at POST /api/rental/flag-display-right. Four regimes:
+// Federal (Freedom to Display the American Flag Act of 2005 — 4
+// U.S.C. § 5 + Pub. L. 109-243 — applies to condo/cooperative/
+// residential association; owner must have separate ownership
+// interest OR right to exclusive possession/use; NO private right
+// of action); Florida (Fla. Stat. § 720.304(2) HOA + § 718.113
+// condo + § 723.054 mobile home parks; HB 437 2023 two-flag
+// expansion; STATE LAW EXPLICITLY TRUMPS LEASE for renter U.S./
+// state/military/POW-MIA flag display); Virginia (Va. Code
+// § 55.1-1820 display of U.S. flag in common interest communities
+// + supporting structures + affirmative defense); Default (federal
+// Act applies to associations only; no general landlord-tenant
+// private statutory protection). Sibling to religious_display_
+// doorpost + firearms_in_rental_unit + otard_antenna_installation
+// — collectively the tenant-rights-in-rental-unit display +
+// installation cluster.
+// ---------------------------------------------------------------------------
+
+async fn flag_display_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FlagDisplayInput>,
+) -> Result<Json<FlagDisplayResult>, ApiError> {
+    Ok(Json(check_flag_display_right(&b)))
 }
 
 // ---------------------------------------------------------------------------
