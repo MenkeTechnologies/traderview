@@ -2919,6 +2919,26 @@ Mounted at `POST /api/calc/section-104`. Twenty tests pin: all 4 physical-pillar
 
 Mounted at `POST /api/calc/section-72t`. Twenty-five tests pin: **pre-59½ no exception 10% applies** ($50k → $5k); **age 60 no additional tax**; **death exception zeroes tax** (capless); disability / SEPP / separation-after-55 / medical / QDRO / higher-education exceptions all zero tax; terminal illness (SECURE 2.0 §326) zeroes tax; **first-time homebuyer $10k cap** ($50k − $10k = $40k × 10% = $4,000 tax remainder); **birth/adoption $5k cap**; **federally declared disaster $22k cap** ($28k × 10% = $2,800 remainder); **emergency personal expense plan-adopted $1k cap**; **emergency expense plan NOT adopted → no exception recognized** (regression — plan-adoption gate binds even after statute eff.); **domestic abuse plan-adopted $10k cap** + plan-not-adopted no exception; **long-term care $2,500 cap** (plan-adopted); **terminal illness NOT plan-optional** (works without plan adoption — regression target distinguishing SECURE 2.0 §326 from §115/§314/§334); **distribution below cap → full qualifying** ($3k birth distribution → 0 tax); **basis recovery NOT subject to §72(t)** ($50k distribution but only $20k includible → $2k tax not $5k); **citation mentions all 9 relevant authorities** (§72(t)(1) + §72(t)(2) + §72(t)(11) + SECURE 2.0 + §326 + §115 + §314 + §334 + plan-optional); note plan-not-adopted explains; note age-exempt path; **$10M precision** ($1M tax).
 
+`traderview-expense::section_7701` is the **IRC §7701 entity classification "check-the-box" module** — foundational for any trader forming an LLC, LP, or other pass-through entity. Treasury Regulations §§ 301.7701-2 and 301.7701-3 (the "check-the-box" or CTB regulations, effective 1997-01-01) let eligible entities choose their U.S. tax classification: disregarded entity, partnership, or corporation. Pairs with existing `section_1361` (S-corp eligibility gate) and `section_351` (formation non-recognition).
+
+**Treas. Reg. § 301.7701-2 default classifications**:
+
+| Entity type | Members | Default classification |
+|-------------|---------|------------------------|
+| Domestic LLC / LP / general partnership | 1 | Disregarded entity |
+| Domestic LLC / LP / general partnership | 2+ | Partnership (Form 1065) |
+| Domestic corporation formed under federal/state corporate statute | (any) | Per-se corporation (no election) |
+| Foreign per-se corporation on § 301.7701-2(b)(8) list | (any) | Per-se corporation (no election) |
+| Foreign eligible entity | (any) | Eligible to elect |
+
+**Treas. Reg. § 301.7701-3 election mechanism**: eligible entities may file Form 8832 to elect corporation taxation (the "check-the-box" election). Effective date: as specified on Form 8832, with up to 75 days retroactive or 12 months prospective.
+
+**§ 301.7701-3(c)(1)(iv) 60-month lockout**: once an entity changes its classification by election, it cannot change again for **60 months** after the effective date. The lockout is **waived** if there is a > 50% change in ownership since the prior election.
+
+**Per-se corporation list (§ 301.7701-2(b))**: includes any entity formed under federal/state law describing it as "incorporated" or as a "corporation"; joint-stock companies; banks subject to Title 12; insurance companies; state-wholly-owned entities; the § 301.7701-2(b)(8) foreign per-se list (e.g., Canadian Corporation, Mexican Sociedad Anónima, German Aktiengesellschaft).
+
+Mounted at `POST /api/calc/section-7701`. Twenty-two tests pin: **single-member LLC defaults to disregarded entity**; **multi-member LLC defaults to partnership**; LP defaults to partnership; general partnership defaults to partnership; **domestic corporation statute is per-se corporation**; **foreign per-se list is per-se**; **per-se corp Form 8832 election irrelevant** (regression — already corporation); **single-member LLC elects to C corp** (via Form 8832); **multi-member LLC elects to C corp**; **foreign eligible entity can elect**; **lockout NOT binding after 60 months** (boundary regression target); **lockout binding at 59 months** (regression — strict ≥ 60); **lockout binding at 0 months → 60 months remaining**; **> 50% ownership change waives lockout** (regression target — even at month 0); **per-se corp cannot change classification** (eligible_to_elect = false); eligible entity with no recent election can elect; **citation mentions all 8 relevant authorities** (§7701 + § 301.7701-2 + § 301.7701-3 + Form 8832 + "60-month" + "1997-01-01" + §1361 + §351 + § 301.7701-2(b)(8) foreign per-se list); note describes default path + multi-member path + election path; note describes lockout months remaining.
+
 `traderview-expense::section_7872` is the **IRC §7872 below-market loan module** — the family sweetheart loan trap. When a trader lends to family, child, or controlled entity at below-AFR rates, the IRS imputes the missing interest as if charged at the Applicable Federal Rate. Forgone interest becomes income to the lender AND deemed transferred back as gift / compensation / dividend depending on the relationship.
 
 **AFR brackets by loan term** under §1274(d):

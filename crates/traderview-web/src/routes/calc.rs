@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-72t",           post(section_72t_route))
+        .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
@@ -845,6 +846,21 @@ async fn section_72t_route(
         ));
     }
     Ok(Json(traderview_expense::section_72t::compute(&b)))
+}
+
+// ── §7701 entity classification check-the-box ───────────────────────
+// Mounted at /api/calc/section-7701. Treas. Reg. § 301.7701-2 default
+// classifications (single-member → disregarded entity; multi-member →
+// partnership; per-se corporation via federal/state statute or
+// § 301.7701-2(b)(8) foreign list); § 301.7701-3 Form 8832 election;
+// § 301.7701-3(c)(1)(iv) 60-month lockout after change (waived by
+// > 50% ownership change). CTB regs effective 1997-01-01.
+
+async fn section_7701_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7701::Section7701Input>,
+) -> Result<Json<traderview_expense::section_7701::Section7701Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7701::compute(&b)))
 }
 
 // ── §7872 below-market loans ─────────────────────────────────────────
