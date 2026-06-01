@@ -498,6 +498,40 @@ Each condition is independently pinned at boundaries: CA notice warranted at day
 
 Mounted at `POST /api/rental/abandonment-check`. Twenty-five tests pin: 51-row coverage; CA boundaries at 14/13d rent unpaid; CA without indicia not warranted (gatekeeper regression target); CA notice period at 14/13d boundaries; CA belongings disposal at 18/17d boundaries; **WA 45-day strictest belongings window** + sweep; TX 30-day belongings; NY court-process-only + CO/NJ mirror; **4-state court-process sweep** (NY/CO/DC/NJ); FL/MA case-by-case; no-statute 9-state sweep; unknown state handled; case-insensitive lookup; sorted all_states; non-empty citations; statutory states have all three day thresholds (integrity sweep); case-by-case states have no day thresholds (integrity sweep); **CA complete-workflow sweep** through all three compliance steps (notice warranted → period satisfied → disposal allowed).
 
+`traderview-expense::str_regulation` is the **state short-term rental (Airbnb/VRBO) regulation compliance table** — directly affects trader-landlords using Airbnb/VRBO/Booking.com. Recent legislative wave (2018-2024) reshaped the STR landscape with state tax-and-register regimes, primary-residence requirements, and major-city outright bans.
+
+**Four regimes** across 51 jurisdictions:
+
+| Regime                                    | States                                                             |
+|-------------------------------------------|--------------------------------------------------------------------|
+| **State preemption**                      | FL § 509.032 (uniquely) — preempts local STR regulation, only pre-June-2011 ordinances grandfathered |
+| **State tax + registration**              | MA M.G.L. c. 64G (5.7% state excise eff. 2019), VT 32 V.S.A. § 9301 (3% surcharge eff. Aug 2024 + 270-day primary residence) |
+| **Local authority with major-city rules** | CA / DC / HI / IL / LA / NJ / NV / NY / OR / WA — state leaves authority to localities; major cities have notable restrictions |
+| **Local authority, no state rule**        | 38 other states — localities may or may not regulate independently |
+
+**FL § 509.032 is the only state preemption regime.** Cities and counties may not prohibit STRs or regulate duration/frequency, unless pre-June-1, 2011 ordinances are grandfathered. Pinned by `fl_state_preemption_complies_without_registration` (no registration required, complies) + `fl_only_state_with_preemption_regime` (sweep verifying no other state has StatePreemption).
+
+**MA M.G.L. c. 64G 5.7% state excise** is load-bearing. State excise of 570 basis points required on top of local up to 6% (6.5% Boston) plus community impact fee for professional operators. Pinned by `ma_state_excise_5_7_required` (570 bp threshold) + `ma_under_remittance_violates` (500 bp insufficient).
+
+**VT Act 183 of 2024 (eff. Aug 1, 2024) is strictest residency in country.** 270-day primary residence requirement plus 3% STR surcharge. Pinned by `vt_270_day_residency_required` (269 days fails) + `vt_270_day_exact_boundary_satisfies` (270 exact = OK) + `vt_3_percent_surcharge_required` (300 bp) + `vt_strictest_residency_requirement_270_days` (sweep verifying no state exceeds 270).
+
+**NYC LL 18 (passed Jan 2022, enforced Sept 2023) requires 183-day primary residence + host presence + OSE registration.** Platforms (Airbnb / VRBO / Booking) cannot process unregistered listings. Pinned by `ny_183_day_primary_residence_required` (182 days fails) + `ny_183_day_exact_satisfies` (183 = OK) + `ny_ll18_registration_required`.
+
+**DC mirrors the 183-day primary residence threshold** under D.C. Code § 47-2829. Pinned by `dc_183_day_residency`.
+
+**Honolulu Bill 41 (CO 22-7, 2022)** — 30-day minimum residential (court injunction blocked 30→90 expansion); $1,000 registration + $500 annual. Major-city regime. Pinned by `hi_honolulu_registration_required_for_major_city_regime`.
+
+**LocalAuthorityWithMajorCityRules vs LocalAuthorityNoStateRule distinction**:
+
+- **WithMajorCityRules** triggers registration requirement at the state-table level (city-specific compliance assumed)
+- **NoStateRule** doesn't require registration at the state level (compliance defaults to whatever local ordinance exists)
+
+Pinned by `ca_local_authority_with_major_city_no_state_residency` (CA has no state residency rule but registration is required for the major-city regime) + `tx_local_authority_no_state_rule_lenient` (TX default input complies even without registration).
+
+**Major city carve-outs surfaced in citation**: CA (SF 90-day unhosted cap + LA HSO), CO (Denver primary residence + license), HI (Honolulu Bill 41), IL (Chicago SHO + Cook County), LA (New Orleans 2023 ban), NJ (Jersey City + Hoboken), NV (Las Vegas + Clark County), NY (NYC LL 18), OR (Portland TLT), WA (Seattle).
+
+Mounted at `POST /api/rental/str-regulation-check`. Twenty-two tests pin: 51-row coverage; **FL state preemption** complies without registration + uniqueness sweep; **MA 5.7% state excise** required + under-remittance violates + registration required; **VT 270-day primary residence** at 269/270 boundary + 3% surcharge required + sweep verifying VT is strictest (no state > 270); **NY 183-day residency** at 182/183 boundary; NY LL 18 registration required; DC 183-day mirror; HI Honolulu registration; CA major-city regime has no state residency but still requires registration; TX no-state-rule lenient default; unknown state errors; case-insensitive lookup; sorted all_states; non-empty citations; **FL-only StatePreemption regime sweep**; **MA + VT StateTaxAndRegistration regime sweep**.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
