@@ -158,6 +158,9 @@ use traderview_expense::quiet_enjoyment::{
 use traderview_expense::flood_disclosure::{
     check as check_flood_disclosure, FloodDisclosureInput, FloodDisclosureResult,
 };
+use traderview_expense::owner_identification::{
+    check as check_owner_identification, OwnerIdentificationInput, OwnerIdentificationResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -310,6 +313,7 @@ pub fn router() -> Router<AppState> {
         .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
         .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
         .route("/flood-disclosure-check", axum::routing::post(flood_disclosure_check_route))
+        .route("/owner-identification-check", axum::routing::post(owner_identification_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2585,6 +2589,33 @@ async fn flood_disclosure_check_route(
         ));
     }
     Ok(Json(check_flood_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord/owner identification + agent-for-service compliance check
+//
+// Mounted at POST /api/rental/owner-identification-check. Four regimes:
+// AffirmativePreLeaseDisclosure (CA Civ. Code § 1962 15-day window
+// post-lease-execution + FL Fla. Stat. § 83.50 at-commencement
+// written disclosure of landlord/agent name and address);
+// DisclosureUponWrittenDemand (TX Prop. Code § 92.201 7-day window
+// from tenant written demand OR continuous posting OR in-lease;
+// § 92.202 damages = one month's rent + $100 + termination right
+// after second 7-day failure); MultipleDwellingRegistration (NY
+// MDL § 325 + NYC HMC § 27-2098 for 3+ units; NJ N.J.S.A. 55:13A;
+// MA G.L. c. 111 § 197A + c. 186 § 15B(7)); LocalLawOrCommonLawOnly
+// (44 other states + DC).
+// ---------------------------------------------------------------------------
+
+async fn owner_identification_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<OwnerIdentificationInput>,
+) -> Result<Json<OwnerIdentificationResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_owner_identification(&b)))
 }
 
 // ---------------------------------------------------------------------------
