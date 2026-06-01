@@ -5266,6 +5266,62 @@ Mounted at `POST /api/calc/section-1341`. Nineteen tests pin: **below $3,000 thr
 
 Mounted at `POST /api/calc/section-1361`. Twenty tests pin: **baseline qualifies** (50 effective shareholders, all 6 prongs pass); **foreign corp fails domestic prong**; **3 ineligible-corp-type failures** (financial institution reserve method + insurance Subchapter L + foreign sales corp / DISC); **exactly 100 shareholders qualifies** (boundary); **101 shareholders fails** (strict ≤ 100); **family attribution collapses 50 members to 1** (50 family + 49 non-family = 50 effective); **family attribution lets large family avoid cap** (200 family + 50 non-family = 51 effective); **partnership shareholder fails** §1361(b)(1)(D); **NRA shareholder fails** even one share; **two classes of stock fails**; **domestic failure short-circuits other failures** (regression — highest priority wins); **financial institution short-circuits count failure**; **count failure reported before NRA failure** (priority ordering); citation mentions all 6 prongs + §1361(c)(1) + §1361(c)(2); **citation mentions voting-rights differences ARE permitted** (regression — common confusion); note qualifying path mentions "qualifies as S corporation"; note failure path describes §1361(b)(1)(E) + nonresident alien; note reports effective shareholder count post-§1361(c)(1).
 
+`traderview-expense::section_1367` is the **IRC § 1367 S-corp shareholder stock basis adjustment module** — core math for any trader organizing as an S corporation. § 1367 governs how shareholder stock basis shifts each year as the corporation's income, losses, distributions, and expenses flow through. The basis figure controls (a) how much corporate loss may be deducted on the personal return under § 1366(d), (b) whether distributions are tax-free under § 1368, and (c) gain recognition on disposition. Direct sibling to `section_1361` (S-corp definition + eligibility) and `section_1374` (built-in gains tax on C-to-S conversion). Form 7203 is the IRS basis-tracking schedule.
+
+**§ 1367(a)(1) basis increases** (positive items, applied first):
+
+| Subparagraph | Source | Item |
+|--------------|--------|------|
+| (a)(1)(A) | § 1366(a)(1)(A) | Separately stated income items (capital gains, charitable contribution pass-through) |
+| (a)(1)(B) | § 1366(a)(1)(B) | Nonseparately computed income (ordinary trade-or-business income) |
+| (a)(1)(C) | § 1367(a)(1)(C) | Excess of depletion deductions over basis of depleted property |
+
+**§ 1367(a)(2) basis decreases** (negative items, floored at $0):
+
+| Subparagraph | Source | Item |
+|--------------|--------|------|
+| (a)(2)(A) | § 1368 | Tax-free distributions |
+| (a)(2)(B) | § 1366(a)(1)(A) | Separately stated loss/deduction items |
+| (a)(2)(C) | § 1366(a)(1)(B) | Nonseparately computed loss |
+| (a)(2)(D) | § 1367(a)(2)(D) | Noncapital, nondeductible expenses (50% meals under § 274(n), fines, lobbying, political contributions) |
+| (a)(2)(E) | § 1367(a)(2)(E) | Shareholder depletion deduction |
+
+**Treas. Reg. § 1.1367-1(f) — standard four-step ordering**:
+
+| Step | Item | Excess treatment |
+|------|------|------------------|
+| 1 | INCREASES | n/a |
+| 2 | DISTRIBUTIONS | Excess = capital gain under § 1368(b)(2) |
+| 3 | NONDEDUCTIBLES | Excess **PERMANENTLY LOST** (no carryforward) |
+| 4 | LOSSES | Excess **SUSPENDED** under § 1366(d)(2), carried forward indefinitely |
+
+**Treas. Reg. § 1.1367-1(g) election — alternative ordering**:
+
+| Step | Item | Excess treatment |
+|------|------|------------------|
+| 1 | INCREASES | n/a |
+| 2 | DISTRIBUTIONS | Excess = capital gain under § 1368(b)(2) |
+| 3 | LOSSES | Excess **SUSPENDED** under § 1366(d)(2) |
+| 4 | NONDEDUCTIBLES | Excess **SUSPENDED + carried forward** under § 1.1367-1(g) (instead of lost) |
+
+Election is BINDING in subsequent years unless IRS approves change back to standard rule. Election protects nondeductible-expense basis erosion at the cost of consuming more basis up-front for losses. Pinned by `election_changes_loss_allowed_when_basis_constrained` (same input under both rules produces different loss-allowed and nondeductible-applied amounts — standard order loses $10K nondeductibles permanently while election order saves them via carryforward; election order allows full $10K of losses while standard order allows $0).
+
+**Standard ordering normal flow** — $100K beginning + $50K income = $150K → -$30K dist = $120K → -$20K nondeductible = $100K → -$40K loss = $60K ending. Pinned by `standard_ordering_normal_flow`.
+
+**Loss suspension under § 1366(d)(2)** — $200K loss against $100K post-step-3 basis → $100K allowed + $100K suspended for indefinite carryforward. Pinned by `standard_loss_exceeds_basis_suspended`.
+
+**Nondeductibles lost permanently under standard rule** — $30K nondeductibles against $20K basis → $20K applied + $10K LOST (no carryforward). Pinned by `standard_nondeductibles_exceed_basis_lost_permanently`.
+
+**§ 1368(b)(2) excess distribution capital gain** — $50K distribution against $10K basis → $10K applied + $40K excess treated as gain from sale of stock (typically capital gain). Pinned by `standard_excess_distribution_capital_gain` and `distribution_above_basis_only_excess_is_gain`.
+
+**§ 1.1367-1(g) election preserves nondeductibles** — $30K nondeductibles + $20K basis under election → $20K applied + $10K SUSPENDED for future carryforward (vs. LOST under standard). Pinned by `election_nondeductibles_suspend_when_exceed`.
+
+**Multi-step ordering invariants** — `increases_applied_before_distributions_invariant` (income raises basis before distributions consume it), `distribution_applied_before_losses_invariant` (distributions step 2; losses step 4), `basis_never_goes_below_zero` ($0 floor at every step), and `standard_vs_election_same_ending_when_basis_unconstrained` (when basis covers all decreases, both orderings produce identical ending basis).
+
+**Sibling S-corp cluster note** — every result references § 1361 (S-corp definition + eligibility), § 1366 (pass-through items + § 1366(d) basis-limited loss + § 1366(d)(2) carryforward), § 1368 (distribution mechanics — § 1368(b)(2) excess-distribution capital gain), § 1374 (built-in gains tax on C-to-S conversion), and Form 7203 (IRS basis-tracking schedule attached to shareholder's Form 1040). Pinned by `sibling_modules_note_present` (UX-text regression for 5-statute cluster + Form 7203).
+
+Mounted at `POST /api/calc/section-1367`. Twenty-one tests pin: **standard ordering normal flow** ($100K + $50K - $30K - $20K - $40K = $60K); **standard loss exceeds basis suspended** ($200K loss → $100K allowed + $100K suspended); **standard nondeductibles exceed basis lost permanently** ($10K lost forever, no carryforward); **standard excess distribution capital gain** ($40K excess capital gain under § 1368(b)(2)); **election loss before nondeductible normal flow**; **election nondeductibles suspend when exceed** ($10K SUSPENDED under § 1.1367-1(g) instead of lost); **election changes loss allowed when basis constrained** (head-to-head comparison — standard $0 loss + $10K lost nondeductible; election $10K loss + $10K suspended nondeductible); **basis never goes below zero**; **increases applied before distributions invariant**; **distribution applied before losses invariant**; **distribution within basis no capital gain**; **distribution above basis only excess is gain**; **citation pins all subsections** (§ 1367 + § 1367(a)(1) + § 1367(a)(2) + § 1366(a)(1) + § 1366(d) + § 1366(d)(2) + § 1368 + § 1368(b)(2) + § 1.1367-1(f) + § 1.1367-1(g) + Form 7203); **sibling modules note present** (UX-text regression for § 1361 + § 1366 + § 1368 + § 1374 + Form 7203); **defensive negative beginning basis clamped**; **defensive negative income clamped**; **zero inputs zero ending basis**; **standard vs election same ending when basis unconstrained**; **separately stated combines with nonseparately income**; **separately stated loss combines with nonseparately loss**; **depletion deduction combines with nondeductibles for basis decrease**.
+
 `traderview-expense::section_1374` is the **IRC §1374 S-corporation built-in gains (BIG) tax module** — the integrity tax that prevents a C-corp from escaping corporate-level tax on pre-conversion appreciation by simply electing S-corp status. When a C-corp converts, its built-in gains remain exposed to corporate-level tax for a **5-year recognition period** under § 1374(d)(7), permanently set by the **PATH Act of 2015** (down from 10 years originally, then 7 years, then 5). The tax rate is the highest §11(b) corporate rate — **21% post-TCJA** — applied to net recognized built-in gain ([Beancount.io §1374 guide](https://beancount.io/blog/2026/05/10/section-1374-built-in-gains-tax-c-corp-s-corp-conversion-five-year-recognition-period-guide), [Cornell LII 26 U.S.C. § 1374](https://www.law.cornell.edu/uscode/text/26/1374)).
 
 **NUBIG (Net Unrealized Built-In Gain) at conversion** is the LIFETIME ceiling on what can ever be taxed under §1374:

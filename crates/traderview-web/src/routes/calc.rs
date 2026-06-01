@@ -66,6 +66,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
+        .route("/calc/section-1367",          post(section_1367_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
@@ -1875,6 +1876,28 @@ async fn section_1361_route(
     Json(b): Json<traderview_expense::section_1361::Section1361Input>,
 ) -> Result<Json<traderview_expense::section_1361::Section1361Result>, ApiError> {
     Ok(Json(traderview_expense::section_1361::compute(&b)))
+}
+
+// ── § 1367 S-corp shareholder stock basis adjustments ───────────────
+// Mounted at /api/calc/section-1367. Core math for trader S-corp
+// entity selection. § 1367(a)(1) increases (separately stated +
+// nonseparately computed income + depletion excess); § 1367(a)(2)
+// decreases (distributions + losses + nondeductibles + depletion);
+// Treas. Reg. § 1.1367-1(f) standard ordering — increases →
+// distributions → NONDEDUCTIBLES (lost if excess) → LOSSES
+// (suspended if excess under § 1366(d)(2)); Treas. Reg.
+// § 1.1367-1(g) election — losses-before-nondeductibles, with
+// nondeductibles SUSPENDED instead of lost. § 1368(b)(2) excess
+// distribution treated as capital gain. Sibling S-corp cluster:
+// § 1361 (definition + eligibility) + § 1366 (pass-through) +
+// § 1368 (distribution mechanics) + § 1374 (built-in gains tax).
+// Form 7203 is the IRS basis-tracking schedule.
+
+async fn section_1367_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1367::Section1367Input>,
+) -> Result<Json<traderview_expense::section_1367::Section1367Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1367::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────

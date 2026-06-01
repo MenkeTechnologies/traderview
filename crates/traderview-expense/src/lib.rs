@@ -196,6 +196,7 @@ pub mod section_1297;
 pub mod section_1298;
 pub mod section_1341;
 pub mod section_1361;
+pub mod section_1367;
 pub mod section_163d;
 pub mod section_163h;
 pub mod section_164;
