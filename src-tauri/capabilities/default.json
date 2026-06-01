@@ -3,11 +3,13 @@
   "identifier": "default",
   "description": "Default permissions for traderview-desktop",
   "windows": ["main"],
-  "permissions": [
+    "permissions": [
     "core:default",
     "core:event:default",
     "core:window:default",
     "core:webview:default",
+    "allow-get-api-config",
+    "allow-get-log-path",
     "shell:allow-open",
     "dialog:default",
     "dialog:allow-open"

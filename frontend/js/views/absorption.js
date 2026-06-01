@@ -2,13 +2,11 @@
 //
 // i18n throughout.
 
-import uPlot from '../vendor/uPlot.esm.js';
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { uplotTheme } from '../uplot_theme.js';
 import {
     parseBarsBlob, barsToBlob, validateInputs, buildBody, localCompute,
     lastSignalBadge, biasBadge, intensityBadge, summarizeBars,
@@ -177,12 +175,13 @@ function renderSummary(report, pending) {
 
 function renderChart(report) {
     const wrap = document.getElementById('abs-chart');
+    if (!wrap || !window.uPlot) return;
     if (!report || state.bars.length === 0) { wrap.innerHTML = ''; return; }
     const xs = state.bars.map((_, i) => i);
     const closes = state.bars.map(b => b.close);
     const bullMark = state.bars.map((b, i) => report.bullish[i] ? b.close : null);
     const bearMark = state.bars.map((b, i) => report.bearish[i] ? b.close : null);
-    const opts = uplotTheme({
+    const opts = {
         width: wrap.clientWidth || 800,
         height: 320,
         scales: { x: { time: false } },
@@ -194,14 +193,16 @@ function renderChart(report) {
             { label: t('view.abs.series.bearish'), stroke: 'var(--red)', width: 0,
               points: { show: true, size: 9, fill: 'var(--red)' } },
         ],
-    });
-    if (chart) chart.destroy();
-    chart = new uPlot(opts, [xs, closes, bullMark, bearMark], wrap);
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (chart) { try { chart.destroy(); } catch {} chart = null; }
+    chart = new window.uPlot(opts, [xs, closes, bullMark, bearMark], wrap);
 }
 
 function renderVolChart(report) {
     const wrap = document.getElementById('abs-vol-chart');
-    if (!wrap) return;
+    if (!wrap || !window.uPlot) return;
     if (!report || state.bars.length === 0) { wrap.innerHTML = ''; return; }
     const xs = state.bars.map((_, i) => i);
     const vols = state.bars.map(b => b.volume);
@@ -209,7 +210,7 @@ function renderVolChart(report) {
     const bearMark = state.bars.map((b, i) => report.bearish[i] ? b.volume : null);
     const avg = vols.reduce((s, v) => s + v, 0) / Math.max(1, vols.length);
     const avgLine = xs.map(() => avg);
-    const opts = uplotTheme({
+    const opts = {
         width: wrap.clientWidth || 800,
         height: 220,
         scales: { x: { time: false } },
@@ -222,9 +223,11 @@ function renderVolChart(report) {
             { label: t('view.abs.series.vol_bear'), stroke: 'var(--red)', width: 0,
               points: { show: true, size: 9, fill: 'var(--red)' } },
         ],
-    });
-    if (volChart) volChart.destroy();
-    volChart = new uPlot(opts, [xs, vols, avgLine, bullMark, bearMark], wrap);
+        axes: [{ stroke: '#aaa' }, { stroke: '#aaa' }],
+        legend: { show: true },
+    };
+    if (volChart) { try { volChart.destroy(); } catch {} volChart = null; }
+    volChart = new window.uPlot(opts, [xs, vols, avgLine, bullMark, bearMark], wrap);
 }
 
 function renderEvents(report) {

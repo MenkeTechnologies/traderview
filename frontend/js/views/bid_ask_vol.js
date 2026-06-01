@@ -48,7 +48,7 @@ export async function renderBidAskVol(mount, _appState) {
                 <button data-i18n="view.bavr.btn.demo_hsell"     id="bv-d7" class="secondary" data-tip="view.bavr.tip.demo_hsell"     type="button">Demo: heavy sell</button>
                 <button data-i18n="view.bavr.btn.demo_short"     id="bv-d8" class="secondary" data-tip="view.bavr.tip.demo_short"     type="button">Demo: short period (10)</button>
             </div>
-            <p data-i18n="view.bavr.hint.about" class="muted">Rolling Σ bid / Σ ask over `period` bars (Lee-Ready classified trades). > 1.5 → sell pressure (sellers hitting bids). < 0.67 → buy pressure (buyers lifting offers). ≈ 1.0 balanced. Default period=60.</p>
+            <p data-i18n="view.bavr.hint.about" class="muted">Rolling Σ bid / Σ ask over period bars (Lee-Ready classified trades). &gt; 1.5 → sell pressure (sellers hitting bids). &lt; 0.67 → buy pressure (buyers lifting offers). ≈ 1.0 balanced. Default period=60.</p>
         </div>
 
         <div id="bv-summary" class="cards"></div>

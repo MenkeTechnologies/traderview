@@ -107,16 +107,12 @@ pub fn run() {
                 Ok(d) => d.join("traderview"),
                 Err(e) => {
                     tracing::error!(?e, "app_data_dir failed");
-                    show_fatal_dialog(app, &format!("app_data_dir: {e}"));
-                    return Err(Box::new(std::io::Error::other(
-                        format!("app_data_dir: {e}"),
-                    )));
+                    fatal_startup(app, &format!("app_data_dir: {e}"));
                 }
             };
             if let Err(e) = std::fs::create_dir_all(&data_dir) {
                 tracing::error!(?e, "mkdir app data");
-                show_fatal_dialog(app, &format!("mkdir {}: {e}", data_dir.display()));
-                return Err(Box::new(e));
+                fatal_startup(app, &format!("mkdir {}: {e}", data_dir.display()));
             }
             tracing::info!(data_dir = %data_dir.display(), "data dir ready");
 
@@ -125,10 +121,7 @@ pub fn run() {
                 Ok(s) => s,
                 Err(e) => {
                     tracing::error!(?e, "secret load/create failed");
-                    show_fatal_dialog(app, &format!("jwt-secret: {e}"));
-                    return Err(Box::new(std::io::Error::other(
-                        format!("jwt-secret: {e}"),
-                    )));
+                    fatal_startup(app, &format!("jwt-secret: {e}"));
                 }
             };
             tracing::info!("jwt secret loaded");
@@ -141,8 +134,7 @@ pub fn run() {
                 Ok(rt) => Arc::new(rt),
                 Err(e) => {
                     tracing::error!(?e, "tokio runtime build failed");
-                    show_fatal_dialog(app, &format!("tokio runtime: {e}"));
-                    return Err(Box::new(e));
+                    fatal_startup(app, &format!("tokio runtime: {e}"));
                 }
             };
 
@@ -189,29 +181,23 @@ pub fn run() {
                 }
                 Ok(Err(err_msg)) => {
                     tracing::error!(%err_msg, "backend failed");
-                    show_fatal_dialog(
+                    fatal_startup(
                         app,
                         &format!(
                             "TraderView backend failed to start:\n\n{err_msg}\n\nLog: {}",
                             log_file_path().display()
                         ),
                     );
-                    Err(Box::new(std::io::Error::other(
-                        format!("backend failed: {err_msg}"),
-                    )))
                 }
                 Err(e) => {
                     tracing::error!(?e, "backend boot timeout/disconnect");
-                    show_fatal_dialog(
+                    fatal_startup(
                         app,
                         &format!(
                             "TraderView backend did not start within 5 minutes.\n\nLog: {}\n\nFirst-run downloads ~80MB of PostgreSQL — check your network.",
                             log_file_path().display()
                         ),
                     );
-                    Err(Box::new(std::io::Error::other(
-                        format!("backend timeout: {e}"),
-                    )))
                 }
             }
         })
@@ -359,6 +345,13 @@ fn show_fatal_dialog(app: &tauri::App, message: &str) {
         .message(message)
         .title("TraderView · startup failed")
         .blocking_show();
+}
+
+/// Show a native error dialog then exit. Returning `Err` from Tauri's setup
+/// hook triggers a panic in tao's `did_finish_launching` (SIGABRT).
+fn fatal_startup(app: &tauri::App, message: &str) -> ! {
+    show_fatal_dialog(app, message);
+    std::process::exit(1);
 }
 
 #[cfg(test)]

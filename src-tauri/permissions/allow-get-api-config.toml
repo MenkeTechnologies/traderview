@@ -1,0 +1,6 @@
+"$schema" = "schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-api-config"
+description = "Enables the get_api_config command for desktop API bootstrap."
+commands.allow = ["get_api_config"]

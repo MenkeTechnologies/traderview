@@ -84,12 +84,12 @@ function bindTestButtons() {
 }
 
 function bindRulesPanel() {
-    document.getElementById('ar-rules').addEventListener('click', (ev) => {
-        const t = ev.target;
-        if (!(t instanceof HTMLElement)) return;
-        const id = t.dataset.ruleId;
+    document.getElementById('ar-rules').addEventListener('click', async (ev) => {
+        const tgt = ev.target;
+        if (!(tgt instanceof HTMLElement)) return;
+        const id = tgt.dataset.ruleId;
         if (!id) return;
-        if (t.dataset.action === 'remove') {
+        if (tgt.dataset.action === 'remove') {
             if (await tConfirm(tr('view.alert_rules.confirm.remove'), {}, { level: 'info' })) {
                 state = engine.removeRule(state, id);
                 engine.saveState(state);

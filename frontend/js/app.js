@@ -282,31 +282,52 @@ export const state = {
     view: 'dashboard',
 };
 
+let uiWired = false;
+
+export async function mountApp({ cfg, me, accounts }) {
+    state.mode = cfg.mode ?? state.mode;
+    state.me = me;
+    state.accounts = accounts;
+    if (state.accounts.length && !state.accountId) state.accountId = state.accounts[0].id;
+
+    if (!uiWired) {
+        bindTabs();
+        uiWired = true;
+    }
+
+    const userStrip = document.getElementById('user-strip');
+    if (userStrip) {
+        userStrip.textContent = me.is_local ? t('app.user.local') : (me.email || me.display_name || '');
+    }
+    renderAccountStrip();
+    await dispatch();
+    hideAuthScreen();
+    startAlertEngine();
+    installHotkeyEngine();
+    requestNotifPermission();
+    startWs();
+    wireWsStatusIndicator();
+    wireKillSwitchIndicator();
+}
+
 async function boot() {
-    await initApi();
+    try {
+        await initApi();
+    } catch (e) {
+        const appEl = document.getElementById('app');
+        if (appEl) {
+            appEl.innerHTML = `<p class="boot">${t('boot.failed_connect', { err: e.message || String(e) })}</p>`;
+        }
+        return;
+    }
     try {
         const cfg = await api.config();
         state.mode = cfg.mode;
     } catch (_) { /* server may not be reachable yet */ }
     try {
         const me = await api.me();
-        state.me = me;
-        const userStrip = document.getElementById('user-strip');
-        if (userStrip) {
-            userStrip.textContent = me.is_local ? t('app.user.local') : (me.email || me.display_name || '');
-        }
-        await loadAccounts();
-        renderAccountStrip();
-        await dispatch();
-        hideAuthScreen();
-        // Boot background engines once authenticated. installHotkeyEngine
-        // already calls reloadHotkeys() internally — don't double-fetch.
-        startAlertEngine();
-        installHotkeyEngine();
-        requestNotifPermission();
-        startWs();
-        wireWsStatusIndicator();
-        wireKillSwitchIndicator();
+        const accounts = await api.accounts();
+        await mountApp({ cfg: { mode: state.mode }, me, accounts });
     } catch (e) {
         if (e instanceof ApiError && e.status === 401 && state.mode === 'web') {
             showAuthScreen();
@@ -2159,7 +2180,3 @@ export const viewRenderers = {
 };
 
 window.addEventListener('tv:authed', () => boot());
-document.addEventListener('DOMContentLoaded', () => {
-    bindTabs();
-    boot();
-});

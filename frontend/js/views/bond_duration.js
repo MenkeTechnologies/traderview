@@ -152,14 +152,11 @@ async function compute(tok) {
     renderSummary(resp, false);
     renderSensitivity(resp);
     renderCfChart();
-<<<<<<< Updated upstream
+    renderPvChart();
     const price = Number(resp.price || 0).toFixed(2);
     const mac = Number(resp.macaulay_duration || 0).toFixed(2);
     const mod = Number(resp.modified_duration || 0).toFixed(2);
     showToast(t('view.bond_duration.toast.computed', { price, mac, mod }), { level: 'success' });
-=======
-    renderPvChart();
->>>>>>> Stashed changes
 }
 
 function renderSummary(report, pending) {

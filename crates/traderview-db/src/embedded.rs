@@ -44,16 +44,52 @@ impl Embedded {
             "starting embedded postgres"
         );
 
+        let pg_data = settings.data_dir.clone();
+
         // If a prior launch was SIGKILL'd / OOM'd, the postmaster process is
         // gone but the lockfile remains, and pg_ctl will refuse to start
         // ("another server might be running"). Detect a stale lock by reading
         // the PID from line 1 of postmaster.pid and checking liveness; if the
         // PID is dead, remove the lock so the next start() can succeed.
-        clean_stale_lock(&data_dir.join("pg-data"));
+        clean_stale_lock(&pg_data);
+
+        let action = resolve_pg_action(&settings).await?;
+        let (settings, start_fresh) = match action {
+            PgAction::Reuse(port) => {
+                tracing::info!(port, "reusing existing embedded postgres");
+                let mut s = settings;
+                s.port = port;
+                (s, false)
+            }
+            PgAction::StartFresh => (settings, true),
+        };
 
         let mut pg = PostgreSQL::new(settings);
         pg.setup().await?;
-        pg.start().await?;
+
+        if start_fresh {
+            if let Err(e) = pg.start().await {
+                // Race: another start between resolve and pg.start(), or stale
+                // lock we couldn't detect — try connecting to whatever is up.
+                if let Some(port) = read_postmaster_port(&pg_data) {
+                    if can_connect_bootstrap(&pg.settings().clone(), port).await {
+                        tracing::warn!(
+                            error = %e,
+                            port,
+                            "pg.start failed but existing instance is reachable; reusing"
+                        );
+                        let mut reuse = pg.settings().clone();
+                        reuse.port = port;
+                        pg = PostgreSQL::new(reuse);
+                        pg.setup().await?;
+                    } else {
+                        return Err(e.into());
+                    }
+                } else {
+                    return Err(e.into());
+                }
+            }
+        }
 
         let db_name = "traderview";
         if !pg.database_exists(db_name).await? {
@@ -80,6 +116,87 @@ impl Embedded {
     }
 }
 
+enum PgAction {
+    Reuse(u16),
+    StartFresh,
+}
+
+/// Decide whether to attach to an already-running cluster or start a new one.
+async fn resolve_pg_action(settings: &Settings) -> anyhow::Result<PgAction> {
+    let pg_data = &settings.data_dir;
+    let pid_file = pg_data.join("postmaster.pid");
+    if !pid_file.exists() {
+        return Ok(PgAction::StartFresh);
+    }
+
+    let Some((pid, port)) = read_postmaster_info(pg_data) else {
+        return Ok(PgAction::StartFresh);
+    };
+
+    if !pid_is_alive(pid) {
+        return Ok(PgAction::StartFresh);
+    }
+
+    if can_connect_bootstrap(settings, port).await {
+        return Ok(PgAction::Reuse(port));
+    }
+
+    tracing::warn!(
+        pid,
+        port,
+        "postmaster.pid live but connection failed; stopping orphan cluster"
+    );
+    stop_cluster(settings).await?;
+    Ok(PgAction::StartFresh)
+}
+
+async fn can_connect_bootstrap(settings: &Settings, port: u16) -> bool {
+    let mut s = settings.clone();
+    s.port = port;
+    let url = s.url("postgres");
+    super::connect_external(&url).await.is_ok()
+}
+
+/// pg_ctl stop on the data dir, then remove the lockfile if it remains.
+async fn stop_cluster(settings: &Settings) -> anyhow::Result<()> {
+    let pg = PostgreSQL::new(settings.clone());
+    if let Err(e) = pg.stop().await {
+        tracing::warn!(error = %e, "pg_ctl stop failed (best-effort)");
+    }
+    let pid_file = settings.data_dir.join("postmaster.pid");
+    if pid_file.exists() {
+        let _ = std::fs::remove_file(&pid_file);
+    }
+    Ok(())
+}
+
+/// Parse line 1 (PID) and line 4 (port) from `postmaster.pid`.
+fn read_postmaster_info(pg_data: &Path) -> Option<(i32, u16)> {
+    let port = read_postmaster_port(pg_data)?;
+    let pid_file = pg_data.join("postmaster.pid");
+    let contents = std::fs::read_to_string(&pid_file).ok()?;
+    let pid: i32 = contents.lines().next()?.trim().parse().ok()?;
+    Some((pid, port))
+}
+
+fn read_postmaster_port(pg_data: &Path) -> Option<u16> {
+    let pid_file = pg_data.join("postmaster.pid");
+    let contents = std::fs::read_to_string(&pid_file).ok()?;
+    let port_line = contents.lines().nth(3)?;
+    port_line.trim().parse().ok()
+}
+
+#[cfg(unix)]
+fn pid_is_alive(pid: i32) -> bool {
+    // kill(pid, 0) probes existence without delivering a signal.
+    unsafe { libc::kill(pid, 0) == 0 }
+}
+
+#[cfg(not(unix))]
+fn pid_is_alive(_pid: i32) -> bool {
+    true
+}
+
 /// Remove a stale `postmaster.pid` whose recorded PID is not alive.
 /// Safe no-op if the file is missing or unreadable.
 fn clean_stale_lock(pg_data: &Path) {
@@ -94,13 +211,7 @@ fn clean_stale_lock(pg_data: &Path) {
         return;
     };
 
-    // kill(pid, 0) probes existence without delivering a signal.
-    #[cfg(unix)]
-    let alive = unsafe { libc::kill(pid, 0) == 0 };
-    #[cfg(not(unix))]
-    let alive = true; // Conservative on non-unix — never delete.
-
-    if !alive {
+    if !pid_is_alive(pid) {
         tracing::warn!(
             pid_file = %pid_file.display(),
             stale_pid = pid,
@@ -222,6 +333,22 @@ mod tests {
         // Unparseable PID → leave the file alone; the embedded PG layer will
         // give the real error message.
         assert!(pid_file.exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_postmaster_port_parses_line_four() {
+        let dir = temp_pg_data("port-parse");
+        write_pid_file(&dir, "12345\n/data\n1700000000\n5433\n");
+        assert_eq!(read_postmaster_port(&dir), Some(5433));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn read_postmaster_info_parses_pid_and_port() {
+        let dir = temp_pg_data("info-parse");
+        write_pid_file(&dir, "99999\n/data\n1700000000\n5434\n");
+        assert_eq!(read_postmaster_info(&dir), Some((99999, 5434)));
         let _ = std::fs::remove_dir_all(&dir);
     }
 
