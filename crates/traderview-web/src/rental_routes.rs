@@ -113,6 +113,9 @@ use traderview_expense::move_in_inspection::{
 use traderview_expense::renters_insurance::{
     check as check_renters_insurance, RentersInsuranceInput, RentersInsuranceResult,
 };
+use traderview_expense::utility_shutoff::{
+    check as check_utility_shutoff, ShutoffInput, ShutoffResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -250,6 +253,7 @@ pub fn router() -> Router<AppState> {
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
+        .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2151,6 +2155,35 @@ async fn renters_insurance_check_route(
         ));
     }
     Ok(Json(check_renters_insurance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord-caused utility shutoff prohibition check
+//
+// Mounted at POST /api/rental/utility-shutoff-check. Five regimes:
+// PerDayStatutoryPenalty (CA Civ. Code § 789.3 $100/day + $250 min;
+// WA RCW 59.18.300 $100/day); FlatPlusOneMonthRentPenalty (TX Prop.
+// Code § 92.008 $1k + 1 month rent); MonthlyRentMultiplePenalty (FL
+// Stat. § 83.67 3 months rent or actual whichever higher);
+// PunitiveDamagesFramework (NY RPL § 235-a + RPAPL 853 compensatory +
+// punitive + treble + criminal); GeneralProhibitionStandardRemedies
+// elsewhere. Bona-fide repair/emergency exception bars any violation.
+// ---------------------------------------------------------------------------
+
+async fn utility_shutoff_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ShutoffInput>,
+) -> Result<Json<ShutoffResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.monthly_rent_dollars < 0 || b.tenant_actual_damages_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "monthly_rent_dollars and tenant_actual_damages_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_utility_shutoff(&b)))
 }
 
 // ---------------------------------------------------------------------------

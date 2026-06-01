@@ -67,6 +67,7 @@ pub mod soi_protection;
 pub mod str_regulation;
 pub mod sublet_consent;
 pub mod tenant_abandonment;
+pub mod utility_shutoff;
 pub mod schedule_e;
 pub mod section_108;
 pub mod section_1014;

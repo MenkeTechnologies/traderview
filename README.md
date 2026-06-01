@@ -659,6 +659,36 @@ Mounted at `POST /api/rental/move-in-inspection-check`. Twenty-four tests pin: *
 
 Mounted at `POST /api/rental/renters-insurance-check`. Twenty-four tests pin: **OR $100k exact cap complies / $100,001 exceeds cap**; **OR additional-insured naming violation** + landlord-as-interest-only complies; **OR low-income exemption boundary** at 49% / 50% / 51% AMI (≤50% blocks requirement); **OR low-income exemption does not fire if landlord does not require** (no compliance impact when nothing required); **OR all three violations stack** (coverage + additional-insured + low-income); **CA no-state-cap accepts $500k coverage**; **TX additional-insured naming complies** (no prohibition); **NY low-income tenant no exemption** (no statutory carveout); FL $1M coverage complies; **OK misconception pinned** (GenerallyAllowedNoStateCap, compliant); **51-state coverage**; non-empty citations; **3 OR-unique invariants** (statutory cap regime / additional-insured prohibition / low-income exemption flag); unknown state falls back to no-cap; lowercase normalizes; OR compliant note describes state path; OR violation note lists each issue (exceeds cap + additional insured + AMI); general-allowed note describes no-cap.
 
+`traderview-expense::utility_shutoff` is the **state landlord-caused utility shutoff prohibition compliance table** — directly addresses the most common "self-help eviction" tactic where landlords cut electricity, water, gas, or heat to pressure tenants out. Every US state prohibits this, but the **statutory penalties vary by orders of magnitude**: from $100/day (CA, WA) to $1k flat + one month rent (TX) to 3 months rent or actual damages whichever is higher (FL) to punitive + treble damages + criminal exposure (NY). Five regimes:
+
+| Regime                                      | States | Source                                                                |
+|---------------------------------------------|--------|-----------------------------------------------------------------------|
+| **PerDayStatutoryPenalty**                  | CA, WA | Cal. Civ. Code § 789.3 ($100/day + $250 minimum + actual damages + attorney's fees); Wash. RCW 59.18.300 (up to $100/day + actual damages + prevailing-party attorney's fees and costs) |
+| **FlatPlusOneMonthRentPenalty**             | TX     | Tex. Prop. Code § 92.008 ($1,000 + one month's rent + actual damages + attorney's fees + court costs) |
+| **MonthlyRentMultiplePenalty**              | FL     | Fla. Stat. § 83.67 (3 months' rent OR actual damages, whichever higher, + costs + attorney's fees) |
+| **PunitiveDamagesFramework**                | NY     | N.Y. RPL § 235-a + RPAPL 853 (compensatory + punitive + treble damages for unlawful eviction + criminal exposure) |
+| **GeneralProhibitionStandardRemedies**      | 46 other states + DC | Self-help eviction prohibited; tenant entitled to actual damages + injunctive relief; no statute-specific enhanced penalty |
+
+**California's per-day formula** is the most-known: $100 per day of violation, $250 minimum floor (so even a 1-day shutoff yields a $250 base penalty), plus actual damages and attorney's fees. After 10 days the per-day amount ($1,000) exceeds the floor and dominates. Pinned by `ca_10_days_yields_1000_dollar_penalty` + `ca_1_day_minimum_floor_applies_250` + `ca_3_days_above_minimum_applies_per_day` boundary ([Tobener Law CA Shutoff guide](https://www.tobenerlaw.com/shut-offs/)).
+
+**Washington has the same $100/day rate but NO minimum floor** — a 1-day shutoff is $100, not $250. Pinned by `wa_no_minimum_floor`.
+
+**Texas's flat penalty is duration-independent** — a 1-day shutoff and a 100-day shutoff yield the same $1,000 + 1 month rent statutory amount (separately from actual damages). Pinned by `tx_duration_does_not_change_penalty`.
+
+**Florida picks the higher of (3 months rent) or (actual damages)** — this is uniquely beneficial to tenants with low rent but high actual damages (food spoilage, hotel costs, lost wages). Pinned by both directions: `fl_3_months_rent_when_higher_than_actual` + `fl_actual_damages_when_higher_than_rent_multiple` ([Fla. Stat. § 83.67](https://www.frls.org/blog/utilitiesprocess)).
+
+**New York alone supports criminal exposure** plus civil compensatory + punitive + treble damages for unlawful eviction under RPL § 235-a and RPAPL 853 ([N.Y. RPL § 235-a official text](https://newyork.public.law/laws/n.y._real_property_law_section_235-a)).
+
+**Bona-fide repair / emergency exception** is universal: every regime includes a carve-out for utility interruption required for genuine repair, construction, or emergency (water main break, gas leak, structural integrity issue). Module bars any violation when `interruption_due_to_bona_fide_repair_or_emergency: true`. Pinned by `bona_fide_repair_exception_blocks_violation_ca`.
+
+**Module invariants** (4 separately pinned):
+- CA + WA only on PerDayStatutoryPenalty (`per_day_regime_only_ca_and_wa`).
+- TX only on FlatPlusOneMonthRentPenalty (`flat_plus_month_regime_only_tx`).
+- FL only on MonthlyRentMultiplePenalty (`monthly_rent_multiple_regime_only_fl`).
+- NY only on PunitiveDamagesFramework (`punitive_regime_only_ny`).
+
+Mounted at `POST /api/rental/utility-shutoff-check`. Twenty-six tests pin: **CA 10 days × $100 = $1,000 penalty**; **CA 1-day minimum floor $250**; CA 3-day boundary ($300 > $250 minimum); CA attorney fees recoverable; **WA 30 days × $100 = $3,000**; WA no minimum floor (1 day = $100); **TX flat $1k + 1 month rent**; TX duration-independent flat penalty; **FL 3 months rent when higher than actual** ($6k > $500 actual); **FL actual damages when higher than rent multiple** ($10k > $3k); **NY punitive + treble + criminal all available**; NY actual damages form statutory base; **OR general-prohibition no specific penalty** (only actual damages, no attorney fees, no punitives); **bona-fide repair exception blocks violation** (CA); no-shutoff no-violation; **51-state coverage**; non-empty citations; **4 regime-uniqueness invariants** (CA+WA / TX / FL / NY); unknown state falls back to general; lowercase normalizes; **CA note describes per-day math** ("10 day", "$100/day"); TX note describes flat + rent path; **NY note describes PUNITIVE + TREBLE + criminal path**.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
