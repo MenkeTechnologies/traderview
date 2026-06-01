@@ -93,6 +93,7 @@ pub mod normalize;
 pub mod pesticide_application_notice;
 pub mod pet_fees;
 pub mod plain_language_lease;
+pub mod portable_tenant_screening_report;
 pub mod pre_move_out_inspection;
 pub mod prevailing_party_attorney_fees;
 pub mod qbi;

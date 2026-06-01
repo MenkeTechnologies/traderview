@@ -328,6 +328,10 @@ use traderview_expense::lease_cure_period::{
     check as check_lease_cure_period, CheckResult as LeaseCureResult,
     Input as LeaseCureInput,
 };
+use traderview_expense::portable_tenant_screening_report::{
+    check as check_portable_screening, CheckResult as PortableScreeningResult,
+    Input as PortableScreeningInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -565,6 +569,7 @@ pub fn router() -> Router<AppState> {
         .route("/holdover-tenant-damages", axum::routing::post(holdover_tenant_damages_route))
         .route("/lease-assignment-consent", axum::routing::post(lease_assignment_consent_route))
         .route("/lease-cure-period", axum::routing::post(lease_cure_period_route))
+        .route("/portable-tenant-screening-report", axum::routing::post(portable_tenant_screening_report_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4397,6 +4402,40 @@ async fn lease_cure_period_route(
         ));
     }
     Ok(Json(check_lease_cure_period(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Portable / reusable tenant screening report regulation.
+//
+// Mounted at POST /api/rental/portable-tenant-screening-report.
+// Three regimes for whether a landlord must accept a tenant-
+// provided pre-pulled screening report in lieu of conducting and
+// charging for their own: (1) Colorado — Colo. Rev. Stat.
+// § 38-12-902 / § 38-12-904 (HB23-1099, eff. 2023): MANDATORY
+// ACCEPTANCE of compliant report (≤30 days old, complete CRTSR
+// components, no-material-change statement); $2,500 violation
+// penalty reducible to $50 if cured within 7 days; single-
+// application-at-a-time exception with 20-day refund; (2)
+// Washington — RCW 59.18.257: OPT-IN DISCLOSURE — landlord must
+// publish acceptance status on property website; if opt-in,
+// must accept compliant CRTSR (credit + criminal + eviction +
+// employment + rental history); $100 max violation penalty;
+// (3) Default — no statutory portability requirement; landlord
+// may demand fresh fee-based screening under general
+// application_fees + FCRA regime.
+// ---------------------------------------------------------------------------
+
+async fn portable_tenant_screening_report_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<PortableScreeningInput>,
+) -> Result<Json<PortableScreeningResult>, ApiError> {
+    if b.report_age_days > 100_000 {
+        return Err(ApiError::BadRequest(
+            "report_age_days out of range".into(),
+        ));
+    }
+    Ok(Json(check_portable_screening(&b)))
 }
 
 // ---------------------------------------------------------------------------
