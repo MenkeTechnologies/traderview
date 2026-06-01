@@ -134,6 +134,9 @@ use traderview_expense::rent_receipts::{
 use traderview_expense::repair_and_deduct::{
     check as check_repair_and_deduct, RepairDeductInput, RepairDeductResult,
 };
+use traderview_expense::cosigner_rules::{
+    check as check_cosigner_rules, CosignerInput, CosignerResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -278,6 +281,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
         .route("/rent-receipt-check", axum::routing::post(rent_receipt_check_route))
         .route("/repair-deduct-check", axum::routing::post(repair_and_deduct_check_route))
+        .route("/cosigner-check", axum::routing::post(cosigner_rules_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2354,6 +2358,29 @@ async fn repair_and_deduct_check_route(
         ));
     }
     Ok(Json(check_repair_and_deduct(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State cosigner / lease guarantor enforcement rules check
+//
+// Mounted at POST /api/rental/cosigner-check. Two regimes:
+// IllinoisStatutoryNoticeRequired (IL 815 ILCS 505/2S -- first-class-
+// mail notice required to cosigner 15 days before collection action;
+// $250 statutory damages + attorney fees on violation);
+// CommonLawSuretyRules (49 other states + DC -- continuing-vs-
+// specific-term guaranty doctrine governs renewal liability; no
+// state-mandated pre-collection notice).
+// ---------------------------------------------------------------------------
+
+async fn cosigner_rules_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CosignerInput>,
+) -> Result<Json<CosignerResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_cosigner_rules(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -860,6 +860,35 @@ Mounted at `POST /api/rental/rent-receipt-check`. Twenty-eight tests pin: **NY a
 
 Mounted at `POST /api/rental/repair-deduct-check`. Twenty-eight tests pin: **CA within 1-month cap complies / exceeds violates / third use in 12 months violates / first use OK**; **TX $500 floor at low rent / $1 month cap at high rent / $501 over floor violates**; **MA 4-month cap within ($7,500 < $8k) / exceeds ($8.5k violates)**; **WA 30-day notice required / 30-day exact complies / 29-day insufficient**; **MD no court order no remedy + court order + substantial threat both required**; **NJ no deposit defense WAIVED + deposit made preserves**; **FL 7-day notice complies / 6-day insufficient**; **51-state coverage**; non-empty citations; **4 regime-uniqueness invariants** (MD / NJ / FL / MA 4-month cap); unknown state falls back to default 1-month cap; lowercase normalizes; CA exceed-cap note describes EXCEEDS CAP; NJ no-deposit note describes defense WAIVED.
 
+`traderview-expense::cosigner_rules` is the **state cosigner / lease guarantor enforcement rules compliance table** — practical for landlord-trader operations using cosigners or guarantors on residential leases. Module answers two key questions: (1) is the cosigner liable for RENEWALS / EXTENSIONS, or only the original term? (2) does the landlord owe statutory notice to the cosigner BEFORE pursuing collection action or adverse-credit reporting? Two regimes:
+
+| Regime                                       | States              | Source                                                                |
+|----------------------------------------------|---------------------|-----------------------------------------------------------------------|
+| **IllinoisStatutoryNoticeRequired**          | IL                  | 815 ILCS 505/2S — first-class-mail notice required to cosigner BEFORE adverse-credit reporting or collection; 15-day cure period; **$250 statutory damages + attorney's fees** on violation |
+| **CommonLawSuretyRules**                     | 49 other states + DC | Continuing-vs-specific-term guaranty doctrine governs renewal liability (CA Civ. Code § 2787-2856 surety provisions; NY common law); no state-mandated pre-collection notice |
+
+**Illinois's unique 815 ILCS 505/2S pre-collection notice** is the strictest landlord-side requirement in the country. Before reporting adverse information to a consumer reporting agency, providing information to a collection agency, or taking ANY collection action against a cosigner, the landlord MUST notify the cosigner by FIRST CLASS MAIL that: (a) the primary obligor has become delinquent or defaulted; (b) the cosigner is responsible for payment; AND (c) the cosigner has 15 days from the date the notice was sent to pay or make arrangements. Failure to comply makes the violation an "unlawful practice" + creates landlord exposure for up to $250 statutory damages + reasonable attorney's fees ([815 ILCS 505/2S statutory text](https://ilga.gov/legislation/ilcs/fulltext.asp?DocName=081505050K2S)). Pinned by `il_collection_without_notice_violates` + `il_collection_with_notice_15_days_compliant` + `il_collection_14_days_before_notice_violates_window` (boundary) + statutory-damages + attorney-fees + 15-day-window all individually pinned as invariants.
+
+**Common-law renewal liability** — the load-bearing distinction is between two guaranty types under CommonLawSuretyRules:
+
+| Guaranty type            | Renewal coverage                                          |
+|--------------------------|-----------------------------------------------------------|
+| **ContinuingGuaranty**   | Covers original term + ALL renewals automatically         |
+| **SpecificTermGuaranty** | Covers original term only; cosigner must RE-SIGN for each renewal |
+
+Pinned by `continuing_guaranty_covers_renewal_automatically` (CA), `specific_term_guaranty_without_resign_no_renewal_liability` (cosigner walks at renewal), `specific_term_guaranty_with_resign_covers_renewal` (re-signing extends liability), `no_renewal_cosigner_liable_only_for_original_term`.
+
+**State citations differentiated**: CA citation explicitly references Cal. Civ. Code § 2787-2856 (suretyship provisions); NY citation references common-law suretyship; all other common-law states share a generic citation. Pinned by `ca_citation_mentions_civ_code` + `ny_common_law_path`.
+
+**Module invariants** (2 separately pinned):
+- IL only on IllinoisStatutoryNoticeRequired regime (`only_il_uses_statutory_notice_regime`)
+- IL only with statutory damages > 0 (`only_il_has_statutory_damages`)
+- IL 15-day window pinned (`il_15_day_window_pinned`)
+- IL $250 statutory damages pinned (`il_statutory_damages_250_dollars_pinned`)
+- IL attorney fees recoverable (`il_attorney_fees_recoverable`)
+
+Mounted at `POST /api/rental/cosigner-check`. Twenty-three tests pin: **continuing guaranty covers renewal automatically** (CA); **specific-term guaranty without re-sign no renewal liability**; specific-term guaranty with re-sign covers renewal; no-renewal cosigner liable only for original term; **IL collection without notice violates** with $250 damages; **IL collection with 15-day notice compliant**; IL 14-day before notice violates (boundary); IL no-collection no-notice-required (notice not triggered when no collection action); **IL violation note describes $250 damages exposure**; CA collection without notice no violation (no statutory requirement); NY common-law path + citation; CA citation mentions Civ. Code § 2787-2856; **51-state coverage**; non-empty citations; **2 regime-uniqueness invariants** (IL only on IllinoisStatutoryNoticeRequired + IL only with statutory damages); IL 15-day window + $250 damages + attorney fees individually pinned; unknown state falls back to common law; lowercase normalizes; continuing guaranty note describes automatic coverage; no-renewal note describes original term only.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:
