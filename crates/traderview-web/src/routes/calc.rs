@@ -88,6 +88,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-332",           post(section_332_route))
+        .route("/calc/section-1234a",         post(section_1234a_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2424,6 +2425,24 @@ async fn section_332_route(
         ));
     }
     Ok(Json(traderview_expense::section_332::compute(&b)))
+}
+
+// ── §1234A character of gain/loss on right termination ─────────────
+// Mounted at /api/calc/section-1234a. §1234A(1) treats gain/loss on
+// cancellation, lapse, expiration, or other termination of a right or
+// obligation with respect to property that is (or would be on
+// acquisition) a capital asset as gain/loss from the sale of a
+// capital asset; holding period of the RIGHT governs §1222 character.
+// §1234A(2) routes character of terminated §1256 contracts to the
+// §1256(a)(3) 60/40 split, ignoring holding period. §1234A excludes
+// securities futures contracts — §1234B governs those. Ordinary
+// underlying property is OUTSIDE §1234A scope (§ 165 / § 1231 govern).
+
+async fn section_1234a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1234a::Section1234AInput>,
+) -> Result<Json<traderview_expense::section_1234a::Section1234AResult>, ApiError> {
+    Ok(Json(traderview_expense::section_1234a::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
