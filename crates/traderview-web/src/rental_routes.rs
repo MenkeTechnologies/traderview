@@ -56,6 +56,9 @@ use traderview_expense::security_deposit_caps::{
 use traderview_expense::rent_control::{
     check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
 };
+use traderview_expense::rent_control_lease_disclosure::{
+    check as check_rent_control_disclosure, RentControlDisclosureInput, RentControlDisclosureResult,
+};
 use traderview_expense::entry_notice::{
     compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
 };
@@ -688,6 +691,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-disclosures-required", axum::routing::post(lease_disclosures_route))
         // State rent control / rent-increase compliance check
         .route("/rent-increase-check", axum::routing::post(rent_increase_check_route))
+        .route("/rent-control-lease-disclosure", axum::routing::post(rent_control_lease_disclosure_route))
         // State habitability remedies available to tenants
         .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
         // State security deposit cap compliance check
@@ -5807,6 +5811,31 @@ async fn rent_increase_check_route(
         ));
     }
     Ok(Json(check_rent_increase(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rent_control_lease_disclosure: Mandatory landlord disclosure of rent
+// control / rent stabilization status at LEASE EXECUTION (distinct from
+// rent_control substantive cap mechanics, rent_increase_notice_period
+// advance-notice-before-raising-rent, and lease_disclosures general
+// lease-required disclosures). Four regimes: California (Cal. Civ. Code
+// § 1947.12 + § 1946.2 AB 1482 — addendum REQUIRED for post-July-1-2020
+// tenancies + 12-point font + § 1947.12(d)(5) exempt-property ownership
+// language requirement); Oregon (Or. Rev. Stat. § 90.323 SB 608 — NO
+// addendum required; cap operates through 90/180-day rent-increase
+// notice + < 15-year / vacancy / subsidized / shared-unit exemptions);
+// NewYork (RPL § 234 + RSC § 2522.5(c) rent stabilization lease rider
+// MANDATORY for stabilized units; failure makes lease unenforceable as
+// to provisions conflicting with stabilization law); Default (no
+// statewide disclosure obligation; municipal control may apply).
+// ---------------------------------------------------------------------------
+
+async fn rent_control_lease_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentControlDisclosureInput>,
+) -> Result<Json<RentControlDisclosureResult>, ApiError> {
+    Ok(Json(check_rent_control_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
