@@ -336,6 +336,10 @@ use traderview_expense::hoa_rental_restriction::{
     check as check_hoa_rental_restriction, CheckResult as HoaRentalResult,
     Input as HoaRentalInput,
 };
+use traderview_expense::rent_acceleration_enforceability::{
+    check as check_rent_acceleration, CheckResult as RentAccelerationResult,
+    Input as RentAccelerationInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -575,6 +579,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-cure-period", axum::routing::post(lease_cure_period_route))
         .route("/portable-tenant-screening-report", axum::routing::post(portable_tenant_screening_report_route))
         .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
+        .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4472,6 +4477,41 @@ async fn hoa_rental_restriction_route(
     Json(b): Json<HoaRentalInput>,
 ) -> Result<Json<HoaRentalResult>, ApiError> {
     Ok(Json(check_hoa_rental_restriction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Rent acceleration clause enforceability.
+//
+// Mounted at POST /api/rental/rent-acceleration-enforceability.
+// Three regimes for when a landlord may demand the full unpaid
+// rent balance for the remainder of the lease term as a lump sum:
+// (1) California — Cal. Civ. Code § 1671 + § 1951.2: § 1671(d)
+// PRESUMES residential liquidated damages clauses INVALID until
+// landlord proves reasonableness; § 1671(b) commercial
+// reasonableness test; § 1951.2 mitigation duty;
+// (2) New York — Holy Properties Ltd., L.P. v. Kenneth Cole
+// Productions, Inc., 87 N.Y.2d 130 (1995): commercial
+// acceleration clauses enforceable WITHOUT mitigation duty,
+// subject to fraud/overreaching/unconscionability exception
+// and mandatory PRESENT-VALUE DISCOUNT when landlord has
+// possession; (3) Default — Restatement (Second) of Contracts
+// § 356 penalty doctrine + Restatement (Second) of Property
+// § 12.1 mitigation duty + PV discount required.
+// ---------------------------------------------------------------------------
+
+async fn rent_acceleration_enforceability_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentAccelerationInput>,
+) -> Result<Json<RentAccelerationResult>, ApiError> {
+    if b.acceleration_amount_demanded_cents > 100_000_000_000
+        || b.actual_damages_estimate_cents > 100_000_000_000
+    {
+        return Err(ApiError::BadRequest(
+            "acceleration or damages amount out of range".into(),
+        ));
+    }
+    Ok(Json(check_rent_acceleration(&b)))
 }
 
 // ---------------------------------------------------------------------------
