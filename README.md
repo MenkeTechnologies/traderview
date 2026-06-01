@@ -1349,6 +1349,35 @@ Three pieces:
 
 Mounted at `POST /api/calc/section-1233`. Twenty-one tests pin: no substantially identical → default ST; short-held at open + gain → §1233(b) + reset; long-held at open + loss → §1233(d); long-held at open + gain → no rule (default ST); short-held at open + loss → no rule (default ST); **acquired-during-short triggers §1233(b)(1)(B)**; both short and long held with loss → §1233(d) wins; both short and long held with gain → §1233(b) wins (only short-held lots reset); FIFO resets capped at short_shares (150 candidates → first 100 reset); 365-day boundary short-held → §1233(b) triggers; 366-day boundary long-held → §1233(d) on loss path only; zero gain/loss → no rule; **reset date equals short-close date not short-open date** (regression target); during-short acquisition resets to close date; long-held lots never appear in reset list; combined (A)+(B) buckets in FIFO order by acquisition date; acquisition on short_sale_date is held_at_open not during_short (boundary classification); only-(A) bucket works; only-(B) bucket works; notes mention short close date when resets emit; notes mention loss amount when §1233(d) fires.
 
+`traderview-expense::section_1235` is the **IRC §1235 sale or exchange of patents module** — provides AUTOMATIC long-term capital gain treatment to a qualifying "holder" who transfers ALL SUBSTANTIAL RIGHTS in a patent **regardless of holding period**. Even royalty-style periodic payments contingent on use, productivity, or disposition qualify — converting what would otherwise be ordinary royalty income into LTCG ([Cornell LII 26 U.S.C. § 1235](https://www.law.cornell.edu/uscode/text/26/1235), [Cornell LII 26 CFR § 1.1235-2](https://www.law.cornell.edu/cfr/text/26/1.1235-2)).
+
+**POST-TCJA importance**: TCJA (P.L. 115-97 § 13314) amended **§1221(a)(3)** to add "patent, invention, model, design, secret formula, or process held by the taxpayer who created the property" to the list of property EXCLUDED from capital-asset treatment. An inventor selling OUTSIDE §1235 now gets ORDINARY income on the gain. **§1235 became MORE important after TCJA** — it is now the primary (often only) path for an inventor or pre-reduction-to-practice financial backer to obtain LTCG ([McDonald Hopkins — Tax reform's impact on patents](https://mcdonaldhopkins.com/insights/news/Tax-reforms-impact-on-patents), [Sunstein LLP — New Tax Bill and Inventors](https://www.sunsteinlaw.com/publications/the-new-tax-bill-and-its-effect-on-inventors-a-capital-result)).
+
+**§1235(b) "Holder" definition** — exactly two paths qualify:
+
+| Path                                            | Requirements                                                                |
+|-------------------------------------------------|-----------------------------------------------------------------------------|
+| **Inventor**                                    | Any individual whose efforts created the property                           |
+| **Financial backer (pre-reduction-to-practice)** | Acquired interest from inventor BEFORE actual reduction to practice; paid consideration in money or money's worth; NOT employer of inventor; NOT related party under § 267(b) modified |
+
+**§1235(d) related-party modification** — §1235(a) does NOT apply to transfers between persons in any § 267(b) or § 707(b) relationship, with **25% substituted for 50%** in the ownership threshold. Critically, brothers and sisters are **EXCLUDED from related-party status** under the §1235 modification (unlike the normal § 267(b) which treats siblings as related). The module surfaces `related_party_under_267b_modified` so callers apply the modified test before calling.
+
+**"All substantial rights"** test (Treas. Reg. § 1.1235-2(b)) — transfer must NOT be limited in ANY of these three ways:
+
+1. Limited geographically within the country of issuance
+2. Limited in duration to less than the remaining patent life
+3. Limited in fields of use to less than all the rights covered by the patent
+
+Each limitation independently disqualifies. Pinned by `geographic_limitation_disqualifies` + `duration_limitation_disqualifies` + `field_of_use_limitation_disqualifies` + `multiple_rights_limitations_all_listed`.
+
+**Three payment types all qualify** (Treas. Reg. § 1.1235-1(b)):
+
+- Lump sum
+- Periodic fixed payments
+- **Payments contingent on productivity, use, or disposition** (royalties) — THIS is the load-bearing benefit: royalties would otherwise be ordinary income, but §1235 transforms them into LTCG. Pinned by `contingent_payment_qualifies_load_bearing`.
+
+Mounted at `POST /api/calc/section-1235`. Twenty-three tests pin: **inventor baseline qualifies for LTCG**; **inventor with contingent royalty payments still LTCG** (load-bearing §1235 benefit); **financial backer pre-reduction acquired qualifies**; backer-acquired-after-reduction disqualified; backer-who-is-employer disqualified; backer-without-consideration disqualified; **3 all-substantial-rights limitations each individually disqualify** (geographic / duration / field-of-use); multiple-rights-limitations all listed in note; **§1235(d) related-party disqualifies** + unrelated party qualifies; **3 payment types all qualify** (lump-sum / periodic-fixed / contingent-load-bearing); not-holder + no-substantial-rights + related-party combined failure scenario all 3 listed in note; **disqualified note mentions TCJA § 13314 + § 1221(a)(3)** (post-TCJA importance); citation mentions all 5 relevant authorities (§1235(a) / §1235(b) / §1235(d) / §1.1235-2 / §1221(a)(3)); $100B precision case still LTCG; zero gain qualifies; qualified note describes holder path "Inventor" + "LTCG regardless of holding period"; qualified backer note describes FinancialBackerBeforeReductionToPractice path; disqualified note says §1235 DOES NOT APPLY + ORDINARY income.
+
 `traderview-expense::section_408m` is the **IRC §408(m) collectibles in IRA module** — the gold/silver/crypto IRA trap. Critical for any trader running a self-directed IRA. Companion to `section_408_d3` (IRA 60-day rollover) and `section_408A_d3` (Roth conversion 5-year aging).
 
 **§408(m)(1) general rule**: acquisition of a "collectible" by an IRA is treated as a **deemed distribution** of the purchase price — taxable income to the beneficiary plus a 10% additional tax under §72(t) if under 59½. The IRA itself isn't disqualified; just the offending acquisition is recharacterized.

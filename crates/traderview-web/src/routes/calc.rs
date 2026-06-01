@@ -71,6 +71,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-704c",          post(section_704c_route))
+        .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
@@ -949,6 +950,30 @@ async fn section_704c_route(
         ));
     }
     Ok(Json(traderview_expense::section_704c::compute(&b)))
+}
+
+// ── §1235 sale or exchange of patents ───────────────────────────────
+// Mounted at /api/calc/section-1235. Automatic LTCG on transfer of
+// all substantial rights in a patent by qualifying "holder"
+// regardless of holding period. §1235(b) holder = inventor OR
+// pre-reduction-to-practice financial backer who paid consideration
+// and is not employer or related party. §1235(d) related-party
+// disqualification (§267(b) modified, 25% threshold, siblings
+// excluded). Treas. Reg. §1.1235-2(b) all-substantial-rights test
+// (no geographic / duration / field-of-use limitations).
+// Post-TCJA: §1221(a)(3) now excludes inventor's patent from
+// capital-asset treatment, so §1235 is the only LTCG path.
+
+async fn section_1235_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1235::Section1235Input>,
+) -> Result<Json<traderview_expense::section_1235::Section1235Result>, ApiError> {
+    if b.gain_amount_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "gain_amount_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1235::compute(&b)))
 }
 
 // ── §754 election + §743(b) inside basis adjustment ─────────────────
