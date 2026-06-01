@@ -155,6 +155,9 @@ use traderview_expense::drug_eviction::{
 use traderview_expense::quiet_enjoyment::{
     check as check_quiet_enjoyment, QuietEnjoymentInput, QuietEnjoymentResult,
 };
+use traderview_expense::flood_disclosure::{
+    check as check_flood_disclosure, FloodDisclosureInput, FloodDisclosureResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -306,6 +309,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
         .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
         .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
+        .route("/flood-disclosure-check", axum::routing::post(flood_disclosure_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2551,6 +2555,36 @@ async fn quiet_enjoyment_check_route(
         ));
     }
     Ok(Json(check_quiet_enjoyment(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State flood-zone / flood-history disclosure compliance check
+//
+// Mounted at POST /api/rental/flood-disclosure-check. Five regimes:
+// FloridaFloodHistoryClaimsFemaAid (FL only; Fla. Stat. § 83.512 eff.
+// 2025-10-01 SB 948; tenant termination within 30 days of substantial
+// loss 50%+ market value); NewJerseyFemaFloodZoneAndHistory (NJ only;
+// N.J.S.A. 46:8-50 eff. 2024-03-20; immediate termination + refund if
+// undisclosed in flood zone); CaliforniaNaturalHazardCombined (CA
+// only; Gov. Code § 8589.45 eff. 2018-07-01); PriorFloodKnowledge-
+// Disclosure (TX/NY/GA/IN/OK/OR — 6 states, damages remedy only);
+// NoStateFloodDisclosure (41 other states + DC, common-law fraud only).
+// ---------------------------------------------------------------------------
+
+async fn flood_disclosure_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FloodDisclosureInput>,
+) -> Result<Json<FloodDisclosureResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    if b.prepaid_rent_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "prepaid_rent_dollars must be >= 0".into(),
+        ));
+    }
+    Ok(Json(check_flood_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
