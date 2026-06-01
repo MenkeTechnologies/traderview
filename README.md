@@ -1433,6 +1433,46 @@ Mounted at `POST /api/calc/section-704d`. Twenty-one tests pin: loss within basi
 
 Mounted at `POST /api/calc/section-465`. Twenty-one tests pin: cash + recourse full at-risk + full loss allowed; loss exceeds at-risk partial allowance + suspension; **prior carryover combines with current loss before cap**; general nonrecourse not at-risk in non-real-property; **§465(b)(6) QNF carve-out applies for real property** + **explicitly does NOT apply for other trade/business** (regression target for activity classification gatekeeper); external pledged property increases; **related-party borrowing reduces**; zero at-risk → all loss suspended; **negative at-risk → §465(e) recapture flag** + clamp to 0; exact at-risk match full allowance zero remaining; real-estate partnership full sweep ($1.05M at-risk); QNF doesn't apply when other-trade misuses real-estate lookup; combined all-components partnership; prior carryover only (no current loss); prior carryover partial suspension; zero loss no-op; **$1B real-estate precision** ($6B at-risk with $5B QNF); note describes §465(e) recapture path; note describes QNF carve-out applied; note for suspended loss mentions §465(d).
 
+`traderview-expense::section_409a` is the **IRC §409A nonqualified deferred compensation compliance module** — major executive exposure for NQDC plans (top-hat plans, supplemental executive retirement plans, deferred bonus arrangements, equity compensation deferral, etc.). Noncompliance triggers three layered penalties:
+
+| Penalty                            | Citation         | Magnitude                                  |
+|------------------------------------|------------------|--------------------------------------------|
+| Immediate income inclusion         | §409A(a)(1)(A)   | All vested deferred amounts in current year |
+| 20% additional tax                 | §409A(a)(1)(B)   | 20% × included amount                       |
+| "Premium interest tax"             | §409A(a)(1)(C)   | IRS underpayment rate + 1% × years × amount |
+
+**Combined effect on a $1M deferral with 5 years of deferral at 9% premium rate**: $1M income inclusion + $200k extra 20% tax + $450k premium interest = **$650k total federal penalty** on top of ordinary income tax. Pinned by `total_penalty_includes_additional_tax_plus_premium_interest` (20% + premium = $650k).
+
+**§409A(a)(2)(A) permitted distribution events** — deferred comp may only be distributed on:
+
+| Event                        | Status         |
+|------------------------------|----------------|
+| `SeparationFromService`      | Permitted      |
+| `Disability`                 | Permitted      |
+| `Death`                      | Permitted      |
+| `SpecifiedTimeOrSchedule`    | Permitted      |
+| `ChangeInControl`            | Permitted      |
+| `UnforeseeableEmergency`     | Permitted      |
+| `OtherImpermissible`         | **Not permitted** |
+
+Pinned by `distribution_event_helper_classifies_correctly` (7-variant sweep) + `all_permitted_events_compliant` (5-event compliant sweep) + `impermissible_distribution_event_triggers_violation`.
+
+**§409A(a)(2)(B)(i) specified-employee 6-month delay** — for "key employees" of public companies (top owners + key officers per §416(i)(1)), distributions on account of separation from service may not be made during the first 6 months after separation. Private companies are exempt.
+
+**6-month delay boundary**: month 6 exact complies, month 5 violates. Pinned by `specified_employee_separation_under_6_months_violates` (3 months = violation) + `specified_employee_separation_6_months_exact_complies` (6 = OK) + `specified_employee_separation_7_months_complies` + `non_specified_employee_no_delay_required` (private/non-key gets no delay).
+
+**§409A(a)(3) anti-acceleration rule** — once distribution time is fixed, it may NOT be accelerated. Limited regulatory exceptions (de minimis cash-outs, conflict-of-interest divestiture, plan termination within 12 months of change in control) are caller-side determined. Pinned by `anti_acceleration_violation_triggers`.
+
+**Premium interest math** = `(IRS_rate + 1%) × years × amount`. The +1% addition is statutorily-mandated. Pinned by `premium_interest_includes_one_percent_addition` (8% IRS + 1% = 9% × 5y × $1M = $450k).
+
+**Zero-deferral and zero-year edge cases**:
+- Zero deferral amount → plan still flagged non-compliant if violations exist, but total penalty = $0 (no dollars to tax). Pinned by `zero_deferral_no_penalty_even_with_violations`.
+- Zero years of deferral → 20% tax still applies; premium interest = $0. Pinned by `zero_years_deferral_no_premium_interest`.
+
+**Multiple violations stack in violation_details list** — impermissible event + acceleration + specified-employee short delay can all fire simultaneously. Pinned by `multiple_violations_stack_in_list` + `three_separate_violations_for_separation_path`.
+
+Mounted at `POST /api/calc/section-409a`. Twenty-one tests pin: compliant baseline no penalty; **impermissible distribution event** triggers §409A(a)(2) violation; **specified-employee separation 6-month boundary** (3m violates, 6m exact complies, 7m complies); non-specified-employee no delay required; **anti-acceleration violation** triggers §409A(a)(3); 20% additional tax math ($1M × 20% = $200k); **premium interest +1% addition** (IRS 8% + 1% × 5y × $1M = $450k); total penalty math (20% + premium = $650k); immediate income inclusion equals vested amount; multiple violations stack (separation+delay+acceleration); 3-violation separation path; **all 6 permitted events compliant sweep**; separation event alone complies without specified-employee status; **DistributionEvent::is_permitted() 7-variant classifier sweep**; zero years no premium interest (20% still applies); zero deferral no penalty even with violations; **$100M deferral precision case** ($100M / 6% IRS / 10y → $90M total penalty); note describes compliant path; note describes non-compliant path with violation count and dollar figures.
+
 `traderview-expense::section_401a9` is the **IRC §401(a)(9) Required Minimum Distribution module** — every trader retiree with a traditional IRA or 401(k) reaching the RMD age must begin taking distributions or face the §4974 excise tax. SECURE Act of 2019 raised the RMD age from 70½ to 72; SECURE 2.0 Act of 2022 raised it again to 73 (and to 75 for the 1960+ cohort).
 
 **RMD age by birth year** (SECURE 2.0 cohort logic):

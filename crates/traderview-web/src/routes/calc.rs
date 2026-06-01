@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
+        .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
@@ -964,6 +965,25 @@ async fn section_401a9_route(
         ));
     }
     Ok(Json(traderview_expense::section_401a9::compute(&b)))
+}
+
+// ── §409A nonqualified deferred compensation ─────────────────────────
+// Mounted at /api/calc/section-409a. §409A(a)(1) three-tier penalty
+// (immediate income inclusion + 20% additional tax + premium interest
+// IRS rate + 1%); §409A(a)(2)(A) permitted distribution events check;
+// §409A(a)(2)(B)(i) specified-employee 6-month delay for public
+// companies; §409A(a)(3) anti-acceleration.
+
+async fn section_409a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_409a::Section409aInput>,
+) -> Result<Json<traderview_expense::section_409a::Section409aResult>, ApiError> {
+    if b.deferred_amount_vested < Decimal::ZERO {
+        return Err(ApiError::BadRequest(
+            "deferred_amount_vested must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_409a::compute(&b)))
 }
 
 // ── §408(m) collectibles in IRA ──────────────────────────────────────
