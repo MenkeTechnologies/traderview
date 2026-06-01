@@ -2401,6 +2401,33 @@ Three subsections govern:
 
 Mounted at `POST /api/calc/section-1234`. Twenty-one tests pin: writer lapsed → ST gain = premium; writer buyback below premium → ST gain; writer buyback above premium → ST loss; **writer held > 1 year still ST**; writer assigned → basis-adjustment event with zero gain/loss; writer dealer-in-options → ordinary character; holder sold short-term → ST capital; holder sold long-term LEAP → LT capital; holder lapsed → capital loss of premium; holder LEAP lapsed → LT capital loss (the patient-LEAP-holder trap); holder exercised → basis-adjustment event; **365-day boundary holder ST**; **366-day boundary holder LT**; holder ordinary underlying → ordinary regardless of holding period (§1234(a)(3) carve-out); §1256 underlying bypasses §1234; writer sold to another writer → still ST under §1234(b); zero premium writer lapsed → zero gain; **§1256 override priority over dealer flag** (branch-ordering regression target); **§1256 override priority over holder exercise** (similar); note describes actual holding-period days for ST/LT-boundary UX; writer note explicitly states "regardless of option holding period" (UX-text regression target).
 
+`traderview-expense::section_1234b` is the **IRC §1234B securities-futures-contract character module** — the redirect target from `section_1234a` (which explicitly excludes SFCs) and the holding-period sibling of `section_1256` (which absorbs only DEALER SFCs). Governs the character of gain or loss on the sale, exchange, or termination of any securities futures contract (single-stock future or narrow-based security index future per Securities Exchange Act § 3(a)(55)(A) — § 1234B(c) definition) held by a non-dealer.
+
+**Three statutory subsections**:
+
+| Subsection | Statute | Rule |
+|------------|---------|------|
+| §1234B(a) | 26 U.S.C. § 1234B(a) | Character **mirrors** the underlying property in the taxpayer's hands. Capital underlying → capital; ordinary underlying → ordinary. |
+| §1234B(b) | 26 U.S.C. § 1234B(b) | SFC **to SELL** property (short position) with capital underlying → **SHORT-TERM CAPITAL** regardless of holding period. Parallels § 1233 short-sale rule. |
+| §1234B(d) | 26 U.S.C. § 1234B(d) | SFC is **NOT** a commodity futures contract. Prevents accidental fall-in to commodity-futures branches of § 1256. |
+
+**Routing precedence** (the load-bearing fact-pattern question this module answers):
+
+| Order | Condition | Outcome |
+|-------|-----------|---------|
+| 1 | Dealer SFC? (§ 1256(b)(1)(E)) | **§ 1256 60/40 split** (§ 1256(a)(3)) — fires before § 1234B |
+| 2 | Underlying ordinary? | **§ 1234B(a) ordinary character** |
+| 3 | Short position with capital underlying? | **§ 1234B(b) SHORT-TERM capital regardless of holding period** |
+| 4 | Long position with capital underlying? | **§ 1234B(a) holding-period split** (§ 1222(3) > 1 year = LT; else § 1222(1) ST) |
+
+**The § 1234B(b) short-position-always-short-term rule is the load-bearing trader trap.** A retail trader who holds a SHORT single-stock-future position for 10 years still produces SHORT-TERM capital gain or loss on close — defeating every long-term-rate planning strategy. The corresponding LONG position uses normal holding-period math. Pinned by `short_sfc_capital_underlying_held_400d_still_short_term`, `short_sfc_held_3650_days_still_short_term_regression_critical` (10-year hold), and the holding-period-invariance test `short_sfc_holding_period_invariance` (5 days = 5000 days produce identical output).
+
+**The § 1256(b)(1)(E) dealer override fires before § 1234B.** Dealer SFCs are § 1256 contracts and get the 60/40 split — even when the dealer-trader holds a SHORT position that would otherwise route through § 1234B(b) to pure short-term. Pinned by `dealer_sfc_short_position_still_60_40_not_short_term`, `dealer_override_fires_before_short_position_short_term_rule`, and `dealer_override_fires_before_ordinary_underlying_rule`.
+
+**Character buckets are mutually exclusive.** Each result populates exactly one of `long_term_cents`, `short_term_cents`, `ordinary_cents` — or, for the dealer-SFC path, splits LT + ST per the 60/40 rule with ordinary at zero. Pinned by `exactly_one_of_long_short_ordinary_60_40_holds_per_result` and `dealer_60_40_parts_sum_to_gain_property` (property test across `[-1_000_000, -1, 0, 1, 7, 100, 999, 1_000_000]`).
+
+Mounted at `POST /api/calc/section-1234b`. Twenty-seven tests pin: **long SFC + capital underlying + 400d → LT**; **long SFC + capital underlying + 100d → ST**; **long SFC boundary 366d → LT**; **long SFC boundary 365d → ST** (exactly 1 year not long-term per § 1222(3)); **long SFC loss → LT**; **short SFC + capital underlying + 5d → ST**; **short SFC + capital underlying + 400d → still ST**; **short SFC + 3650d → still ST (10-year regression critical)**; **short SFC loss → ST**; **short SFC holding-period invariance** (5d = 5000d); **SFC + ordinary underlying + long position → ordinary**; **SFC + ordinary underlying + short position → still ordinary** (regression — § 1234B(b) only fires for capital character); **SFC + ordinary underlying + holding period irrelevant**; **dealer SFC routes to § 1256 60/40**; **dealer SFC short position still 60/40 not ST** (regression — § 1256 override beats § 1234B(b)); **dealer SFC loss 60/40 split**; **dealer SFC holding period ignored invariant** (5d = 2000d); **dealer SFC 60/40 rounding 1001 → 600/401**; **dealer override fires before short-position ST rule**; **dealer override fires before ordinary-underlying rule**; **only-short-position-capital-underlying triggers § 1234B(b)** 4-combo invariant; **citation pins subsection per path** (§ 1234B(a) + § 1222(3) for long-cap-LT; § 1234B(a) + § 1222(1) for long-cap-ST; § 1234B(b) + § 1234B(a) for short-cap; § 1234B(a) for ordinary; § 1256(b)(1)(E) + § 1256(a)(3) for dealer); **dealer 60/40 parts always sum to gain property** test over 8 amounts; **exactly-one bucket holds gain invariant**; **short-position note documents § 1233 parallel** (UX-text regression); **dealer note documents § 1256 routing** (UX-text regression); **ordinary-underlying note describes character mirror** (UX-text regression).
+
 `traderview-expense::section_1234a` is the **IRC §1234A right/obligation-termination character module** — companion to `section_1234` (option lapse/sale by holder/writer) and `section_1256` (mark-to-market on regulated contracts). Governs the character of gain or loss when a right or obligation with respect to property is **cancelled, lapsed, expired, or otherwise terminated** without becoming an exercise/sale. Covers cash-settled options, cancelled forwards, terminated swaps, abandoned real-property purchase options, and terminated §1256 contracts.
 
 **Three statutory paths**:

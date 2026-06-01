@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-332",           post(section_332_route))
         .route("/calc/section-1234a",         post(section_1234a_route))
+        .route("/calc/section-1234b",         post(section_1234b_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2443,6 +2444,25 @@ async fn section_1234a_route(
     Json(b): Json<traderview_expense::section_1234a::Section1234AInput>,
 ) -> Result<Json<traderview_expense::section_1234a::Section1234AResult>, ApiError> {
     Ok(Json(traderview_expense::section_1234a::compute(&b)))
+}
+
+// ── §1234B character of gain/loss on securities futures contracts ─
+// Mounted at /api/calc/section-1234b. §1234B(a) character mirrors
+// underlying property (capital underlying → capital character;
+// ordinary underlying → ordinary character). §1234B(b) — gain/loss
+// on sale/exchange/termination of a securities futures contract TO
+// SELL property is treated as SHORT-TERM CAPITAL regardless of
+// holding period (parallels § 1233 short-sale rule). §1256(b)(1)(E)
+// override — DEALER securities futures contracts are § 1256 contracts
+// and get the § 1256(a)(3) 60/40 split, BEFORE § 1234B engages.
+// §1234B(c) defines SFC via Securities Exchange Act § 3(a)(55)(A).
+// §1234B(d) — SFC is not a commodity futures contract.
+
+async fn section_1234b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1234b::Section1234BInput>,
+) -> Result<Json<traderview_expense::section_1234b::Section1234BResult>, ApiError> {
+    Ok(Json(traderview_expense::section_1234b::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
