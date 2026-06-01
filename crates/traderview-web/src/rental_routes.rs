@@ -288,6 +288,10 @@ use traderview_expense::lock_change_between_tenancies::{
     check as check_lock_change_between_tenancies, CheckResult as LockChangeResult,
     Input as LockChangeInput,
 };
+use traderview_expense::landlord_lien_prohibition::{
+    check as check_landlord_lien_prohibition, CheckResult as LandlordLienResult,
+    Input as LandlordLienInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -515,6 +519,7 @@ pub fn router() -> Router<AppState> {
         .route("/asbestos-disclosure", axum::routing::post(asbestos_disclosure_route))
         .route("/firearms-in-rental-unit", axum::routing::post(firearms_in_rental_unit_route))
         .route("/lock-change-between-tenancies", axum::routing::post(lock_change_between_tenancies_route))
+        .route("/landlord-lien-prohibition", axum::routing::post(landlord_lien_prohibition_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -4023,6 +4028,38 @@ async fn lock_change_between_tenancies_route(
         ));
     }
     Ok(Json(check_lock_change_between_tenancies(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord-lien-on-tenant-property compliance check.
+//
+// Mounted at POST /api/rental/landlord-lien-prohibition. Six
+// regimes: Texas (Tex. Prop. Code § 54.041(a) STATUTORY landlord
+// lien on nonexempt property in residence for unpaid rent;
+// STRONGEST pro-landlord regime; § 54.043 contractual lien must be
+// underlined or in conspicuous bold print); California (Cal. Civ.
+// Code § 1861(a) court order required before taking possession;
+// even with court order lien may NOT be enforced against property
+// necessary to tenant's livelihood or household necessary items;
+// §§ 1861.5-1861.27 enforcement procedure); NewYork (NO statutory
+// landlord lien; must exist as contractual term in original lease
+// OR court-rendered judgment lien; no self-help possession); Massa-
+// chusetts (no precedent for statutory lien in ordinary tenancy;
+// UCC Article 9 permits voluntary lien; storage lien for warehouse
+// operators); Illinois (735 ILCS 5/9 et seq. — court judgment
+// required first; unpaid rent alone does not automatically create
+// lien); Default (varies by state; common-law landlord's lien
+// generally requires court order). Distinct from abandoned_property_
+// handling which addresses disposition of belongings LEFT BEHIND
+// after vacating.
+// ---------------------------------------------------------------------------
+
+async fn landlord_lien_prohibition_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordLienInput>,
+) -> Result<Json<LandlordLienResult>, ApiError> {
+    Ok(Json(check_landlord_lien_prohibition(&b)))
 }
 
 // ---------------------------------------------------------------------------
