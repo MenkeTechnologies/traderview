@@ -3410,6 +3410,30 @@ Mounted at `POST /api/calc/section-305`. Twenty-two tests pin: **no-exception no
 
 Mounted at `POST /api/calc/section-331`. Twenty tests pin: **baseline LT capital gain** ($50k cash + $100k FMV − $100k basis = $50k LT gain over 400-day holding); **300-day holding ST gain**; **365-day boundary still ST** (regression — §1222 requires holding > 1 year); **366-day boundary LT**; **LT capital loss path** ($300k basis exceeds $150k realized → −$150k LT loss); **ST capital loss path**; **§334(a) shareholder basis in property = FMV** ($100k FMV property → $100k carryover basis); **cash-only distribution → zero basis in property**; **§332 corporate-parent 80%/80% non-recognition** (regardless of magnitude); **§332 basis carryover modeled as zero** (signaling caller to use sub-side §334(b)); **§332 takes precedence over §331 capital gain** ($10M cash + 80% trigger → non-recognition); **partial liquidation no §331** (redirect to §302 redemption analysis); zero net when amount realized = basis; **citation mentions all 7 relevant authorities** (§331(a) + §331(b) + §1001 + §332 + §334(a) + §334(b) + §1504(a)(2)); partial-liquidation citation mentions §302; note baseline describes LT gain; **note §332 describes "80%/80% threshold" + non-recognition + §334(b)**; note partial liquidation redirects to §302; **$1B precision case** ($500M cash + $500M FMV − $100M basis = $900M gain); zero basis full amount realized is gain.
 
+`traderview-expense::section_332` is the **IRC §332 complete-liquidation-of-subsidiary non-recognition module** — the parent-corporation tax-free exception to the general §331/§336 FMV-recognition rules for corporate liquidation. Pairs with `section_331` (shareholder side default) and `section_336` (corporate side default) — when § 332 applies, both parties get full non-recognition; when it fails, both parties revert to FMV recognition.
+
+**§ 332(b) four-prong test** — ALL four prongs required:
+
+| Prong | Requirement | Citation |
+|-------|-------------|----------|
+| (1) Voting | Parent owns **≥ 80% of total voting power** of subsidiary stock | § 332(b)(2) + § 1504(a)(2) |
+| (2) Value | Parent owns **≥ 80% of total value** of subsidiary stock | § 332(b)(2) + § 1504(a)(2) |
+| (3) Continuous ownership | 80% maintained from plan-adoption date through final distribution | § 332(b)(3) |
+| (4) Complete liquidation | All property distributed, all subsidiary stock cancelled | § 332(b)(1) |
+
+**Three statutory consequences when § 332 applies**:
+- **§ 332(a) parent non-recognition** — no gain/loss to parent on receipt of property
+- **§ 337(a) subsidiary non-recognition** — no gain/loss to subsidiary on distribution
+- **§ 334(b)(1) carryover basis** — parent takes subsidiary's adjusted basis (NOT FMV); preserves tax attributes including NOL carryovers under § 381
+
+**When § 332 fails (any prong missing)** → falls to default rules: parent recognizes under § 331 (FMV − stock basis), subsidiary recognizes under § 336 (FMV − adjusted basis), parent takes FMV basis in distributed property. Built-in gains/losses fully recognized on both sides.
+
+**Worked example (compliant)**: Parent owns 100% of Sub. Sub has $1M FMV property with $400K basis. Parent stock basis $200K. § 332 applies → (1) Parent $0 gain (vs $800K under § 331); (2) Sub $0 gain (vs $600K under § 336); (3) Parent takes $400K carryover basis (vs $1M FMV). $1.4M of recognition deferred.
+
+**Worked example (failed at 75%)**: Same fact pattern but parent owns only 75% → § 332 fails. Parent recognizes $800K gain (§ 331), Sub recognizes $600K gain (§ 336), parent takes $1M FMV basis. Full $1.4M recognized immediately.
+
+Mounted at `POST /api/calc/section-332`. Eighteen tests pin: **full compliance 100% owned complete liquidation** → no gain on either side + carryover basis; **at 80%/80% boundary applies** (≥ strict); **79.99% voting fails** + § 331 + § 336 recognition; **79.99% value fails**; **continuous ownership not maintained fails**; **incomplete liquidation fails**; **all four prongs individually required** (single-test 4-prong-fail-independence regression); **§ 334(b) carryover basis** ($1M FMV but $200K subsidiary basis → parent takes $200K not $1M); **§ 332 fails → FMV basis** (regression); **§ 337(a) parallel subsidiary non-recognition** (regression — when § 332 applies on parent side, subsidiary also doesn't recognize even with built-in gain); **parent loss when § 332 fails and FMV below stock basis** ($200K loss recognized); **citations pin authorities** (§ 332(a) + § 337(a) + § 334(b) + § 331 + § 336); **negative inputs clamped**; **voting and value tests independent**; **worked example clean parent-sub liquidation** (no gain + $400K carryover basis); **worked example failed liquidation recognizes everything** ($800K parent + $600K subsidiary + $1M FMV basis); **all four test flags returned**.
+
 `traderview-expense::section_336` is the **IRC §336 corporate liquidation gain/loss module** — corporate-side counterpart to §331 (shareholder) and §332 (parent-subsidiary tax-free exception). For any C-corp in complete liquidation, §336(a) requires the liquidating corporation to recognize gain OR loss as if the distributed property had been sold to the distributee at FMV. Several anti-abuse loss-disallowance rules layer on top ([Cornell LII 26 U.S.C. § 336](https://www.law.cornell.edu/uscode/text/26/336), [Tax Adviser — Summary of tax rules for liquidating corporations](https://www.thetaxadviser.com/issues/2020/oct/tax-rules-liquidating-corporations/)).
 
 **§ 336(a) general rule** — gain or loss recognized as if property sold at FMV. Pinned by `standard_gain_recognized` (FMV $1M − basis $600k = $400k recognized gain) + `standard_loss_recognized` (FMV $400k − basis $600k = $200k recognized loss).

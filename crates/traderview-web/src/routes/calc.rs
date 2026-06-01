@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-3406",          post(section_3406_route))
         .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-331",           post(section_331_route))
+        .route("/calc/section-332",           post(section_332_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2392,6 +2393,37 @@ async fn section_331_route(
         ));
     }
     Ok(Json(traderview_expense::section_331::compute(&b)))
+}
+
+// ── §332 complete liquidations of subsidiaries ──────────────────────
+// Mounted at /api/calc/section-332. §332(a) parent corporation no
+// gain/loss recognition on receipt of property in complete liquidation
+// of subsidiary IF 4-prong test satisfied: (1) §332(b)(2) 80% voting
+// power AND (2) 80% value (§1504(a)(2) test) AND (3) continuous 80%
+// ownership maintained from plan-adoption date through final
+// distribution AND (4) complete liquidation (all property distributed,
+// all stock cancelled). §337(a) parallel subsidiary non-recognition.
+// §334(b)(1) parent takes carryover basis (NOT FMV). Failing any
+// prong falls to §331/§336 FMV recognition.
+
+async fn section_332_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_332::Section332Input>,
+) -> Result<Json<traderview_expense::section_332::Section332Result>, ApiError> {
+    if b.fmv_of_property_distributed_cents < 0
+        || b.subsidiary_adjusted_basis_cents < 0
+        || b.parent_basis_in_subsidiary_stock_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.voting_power_owned_bp > 10_000 || b.value_owned_bp > 10_000 {
+        return Err(ApiError::BadRequest(
+            "voting_power_owned_bp and value_owned_bp must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_332::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
