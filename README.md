@@ -2916,6 +2916,36 @@ Mounted at `POST /api/calc/section-444`. Eighteen tests pin: **all 3 eligible fi
 
 Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no withholding** (full payment to payee); **A trigger TIN-not-furnished triggers 24% withholding** ($10k → $2,400); **B trigger IRS-notified incorrect TIN** triggers withholding; **C trigger fires for interest** + dividends (load-bearing); **C trigger does NOT fire for rent** + non-employee comp (regression); **D trigger certification failure** triggers withholding; **3 trigger precedence pins** (A > B, B > C, C > D); **withholding rate 24%** (2400bp); withholding at $100k payment = $24k; **$1B precision** = $240M withheld; zero payment zero withholding; **all 10 payment types subject to A trigger** sweep; triggered note describes trigger + 24%; untriggered note describes no trigger; **citation mentions all 4 trigger subsections** + § 3406(b)(1)(A) rate + CP 2100 + Publication 1281.
 
+`traderview-expense::section_30d` is the **IRC §30D Clean Vehicle Credit module with OBBBA termination** — the post-IRA 2022 bifurcated $7,500 credit for new clean vehicles. Trader and landlord-relevant for any EV purchase. IRA 2022 redesigned the credit into a **$3,750 critical-minerals prong** + **$3,750 battery-components prong**, scheduled to run through 2032. **OBBBA § 70424 (eff. 2025-09-30) TERMINATED the credit** for vehicles acquired after September 30, 2025 — accelerating the sunset by more than 7 years.
+
+**Credit structure** (pre-termination):
+
+| Component | Amount | Citation |
+|-----------|--------|----------|
+| Critical-minerals sourcing test | **$3,750** | § 30D(e)(1) |
+| Battery-components sourcing test | **$3,750** | § 30D(e)(2) |
+| Both prongs satisfied | **$7,500 total** | § 30D(e) |
+
+**MSRP caps** (§ 30D(f)(11)):
+- Cars: **$55,000**
+- SUVs / trucks / vans: **$80,000**
+
+Vehicle MSRP exceeding the applicable cap → credit = $0 (hard block, not gradual).
+
+**Income phaseout** (§ 30D(f)(10)) — **HARD CUTOFF, not gradual**:
+
+| Filing status | MAGI threshold |
+|---------------|----------------|
+| Single / MFS | $150,000 |
+| Head of Household | $225,000 |
+| MFJ / QW | $300,000 |
+
+Above the threshold → credit = $0. § 30D(f)(10)(B)(iii) lets the taxpayer elect the LESSER of current-year or prior-year MAGI.
+
+**OBBBA termination + IRS binding-contract carve-out**: vehicles acquired after 2025-09-30 are ineligible UNLESS the taxpayer had a written binding contract in place AND made a payment on or before 2025-09-30. The "acquired" date snaps to the contract + payment date for the carve-out.
+
+Mounted at `POST /api/calc/section-30d`. Twenty-five tests pin: **full $7,500 credit for eligible vehicle** (both prongs + Car + $40K MSRP + $100K MAGI Single); **half credit critical-minerals only** ($3,750); **half credit battery-components only** ($3,750); **no credit neither test met**; **OBBBA termination acquired after 2025-09-30** ($0 + § 70424 + "TERMINATED" citation); **at 2025-09-30 boundary still eligible** (strict greater-than); **one day after cutoff (Oct 1) terminated**; **binding-contract carve-out preserves credit after cutoff** + "binding-contract carve-out" note regression; **no-carve-out no-payment blocks post-cutoff**; **MAGI over $150K Single no credit** + § 30D(f)(10) + "HARD CUTOFF" citation; **MAGI at $150K Single boundary eligible** (≤ strict); **MAGI $150K + 1 cent blocks**; **MFJ uses $300K threshold**; **HoH uses $225K threshold**; **MFS uses $150K not half of MFJ $300K** (regression — MFS gets Single-level not half-of-MFJ); **car MSRP over $55K blocks credit** + § 30D(f)(11) citation; **car MSRP at $55K boundary eligible**; **SUV MSRP up to $80K eligible**; **SUV MSRP over $80K blocks credit**; **pre-termination 2024 eligible with all conditions**; **termination check order independent of other blocks** (high MSRP + post-termination → termination fires first regression); **full credit breakdown matches components**; **citations pin authorities** (§ 30D(e) + OBBBA § 70424 + § 30D(f)(10) + § 30D(f)(11)); **year boundary 2024 pre-termination 2026 post**; **date boundary 2025-09-29 / 30 / Oct 1 three-day triple-test** (29 eligible / 30 eligible / Oct 1 terminated regression).
+
 `traderview-expense::section_305` is the **IRC §305 stock dividend distribution classification module** — trader-relevant for anyone holding corporate stock who receives a stock dividend or stock right. §305(a) general rule excludes stock-on-stock distributions from gross income (the distribution simply changes per-share basis under §307(a)). §305(b) enumerates **5 exceptions** making the distribution taxable as a §301 distribution. §305(c) creates deemed distributions from certain capital-structure events.
 
 **§305(b) five taxable exceptions** with priority ordering:

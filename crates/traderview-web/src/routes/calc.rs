@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/section-164",           post(section_164_route))
         .route("/calc/section-165h",          post(section_165h_route))
+        .route("/calc/section-30d",           post(section_30d_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
@@ -2339,6 +2340,38 @@ async fn section_165h_route(
         ));
     }
     Ok(Json(traderview_expense::section_165h::compute(&b)))
+}
+
+// ── §30D Clean Vehicle Credit (post-OBBBA termination 2025-09-30) ────
+// Mounted at /api/calc/section-30d. IRA 2022 bifurcated $7,500 credit:
+// $3,750 critical-minerals (§30D(e)(1)) + $3,750 battery-components
+// (§30D(e)(2)). MSRP caps §30D(f)(11): $55K cars / $80K SUVs+trucks+vans.
+// MAGI hard-cutoff §30D(f)(10): $150K Single/MFS + $225K HoH + $300K MFJ.
+// OBBBA §70424 (eff. 2025-09-30) TERMINATED §30D for vehicles acquired
+// after September 30, 2025 — accelerating the IRA's 2032 sunset by 7+
+// years. IRS binding-contract carve-out: written binding contract +
+// payment ≤ 2025-09-30 preserves credit even if vehicle placed in
+// service later. Out of scope: §25E used clean vehicle credit (also
+// terminated 2025-09-30); §30D(g) transfer-to-dealer election.
+
+async fn section_30d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_30d::Section30DInput>,
+) -> Result<Json<traderview_expense::section_30d::Section30DResult>, ApiError> {
+    if b.msrp_cents < 0 || b.modified_agi_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "msrp_cents and modified_agi_cents must be non-negative".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.acquisition_year)
+        || !(1..=12).contains(&b.acquisition_month)
+        || !(1..=31).contains(&b.acquisition_day)
+    {
+        return Err(ApiError::BadRequest(
+            "acquisition date must be a valid year/month/day".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_30d::compute(&b)))
 }
 
 // ── §1296 PFIC mark-to-market election ───────────────────────────────
