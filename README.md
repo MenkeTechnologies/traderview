@@ -742,6 +742,34 @@ Mounted at `POST /api/rental/adverse-action-check`. Twenty-one tests pin: **TX F
 
 Mounted at `POST /api/rental/topa-check`. Twenty-nine tests pin: **DC voluntary sale creates ROFR** + 200-unit building still covered; **DC foreclosure exempt** + tax sale exempt + bankruptcy sale exempt (3 sale-type exemptions individually); **DC 15-day window** day-15 within / day-16 expired; tenant-already-exercised no longer exercisable; **MD 3-unit covered / 4-unit not covered** (boundary); MD single-family covered; **CA foreclosure 4-unit covered / 5-unit not covered / 1-unit covered**; **CA voluntary sale NOT covered** (key regression — CA is foreclosure-only); CA tax sale not covered; **NoStateTopa 7-state sweep** (TX/FL/NY/WA/MA/OR/GA never create ROFR); MA citation mentions H.1260 pending; **51-state coverage**; non-empty citations; **3 regime-uniqueness invariants** (DC / MD / CA); unknown state falls back to NoStateTopa; lowercase normalizes; **DC note describes AllSalesGeneralTopa path** with foreclosure-exempt callout; MD note describes ≤3 unit cap; CA note describes 15-day + 45-day priority window; expired window described in DC note ("EXPIRED").
 
+`traderview-expense::lease_auto_renewal` is the **state lease automatic renewal / evergreen-clause disclosure compliance table** — when a residential lease contains an auto-renewal clause that requires either party to give specific notice to prevent renewal, **four states statutorily require the LANDLORD to send a written reminder notice before the tenant's non-renewal-notice deadline**. Without that reminder, the auto-renewal clause is **UNENFORCEABLE** — the lease simply expires at the end of the original term. Three regimes:
+
+| Regime                                          | States      | Source                                                                |
+|-------------------------------------------------|-------------|-----------------------------------------------------------------------|
+| **PreNonrenewalNotificationFifteenToThirtyDays** | FL, WI, NY  | Fla. Stat. § 83.575 (15-30 days + fees/penalties listing required); Wis. Stat. § 704.15 (15-30 days); N.Y. GBL § 5-905 (15-30 days, must "call attention" to the clause) |
+| **PreCancellationDeadlineThirtyToSixtyDays**     | IL          | 815 ILCS 601/10 Automatic Contract Renewal Act — 30-60 days for 12-month+ contracts with renewal > 1 month; clause must be "clear and conspicuous" in the original contract |
+| **NoStateDisclosureRequirement**                | 46 other states + DC | Auto-renewal clauses generally enforceable as written; common-law unconscionability may apply in extreme cases |
+
+**Florida's unique fees-listing requirement** is the strictest content rule: in addition to the 15-30 day window, the reminder notice MUST list "all fees, penalties, and other charges applicable to the tenant" upon renewal under Fla. Stat. § 83.575. Missing the fees enumeration alone voids the auto-renewal regardless of timing compliance. Pinned by `only_fl_requires_fees_listing` invariant + `fl_notice_missing_fees_listing_violates` + `wi_does_not_require_fees_listing` (regression target — distinguishes WI from FL on same window).
+
+**Illinois's clear-and-conspicuous clause requirement** is the unique 2-prong test: the original auto-renewal clause itself must be drafted in clear-and-conspicuous form (boldface, separately initialed, etc.) AND the 30-60 day reminder must be sent. Both required. Pinned by `only_il_requires_clear_conspicuous_clause` invariant + `il_clause_not_clear_and_conspicuous_violates`.
+
+**Boundary tests pinned for all 4 regulated states**:
+- FL day-14 outside / day-15 boundary / day-30 boundary / day-31 outside
+- WI 15-30 day window similar
+- NY 15-30 day window similar  
+- IL day-29 outside / day-30 boundary / day-60 boundary / day-61 outside
+
+**Module invariants** (4 separately pinned):
+- FL + WI + NY only on PreNonrenewalNotificationFifteenToThirtyDays (`fl_wi_ny_share_15_30_day_regime`)
+- IL unique on PreCancellationDeadlineThirtyToSixtyDays (`il_unique_30_60_day_regime`)
+- FL only with fees-listing requirement (`only_fl_requires_fees_listing`)
+- IL only with clear-and-conspicuous clause requirement (`only_il_requires_clear_conspicuous_clause`)
+
+Sources: [Fla. Stat. § 83.575 (FindLaw)](https://codes.findlaw.com/fl/title-vi-civil-practice-and-procedure/fl-st-sect-83-575/), [Wis. Stat. § 704.15 / Tenant Resource Center](https://www.tenantresourcecenter.org/notice_when_ending_a_tenancy), [815 ILCS 601/10 (FindLaw)](https://codes.findlaw.com/il/chapter-815-business-transactions/il-st-sect-815-601-10/), [N.Y. GBL § 5-903 (newyork.public.law)](https://newyork.public.law/laws/n.y._general_obligations_law_section_5-903).
+
+Mounted at `POST /api/rental/auto-renewal-check`. Twenty-nine tests pin: **FL compliant with 20-day notice + fees listed**; **FL 14-day before-window violates / 15-day exact boundary complies / 30-day exact boundary complies / 31-day after-window violates** (4 boundary pins); FL missing fees listing violates (regression against WI); **FL no notice at all unenforceable** with UNENFORCEABLE note; **WI compliant + WI does NOT require fees listing** (regression target); **NY 15-30 day window complies / NY outside-window violates**; **IL 30-60 day window with 45-day complies / 29-day below minimum violates / 30-day exact / 60-day exact / 61-day above max violates** (4 boundary pins); **IL clause not clear-and-conspicuous violates** (state-specific); **NoState 6-state sweep** (TX/CA/MA/OR/DC/OH always enforceable); **no auto-renewal clause → no disclosure required**; **51-state coverage**; non-empty citations; **4 invariants** (FL+WI+NY share regime / IL unique regime / FL unique fees-listing / IL unique clear-conspicuous); unknown state falls back; lowercase normalizes; FL violation note lists fees issue; enforceable note describes 15-30 day window satisfaction.
+
 `traderview-expense::sublet_consent` is the **state lease assignment + subletting consent rules table** — sibling to `mold_disclosure`, `bedbug_disclosure`, `heat_requirements`, `foreclosure_tenant_rights`, `lead_disclosure`, `detector_requirements`, `soi_protection`, `just_cause_eviction`, `dv_termination`, `lockout_penalties`, `application_fees`, `entry_notice`, `retaliation_windows`, `eviction_notices`, `late_fee_caps`, `deposit_interest`, `deposit_return_windows`, `lease_disclosures`, `habitability_remedies`, `rent_control`, `military_termination`, `security_deposit_caps`, and `contractor_1099`. Highly relevant to trader-tenants relocating for work, summer abroad, roommate additions in NYC/SF.
 
 **Two state-law regimes** override the default contract-governs baseline:

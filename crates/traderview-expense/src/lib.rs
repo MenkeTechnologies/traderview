@@ -35,6 +35,7 @@ pub mod just_cause_eviction;
 pub mod home_office;
 pub mod late_fee_caps;
 pub mod lead_disclosure;
+pub mod lease_auto_renewal;
 pub mod lease_disclosures;
 pub mod lease_termination_notice;
 pub mod lockout_penalties;
