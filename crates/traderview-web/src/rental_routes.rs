@@ -302,6 +302,10 @@ use traderview_expense::duty_to_mitigate_damages::{
     check as check_duty_to_mitigate_damages, CheckResult as DutyToMitigateResult,
     Input as DutyToMitigateInput,
 };
+use traderview_expense::lease_early_termination_fee_cap::{
+    check as check_lease_early_termination_fee_cap, LeaseEarlyTerminationFeeInput,
+    LeaseEarlyTerminationFeeResult,
+};
 use traderview_expense::pesticide_application_notice::{
     check as check_pesticide_application_notice, CheckResult as PesticideNoticeResult,
     Input as PesticideNoticeInput,
@@ -684,6 +688,7 @@ pub fn router() -> Router<AppState> {
         .route("/damage-deduction-itemization", axum::routing::post(damage_deduction_itemization_route))
         .route("/cooling-requirements", axum::routing::post(cooling_requirements_route))
         .route("/duty-to-mitigate-damages", axum::routing::post(duty_to_mitigate_damages_route))
+        .route("/lease-early-termination-fee-cap", axum::routing::post(lease_early_termination_fee_cap_route))
         .route("/pesticide-application-notice", axum::routing::post(pesticide_application_notice_route))
         .route("/condominium-conversion-protection", axum::routing::post(condominium_conversion_protection_route))
         .route("/otard-antenna-installation", axum::routing::post(otard_antenna_installation_route))
@@ -4205,6 +4210,40 @@ async fn duty_to_mitigate_damages_route(
         ));
     }
     Ok(Json(check_duty_to_mitigate_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// lease_early_termination_fee_cap: Lease early-termination fee + liquidated
+// damages cap enforceability — when a residential tenant breaks the lease
+// early, what statutory cap or duty-to-mitigate framework limits the
+// landlord's recovery? Mounted at POST /api/rental/lease-early-termination-
+// fee-cap. Three regimes: (1) Florida Fla. Stat. § 83.595(4): explicit
+// 2-MONTH RENT cap + 60-day tenant notice + SEPARATE ADDENDUM with
+// statutory wording + election waives additional rent beyond month of
+// retaking possession + § 83.595(2) menu of remedies (terminate-retake,
+// re-rent-on-tenant-account, hold-for-full-rent, OR liquidated-damages).
+// (2) California Cal. Civ. Code § 1951.2 + § 1671(d): ACTUAL DAMAGES
+// framework with strict duty to mitigate; liquidated damages clauses
+// presumptively VOID unless reasonable estimate at lease execution. (3)
+// Default common-law: actual damages + duty to mitigate per Restatement
+// (Second) of Contracts §§ 350 (mitigation) + 356 (liquidated damages vs
+// penalty). Distinct from siblings `duty_to_mitigate_damages` (general
+// mitigation), `rent_acceleration_enforceability` (full balance
+// acceleration), `lease_termination_catastrophic_damage` (force-majeure),
+// and `military_termination` (SCRA).
+// ---------------------------------------------------------------------------
+
+async fn lease_early_termination_fee_cap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseEarlyTerminationFeeInput>,
+) -> Result<Json<LeaseEarlyTerminationFeeResult>, ApiError> {
+    if b.monthly_rent_cents < 0 || b.fee_amount_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(check_lease_early_termination_fee_cap(&b)))
 }
 
 // ---------------------------------------------------------------------------

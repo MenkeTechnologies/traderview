@@ -81,6 +81,7 @@ pub mod lease_auto_renewal;
 pub mod lease_copy_delivery;
 pub mod lease_cure_period;
 pub mod lease_disclosures;
+pub mod lease_early_termination_fee_cap;
 pub mod lease_nondisparagement_prohibition;
 pub mod lease_succession;
 pub mod lease_termination_catastrophic_damage;
