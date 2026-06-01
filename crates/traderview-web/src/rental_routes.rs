@@ -248,6 +248,10 @@ use traderview_expense::reasonable_accommodation_modification::{
     check as check_reasonable_accommodation_modification,
     CheckResult as ReasonableAccommodationResult, Input as ReasonableAccommodationInput,
 };
+use traderview_expense::damage_deduction_itemization::{
+    check as check_damage_deduction_itemization, CheckResult as DamageDeductionResult,
+    Input as DamageDeductionInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -465,6 +469,7 @@ pub fn router() -> Router<AppState> {
         .route("/winter-eviction-protections", axum::routing::post(winter_eviction_protections_route))
         .route("/landlord-identification-disclosure", axum::routing::post(landlord_identification_disclosure_route))
         .route("/reasonable-accommodation-modification", axum::routing::post(reasonable_accommodation_modification_route))
+        .route("/damage-deduction-itemization", axum::routing::post(damage_deduction_itemization_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3594,6 +3599,42 @@ async fn reasonable_accommodation_modification_route(
         ));
     }
     Ok(Json(check_reasonable_accommodation_modification(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State security-deposit damage-deduction itemization compliance check.
+//
+// Mounted at POST /api/rental/damage-deduction-itemization. Five
+// regimes: California (Cal. Civ. Code § 1950.5(g)(1) 21-day deadline
+// + § 1950.5(g)(2) $125 receipt/invoice threshold + § 1950.5(g)(3)(A)
+// AB 2801 photographic-documentation mandate eff. 2025-04-01 for all
+// tenancies and 2025-07-01 for pre-tenancy shots + § 1950.5(b)(2)
+// ordinary-wear-and-tear exclusion + § 1950.5(l) bad-faith up to 2×
+// withheld); Washington (RCW 59.18.280 30-day full-and-specific
+// statement; intentional refusal up to 2× deposit); Oregon (ORS
+// 90.300(13) 31-day itemized + statutory depreciation); Florida
+// (Fla. Stat. § 83.49(3) 30-day certified mail + $200 invoice
+// threshold + depreciation required); Texas (Tex. Prop. Code § 92.103
+// + § 92.104(c) + § 92.109 — STEEPEST PENALTY of $100 + 3× retained
+// + reasonable attorney fees; no statutory depreciation mandate).
+// ---------------------------------------------------------------------------
+
+async fn damage_deduction_itemization_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DamageDeductionInput>,
+) -> Result<Json<DamageDeductionResult>, ApiError> {
+    if b.total_deductions_cents < 0 || b.amount_withheld_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.days_to_itemized_statement > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_to_itemized_statement looks invalid (>100000)".into(),
+        ));
+    }
+    Ok(Json(check_damage_deduction_itemization(&b)))
 }
 
 // ---------------------------------------------------------------------------
