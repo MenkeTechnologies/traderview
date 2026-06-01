@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
         .route("/calc/section-164",           post(section_164_route))
         .route("/calc/section-165h",          post(section_165h_route))
+        .route("/calc/section-25c",           post(section_25c_route))
         .route("/calc/section-25d",           post(section_25d_route))
         .route("/calc/section-30d",           post(section_30d_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
@@ -2341,6 +2342,44 @@ async fn section_165h_route(
         ));
     }
     Ok(Json(traderview_expense::section_165h::compute(&b)))
+}
+
+// ── §25C Energy Efficient Home Improvement Credit (OBBBA term 12/31/25)
+// Mounted at /api/calc/section-25c. IRA 2022 30% credit for energy-
+// efficiency improvements with layered cap structure totaling up to
+// $3,200/year. General $1,200 envelope (§25C(b)(1)) with sub-caps:
+// $600 windows+skylights (§25C(b)(2)(A)) + $250/door / $500 aggregate
+// doors (§25C(b)(2)(B)) + $600/item energy property (§25C(b)(2)(C)) +
+// $150 home energy audit (§25C(b)(2)(D)) + insulation no sub-cap.
+// Heat pump SEPARATE $2,000 cap (§25C(b)(3)) above and beyond the
+// general $1,200. NONREFUNDABLE no carryforward (distinct from §25D).
+// OBBBA §70425 ACCELERATED termination to property PLACED IN SERVICE
+// after 2025-12-31 — wiping out IRA's 2032 sunset.
+
+async fn section_25c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_25c::Section25CInput>,
+) -> Result<Json<traderview_expense::section_25c::Section25CResult>, ApiError> {
+    if b.windows_skylights_cost_cents < 0
+        || b.doors_cost_cents < 0
+        || b.insulation_cost_cents < 0
+        || b.energy_property_cost_cents < 0
+        || b.heat_pump_cost_cents < 0
+        || b.home_energy_audit_cost_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if !(1990..=2100).contains(&b.placed_in_service_year)
+        || !(1..=12).contains(&b.placed_in_service_month)
+        || !(1..=31).contains(&b.placed_in_service_day)
+    {
+        return Err(ApiError::BadRequest(
+            "placed_in_service date must be a valid year/month/day".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_25c::compute(&b)))
 }
 
 // ── §25D Residential Clean Energy Credit (OBBBA termination 12/31/25) ─

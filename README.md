@@ -2948,6 +2948,27 @@ Mounted at `POST /api/calc/section-444`. Eighteen tests pin: **all 3 eligible fi
 
 Mounted at `POST /api/calc/section-3406`. Nineteen tests pin: **no trigger no withholding** (full payment to payee); **A trigger TIN-not-furnished triggers 24% withholding** ($10k → $2,400); **B trigger IRS-notified incorrect TIN** triggers withholding; **C trigger fires for interest** + dividends (load-bearing); **C trigger does NOT fire for rent** + non-employee comp (regression); **D trigger certification failure** triggers withholding; **3 trigger precedence pins** (A > B, B > C, C > D); **withholding rate 24%** (2400bp); withholding at $100k payment = $24k; **$1B precision** = $240M withheld; zero payment zero withholding; **all 10 payment types subject to A trigger** sweep; triggered note describes trigger + 24%; untriggered note describes no trigger; **citation mentions all 4 trigger subsections** + § 3406(b)(1)(A) rate + CP 2100 + Publication 1281.
 
+`traderview-expense::section_25c` is the **IRC §25C Energy Efficient Home Improvement Credit module with OBBBA termination** — completes the OBBBA-terminated IRA-2022 energy-credit triplet (`§25C` home efficiency + `§25D` residential clean energy + `§30D` clean vehicle). Provides a **30% nonrefundable credit** with a layered cap structure totaling **up to $3,200/year** for energy-efficiency improvements to a taxpayer's residence. **OBBBA § 70425 ACCELERATED termination** to property placed in service after **December 31, 2025** — wiping the IRA-scheduled 2032 sunset by 7 years.
+
+**Cap structure** (post-IRA-2022 redesign, pre-OBBBA termination):
+
+| Component | Cap | Citation |
+|-----------|-----|----------|
+| General $1,200 envelope (windows + doors + insulation + non-heat-pump energy property + audits) | **$1,200/year** | § 25C(b)(1) |
+| Windows + skylights (within general envelope) | **$600 aggregate** | § 25C(b)(2)(A) |
+| Exterior doors (within general envelope) | **$250/door, $500 aggregate** | § 25C(b)(2)(B) |
+| Any single qualified energy property item (within general envelope) | **$600/item** | § 25C(b)(2)(C) |
+| Home energy audit (within general envelope) | **$150** | § 25C(b)(2)(D) |
+| Insulation (within general envelope) | No sub-cap | § 25C(b)(1) |
+| **Heat pumps + heat pump water heaters + biomass stoves (SEPARATE)** | **$2,000 above + beyond the $1,200** | § 25C(b)(3) |
+| **Total annual maximum** | **$3,200** ($1,200 general + $2,000 heat pump) | § 25C(b) |
+
+**Nonrefundable, no carryforward** — distinct from § 25D which has indefinite carryforward. § 25C credit limited to current-year tax liability; excess lost.
+
+**OBBBA placed-in-service requirement**: property must be PLACED IN SERVICE by 2025-12-31 (not just paid for or contracted). The "placed in service" requirement is strict — installation must be complete.
+
+Mounted at `POST /api/calc/section-25c`. Twenty-six tests pin: **full $3,200 maxes both envelopes** (worked example $5K windows + $3K doors (2) + $5K insulation + $5K energy (2 items) + $500 audit + $10K heat pump → exactly $3,200); **OBBBA termination after 2025-12-31** + § 70425 + "TERMINATED" citation; **at 2025-12-31 boundary still eligible** (strict greater-than); **windows capped at $600** + windows under cap not capped; **doors $250/door 1-door**; **doors $500 aggregate 3-doors** + aggregate cap binds with more doors; **energy property $600/item single + multiple items**; **audit capped at $150** + audit under cap not capped; **heat pump capped at $2,000**; **heat pump SEPARATE from general envelope** (regression-critical — $600 windows + $2,000 heat pump = $2,600, both caps apply independently); **insulation no sub-cap** + insulation bounded only by general $1,200; **zero cost zero credit**; **negative inputs clamped**; **citation pins § 25C(a) + (b)(1) + (b)(3) + OBBBA § 70425**; **date boundary Dec 30/31/Jan 1 three-day triple-test**; **general envelope caps at $1,200**; **doors per-door cap below aggregate**; **doors per-door cap binds high-cost single door**; **windows at $600 boundary exactly**; **heat pump at $2,000 boundary exactly**; **total caps at $3,200 in high-spend scenario** ($50K windows + $50K doors + $50K insulation + $50K energy + $5K audit + $50K heat pump → exactly $3,200).
+
 `traderview-expense::section_25d` is the **IRC §25D Residential Clean Energy Credit module with OBBBA termination** — pairs with `section_30d` (Clean Vehicle Credit) as the two OBBBA-terminated IRA-2022 incentives. Provides a **30% nonrefundable credit** for qualifying clean energy property installed at the taxpayer's RESIDENCE (primary or secondary home). **Pure rentals never qualified** — a landlord whose tenants live in the unit but who does not himself reside there cannot claim §25D. OBBBA did not change the residence requirement; it only accelerated the sunset.
 
 **OBBBA § 70426 termination**: expenditures made **after December 31, 2025** ineligible. IRA 2022 had originally scheduled the 30% rate through 2032 with a 26%/22%/0% step-down for 2033/2034/2035; OBBBA wiped out all step-down years.
