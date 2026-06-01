@@ -109,6 +109,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
+        .route("/calc/section-179",           post(section_179_route))
         .route("/calc/section-183",           post(section_183_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
@@ -641,6 +642,34 @@ async fn section_174_route(
         ));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
+}
+
+// ── §179 election to expense certain depreciable business assets ─────
+// Mounted at /api/calc/section-179. §179(b)(1) dollar cap (2026 =
+// $2,560,000); §179(b)(2) phaseout dollar-for-dollar above threshold
+// (2026 = $4,090,000); §179(b)(3)(A) taxable-income limitation with
+// §179(b)(3)(B) indefinite carryforward; §179(b)(5) heavy-SUV sublimit
+// (GVWR 6,001-14,000 lb. — 2026 = $32,000) with excess flowing to §168(k)
+// 100% bonus depreciation made permanent by OBBBA §70302 (eff. 2025-01-01).
+// Out of scope: §179(d)(3) related-party purchase restriction; §179(d)(10)
+// recapture on business-use percentage drop below 50%; §179(f) qualified
+// real-property carve-in (roofs, HVAC, fire alarm, security systems).
+
+async fn section_179_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_179::Section179Input>,
+) -> Result<Json<traderview_expense::section_179::Section179Result>, ApiError> {
+    if b.qualifying_property_cents < 0
+        || b.suv_property_cents < 0
+        || b.dollar_cap_cents < 0
+        || b.phaseout_threshold_cents < 0
+        || b.suv_sublimit_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents values required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_179::compute(&b)))
 }
 
 // ── §183 hobby loss rules ────────────────────────────────────────────
