@@ -153,6 +153,7 @@ pub mod tenant_death_termination;
 pub mod tenant_organizing;
 pub mod tenant_solar_installation;
 pub mod tenant_relocation_assistance;
+pub mod tenant_rent_judgment_wage_garnishment;
 pub mod tenant_topa;
 pub mod utility_shutoff;
 pub mod vehicle_towing_from_rental_property;

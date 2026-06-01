@@ -135,6 +135,9 @@ use traderview_expense::adverse_action_notice::{
 use traderview_expense::adverse_possession_claim::{
     check as check_adverse_possession, AdversePossessionInput, AdversePossessionResult,
 };
+use traderview_expense::tenant_rent_judgment_wage_garnishment::{
+    compute as compute_wage_garnishment, GarnishmentInput, GarnishmentResult,
+};
 use traderview_expense::tenant_topa::{
     check as check_tenant_topa, TopaInput, TopaResult,
 };
@@ -603,6 +606,7 @@ pub fn router() -> Router<AppState> {
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
+        .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
@@ -3205,6 +3209,43 @@ async fn tenant_organizing_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_organizing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_rent_judgment_wage_garnishment: Post-judgment wage garnishment
+// for tenant rent debt. Three regimes: FullyProhibited (TX, NC, PA, SC —
+// civil-debt wage garnishment ABSOLUTELY barred at employer level per
+// Tex. Const. art. XVI § 28; N.C. Const. art. X § 1 + N.C. Gen. Stat. §
+// 1-362; 42 Pa. Cons. Stat. § 8127; S.C. Code § 37-5-104); StateMore
+// Protective (CA Code Civ. Proc. § 706.050 50× state min, MA G.L. c. 246
+// § 28 50× state min, VA Code § 34-29 75% / 40× federal min); FederalFloor
+// (15 U.S.C. § 1673(a)(1) — lesser of 25% disposable or excess over 30×
+// federal minimum, currently $7.25 → $217.50/week 30× threshold). Carve-
+// outs: child support / alimony (§ 1673(a)(2) tiers 50-65%), tax debt,
+// federally backed student loan (15% administrative). Distinct from
+// damage_deduction_itemization, rent_credit_reporting, prevailing_party_
+// attorney_fees.
+// ---------------------------------------------------------------------------
+
+async fn tenant_rent_judgment_wage_garnishment_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<GarnishmentInput>,
+) -> Result<Json<GarnishmentResult>, ApiError> {
+    if b.weekly_disposable_earnings_cents < 0
+        || b.federal_minimum_wage_cents_per_hour < 0
+        || b.state_minimum_wage_cents_per_hour < 0
+    {
+        return Err(ApiError::BadRequest(
+            "monetary inputs must be >= 0".into(),
+        ));
+    }
+    if b.state_exemption_multiplier_hours > 1_000 {
+        return Err(ApiError::BadRequest(
+            "state_exemption_multiplier_hours out of plausible range".into(),
+        ));
+    }
+    Ok(Json(compute_wage_garnishment(&b)))
 }
 
 // ---------------------------------------------------------------------------
