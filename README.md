@@ -2149,6 +2149,28 @@ Pinned by `forfeiture_with_valid_election_no_refund_per_83b2`, `forfeiture_witho
 
 Mounted at `POST /api/calc/section-83b`. Twenty-four tests pin: timely election within 30 days valid; **day 0 / day 30 / day 31 boundaries** (the three bright-line cases); no election falls back to §83(a); founder grant election savings (−$9.99); election with full $50 appreciation → full LTCG; no-election same appreciation → ordinary $9.99 + LTCG $40 split; election sale within 1 year STCG; **365 vs 366-day boundary**; no-election sale at 17 months from vesting → LTCG; no-election STCG path; FMV grant above paid creates ordinary at grant; **election-was-wrong** (positive savings number); negative ordinary clamps to zero; not-yet-sold returns no gain; election before grant invalid (pathological pin); **very large grant precision** ($0.0001 → $5000); day-31 late election uses vesting basis (not grant); note describes 30-day deadline explicitly ("day 14/30"); forfeiture with valid election + §83(b)(2) call-out in note (UX-text regression target); forfeiture without election clean.
 
+`traderview-expense::section_83c` is the **IRC §83(c) substantial risk of forfeiture timing-rules module** — completes the §83 stock-compensation triplet alongside existing `section_83b` (election to recognize at grant) and `section_83i` (qualified equity grants 5-year deferral). §83(c) defines WHEN property is "substantially vested" — the point at which §83(a) requires income recognition. The two prongs that delay vesting are (1) substantial risk of forfeiture under §83(c)(1) and (2) non-transferability under §83(c)(2). §83(c)(3) carves out a special rule for §16(b) Securities Exchange Act insiders.
+
+**§83(a) timing rule**: property transferred to a service provider is taxable on the **earlier** of (a) when transferable OR (b) when not subject to substantial risk of forfeiture.
+
+**§83(c)(1) substantial-risk-of-forfeiture conditions** — must be ONE of:
+- **Future-performance-of-substantial-services condition** — full-time job duties qualify; ONE HOUR PER WEEK is NOT substantial.
+- **Transfer-purpose condition** — performance metric, change-of-control, or hurdle event related to a purpose of the transfer.
+
+Plus all three of: substantial possibility of forfeiture + service condition is substantial / purpose condition is likely to occur + forfeiture condition is likely to be enforced.
+
+**§83(c)(2) transferability**: property is "transferable" only when the transferee is NOT subject to a substantial risk of forfeiture. Restricted stock the holder cannot sell except to other restricted holders is NOT transferable.
+
+**§83(c)(3) § 16(b) insider restriction** — property held by a §16(b) "insider" (officer, director, 10%+ shareholder of a §12 SEA-registered company) is treated as subject to SRF AND non-transferable until earlier of:
+- The 6-month §16(b) short-swing-profit period expires
+- The first day sale at a profit would no longer trigger §16(b) suit
+
+**Other insider-trading restrictions (Rule 10b-5, lock-up agreements) do NOT trigger §83(c)(3)** — Congress chose §16(b) as the ONLY securities-law restriction that delays §83 recognition.
+
+**Treas. Reg. § 1.83-3(c)** clarifies: SRF can ONLY be established through a service condition or a transfer-purpose condition. Likelihood of both occurrence AND enforcement matters.
+
+Mounted at `POST /api/calc/section-83c`. Fifteen tests pin: **substantial future service unvested** (3-prong gate met → SRF exists); **1-hour-per-week NOT substantial → vested** (regression target — Reg. § 1.83-3(c) hour-a-week not substantial); **non-substantial forfeiture possibility → vested**; **employer unlikely to enforce → vested** (regression — likelihood-of-enforcement prong); **transfer-purpose-condition path** (likely-to-occur → unvested; unlikely → vested); **§83(a) earlier-of rule** (transferable property vested even with SRF — disjunctive trigger); **§83(c)(3) 30-day-remaining 16(b) period → unvested even with transferable=true** (regression target — 16(b) overrides §83(c)(2)); **§16(b) period expired (0 days remaining) → vested**; **Rule 10b-5 NOT §83(c)(3)** (regression — only §16(b) delays §83 recognition); no-condition path → immediately vested + §83(a) recognition required; **citation mentions all 6 relevant authorities** (§83(a) + §83(c)(1) + §83(c)(2) + §83(c)(3) + § 16(b) + Treas. Reg. § 1.83-3(c) + "EARLIER" + "6-month"); note describes service-condition path; note describes §16(b) path "30 days remaining"; note describes purpose-condition path.
+
 `traderview-expense::section_83i` is the **IRC §83(i) qualified equity grant 5-year income-tax deferral module** — TCJA addition (P.L. 115-97) and the natural companion to §83(b). Where §83(b) ACCELERATES income to grant date to lock in low FMV, §83(i) DEFERS income away from the vesting/exercise date — up to 5 years — so the employee can wait out the private→public transition before owing federal income tax on illiquid stock. Directly relevant to any pre-IPO startup employee receiving NQSOs or RSUs.
 
 **§83(i)(2)(C) eligible corporation** test (both required):

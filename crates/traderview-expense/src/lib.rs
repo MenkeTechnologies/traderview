@@ -156,6 +156,7 @@ pub mod section_336;
 pub mod section_351;
 pub mod section_382;
 pub mod section_83b;
+pub mod section_83c;
 pub mod section_83i;
 pub mod section_401a9;
 pub mod section_408_d3;

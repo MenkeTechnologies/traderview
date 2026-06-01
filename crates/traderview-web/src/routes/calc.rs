@@ -119,6 +119,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-83b",           post(section_83b_route))
+        .route("/calc/section-83c",           post(section_83c_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1231",          post(section_1231_route))
         .route("/calc/section-1233",          post(section_1233_route))
@@ -779,6 +780,28 @@ async fn section_83b_route(
         }
     }
     Ok(Json(traderview_expense::section_83b::compute(&b)))
+}
+
+// ── §83(c) substantial risk of forfeiture timing rules ───────────
+// Mounted at /api/calc/section-83c. §83(a) recognize on EARLIER of
+// transferable or no-SRF; §83(c)(1) SRF requires future-performance
+// of substantial services OR transfer-purpose condition + substantial
+// possibility of forfeiture + likelihood of enforcement; §83(c)(2)
+// transferability = transferee not subject to SRF; §83(c)(3) § 16(b)
+// 6-month short-swing-profit restriction (treats property as SRF AND
+// non-transferable until 6-month expiry or no-§16(b)-suit-on-profit);
+// Treas. Reg. § 1.83-3(c) elaboration.
+
+async fn section_83c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_83c::Section83cInput>,
+) -> Result<Json<traderview_expense::section_83c::Section83cResult>, ApiError> {
+    if b.days_remaining_in_section_16b_period > 366 {
+        return Err(ApiError::BadRequest(
+            "days_remaining_in_section_16b_period must be <= 366".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_83c::compute(&b)))
 }
 
 // ── §172 Net Operating Loss deduction ────────────────────────────────
