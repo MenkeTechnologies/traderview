@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1297",          post(section_1297_route))
         .route("/calc/section-1298",          post(section_1298_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
+        .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2980,6 +2981,35 @@ async fn section_6038d_route(
         ));
     }
     Ok(Json(traderview_expense::section_6038d::compute(&b)))
+}
+
+// ── § 6011 reportable transaction disclosure (Form 8886) ──────────
+// Mounted at /api/calc/section-6011. Treas. Reg. § 1.6011-4(b)
+// designates five reportable-transaction categories: listed
+// transactions (b)(2); confidential transactions (b)(3) with
+// $250K corporate / $50K noncorporate fee thresholds; transactions
+// with contractual protection (b)(4); loss transactions (b)(5)
+// with $2M individual / $10M entity single-year thresholds;
+// transactions of interest (b)(6). Failure to disclose triggers
+// § 6707A penalty — 75% of tax reduction, floored at $5K
+// individual / $10K entity, capped at $100K individual / $200K
+// entity for listed transactions. Companion to § 6111 material
+// advisor disclosure (Form 8918), § 6112 advisor list maintenance,
+// and § 6662A 20%/30% reportable-transaction-understatement penalty.
+
+async fn section_6011_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6011::Section6011Input>,
+) -> Result<Json<traderview_expense::section_6011::Section6011Result>, ApiError> {
+    if b.fee_paid_to_advisor_cents < 0
+        || b.single_year_loss_claimed_cents < 0
+        || b.multi_year_loss_total_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6011::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
