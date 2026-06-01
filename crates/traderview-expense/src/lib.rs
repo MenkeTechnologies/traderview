@@ -60,6 +60,7 @@ pub mod habitability_remedies;
 pub mod heat_requirements;
 pub mod immigration_status_protection;
 pub mod just_cause_eviction;
+pub mod just_cause_termination_notice_content;
 pub mod landlord_harassment;
 pub mod landlord_identification_disclosure;
 pub mod landlord_possession_delivery;

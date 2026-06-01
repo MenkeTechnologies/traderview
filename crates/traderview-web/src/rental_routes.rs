@@ -81,6 +81,9 @@ use traderview_expense::dv_survivor_lock_change::{
 use traderview_expense::dv_termination::{
     check as check_dv_termination, DvEarlyTerminationInput, DvEarlyTerminationResult,
 };
+use traderview_expense::just_cause_termination_notice_content::{
+    check as check_just_cause_notice_content, JustCauseNoticeContentInput, JustCauseNoticeContentResult,
+};
 use traderview_expense::just_cause_eviction::{
     check as check_just_cause, JustCauseInput, JustCauseResult,
 };
@@ -597,6 +600,7 @@ pub fn router() -> Router<AppState> {
         .route("/dv-survivor-lock-change", axum::routing::post(dv_survivor_lock_change_route))
         .route("/dv-termination-check", axum::routing::post(dv_termination_check_route))
         .route("/just-cause-check", axum::routing::post(just_cause_check_route))
+        .route("/just-cause-termination-notice-content", axum::routing::post(just_cause_termination_notice_content_route))
         .route("/soi-protection-check", axum::routing::post(soi_protection_check_route))
         .route("/detector-check", axum::routing::post(detector_check_route))
         .route("/lead-disclosure-check", axum::routing::post(lead_disclosure_check_route))
@@ -5771,6 +5775,26 @@ async fn just_cause_check_route(
         ));
     }
     Ok(Json(check_just_cause(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// just_cause_termination_notice_content: Just-cause termination notice CONTENT
+// requirements — what content + format must the WRITTEN termination notice
+// contain to satisfy just-cause statutory requirements? CA Civ. Code
+// § 1946.2(c) (written cause + cure for curable at-fault + relocation
+// assistance for no-fault + VOID for noncompliance); WA RCW 59.18.650(2)
+// (specific cause + facts and circumstances + 16 enumerated categories
+// (a)-(p)); OR ORS 90.427 SB 608 (written reason + < 1 year no-cause path);
+// NJ N.J.S.A. 2A:18-61.2 + § 2A:18-61.1(a)-(r) (18 enumerated grounds + exact
+// statutory match required).
+// ---------------------------------------------------------------------------
+
+async fn just_cause_termination_notice_content_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<JustCauseNoticeContentInput>,
+) -> Result<Json<JustCauseNoticeContentResult>, ApiError> {
+    Ok(Json(check_just_cause_notice_content(&b)))
 }
 
 // ---------------------------------------------------------------------------
