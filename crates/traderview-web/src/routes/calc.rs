@@ -91,6 +91,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1234a",         post(section_1234a_route))
         .route("/calc/section-1234b",         post(section_1234b_route))
         .route("/calc/section-263g",          post(section_263g_route))
+        .route("/calc/section-1276",          post(section_1276_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -2498,6 +2499,38 @@ async fn section_263g_route(
         ));
     }
     Ok(Json(traderview_expense::section_263g::compute(&b)))
+}
+
+// ── §1276 market-discount-bond ordinary-income recharacterization ─
+// Mounted at /api/calc/section-1276. §1276(a)(1) general rule: gain
+// on disposition of any market discount bond is ordinary income up
+// to accrued market discount. §1276(a)(2): non-sale dispositions
+// (gift, distribution) treated as realizing FMV. §1276(a)(3): partial
+// principal payment ordinary up to accrued. §1276(a)(4): amount
+// treated as INTEREST for purposes of the Code (with carve-outs for
+// §§ 103, 871(a), 881, 1441, 1442, 6049). §1276(b)(1) ratable accrual
+// default = market_discount × (days_held / total_days). §1276(b)(2)
+// constant-yield election uses §1272(a) OID formula (caller supplies
+// computed accrual). §1278(a)(2)(A) defines market discount = stated
+// redemption − basis (clamped at zero). §1278(b) current-inclusion
+// election lets taxpayer recognize annually; prior-year accrual
+// subtracts from §1276 disposition cap to avoid double inclusion.
+
+async fn section_1276_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1276::Section1276Input>,
+) -> Result<Json<traderview_expense::section_1276::Section1276Result>, ApiError> {
+    if b.purchase_price_cents < 0
+        || b.stated_redemption_at_maturity_cents < 0
+        || b.realized_amount_cents < 0
+        || b.constant_yield_accrual_cents < 0
+        || b.prior_years_accrual_already_taxed_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1276::compute(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

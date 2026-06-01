@@ -4042,6 +4042,41 @@ The **§1092(c)(4)(B) qualified covered call (QCC) exception** is the load-beari
 
 Mounted at `POST /api/calc/section-1092`. Seventeen tests pin: loss fully deferred when gain on offset exceeds loss (5k gain + 2k loss → all 2k deferred, 0 recognized); loss partially deferred when gain less than loss (2k gain + 5k loss → 2k deferred, 3k recognized); no gain on offset full loss recognized (still flags holding-period suspension because it's still a straddle); loss-on-disposed-at-zero no-op; QCC exception fully qualified recognizes loss with holding period preserved; **QCC disqualified at exactly 30 days** (boundary — strict `>` boundary); QCC qualified at 31 days; QCC disqualified when underlying not publicly traded; QCC disqualified when strike deep ITM; multiple offsetting legs sum their unrecognized gains; **unrealized LOSS on offsetting leg doesn't count negative** (only positive unrecognized gains feed the deferral pool, losses ignored); loss exactly equal to gain fully deferred; no-offsetting-legs degenerate case handled; note distinguishes QCC path from normal straddle path; holding-period suspension only for non-QCC straddle; empty legs no-op; QCC short-circuit runs before offsetting-gain calculation (even a $90k gain doesn't change the QCC outcome).
 
+`traderview-expense::section_1276` is the **IRC §1276 market-discount-bond ordinary-income recharacterization module** — trader-critical for every secondary-market bond purchased at a price below stated redemption at maturity. Converts disposition gain from capital to ORDINARY INCOME up to the accrued market discount. Companion to `section_988` (foreign currency ordinary character) and `section_1259` (constructive-sale anti-conversion). The bond-equivalent of § 1234B's character-conversion rule.
+
+**Six operative subparagraphs**:
+
+| Subparagraph | Statute | Rule |
+|--------------|---------|------|
+| § 1276(a)(1) | 26 U.S.C. § 1276(a)(1) | **General rule** — gain on disposition of any market discount bond is ordinary income up to accrued market discount |
+| § 1276(a)(2) | 26 U.S.C. § 1276(a)(2) | **Non-sale dispositions** — gift, distribution, etc. treated as realizing FMV of the bond |
+| § 1276(a)(3) | 26 U.S.C. § 1276(a)(3) | **Partial principal payments** — ordinary income up to accrued market discount |
+| § 1276(a)(4) | 26 U.S.C. § 1276(a)(4) | **Treatment as interest** — amount treated as INTEREST for Code purposes (carve-outs §§ 103, 871(a), 881, 1441, 1442, 6049) |
+| § 1276(b)(1) | 26 U.S.C. § 1276(b)(1) | **Ratable accrual (DEFAULT)** — accrued = market_discount × (days held ÷ days from acquisition to maturity) |
+| § 1276(b)(2) | 26 U.S.C. § 1276(b)(2) | **Constant-yield election** — § 1272(a) OID yield-to-maturity formula as if bond originally issued on acquisition date at taxpayer's basis; **IRREVOCABLE** as to that bond |
+
+**§ 1278(a)(2)(A) market discount = stated redemption − basis (clamped at zero).** Premium bonds (purchase ≥ face) have no market discount and § 1276 doesn't apply. Pinned by `purchase_at_or_above_face_no_market_discount` and `purchase_at_face_no_discount`.
+
+**§ 1278(b) current-inclusion election prevents double inclusion.** Taxpayer who elects annual recognition of accrued discount excludes prior-year recognitions from the § 1276 disposition recharacterization. The compute subtracts `prior_years_accrual_already_taxed_cents` from the recharacterization cap (saturating at zero — prior-year inclusion in excess of total accrued does NOT create negative recharacterization). Pinned by `current_inclusion_election_subtracts_prior_year_accrual`, `current_inclusion_prior_year_equals_accrued_zero_recharacterization`, and `current_inclusion_prior_year_exceeds_accrued_does_not_negate`.
+
+**§ 1276(a)(4) treatment as interest is conditional on actual recharacterization.** Where no discount or no held-period accrual or no realized gain produces zero ordinary recharacterization, the bond produces only capital gain/loss (the `treated_as_interest` flag stays false). Pinned by `treated_as_interest_only_when_ordinary_recharacterization_nonzero`.
+
+**Three load-bearing fact patterns**:
+
+| Pattern | Treatment |
+|---------|-----------|
+| Buy $900 face-$1000 bond, hold half the term, sell at face | Accrued $50; ordinary $50; capital $50 (residual gain) |
+| Buy $900 face-$1000 bond, hold full term, sell at face | Accrued $100; ordinary $100; capital $0 |
+| Buy $900 face-$1000 bond, gift at FMV $970 | § 1276(a)(2) treats as realizing $970; ordinary $70; capital $0 |
+| Buy $900 face-$1000 bond, receive $3000 partial principal | § 1276(a)(3) ordinary $3000 (capped at accrued); capital $0 |
+| Buy $1000 face-$950 bond at premium, sell at $1050 | No discount → § 1276 inapplicable; all $50 capital gain |
+
+**Conservation invariants pinned**:
+- `ordinary_plus_capital_equals_total_gain_invariant` — accounting must balance across Sale + NonSaleDisposition paths (PartialPrincipalPayment paths handle realized as direct payment amount, not gain).
+- `ordinary_never_exceeds_accrued_market_discount_invariant` — across 3 disposition types × 6 realized amounts (18 cells), ordinary is always ≤ accrued.
+
+Mounted at `POST /api/calc/section-1276`. Twenty-three tests pin: **ratable accrual half holding half discount**; **ratable full holding full discount**; **ratable holding longer than total caps at full discount**; **ratable zero days held zero accrued**; **ratable zero total days uses full discount** (edge — degenerate denominator); **gain less than accrued ordinary caps at gain**; **loss on sale no ordinary recharacterization** (regression — no negative ordinary); **purchase at or above face no market discount**; **purchase at face no discount**; **non-sale disposition uses FMV as realized** (§ 1276(a)(2)); **partial principal payment ordinary up to accrued** (§ 1276(a)(3)); **partial principal payment exceeding accrued caps**; **constant-yield election uses caller-supplied accrual** (§ 1276(b)(2)); **constant-yield caller-supplied exceeds market discount caps**; **constant-yield negative caller-supplied clamps at zero**; **current-inclusion election subtracts prior-year accrual** (§ 1278(b)); **current-inclusion prior year equals accrued zero recharacterization**; **current-inclusion prior year exceeds accrued does not negate** (regression — saturating subtraction); **treated as interest only when ordinary recharacterization nonzero** (§ 1276(a)(4) flag accuracy); **ordinary plus capital equals total gain invariant** across Sale + NonSale paths; **ordinary never exceeds accrued market discount invariant** across 3 disposition types × 6 realized amounts; **citation pins subsection per disposition type** (§ 1276(a)(1) for Sale; § 1276(a)(3) for partial; § 1276(a)(2) for non-sale; all paths include § 1276(a)(4) interest treatment + § 1278(a)(2)(A) market-discount definition); **treated-as-interest note present when recharacterization occurs** (UX-text regression for § 1276(a)(4)).
+
 `traderview-expense::section_1259` is the **IRC §1259 constructive sale of appreciated financial position module** — the "short against the box" anti-conversion rule that ended pre-1997 traders' ability to lock in gains tax-free by shorting the same stock they held long. An appreciated long position (FMV > basis) is **constructively sold** when the taxpayer enters a hedge that substantially eliminates risk of loss and opportunity for gain. The deemed sale triggers gain recognition at FMV as of the hedge entry date; basis steps up to FMV per §1259(b)(2) and holding period restarts on the hedge entry date.
 
 `HedgeType` enumerates the §1259(c) covered-transaction list: `ShortSaleSubstantiallyIdentical` (the classic), `OffsettingNotionalPrincipalContract` (total-return swap), `FuturesContractSubstantiallyIdentical`, `ForwardContractSubstantiallyIdentical`, `CombinedPositionsSameEconomicEffect` (collar / synthetic short), plus two non-triggering categories: `Section1256Contract` (exempt under §1259(c)(3)(C) because §1256 already marks to market) and `NoCoveredTransaction` (standalone protective put at OTM strike, etc.).
