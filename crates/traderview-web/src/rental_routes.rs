@@ -256,6 +256,10 @@ use traderview_expense::cooling_requirements::{
     check as check_cooling_requirements, CheckResult as CoolingRequirementsResult,
     Input as CoolingRequirementsInput,
 };
+use traderview_expense::duty_to_mitigate_damages::{
+    check as check_duty_to_mitigate_damages, CheckResult as DutyToMitigateResult,
+    Input as DutyToMitigateInput,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -475,6 +479,7 @@ pub fn router() -> Router<AppState> {
         .route("/reasonable-accommodation-modification", axum::routing::post(reasonable_accommodation_modification_route))
         .route("/damage-deduction-itemization", axum::routing::post(damage_deduction_itemization_route))
         .route("/cooling-requirements", axum::routing::post(cooling_requirements_route))
+        .route("/duty-to-mitigate-damages", axum::routing::post(duty_to_mitigate_damages_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3680,6 +3685,43 @@ async fn cooling_requirements_route(
         ));
     }
     Ok(Json(check_cooling_requirements(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State landlord duty-to-mitigate-damages compliance check for
+// tenant lease breach / abandonment.
+//
+// Mounted at POST /api/rental/duty-to-mitigate-damages. Eight regimes:
+// California (Cal. Civ. Code § 1951.2 statutory duty + § 1951.4
+// assignment-or-subletting carve-out from the § 1951.2 duty);
+// NewYork (N.Y. Real Prop. Law § 227-e HSTPA 2019 — statutory duty;
+// NON-WAIVABLE; pre-HSTPA NY was a no-duty state under common law);
+// Texas (Tex. Prop. Code § 91.006(a) statutory duty + § 91.006(b)
+// waiver prohibition); Illinois (735 ILCS 5/9-213.1 statutory duty);
+// Florida (Fla. Stat. § 83.595 CONDITIONAL — duty depends on landlord
+// election among (1)(a) terminate, (1)(b) retake-and-relet REQUIRES,
+// (1)(c) stand-by-collect-rent NO duty, (1)(d) sue-as-accrued
+// REQUIRES); Mississippi (Alsup v. Banks 9 So. 895 Miss. 1891 —
+// COMMON-LAW MINORITY RULE no duty); Georgia (unclear case law
+// allows no mitigation); Default (majority common-law rule duty).
+// ---------------------------------------------------------------------------
+
+async fn duty_to_mitigate_damages_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DutyToMitigateInput>,
+) -> Result<Json<DutyToMitigateResult>, ApiError> {
+    if b.original_monthly_rent_cents < 0 || b.re_rented_monthly_rent_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative cents inputs required".into(),
+        ));
+    }
+    if b.days_unit_remained_vacant > 100_000 || b.months_remaining_on_lease > 1_000 {
+        return Err(ApiError::BadRequest(
+            "day-counters look invalid".into(),
+        ));
+    }
+    Ok(Json(check_duty_to_mitigate_damages(&b)))
 }
 
 // ---------------------------------------------------------------------------

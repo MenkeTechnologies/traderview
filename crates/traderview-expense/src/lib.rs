@@ -22,6 +22,7 @@ pub mod cooling_requirements;
 pub mod cosigner_rules;
 pub mod cost_segregation;
 pub mod damage_deduction_itemization;
+pub mod duty_to_mitigate_damages;
 pub mod credit_check_authorization;
 pub mod death_in_unit_disclosure;
 pub mod demolition_tenant_notice;
