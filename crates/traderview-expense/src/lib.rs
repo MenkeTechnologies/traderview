@@ -42,6 +42,7 @@ pub mod meals_50;
 pub mod mileage;
 pub mod military_termination;
 pub mod mold_disclosure;
+pub mod move_in_inspection;
 pub mod mlp_ubti;
 pub mod mtm_475f;
 pub mod niit;

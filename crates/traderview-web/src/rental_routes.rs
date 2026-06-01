@@ -107,6 +107,9 @@ use traderview_expense::lease_termination_notice::{
 use traderview_expense::occupancy_standards::{
     check as check_occupancy, OccupancyInput, OccupancyResult,
 };
+use traderview_expense::move_in_inspection::{
+    check as check_move_in_inspection, InspectionInput, InspectionResult,
+};
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
@@ -242,6 +245,7 @@ pub fn router() -> Router<AppState> {
         .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
         .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
+        .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
@@ -2093,6 +2097,28 @@ async fn occupancy_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_occupancy(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State move-in / move-out inspection requirement check
+//
+// Mounted at POST /api/rental/move-in-inspection-check. Four regimes:
+// MandatoryMoveInChecklist (WA strictest — full deposit forfeit + atty
+// fees on failure; AZ ARS § 33-1321; MI MCL 554.608 7-day window;
+// KY KRS 383.580); TenantRequestedMoveInChecklist (MD § 8-203.1 within
+// 15-day tenant request window); PreMoveOutInspectionOffer (CA Civ.
+// Code § 1950.5(f) walk-through offer); NoStateRequirement elsewhere.
+// ---------------------------------------------------------------------------
+
+async fn move_in_inspection_check_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<InspectionInput>,
+) -> Result<Json<InspectionResult>, ApiError> {
+    if b.state_code.trim().is_empty() {
+        return Err(ApiError::BadRequest("state_code required".into()));
+    }
+    Ok(Json(check_move_in_inspection(&b)))
 }
 
 // ---------------------------------------------------------------------------
