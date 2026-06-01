@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
+        .route("/calc/section-280b",          post(section_280b_route))
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
@@ -1349,6 +1350,30 @@ async fn section_280f_route(
         return Err(ApiError::BadRequest("cost_basis must be >= 0".into()));
     }
     Ok(Json(traderview_expense::section_280f::compute(&b)))
+}
+
+// ── §280B demolition of structures ──────────────────────────────────
+// Mounted at /api/calc/section-280b. §280B(1) NO deduction for
+// demolition costs or loss sustained; §280B(2) capitalized to land
+// basis. IRS Notice 90-21 casualty exception allows separate § 165
+// casualty loss when structure was casualty-damaged before
+// demolition; § 168(i)(4) GAA election can permit abandonment loss
+// via GAA termination under Treas. Reg. § 1.168(i)-1(e).
+
+async fn section_280b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_280b::Section280BInput>,
+) -> Result<Json<traderview_expense::section_280b::Section280BResult>, ApiError> {
+    if b.demolition_costs_paid_dollars < 0
+        || b.structure_remaining_adjusted_basis_dollars < 0
+        || b.structure_salvage_value_dollars < 0
+        || b.land_pre_demolition_basis_dollars < 0
+    {
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_280b::compute(&b)))
 }
 
 // ── §481(a) accounting method change adjustment ──────────────────────

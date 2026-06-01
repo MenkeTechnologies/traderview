@@ -2548,6 +2548,33 @@ Three structural elements:
 
 Mounted at `POST /api/calc/section-280f`. Seventeen tests pin: year-1 no bonus 2024 caps at $12,400 (under MACRS $12,000 → no cap); year-1 with bonus 2024 caps at $20,400; year-2 caps at $19,800; year-3 caps at $11,900; year-4 caps at $7,160; expensive vehicle ($150k) shows $17,600 capped-amount-lost; **heavy vehicle (>6000 lb GVWR) skips cap entirely** ($100k SUV gets full $20,000 year-1); business-use 60% scales cap proportionally; zero business use no deduction; above-one business use clamps to one; published caps table 2020-2024 each year exact year-1-no-bonus; unknown year (2099) returns None + caller_override path takes precedence; **caller_override beats published table** for known years; pre-service year no deduction; MACRS rates match Pub 946 Table A-1 (20/32/19.20/11.52/11.52/5.76%); year 5 and 6 use year-4-plus cap; capped_amount_lost calculated correctly.
 
+`traderview-expense::section_280b` is the **IRC §280B demolition of structures disallowance module** — foundational rule for any real estate trader: when an owner demolishes a structure, the demolition costs AND any loss sustained on the demolition (structure remaining basis − salvage value) are **NOT DEDUCTIBLE**. Instead they are **CAPITALIZED into the basis of the LAND** on which the demolished structure was located ([Cornell LII 26 U.S.C. § 280B](https://www.law.cornell.edu/uscode/text/26/280B), [Cornell LII 26 CFR § 1.280B-1](https://www.law.cornell.edu/cfr/text/26/1.280B-1)).
+
+**Why this matters**: land is NOT a depreciable asset, so the "deduction" is **DEFERRED until the LAND is eventually sold** — potentially decades later. Compare: if the structure were depreciated to zero and abandoned without demolition, the remaining basis would be immediately deductible as an ordinary loss. §280B forces a capital-account treatment that destroys timing.
+
+**§280B applies BROADLY with NO exceptions for**:
+
+- Safety concerns necessitating demolition
+- Unanticipated circumstances (fire damage, structural failure discovered post-purchase)
+- Economic obsolescence
+- Local code requirements forcing demolition
+
+A taxpayer cannot escape §280B by arguing the demolition was forced upon them ([LegalClarity — How the IRS Treats Demolition Costs](https://legalclarity.org/how-the-irs-treats-demolition-costs-for-tax-purposes/)).
+
+**Two narrow EXCEPTIONS** where §280B's harsh deferral can be avoided:
+
+1. **IRS Notice 90-21 casualty exception** — when a structure is damaged by a casualty (fire, flood, earthquake, storm), the taxpayer can compute a § 165 casualty loss separately on the pre-casualty basis BEFORE § 280B captures the demolition costs. The actual demolition expenses still capitalize to land, but the casualty loss on the structure is deductible. Pinned by `casualty_exception_allows_separate_loss` + `casualty_exception_does_not_change_280b_capitalization` (the § 280B treatment of demo costs is unchanged — only the casualty loss is separate).
+
+2. **General Asset Account (GAA) election** — if the structure was placed in a § 168(i)(4) GAA at or before the demolition decision, and the GAA election remains in effect, an abandonment loss on the demolished structure may be claimed by terminating the GAA under Treas. Reg. § 1.168(i)-1(e). The election must have been made AT or BEFORE the demolition — it cannot be made retroactively ([KBKG — Demolishing a Building? Cost Segregation Can Preserve Deductions](https://www.kbkg.com/cost-segregation/demolishing-a-building-cost-segregation-can-preserve-deductions-in-this-situation)). Pinned by `gaa_election_in_effect_allows_abandonment_loss` + `no_gaa_no_abandonment_loss` regression.
+
+**Practical effect**: a real estate trader with $50k demolition costs + $200k structure remaining basis (no salvage, no exception applies) gets:
+
+- $0 current deduction
+- $250k capitalized to land basis (was $100k → now $350k)
+- Deduction realized only when LAND is sold, as reduced gain or increased loss
+
+Mounted at `POST /api/calc/section-280b`. Nineteen tests pin: **standard demolition no deduction**; standard demolition loss sustained ($200k); **standard demolition capitalized to land** ($50k + $200k = $250k → land basis $100k + $250k = $350k); salvage value reduces loss ($200k − $30k salvage = $170k loss); **salvage greater than basis clamps loss to zero**; zero demolition costs only loss capitalized; **fully depreciated structure no loss only demo costs** ($0 loss + $50k demo); **IRS Notice 90-21 casualty exception allows separate $200k loss** with CASUALTY EXCEPTION note; **casualty exception does NOT change § 280B capitalization** ($250k still to land); **§ 168(i)(4) GAA election allows $200k abandonment loss** via GAA termination; no GAA no abandonment loss; **both casualty + GAA exceptions can apply simultaneously**; no-exceptions note describes indefinite deferral until LAND is sold; **$1B precision path** ($1B demo + $5B basis + $10B land = $16B new land basis); zero all inputs no-op; note mentions § 280B(1) + § 280B(2) + NO deduction + capitalized to land; citation mentions all 5 relevant authorities (§280B(1), §280B(2), §1.280B-1, Notice 90-21, §168(i)(4)); note mentions GAA when election in effect; note does NOT mention casualty when absent.
+
 `traderview-expense::cost_segregation` is the **cost-seg-study + §168(k) bonus depreciation accelerator** — the strategy that converts a $500k STR purchase into a $100k+ first-year tax shield when paired with §280A short-term-rental + material participation from `section_280a`. A landlord who buys a $500k residential rental and depreciates it as a single 27.5-year asset gets ~$9k/year. Run cost seg + bonus and year-1 jumps to ~$150k.
 
 The module breaks the depreciable basis into FIVE MACRS class buckets per the typical industry breakdown for the property type:
