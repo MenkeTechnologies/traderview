@@ -1541,6 +1541,26 @@ Mounted at `POST /api/rental/lease-succession-check`. Twenty-six tests pin: **3 
 
 Mounted at `POST /api/rental/rent-credit-reporting-check`. Twenty-two tests pin: **CA AB 2747 regime classification + default for 49 other states**; **CA pre-effective-date 2025-03-31 statute not in effect**; **CA on-effective-date 2025-04-01 statute in effect**; **CA 14 units below threshold no obligation**; **CA 15 units at threshold obligation applies** (boundary regression target); **CA all-notice-provided compliant**; **CA no-initial-notice non-compliant**; **CA no-annual-notice non-compliant** (regression — both prongs required); **CA fee at or below actual cost compliant**; **CA fee capped at $10 when actual cost higher** ($15 cost → max $10); **CA fee above $10 cap non-compliant**; **CA fee above actual cost non-compliant even when below $10** (regression — actual cost is the binding cap when lower than $10); **CA zero actual cost zero permitted fee** (regression target — cannot profit); default state TX no obligation; **citation mentions § 1954.06 + AB 2747 + 2025-04-01 + 15+ units + $10/month**; **51-state coverage**; non-empty citations; **CA-only single-state-uniqueness invariant**; **CA pre-effective note describes "not yet in effect"**; **CA below-threshold note explains "threshold is 15 units"**; lowercase state code normalizes.
 
+`traderview-expense::winter_eviction_protections` is the **state/municipal winter and weather-based eviction protection compliance check** — addresses statutory restrictions on landlord ability to evict during hazardous weather conditions or specified winter periods. Distinct from `snow_removal_responsibility` (landlord duty to clear snow/ice from premises) and from `heat_requirements` (habitability heat minimums).
+
+**Three regimes**:
+
+| Regime | Authority | Cold threshold | Heat threshold | Precipitation | Holiday moratorium |
+|--------|-----------|----------------|----------------|----------------|---------------------|
+| `DistrictOfColumbia` | DC Code § 42-3505.01(k) | NWS predicts **< 32°F** at 8 AM at Reagan National | NWS predicts **> 95°F** at 8 AM | **Yes** — actively falling at unit | No |
+| `CookCountyIllinois` | Cook County Sheriff Order | **≤ 15°F** at 8 AM | No | No | **Dec 19 – Jan 5** annual |
+| `Default` | — | — | — | — | — |
+
+**DC's three-prong weather rule** is the strongest US statutory weather-based eviction restriction. § 42-3505.01(k)(1) (sub-freezing), (k)(2) (precipitation), (k)(3) (extreme heat) operate independently — any one triggers blocks eviction that day.
+
+**Cook County uses sheriff-execution discretion** rather than statutory restriction — the sheriff's published policy controls when eviction orders will not be executed. The 15°F cold cutoff is BELOW DC's 32°F sub-freezing rule (Cook County is more permissive); the holiday moratorium (Dec 19 - Jan 5) has no DC counterpart.
+
+**Boundary semantics**: DC sub-freezing is STRICT BELOW 32°F (at 32°F eviction permitted); DC extreme heat is STRICT ABOVE 95°F (at 95°F eviction permitted); Cook County cold is INCLUSIVE (≤ 15°F blocks; 16°F permits).
+
+**Restriction priority**: in DC, sub-freezing fires before precipitation if both apply; in Cook County, holiday moratorium fires before temperature check.
+
+Mounted at `POST /api/rental/winter-eviction-protections`. Twenty-three tests pin: **DC sub-freezing 31°F blocks** + § 42-3505.01(k)(1) citation; **DC at 32°F boundary eviction permitted** (strict-below required); **DC extreme heat 96°F blocks** + § 42-3505.01(k)(3); **DC at 95°F boundary permitted**; **DC precipitation blocks** + § 42-3505.01(k)(2); **DC mild-weather-no-precipitation permitted**; **Cook County holiday moratorium blocks** + "December 19 through January 5" citation; **Cook County 15°F blocks**; **Cook County 14°F blocks**; **Cook County 16°F permitted** (boundary regression); **Cook County extreme weather safety threat blocks**; **Cook County normal conditions permitted**; **default no obligation even with extreme inputs**; **DC negative-temperature blocks**; **DC temperature-priority-over-precipitation** (sub-freezing fires first when both apply); **Cook County holiday-priority-over-temperature**; **jurisdiction routing DC + IL/Cook + IL/DuPage→Default + case-insensitive**; **only-DC-has-precipitation-restriction** 3-regime invariant; **only-DC-has-extreme-heat-restriction** 2-regime invariant; **only-Cook-County-has-holiday-moratorium** 3-regime invariant; **DC threshold chronology 31/32/95/96** (single-test 4-temperature regression — 31 blocks + 32 permits + 95 permits + 96 blocks); **citations pin authorities** (§ 42-3505.01(k)(1)/(k)(2)/(k)(3) + Cook County Sheriff Order).
+
 `traderview-expense::window_guard_requirements` is the **state window-guard landlord compliance check** — child-safety regulation for multi-family housing. Two jurisdictions have substantive statutory requirements with sharply different trigger models: NYC uses a **proactive/mandatory** model (install automatically when a qualifying child is present), while NJ uses a **reactive/on-request** model (install only after written tenant request). Cost allocation also differs: NYC landlord bears 100%; NJ allows up to $20 per guard pass-through to the requesting tenant.
 
 **Three regimes**:

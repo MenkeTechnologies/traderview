@@ -237,6 +237,9 @@ use traderview_expense::pre_move_out_inspection::{
 use traderview_expense::credit_check_authorization::{
     check as check_credit_check_authorization, CreditCheckInput, CreditCheckResult,
 };
+use traderview_expense::winter_eviction_protections::{
+    check as check_winter_eviction_protections, WinterEvictionInput, WinterEvictionResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -451,6 +454,7 @@ pub fn router() -> Router<AppState> {
         .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
         .route("/pre-move-out-inspection", axum::routing::post(pre_move_out_inspection_route))
         .route("/credit-check-authorization", axum::routing::post(credit_check_authorization_route))
+        .route("/winter-eviction-protections", axum::routing::post(winter_eviction_protections_route))
         .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
         .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
         .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
@@ -3480,6 +3484,36 @@ async fn credit_check_authorization_route(
         ));
     }
     Ok(Json(check_credit_check_authorization(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// State/municipal winter and weather-based eviction protection check.
+//
+// Mounted at POST /api/rental/winter-eviction-protections. Three regimes:
+// DistrictOfColumbia (DC Code § 42-3505.01(k) — strongest statutory
+// weather-based restriction; no eviction when NWS predicts at 8 AM that
+// Reagan National Airport temperature will fall BELOW 32°F (§ k(1))
+// OR rise ABOVE 95°F (§ k(3)) OR precipitation is falling at the
+// rental unit location (§ k(2))); CookCountyIllinois (Cook County
+// Sheriff Order — sheriff will NOT execute eviction orders when
+// temperature is 15°F or COLDER OR extreme weather endangers safety
+// OR within annual holiday moratorium Dec 19 - Jan 5); Default (no
+// statutory restriction; court equitable discretion only). Distinct
+// from snow_removal_responsibility (landlord duty to clear) and
+// heat_requirements (habitability heat minimums).
+// ---------------------------------------------------------------------------
+
+async fn winter_eviction_protections_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<WinterEvictionInput>,
+) -> Result<Json<WinterEvictionResult>, ApiError> {
+    if !(-100..=150).contains(&b.nws_predicted_temp_at_8am_f) {
+        return Err(ApiError::BadRequest(
+            "nws_predicted_temp_at_8am_f must be in [-100, 150]".into(),
+        ));
+    }
+    Ok(Json(check_winter_eviction_protections(&b)))
 }
 
 // ---------------------------------------------------------------------------
