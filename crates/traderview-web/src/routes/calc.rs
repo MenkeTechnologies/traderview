@@ -77,6 +77,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
+        .route("/calc/section-1033",          post(section_1033_route))
         .route("/calc/section-481",           post(section_481_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-280b",          post(section_280b_route))
@@ -1691,6 +1692,33 @@ async fn section_1031_f_route(
         ));
     }
     Ok(Json(traderview_expense::section_1031_f::compute(&b)))
+}
+
+// ── §1033 involuntary conversion gain-deferral ───────────────────────
+// Mounted at /api/calc/section-1033. §1033(a)(2)(A) gain recognized to
+// extent amount realized exceeds replacement cost (capped at realized
+// gain); §1033(b)(2) basis in replacement = replacement cost − deferred
+// gain; replacement windows: 2-year general (§1033(a)(2)(B)(i)) / 3-year
+// condemnation real-property-trade-or-investment (§1033(g)(4)) / 4-year
+// federally-declared-disaster principal residence (§1033(h)(1)(B)) / 5-year
+// qualifying-disaster property (§1033(h)(2)(A)); similar-or-related-in-
+// service-or-use test under Treas. Reg. § 1.1033(a)-2 (functional-use for
+// owner-users, end-use for lessors of investment real estate); §1033(a)(2)
+// election required for proceeds-into-property path (mandatory §1033(a)(1)
+// when proceeds converted directly into property).
+
+async fn section_1033_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1033::Section1033Input>,
+) -> Result<Json<traderview_expense::section_1033::Section1033Result>, ApiError> {
+    if b.amount_realized_cents < 0
+        || b.replacement_cost_cents < 0
+    {
+        return Err(ApiError::BadRequest(
+            "amount_realized_cents and replacement_cost_cents must be non-negative".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1033::compute(&b)))
 }
 
 // ── §1259 constructive sale of appreciated financial position ────────
