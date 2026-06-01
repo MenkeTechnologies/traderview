@@ -108,6 +108,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
+        .route("/calc/section-6112",          post(section_6112_route))
         .route("/calc/section-6662a",         post(section_6662a_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
@@ -3045,6 +3046,41 @@ async fn section_6111_route(
         ));
     }
     Ok(Json(traderview_expense::section_6111::compute(&b)))
+}
+
+// ── § 6112 material advisor list maintenance ────────────────────────
+// Mounted at /api/calc/section-6112. Sixth member of the
+// disclosure-regime cluster (§ 6011 + § 6111 + § 6707 + § 6707A
+// + § 6662A + § 6112). § 6112(a) requires material advisors to
+// maintain a list of all persons advised on a reportable
+// transaction; § 6112(b)(1)(A) requires production within 20
+// BUSINESS DAYS of IRS written request. Treas. Reg.
+// § 301.6112-1(b)(2) defines three required list components:
+// itemized statement + detailed transaction description + copies
+// of documents. § 6708(a) imposes $10,000-per-day penalty for
+// each day after the 20-business-day deadline; reasonable cause
+// excused on day-by-day basis per § 301.6708-1(c). The only
+// per-day-accruing penalty in the disclosure-regime cluster.
+
+async fn section_6112_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6112::Section6112Input>,
+) -> Result<Json<traderview_expense::section_6112::Section6112Result>, ApiError> {
+    if b.business_days_since_request < 0
+        || b.business_days_since_request > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "business_days_since_request out of range".into(),
+        ));
+    }
+    if b.days_with_reasonable_cause < 0
+        || b.days_with_reasonable_cause > 100_000
+    {
+        return Err(ApiError::BadRequest(
+            "days_with_reasonable_cause out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6112::compute(&b)))
 }
 
 // ── § 6662A reportable-transaction-understatement penalty ──────────
