@@ -2814,6 +2814,35 @@ Mounted at `POST /api/calc/section-108`. Twenty-two tests pin: solvent taxpayer 
 
 Mounted at `POST /api/calc/section-104`. Twenty tests pin: all 4 physical-pillar exclusions individually (compensatory / pain-suffering / lost wages / emotional-from-physical); **non-physical emotional distress fully included without medical care**; **non-physical emotional distress partial exclusion with medical care** ($80k − $10k → $70k included); **medical care capped at emotional distress amount** ($5k award + $20k medical → $5k excluded only); **punitive damages included by default** + **punitive wrongful-death § 104(c) state carveout**; **interest always included** (even with $1M physical injury award); **previously deducted medical reduces exclusion** ($200k − $50k recapture = $150k excluded); **recapture capped at physical excluded amount** ($30k physical + $100k prior → $30k recapture); **complex settlement integration** $1.355M total → $940k excluded + $415k included; pure punitive award fully included; pure physical injury fully excluded; zero damages no-op; note describes physical pillar with amounts; note describes recapture when present; citation mentions all relevant authorities (§104(a)(2) / §104(a) flush / §104(c) / §1.104-1 / 1996 SBJPA); $100B precision case.
 
+`traderview-expense::section_72t` is the **IRC §72(t) 10% additional tax on early retirement distributions module** — trader-critical because traders frequently consider accessing retirement-account capital for active strategies. §72(t)(1) imposes an additional 10% tax on the **includible portion** of any distribution from a qualified plan, IRA, or other tax-favored retirement vehicle received before age 59½ (basis recovery is excluded).
+
+**§72(t)(2) exception list** — 14 statutory carve-outs:
+
+| Exception | Authority | Cap | Plan-optional? |
+|-----------|-----------|-----|-----------------|
+| Age 59½+ | §72(t)(2)(A)(i) | none | No |
+| Death | §72(t)(2)(A)(ii) | none | No |
+| Disability | §72(t)(2)(A)(iii) | none | No |
+| Substantially equal periodic payments (SEPP) | §72(t)(2)(A)(iv) | none | No |
+| Separation from service after age 55 | §72(t)(2)(A)(v) | none | No |
+| Medical expenses > 7.5% AGI | §72(t)(2)(B) | none | No |
+| QDRO | §72(t)(2)(C) | none | No |
+| Higher education (IRA only) | §72(t)(2)(D) | none | No |
+| First-time homebuyer (IRA only) | §72(t)(2)(F) | **$10,000 lifetime** | No |
+| Unemployed health insurance (IRA only) | §72(t)(2)(G) | none | No |
+| Federally declared disaster | §72(t)(11) | **$22,000** | No |
+| Birth or adoption | §72(t)(2)(H) | **$5,000** | No |
+| Terminal illness (physician-certified < 7-yr) | SECURE 2.0 §326 | none | No |
+| Emergency personal expense | SECURE 2.0 §115 | **$1,000/year** | **Yes** |
+| Domestic abuse victim | SECURE 2.0 §314 | **$10,000 indexed** | **Yes** |
+| Qualified long-term care insurance | SECURE 2.0 §334 | **$2,500/year**, eff. 2026 | **Yes** |
+
+**SECURE 2.0 plan-optional gate**: emergency personal expense, domestic abuse victim, and qualified long-term care exceptions are NOT automatically available — the plan sponsor must affirmatively adopt them. Even after the statutory effective date, a taxpayer whose plan has not adopted the exception still pays the 10% tax. Terminal illness (§326) is statutory and NOT plan-optional — it works regardless of plan adoption.
+
+**Includible-vs-basis distinction**: §72(t) applies only to the portion of the distribution includible in gross income. A Roth IRA basis recovery distribution carries $0 §72(t) exposure even if taken at age 30.
+
+Mounted at `POST /api/calc/section-72t`. Twenty-five tests pin: **pre-59½ no exception 10% applies** ($50k → $5k); **age 60 no additional tax**; **death exception zeroes tax** (capless); disability / SEPP / separation-after-55 / medical / QDRO / higher-education exceptions all zero tax; terminal illness (SECURE 2.0 §326) zeroes tax; **first-time homebuyer $10k cap** ($50k − $10k = $40k × 10% = $4,000 tax remainder); **birth/adoption $5k cap**; **federally declared disaster $22k cap** ($28k × 10% = $2,800 remainder); **emergency personal expense plan-adopted $1k cap**; **emergency expense plan NOT adopted → no exception recognized** (regression — plan-adoption gate binds even after statute eff.); **domestic abuse plan-adopted $10k cap** + plan-not-adopted no exception; **long-term care $2,500 cap** (plan-adopted); **terminal illness NOT plan-optional** (works without plan adoption — regression target distinguishing SECURE 2.0 §326 from §115/§314/§334); **distribution below cap → full qualifying** ($3k birth distribution → 0 tax); **basis recovery NOT subject to §72(t)** ($50k distribution but only $20k includible → $2k tax not $5k); **citation mentions all 9 relevant authorities** (§72(t)(1) + §72(t)(2) + §72(t)(11) + SECURE 2.0 + §326 + §115 + §314 + §334 + plan-optional); note plan-not-adopted explains; note age-exempt path; **$10M precision** ($1M tax).
+
 `traderview-expense::section_7872` is the **IRC §7872 below-market loan module** — the family sweetheart loan trap. When a trader lends to family, child, or controlled entity at below-AFR rates, the IRS imputes the missing interest as if charged at the Applicable Federal Rate. Forgone interest becomes income to the lender AND deemed transferred back as gift / compensation / dividend depending on the relationship.
 
 **AFR brackets by loan term** under §1274(d):

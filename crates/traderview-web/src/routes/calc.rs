@@ -79,6 +79,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
+        .route("/calc/section-72t",           post(section_72t_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1092",          post(section_1092_route))
@@ -796,6 +797,29 @@ async fn section_170e_route(
         ));
     }
     Ok(Json(traderview_expense::section_170e::compute(&b)))
+}
+
+// ── §72(t) 10% additional tax on early retirement distributions ─────
+// Mounted at /api/calc/section-72t. §72(t)(1) 10% additional tax on
+// includible portion of pre-age-59½ distributions; §72(t)(2) ~14
+// exceptions including age 59½, death, disability, SEPP, separation
+// after 55, medical > 7.5% AGI, QDRO, higher education, first-time
+// homebuyer $10k IRA-only, unemployed health, §72(t)(11) federally
+// declared disaster $22k, birth/adoption $5k, SECURE 2.0 §326
+// terminal illness, §115 emergency personal expense $1k (plan-
+// optional), §314 domestic abuse $10k (plan-optional), §334 long-
+// term care $2.5k eff. 2026 (plan-optional).
+
+async fn section_72t_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_72t::Section72tInput>,
+) -> Result<Json<traderview_expense::section_72t::Section72tResult>, ApiError> {
+    if b.distribution_amount_dollars < 0 || b.includible_in_gross_income_dollars < 0 {
+        return Err(ApiError::BadRequest(
+            "non-negative dollar inputs required".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_72t::compute(&b)))
 }
 
 // ── §7872 below-market loans ─────────────────────────────────────────
