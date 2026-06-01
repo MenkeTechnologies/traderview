@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-7430",          post(section_7430_route))
+        .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6511",          post(section_6511_route))
@@ -2703,6 +2704,33 @@ async fn section_7430_route(
         ));
     }
     Ok(Json(traderview_expense::section_7430::compute(&b)))
+}
+
+// ── §162(f) fines and penalties nondeductibility ────────────────────
+// Mounted at /api/calc/section-162f. § 162(f)(1) general rule (post-
+// TCJA Dec 22, 2017) — no deduction for amounts paid to government in
+// relation to violation or investigation. § 162(f)(2) restitution /
+// remediation / compliance exception requires BOTH § 162(f)(2)(B)
+// identification (court order or settlement agreement explicitly
+// identifies amount + purpose) AND § 162(f)(2)(A) establishment
+// (taxpayer establishes payment was for identified purpose). § 162(f)
+// (3) routine investigation / court costs unaffected. § 162(f)(5) qui
+// tam payments to relators outside § 162(f)(1) prohibition. § 6050X
+// Form 1098-F reporting at $50K threshold. § 162(q) separate sexual-
+// harassment-NDA restriction. TCJA § 13306 grandfathers pre-December
+// 22, 2017 binding orders. Trader-relevant for FINRA / SEC / CFTC /
+// exchange disciplinary fines.
+
+async fn section_162f_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_162f::Section162fInput>,
+) -> Result<Json<traderview_expense::section_162f::Section162fResult>, ApiError> {
+    if b.payment_amount_cents < 0 {
+        return Err(ApiError::BadRequest(
+            "payment_amount_cents must be >= 0".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_162f::compute(&b)))
 }
 
 // ── §6511 limitations on credit or refund ───────────────────────────
