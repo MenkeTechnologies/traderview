@@ -543,6 +543,10 @@ use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
 };
+use traderview_expense::rental_organic_waste_collection_disclosure::{
+    check as check_rental_organic_waste_collection_disclosure,
+    RentalOrganicWasteCollectionDisclosureInput, RentalOrganicWasteCollectionDisclosureResult,
+};
 use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
@@ -897,6 +901,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
+        .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -6381,6 +6386,38 @@ async fn rental_pet_deposit_separate_security_route(
     Json(b): Json<RentalPetDepositSeparateSecurityInput>,
 ) -> Result<Json<RentalPetDepositSeparateSecurityResult>, ApiError> {
     Ok(Json(check_rental_pet_deposit_separate_security(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_organic_waste_collection_disclosure: Rental property organic
+// waste collection disclosure compliance — when must a trader-landlord
+// provide organics collection bins, tenant education, and move-in
+// disclosure before billing for waste service or claiming compliance
+// with state organic waste diversion mandates? Mounted at POST /api/
+// rental/rental-organic-waste-collection-disclosure. Four regimes:
+// California SB 1383 of 2016 + 14 CCR §§ 18984-18984.13 (eff. January
+// 1, 2022; multifamily 5+ units must provide organics containers +
+// annual tenant education + new tenant info within 14 days; 75%
+// diversion target by 2025); Vermont Universal Recycling Law Act 148
+// of 2012 + 10 V.S.A. § 6605k (fully eff. July 1, 2020; bans food
+// scraps from landfill statewide; applies to ALL properties
+// regardless of unit count; $200-$1,000 first-offense civil penalty
+// under § 8007); Seattle Municipal Code Ch. 21.36.082 (eff. January
+// 1, 2015; multifamily 5+ units required to participate in compost
+// service; $50 per-pickup contamination fine); Default — no statewide
+// mandate; local municipal ordinances may impose (NYC LL97 organic
+// waste, Boston organic waste pilot); federal RCRA Subtitle D solid
+// waste regulations apply. Distinct from siblings rental_energy_
+// benchmarking, rental_water_submetering_disclosure, rental_gas_
+// appliance_ban.
+// ---------------------------------------------------------------------------
+
+async fn rental_organic_waste_collection_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalOrganicWasteCollectionDisclosureInput>,
+) -> Result<Json<RentalOrganicWasteCollectionDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_organic_waste_collection_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
