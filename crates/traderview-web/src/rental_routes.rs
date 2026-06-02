@@ -392,6 +392,10 @@ use traderview_expense::sex_offender_database_notice::{
     check as check_sex_offender_database_notice, CheckResult as SexOffenderNoticeResult,
     Input as SexOffenderNoticeInput,
 };
+use traderview_expense::short_term_rental_conversion::{
+    check as check_short_term_rental_conversion, ShortTermRentalConversionInput,
+    ShortTermRentalConversionResult,
+};
 use traderview_expense::mid_tenancy_ownership_change::{
     check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
     Input as MidTenancyOwnershipInput,
@@ -801,6 +805,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-lien-prohibition", axum::routing::post(landlord_lien_prohibition_route))
         .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
         .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
+        .route("/short-term-rental-conversion", axum::routing::post(short_term_rental_conversion_route))
         .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
         .route("/mid-tenancy-security-deposit-increase", axum::routing::post(mid_tenancy_security_deposit_increase_route))
         .route("/mid-tenancy-term-modification", axum::routing::post(mid_tenancy_term_modification_route))
@@ -5010,6 +5015,38 @@ async fn sex_offender_database_notice_route(
     Json(b): Json<SexOffenderNoticeInput>,
 ) -> Result<Json<SexOffenderNoticeResult>, ApiError> {
     Ok(Json(check_sex_offender_database_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// short_term_rental_conversion: Short-term rental conversion
+// restriction compliance — when a trader-landlord may lawfully convert
+// a long-term residential rental unit to a short-term rental (Airbnb /
+// VRBO / Booking.com listing under 30 nights) without violating local
+// registration ordinances. Mounted at POST /api/rental/short-term-
+// rental-conversion. Four regimes: NYC Local Law 18 of 2022 (eff. Sep
+// 5, 2023 — all hosts must register with Office of Special
+// Enforcement OSE; applies to stays under 30 nights; booking
+// platforms must verify registration; up to $5,000 per violation;
+// host must be permanent occupant AND PRESENT during stay); San
+// Francisco Admin. Code Chapter 41A Ordinance 218-14 (Business
+// Registration Certificate required; primary residence 270 nights/
+// year occupancy; 90 unhosted nights cap; up to $1,000 per day);
+// Los Angeles LAMC § 12.22 A.32 Home-Sharing Ordinance (eff. Nov 1,
+// 2019 — LADBS Home-Sharing Program registration; primary residence
+// requirement; 120 unhosted days/year default cap; 240 days/year
+// with Extended Home-Sharing permit); Default (locality-controlled;
+// FL/AZ preempt local STR regulation; NY/CA/CO permit local).
+// Distinct from siblings rental_property_registration, condominium_
+// conversion_protection, tenant_relocation_assistance, just_cause_
+// eviction.
+// ---------------------------------------------------------------------------
+
+async fn short_term_rental_conversion_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ShortTermRentalConversionInput>,
+) -> Result<Json<ShortTermRentalConversionResult>, ApiError> {
+    Ok(Json(check_short_term_rental_conversion(&b)))
 }
 
 // ---------------------------------------------------------------------------

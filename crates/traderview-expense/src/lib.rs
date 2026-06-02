@@ -167,6 +167,7 @@ pub mod security_deposit_interest_statement;
 pub mod senior_disabled_protection;
 pub mod service_animal;
 pub mod sex_offender_database_notice;
+pub mod short_term_rental_conversion;
 pub mod smoke_free_housing;
 pub mod snow_removal_responsibility;
 pub mod soft_story_seismic_retrofit;
