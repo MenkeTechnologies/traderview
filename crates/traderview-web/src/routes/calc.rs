@@ -230,6 +230,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4945",          post(section_4945_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
+        .route("/calc/section-4972",          post(section_4972_route))
         .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
@@ -862,6 +863,36 @@ async fn section_4973_route(
     Json(b): Json<traderview_expense::section_4973::Section4973Input>,
 ) -> Result<Json<traderview_expense::section_4973::Section4973Result>, ApiError> {
     Ok(Json(traderview_expense::section_4973::check(&b)))
+}
+
+// ── § 4972 tax on nondeductible contributions to qualified plans ─────
+// Mounted at /api/calc/section-4972. Pure compute; § 4972(a) imposes
+// 10% annual excise tax on nondeductible contributions to qualified
+// employer plans paid by EMPLOYER (not individual — § 4973 covers
+// individual side); § 4972(c)(1)(A) nondeductible = current-year
+// employer contributions plus unused prior-year carryforwards less
+// § 404 deduction limit; § 4972(c)(2) ordering rule applies deduction
+// first to carryforwards then to current contributions; § 4972(d)
+// qualified employer plan = § 401(a) qualified plan + § 403(a)
+// qualified annuity + § 408(k) SEP-IRA + § 408(p) SIMPLE IRA;
+// § 4972(c)(6) exceptions: (A) SEP excess allocable to participant
+// under § 415, (B) PSP deductibility from post-plan-year-end
+// compensation increase. Carryforward compounds annually until
+// consumed by future § 404 deduction headroom or returned under
+// § 401(a)(2) reversion (§ 4980 iter 460 reversion excise also
+// applies). Form 5330 filing deadline last day of 7th month after
+// employer tax-year-end. Distinction from § 4973 (iter 442 individual
+// IRA 6% excise) + § 4974 (iter 436 RMD 25% post-SECURE 2.0) +
+// § 4975 (iter 434 prohibited transactions 15%/100%). Original
+// enactment Deficit Reduction Act of 1984 Pub. L. 98-369 with current
+// 10% rate from Omnibus Budget Reconciliation Act of 1989 Pub. L.
+// 101-239.
+
+async fn section_4972_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4972::Section4972Input>,
+) -> Result<Json<traderview_expense::section_4972::Section4972Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4972::check(&b)))
 }
 
 // ── § 4974 excise tax on RMD failures (post-SECURE 2.0) ──────────────
