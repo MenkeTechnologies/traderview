@@ -200,6 +200,7 @@ pub mod rental_sewer_lateral_responsibility;
 pub mod rental_sex_offender_registry_notice;
 pub mod rental_sinkhole_disclosure;
 pub mod rental_smoke_free_housing_disclosure;
+pub mod rental_solar_panel_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_underground_storage_tank_disclosure;
 pub mod rental_unpermitted_unit_disclosure;

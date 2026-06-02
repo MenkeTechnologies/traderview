@@ -741,6 +741,10 @@ use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
 };
+use traderview_expense::rental_solar_panel_disclosure::{
+    check as check_rental_solar_panel_disclosure,
+    RentalSolarPanelDisclosureInput, RentalSolarPanelDisclosureResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1175,6 +1179,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
+        .route("/rental-solar-panel-disclosure", axum::routing::post(rental_solar_panel_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10208,4 +10213,33 @@ async fn rental_oil_tank_replacement_disclosure_route(
     Json(b): Json<RentalOilTankReplacementDisclosureInput>,
 ) -> Result<Json<RentalOilTankReplacementDisclosureResult>, ApiError> {
     Ok(Json(check_rental_oil_tank_replacement_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_solar_panel_disclosure (iter 495): Trader-landlord rooftop solar PV
+// disclosure framework. Five financing structures (outright-owned, financed-
+// loan, solar lease, PPA per-kWh, community subscription). Five failure
+// modes: utility-bill confusion, net-metering credit misallocation, PPA
+// pass-through without lease authorization, roof warranty void on PV
+// penetration, PPA acceleration on default. Seven jurisdictions: CA (Cal.
+// Civ. Code § 1102.6c + § 1947.13 + NEM 3.0 / NBT eff. April 15, 2023 + SB
+// 1340), MA (220 CMR 18.00 + SMART eff. November 26, 2018 + M.G.L. ch.
+// 164 § 138-140), NJ (N.J.S.A. 48:3-87.13 + SuSI eff. August 28, 2021),
+// AZ (A.A.C. R14-2-1801 + A.R.S. § 33-1310 + HB 2675), HI (H.R.S. § 269-
+// 101.5 + CSS + CGS+ tariffs since October 21, 2015 closing NEM), NY (16
+// NYCRR Part 96 + VDER Value Stack eff. March 9, 2017), Default (federal
+// 26 U.S.C. § 48 ITC + Notice 2018-59 + 40 C.F.R. Part 273 Universal
+// Waste for cracked-panel CdTe disposal). Coordinates with sibling tenant_
+// solar_installation (right-to-install on portable systems), rental_propane_
+// tank_lease_disclosure (lease-pass-through analog), rental_oil_tank_
+// replacement_disclosure (energy-infrastructure pattern), ev_charger_
+// installation (parallel tenant-right framework).
+// ---------------------------------------------------------------------------
+
+async fn rental_solar_panel_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSolarPanelDisclosureInput>,
+) -> Result<Json<RentalSolarPanelDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_solar_panel_disclosure(&b)))
 }
