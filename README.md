@@ -12421,6 +12421,48 @@ PRIs include low-interest loans to charitable organizations, equity investments 
 
 Mounted at `POST /api/calc/section-4944`. Thirty-two tests pin: **public charity not subject to § 4944**; **non-exempt not applicable**; **PRI three-prong exception applies**; **PRI missing charitable purpose no exception**; **PRI with income purpose no exception**; **PRI with political purpose no exception**; **ordinary business care and prudence compliant**; **Tier-1 only when removed in taxable period** ($100K on $1M); **Tier-2 PF 25% when not removed** ($350K total on $1M); **manager knowing willful Tier-1 capped at $10K** ($10M investment → $10K cap); **manager knowing willful Tier-1 under cap** ($50K investment → $5K manager); **manager not knowing no Tier-1 manager tax**; **manager refuses correction Tier-2 capped at $20K** ($10M → $20K cap); **manager refuses correction under cap** ($200K → $10K); **manager refuses but removed no Tier-2 manager**; **all four tiers stack** ($380K on $1M); **citation pins all authorities** (§ 4944(a)(1)/(a)(2)/(b)(1)/(b)(2)/(c)/(d)(2) + § 170(c)(2)(B) + § 4945(d)(1)/(d)(2) + 26 C.F.R. § 53.4944-1(a)(2) + § 4943 (iter 474)); **note pins four-tier structure** (10% + 25% + 5% + $10K/$20K caps); **note pins ordinary business care standard** (time of investment + modern portfolio theory); **note pins eight scrutinized categories**; **note pins PRI three-prong test**; **note pins § 4943 distinction**; **note pins companion modules**; **5-cell severity truth table**; **saturating arithmetic overflow defense**; **boundary zero investment**; **boundary 1-cent investment**; **diversified portfolio with prudence compliant**; **options derivative without prudence jeopardizing**; **working interest oil/gas without prudence jeopardizing**; **PRI partial two-of-three no exception**; **realistic $5M PF speculative investment** ($185K total tax on $500K).
 
+`traderview-expense::section_4945` is the **IRC § 4945 — Taxes on taxable expenditures (private foundation regime) module** — direct PF Chapter 42 companion completing the § 4940-§ 4945 PF excise tax series with `section_4940` (PF NII excise — iter 470), `section_4941` (PF self-dealing — iter 468), `section_4942` (PF minimum distribution — iter 472), `section_4943` (PF excess business holdings — iter 474), `section_4944` (PF jeopardizing investments — iter 476), `section_4958` (intermediate sanctions for public charities — iter 466), `section_4960` (ATEO executive comp 21% — iter 464). § 4945 was originally enacted by the Tax Reform Act of 1969, Pub. L. 91-172, restricting PF spending to charitable purposes within § 170(c)(2)(B).
+
+**Four-tier excise tax structure**:
+- **Tier 1 PF** — § 4945(a)(1): **20%** of amount of taxable expenditure
+- **Tier 1 Manager** — § 4945(a)(2): **5%** on manager knowingly agreed, **capped at $10,000** per expenditure per § 4945(c)(2)
+- **Tier 2 PF** — § 4945(b)(1): **100%** if not corrected within taxable period
+- **Tier 2 Manager** — § 4945(b)(2): **50%** on manager refusing correction, **capped at $20,000** per expenditure
+
+**Five categories of taxable expenditures per § 4945(d)**:
+1. **§ 4945(d)(1)** — INFLUENCING LEGISLATION (lobbying), subject to § 4945(e) exceptions
+2. **§ 4945(d)(2)** — INFLUENCING ELECTIONS or VOTER REGISTRATION DRIVES, subject to § 4945(f) safe harbor
+3. **§ 4945(d)(3)** — GRANTS TO INDIVIDUALS without § 4945(g) advance IRS approval
+4. **§ 4945(d)(4)** — GRANTS TO ORGANIZATIONS that are not § 509(a)(1)/(2)/(3) public charities or § 4942(j)(3) operating foundations, without § 4945(h) expenditure responsibility
+5. **§ 4945(d)(5)** — NON-CHARITABLE EXPENDITURES outside § 170(c)(2)(B) religious/charitable/scientific/literary/educational/public purposes
+
+**§ 4945(e) lobbying exceptions** (four):
+- (A) Nonpartisan analysis, study, or research
+- (B) Technical advice in response to written request from governmental body
+- (C) Self-defense (legislation directly affecting PF existence/powers/duties/tax status)
+- (D) Examination of broad social, economic, and similar problems
+
+**§ 4945(f) voter registration safe harbor** (five conditions, all required):
+1. PF is § 501(c)(3) and § 509(a)(1)/(2)/(3) or operating foundation
+2. Substantially all income spent for charitable activities described in (i)
+3. **85%+ support** from sources other than DPs and non-(c)(3)s
+4. Nonpartisan activities carried on in **5+ states**
+5. Activities are non-earmarked for any candidate
+
+**§ 4945(h) expenditure responsibility four-prong** (for grants to non-public-charity organizations):
+1. **PRE-GRANT INQUIRY** — reasonable investigation into grantee's ability to use funds for charitable purposes
+2. **WRITTEN GRANT AGREEMENT** — specifies charitable purpose + prohibits use for § 4945(d)(1)/(d)(2) lobbying or political activity
+3. **REPORTS FROM GRANTEE** — annual reports detailing use of funds + progress toward charitable goals
+4. **REPORTS TO IRS** — full and detailed reports on Form 990-PF
+
+**Trader-foundation critical fact patterns**: (1) Family-foundation $50K political donation by knowing manager → Tier-1 PF $10K + Tier-1 manager $2.5K + Tier-2 PF $50K (uncorrected) = **$62.5K total tax**; (2) PF makes $100K grant to LLC social enterprise without expenditure responsibility four-prong → Tier-1 $20K + Tier-2 $100K = $120K; (3) PF scholarship program without § 4945(g) advance IRS approval (typical 6-12 month review) → every disbursement is a taxable expenditure; (4) PF spends $25K on board retreat at luxury resort without clear charitable purpose → § 4945(d)(5) non-charitable expenditure; (5) PF executive director publishes op-ed advocating for tax-policy change — may trigger § 4945(d)(1) lobbying unless § 4945(e) self-defense exception applies; (6) Tier-2 100% tax effectively confiscates the entire grant amount and is non-deductible; (7) manager $10K + $20K caps make individual board-member exposure manageable but joint and several with PF tax.
+
+**Distinction from § 4944** (iter 476): § 4944 evaluates prudence of INVESTMENTS (asset side); § 4945 evaluates propriety of EXPENDITURES (program side).
+
+**Distinction from § 4941** (iter 468): § 4941 punishes self-dealing TRANSACTIONS between PF and DP; § 4945 punishes expenditures outside permitted CHARITABLE purposes regardless of recipient relationship.
+
+Mounted at `POST /api/calc/section-4945`. Thirty-three tests pin: **public charity not subject to § 4945**; **non-exempt not applicable**; **charitable program payment compliant**; **lobbying no exception Tier-2** ($120K on $100K); **lobbying with § 4945(e) exception compliant**; **political campaign no safe harbor Tier-2**; **voter registration with § 4945(f) safe harbor compliant**; **grant to individual no advance IRS approval Tier-2**; **grant to individual with § 4945(g) advance approval compliant**; **grant to org no expenditure responsibility Tier-2**; **grant to org with § 4945(h) compliant**; **non-charitable expenditure no exception available**; **Tier-1 only when corrected within taxable period** ($20K on $100K); **manager knowingly agreed 5% capped at $10K** ($1M → cap); **manager knowingly agreed under cap** ($100K → $5K); **manager not knowing no Tier-1 manager tax**; **manager refused correction 50% capped at $20K** ($1M → cap); **manager refused correction under cap** ($30K → $15K); **manager refused but corrected no Tier-2 manager**; **all four tiers stack** ($145K on $100K); **citation pins all authorities** (§ 4945(a)(1)/(a)(2)/(b)(1)/(b)(2)/(c)(2)/(d)(1)/(d)(2)/(d)(3)/(d)(4)/(d)(5)/(e)/(f)/(g)/(h) + § 170(c)(2)(B) + § 509(a)(1) + § 4942(j)(3) + § 4944 (iter 476) + § 4941 (iter 468)); **note pins four-tier structure** (20% + 100% + 5% + 50% + $10K/$20K caps); **note pins five categories**; **note pins § 4945(e) lobbying exceptions** (nonpartisan analysis + technical advice + self-defense + broad social/economic); **note pins § 4945(f) voter registration safe harbor** (85%+ + 5+ states + non-earmarked); **note pins § 4945(h) expenditure responsibility four-prong** (pre-grant inquiry + written agreement + grantee reports + Form 990-PF); **note pins § 4944/§ 4941 distinctions**; **note pins companion modules**; **8-cell severity truth table** (public charity / charitable / lobbying exception / voter safe harbor / individual approval / org responsibility / corrected / uncorrected); **saturating arithmetic overflow defense** (both manager caps bind); **boundary 1-cent expenditure** ($0.01 Tier-2 PF); **boundary zero expenditure no tax**; **realistic $50K unauthorized lobbying** ($62.5K tax).
+
 `traderview-expense::section_4958` is the **IRC § 4958 — Intermediate sanctions on excess benefit transactions module** — direct trader-board companion to `section_4960` (ATEO executive comp 21% excise — iter 464), `section_4973` (excess contributions excise — iter 442), `section_4974` (RMD excise — iter 436), `section_4975` (prohibited transactions — iter 434), `section_4980` (employer reversion excise — iter 460), `section_162m` ($1M public-company exec comp cap — iter 446). § 4958 enacted by Taxpayer Bill of Rights 2, Pub. L. 104-168 (July 30, 1996); extended to donor-advised funds + supporting orgs by Pension Protection Act of 2006.
 
 **Three-tier tax structure**:

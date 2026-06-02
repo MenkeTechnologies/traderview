@@ -227,6 +227,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4942",          post(section_4942_route))
         .route("/calc/section-4943",          post(section_4943_route))
         .route("/calc/section-4944",          post(section_4944_route))
+        .route("/calc/section-4945",          post(section_4945_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
@@ -1053,6 +1054,41 @@ async fn section_4944_route(
     Json(b): Json<traderview_expense::section_4944::Section4944Input>,
 ) -> Result<Json<traderview_expense::section_4944::Section4944Result>, ApiError> {
     Ok(Json(traderview_expense::section_4944::check(&b)))
+}
+
+// ── § 4945 taxes on PF taxable expenditures ──────────────────────────
+// Mounted at /api/calc/section-4945. Pure compute; § 4945(a)(1) 20%
+// Tier-1 PF excise on amount of taxable expenditure; § 4945(a)(2) 5%
+// Tier-1 manager excise (knowingly agreed) capped at $10,000 per
+// expenditure per § 4945(c)(2); § 4945(b)(1) 100% Tier-2 PF excise if
+// not corrected within taxable period; § 4945(b)(2) 50% Tier-2 manager
+// excise (refused correction) capped at $20,000. Five categories of
+// taxable expenditures per § 4945(d): (1) § 4945(d)(1) influencing
+// legislation/lobbying with § 4945(e) exceptions (nonpartisan analysis
+// + technical advice + self-defense + employee communications); (2)
+// § 4945(d)(2) influencing elections / voter registration with
+// § 4945(f) five-condition safe harbor (501(c)(3)/(509(a)(1)-(3)) +
+// substantial-all income + 85%+ non-DP support + 5+ state nonpartisan
+// + non-earmarked); (3) § 4945(d)(3) grants to individuals without
+// § 4945(g) advance IRS approval; (4) § 4945(d)(4) grants to
+// organizations not § 509(a)(1)/(2)/(3) or § 4942(j)(3) operating
+// foundation without § 4945(h) expenditure responsibility four-prong
+// (pre-grant inquiry + written grant agreement + grantee reports +
+// IRS Form 990-PF reports); (5) § 4945(d)(5) non-charitable
+// expenditures outside § 170(c)(2)(B) charitable purposes.
+// Distinction from § 4944 (iter 476): § 4944 evaluates prudence of
+// INVESTMENTS (asset side); § 4945 evaluates propriety of
+// EXPENDITURES (program side). Distinction from § 4941 (iter 468):
+// § 4941 punishes self-dealing TRANSACTIONS between PF and DP; § 4945
+// punishes expenditures outside permitted charitable purposes
+// regardless of recipient relationship. Original enactment Tax Reform
+// Act of 1969 Pub. L. 91-172.
+
+async fn section_4945_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4945::Section4945Input>,
+) -> Result<Json<traderview_expense::section_4945::Section4945Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4945::check(&b)))
 }
 
 // ── § 4958 intermediate sanctions on excess benefit transactions ─────
