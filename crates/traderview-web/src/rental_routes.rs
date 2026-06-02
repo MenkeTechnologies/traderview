@@ -494,6 +494,10 @@ use traderview_expense::rental_application_denial_disclosure::{
     check as check_rental_application_denial_disclosure,
     RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
 };
+use traderview_expense::rental_bed_bug_disclosure::{
+    check as check_rental_bed_bug_disclosure, RentalBedBugDisclosureInput,
+    RentalBedBugDisclosureResult,
+};
 use traderview_expense::rental_bedroom_egress_window::{
     check as check_rental_bedroom_egress_window, RentalBedroomEgressWindowInput,
     RentalBedroomEgressWindowResult,
@@ -863,6 +867,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
+        .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
@@ -6032,6 +6037,40 @@ async fn rental_application_denial_disclosure_route(
     Json(b): Json<RentalApplicationDenialDisclosureInput>,
 ) -> Result<Json<RentalApplicationDenialDisclosureResult>, ApiError> {
     Ok(Json(check_rental_application_denial_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_bed_bug_disclosure: Rental property bed bug infestation
+// pre-lease disclosure compliance — when a trader-landlord must
+// disclose bed bug infestation history to prospective tenants
+// before lease signing. Mounted at POST /api/rental/rental-bed-bug-
+// disclosure. Four regimes: California Cal. Civ. Code § 1954.603
+// (AB 551 of 2015 — written notice in 10-point type describing
+// bed bug appearance/behavior/lifecycle to prospective tenants
+// before initiating new tenancy; landlord may NOT show, rent, or
+// lease vacant unit known to have current infestation; 2-business-
+// day inspection finding notification); New York City NYC
+// Multiple Dwelling Law § 27-2018.1 (annual building-wide bed bug
+// report Form RA-89 filed with HPD between December 1 and
+// December 31; prior year's filing to every new tenant; $250 civil
+// penalty for failure to file); Arizona A.R.S. § 33-1319 (tenant-
+// request-only ADHS educational materials disclosure; no proactive
+// pre-lease disclosure); Maine 14 M.R.S. § 6021-A (strictest
+// single-unit rule — pre-rental disclosure of infestation in unit
+// OR adjacent unit within prior 12 months; 5-day inspection
+// deadline; 24-hour inspection-result disclosure deadline; $250 to
+// $1,500 per-violation civil penalty). Distinct from siblings
+// rental_application_denial_disclosure, rental_hot_water_
+// temperature, tenant_fire_safety_plan_disclosure, rental_bedroom_
+// egress_window.
+// ---------------------------------------------------------------------------
+
+async fn rental_bed_bug_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBedBugDisclosureInput>,
+) -> Result<Json<RentalBedBugDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_bed_bug_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
