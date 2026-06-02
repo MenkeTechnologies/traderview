@@ -228,6 +228,7 @@ pub mod tenant_domestic_violence_lease_termination;
 pub mod tenant_emotional_distress_damages;
 pub mod tenant_estoppel_certificate;
 pub mod tenant_ev_charging_installation_right;
+pub mod tenant_holdover_security_deposit_setoff;
 pub mod tenant_fire_safety_plan_disclosure;
 pub mod tenant_death_termination;
 pub mod tenant_noise_nuisance_enforcement;

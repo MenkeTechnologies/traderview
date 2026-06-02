@@ -513,6 +513,10 @@ use traderview_expense::landlord_master_key_retention::{
     check as check_landlord_master_key_retention,
     LandlordMasterKeyRetentionInput, LandlordMasterKeyRetentionResult,
 };
+use traderview_expense::tenant_holdover_security_deposit_setoff::{
+    check as check_tenant_holdover_security_deposit_setoff,
+    TenantHoldoverSecurityDepositSetoffInput, TenantHoldoverSecurityDepositSetoffResult,
+};
 use traderview_expense::landlord_foreclosure_status_disclosure::{
     check as check_landlord_foreclosure_status_disclosure,
     LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
@@ -1050,6 +1054,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
         .route("/rent-abatement-construction-nuisance", axum::routing::post(rent_abatement_construction_nuisance_route))
         .route("/landlord-master-key-retention", axum::routing::post(landlord_master_key_retention_route))
+        .route("/tenant-holdover-security-deposit-setoff", axum::routing::post(tenant_holdover_security_deposit_setoff_route))
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
@@ -6398,6 +6403,43 @@ async fn landlord_master_key_retention_route(
     Json(b): Json<LandlordMasterKeyRetentionInput>,
 ) -> Result<Json<LandlordMasterKeyRetentionResult>, ApiError> {
     Ok(Json(check_landlord_master_key_retention(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant holdover security deposit setoff limits framework.
+//
+// Mounted at POST /api/rental/tenant-holdover-security-deposit-setoff.
+// Four-jurisdiction framework + 10-category deduction permission
+// matrix: (1) California — Cal. Civ. Code § 1950.5(e) + 21-day
+// itemization (§ 1950.5(g)(1)) + § 1950.5(l) bad-faith 2× punitive
+// + § 1670.5 unconscionability; (2) New York — NY GOL § 7-108(1-a)
+// (g) 4 permitted categories (rent + damage + utilities + moving/
+// storage) + § 7-108(1-a)(e) 14-day window with FORFEITURE on
+// failure + § 5-321 unconscionability; (3) Texas — Tex. Prop. Code
+// § 92.104 + § 92.104(c) rent-owed itemization exception + § 92.103
+// 30-day window + § 92.109(a) bad-faith $100 + 3× wrongfully
+// withheld + attorney fees; (4) Massachusetts — Mass. Gen. Laws c.
+// 186 § 15B(4) 4 permitted categories + § 15B(7) TRIPLE damages
+// + interest + fees + 30-day window. Seven permitted categories
+// (unpaid holdover rent + double rent damages with lease auth +
+// physical damage + eviction fees with lease/statute/prevailed +
+// cleaning to baseline + utilities NY + moving/storage NY); three
+// universally prohibited (normal wear and tear + pre-existing
+// conditions + unconscionable liquidated damages); penalty
+// multipliers stack on bad-faith retention or late itemization.
+// Sibling cluster: holdover_tenant_damages, damage_deduction_
+// itemization, deposit_return_windows, security_deposit_bank_
+// disclosure, landlord_property_sale_notice (iter 437),
+// duty_to_mitigate_damages, lease_cure_period, abandoned_
+// property_handling.
+// ---------------------------------------------------------------------------
+
+async fn tenant_holdover_security_deposit_setoff_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantHoldoverSecurityDepositSetoffInput>,
+) -> Result<Json<TenantHoldoverSecurityDepositSetoffResult>, ApiError> {
+    Ok(Json(check_tenant_holdover_security_deposit_setoff(&b)))
 }
 
 // ---------------------------------------------------------------------------
