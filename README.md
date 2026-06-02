@@ -8359,6 +8359,37 @@ Pinned by individual exclusion-blocks tests for all eight prongs plus `each_excl
 
 Mounted at `POST /api/calc/section-7345`. Twenty-five tests pin: **baseline seriously delinquent certification engaged**; **debt below threshold no certification**; **debt at threshold exactly not exceeding** (statute reads "exceeds"); **debt one cent above threshold engages**; **lien without exhausted remedies no engagement**; **levy alone satisfies collection action**; **no lien no levy no engagement**; eight individual exclusion-blocks tests (installment agreement, OIC, innocent spouse, CDP, bankruptcy, identity theft, disaster area, CNC); **multiple exclusions listed individually** (3 simultaneous exclusions); **all three engagement conditions required truth table** (8-cell sweep); **each exclusion independently blocks certification invariant** (8-prong sweep); **threshold constants invariant** ($66K 2025 > $50K 2015; 30-day reversal); **parameterized threshold 2024 value** ($62K — confirms inflation-adjustment parameterization); **citation pins all subsections** (§ 7345 + § 7345(b)(1) + § 7345(b)(1)(A)/(B) + § 7345(b)(2) + § 7345(c)/(d)/(e) + FAST Act § 32101 + December 4, 2015 + § 6159 + § 7122 + § 6015 + § 6320 + § 6330 + § 6323 + § 6331 + CP508C + CP508R); **sibling modules note present** (UX-text regression for § 6011 + § 6651 + § 6654 + § 6662 + § 6707A + FAST Act origin); **defensive negative debt no engagement**; **defensive negative threshold clamped to zero**; **zero debt no engagement**.
 
+`traderview-expense::section_7405` is the **IRC § 7405 action for recovery of erroneous refunds** module — IRS-side reverse mechanism to `section_7422` (taxpayer-initiated refund suit). Trader-relevant when IRS issues refund (e.g., NOL carryback via § 475(f) MTM election) and later determines computation was erroneous, providing recovery pathway. Procedural-companion to `section_7421` (Anti-Injunction Act), `section_7422` (taxpayer-initiated refund — reverse direction), `section_7426` (third-party wrongful levy), `section_7429` (jeopardy review), `section_7430` (litigation costs), `section_7433` (civil damages for unauthorized collection), `section_6514` (refunds otherwise erroneous), and `section_6532` (refund-suit limitations).
+
+**§ 7405 two recovery pathways**:
+
+| Pathway | Source | Scope |
+|---------|--------|-------|
+| § 7405(a) | § 6514-erroneous refunds | Refunds erroneous within meaning of § 6514 |
+| § 7405(b) | Non-§ 6514 erroneous refunds | Refunds erroneously made even if NOT § 6514 erroneous |
+
+Pinned by `fully_compliant_2_year_action_maintainable`, `non_section_6514_recovery_action_maintainable`, `refund_type_truth_table` (2-cell sweep), `note_pins_section_7405a_b_recovery_paths`.
+
+**§ 7405(d) statute of limitations — 2-year standard vs 5-year fraud**:
+
+| SOL trigger | Length | Source |
+|-------------|--------|--------|
+| Standard | **2 years (730 days)** from making of refund | § 7405(d) |
+| Fraud or misrepresentation of material fact | **5 years (1,825 days)** from making of refund | § 7405(d) |
+
+Pinned by `at_730_day_2_year_boundary_compliant` (exactly 730 = compliant), `at_731_days_2_year_violates` (1-day precision boundary), `fraud_at_1825_day_boundary_compliant`, `fraud_at_1826_days_violates`, `fraud_at_1000_days_compliant` (within 5-year window), `fraud_truth_table_extends_sol`, `fraud_uniquely_extends_sol_invariant` (1000 days fails without fraud; passes with fraud), `precise_1_day_boundary_distinguishes_2_year_vs_fraud` (731 days no-fraud fails; 731 days fraud passes), `at_730_day_2_year_boundary_with_fraud_engages_5_year_window`, `sol_satisfied_truth_table` (7-cell sweep), `standard_2_year_uniquely_lower_than_fraud_5_year_invariant`, and `note_pins_2_5_year_sol_framework`.
+
+**IRS burden of proof (per IRM 5.17.4 + case law) — three elements**:
+1. Refund was erroneous
+2. Amount of the refund
+3. Taxpayer received or benefited from erroneous refund
+
+Pinned by `no_refund_proven_erroneous_violates`, `no_amount_established_violates`, `no_taxpayer_received_violates`, `all_burden_elements_failed_3_violations_stack` (3 simultaneous failures), `burden_of_proof_truth_table` (5-cell sweep — only all-3-true satisfies burden), and `note_pins_irs_burden_of_proof_three_elements`.
+
+**Jurisdiction** — district court (concurrent with United States Court of Federal Claims under 28 USC § 1346(a)(1)). Pinned by `note_pins_jurisdiction_and_companion_section_7422`.
+
+Mounted at `POST /api/calc/section-7405`. Twenty-five tests pin: **fully compliant 2-year action maintainable**; **at 730-day 2-year boundary compliant**; **at 731 days 2-year violates** (1-day precision); **fraud at 1,000 days compliant**; **fraud at 1,825-day boundary compliant**; **fraud at 1,826 days violates**; **non-§ 6514 recovery action maintainable**; **no refund proven erroneous violates** (burden element 1); **no amount established violates** (burden element 2); **no taxpayer received violates** (burden element 3); **all burden elements failed 3 violations stack**; **citation pins all authorities** (§ 7405(a)-(d) + § 6514 + IRM 5.17.4 + 28 USC § 1346(a)(1)); **note pins § 7405(a)+(b) recovery paths**; **note pins 2/5-year SOL framework**; **note pins IRS burden of proof three elements**; **note pins jurisdiction and companion § 7422**; **fraud truth table extends SOL** (2-cell); **fraud uniquely extends SOL invariant** (1,000 days fails without fraud; passes with); **refund type truth table** (2-cell); **burden of proof truth table** (5-cell sweep); **at 730-day 2-year boundary with fraud engages 5-year window**; **precise 1-day boundary distinguishes 2-year vs fraud**; **citations field includes IRM**; **SOL satisfied truth table** (7-cell sweep); **standard 2-year uniquely lower than fraud 5-year invariant**.
+
 `traderview-expense::section_7408` is the **IRC § 7408 injunction-remedy module** — completes the preparer-and-promoter enforcement cluster (§ 6694 + § 6695 + § 6700 + § 6701 + § 7408). § 7408 is the EQUITABLE INJUNCTION authority IRS uses to STOP ongoing promoter/aider conduct, distinct from the civil penalty assessments under § 6700/§ 6701. § 7408 supplements (does not replace) the penalty sections; IRS may pursue penalties and injunction in parallel under § 7402(a) independent-jurisdiction rule.
 
 **§ 7408(b) two-prong injunction test** — court may issue injunction when BOTH satisfied:

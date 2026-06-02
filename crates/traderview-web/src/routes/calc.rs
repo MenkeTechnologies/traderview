@@ -175,6 +175,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-72t",           post(section_72t_route))
         .route("/calc/section-7345",          post(section_7345_route))
+        .route("/calc/section-7405",          post(section_7405_route))
         .route("/calc/section-7408",          post(section_7408_route))
         .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
@@ -1195,6 +1196,27 @@ async fn section_7345_route(
         ));
     }
     Ok(Json(traderview_expense::section_7345::compute(&b)))
+}
+
+// ── §7405 IRS action for recovery of erroneous refunds ─────────────
+// Mounted at /api/calc/section-7405. § 7405 is the IRS-side reverse
+// mechanism to § 7422 (taxpayer-initiated refund suit). § 7405(a)
+// recovers refunds erroneous within meaning of § 6514; § 7405(b)
+// reaches refunds outside § 6514 scope. § 7405(d) statute of
+// limitations — 2 years (730 days) from making of refund standard;
+// 5 years (1825 days) if refund induced by fraud or misrepresentation
+// of material fact. IRS burden of proof per IRM 5.17.4 + case law:
+// (1) refund was erroneous; (2) amount of refund; (3) taxpayer
+// received or benefited. Jurisdiction: district court (concurrent
+// with Court of Federal Claims under 28 USC § 1346(a)(1)). Trader-
+// relevant when IRS issues refund (e.g., NOL carryback via § 475(f)
+// MTM election) and later determines computation was erroneous.
+
+async fn section_7405_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7405::Section7405Input>,
+) -> Result<Json<traderview_expense::section_7405::Section7405Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7405::check(&b)))
 }
 
 // ── § 7408 injunction remedy for preparer/promoter conduct ──────────
