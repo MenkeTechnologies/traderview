@@ -1861,6 +1861,54 @@ Mounted at `POST /api/rental/tenant-positive-rent-reporting`. Thirty-six tests p
 
 Mounted at `POST /api/rental/tenant-rent-judgment-wage-garnishment`. Twenty-three tests pin: **Texas civil-debt garnishment prohibited**; **fully prohibited note lists all four states** (TX, NC, PA, SC); **fully prohibited notes bank-account carveout** (employer-level prohibition only); **federal floor high earner 25% governs** ($1K weekly → ~$250 garnishment); **federal floor at 30× threshold zero garnishment** ($217.50 boundary); **federal floor below 30× zero garnishment**; **federal floor low earner excess governs**; **state more protective California 50× state min governs**; **state more protective high state min blocks garnishment** ($600 weekly + $16 state min × 50 = $800 exempt); **child support bypasses civil-debt prohibitions** (§ 1673(a)(2) tier); **tax debt bypasses civil-debt prohibitions**; **student loan bypasses civil-debt prohibitions** (15% DoE administrative); **citation pins federal statute + four-state authorities**; **federal floor note describes lesser-of calculation**; **state more protective note describes state multiplier**; **only civil debt blocked in fully-prohibited invariant** (3-cell carve-out sweep); **federal minimum 725 cents 30× threshold pinned**; **fully prohibited uniquely zero garnishment for civil debt invariant** (3-regime sweep); **high earner state more protective capped at 25% under federal floor**; **Massachusetts 50× state min at $15 state wage $750 exemption**; **note for state more protective includes min formula**; **empty disposable earnings zero garnishment all regimes** (defensive); **fully prohibited disposable earnings irrelevant to outcome** (4-cell income sweep).
 
+`traderview-expense::tenant_rent_receipt_requirement` is the **multi-jurisdictional tenant rent receipt requirement framework module** — trader-landlord critical because (1) cash rent receipts are mandatory in many states regardless of tenant request; (2) receipt-issuance failures create per-violation civil exposure plus an evidentiary presumption against the landlord in rent-payment disputes; (3) record retention obligations (3-year NY, similar elsewhere) extend long beyond tenancy termination; (4) modern payment methods (Zelle, Venmo, ACH) require careful receipt practices to satisfy state mandates. Companion to `landlord_annual_rent_statement`, `tenant_late_fee_cap`, `tenant_positive_rent_reporting`, `rental_junk_fee_transparency`.
+
+**Five-jurisdiction framework**:
+
+| Jurisdiction | Source | Trigger | Receipt Required |
+|--------------|--------|---------|------------------|
+| **New York** | N.Y. Real Prop. Law § 235-e | Cash / money order / cashier's check / non-personal-check OR personal-check + written request | Yes; immediate in-person OR 15 days non-in-person + 3-year retention for cash |
+| **California** | Cal. Civ. Code § 1499 | Tenant request | Yes; signed + dated at TIME OF PAYMENT |
+| **Massachusetts** | Mass. G.L. c. 186 § 15B | LAST MONTH'S RENT at commencement of tenancy | LIMITED mandate; regular monthly rent NOT required |
+| **Washington** | Wash. Rev. Code § 59.18.063 | Cash payment OR non-cash payment + tenant request | Yes |
+| **Default** | Common-law + local ordinances (Chicago RLTO, San Francisco) | None statewide | Payment-of-rent dispute defense |
+
+Pinned by `ny_cash_in_person_with_receipt_compliant`, `ca_request_triggers_obligation`, `ma_last_month_rent_receipt_required`, `wa_cash_mandatory_obligation`, `default_jurisdiction_no_obligation`, `jurisdiction_truth_table_five_cells`, `ny_uniquely_engages_3_year_retention_invariant`.
+
+**NY § 235-e six required content elements**:
+
+| # | Element |
+|---|---------|
+| 1 | PAYMENT DATE |
+| 2 | AMOUNT received |
+| 3 | PERIOD for which rent was paid |
+| 4 | APARTMENT NUMBER |
+| 5 | SIGNATURE of person receiving payment |
+| 6 | TITLE of person receiving payment |
+
+Pinned by `ny_missing_content_violation`.
+
+**NY § 235-e timing — immediate vs 15-day split**:
+
+| Payment Mode | Required Timing |
+|--------------|------------------|
+| In-person cash or money order | **IMMEDIATE** at time of payment |
+| Non-in-person (mail, ACH, electronic) | Within **15 DAYS** |
+
+Pinned by `ny_cash_in_person_no_receipt_violation`, `ny_15_day_boundary_non_in_person_compliant` (day 15 = compliant), `ny_16_day_non_in_person_violation` (day 16 = violation).
+
+**NY § 235-e personal-check special rule** — tenant may REQUEST in writing a rent receipt for personal-check payment; after first request, landlord must provide receipt EVERY MONTH thereafter. Pinned by `ny_personal_check_no_request_no_obligation`, `ny_personal_check_with_request_obligation_triggered`.
+
+**NY § 235-e 3-year record retention** — landlord must keep proof of CASH rent receipts for **3 YEARS**. Pinned by `ny_no_3_year_retention_violation`, `ny_uniquely_engages_3_year_retention_invariant` (only NY mandates retention).
+
+**CA § 1499 time-of-payment requirement** — receipt must be provided AT TIME OF PAYMENT (not year-end / not in lump sum at tax time); applies to ALL payment methods (cash, check, money order, electronic). Pinned by `ca_year_end_lump_sum_violation`.
+
+**MA § 15B limited last-month-only mandate** — regular monthly rent does NOT require receipt (even cash); last month's rent at commencement of tenancy requires signed receipt with amount + date + description + landlord name + tenant name + recipient name. Pinned by `ma_regular_cash_no_obligation`, `ma_last_month_no_receipt_violation`.
+
+**WA § 59.18.063 cash + request dual mandate** — cash payments MANDATORY receipt; non-cash payments require receipt on tenant request. Pinned by `wa_cash_no_receipt_violation`, `wa_non_cash_request_triggers_obligation`, `wa_non_cash_no_request_no_obligation`.
+
+Mounted at `POST /api/rental/tenant-rent-receipt-requirement`. Thirty-six tests pin: **NY cash in person with receipt compliant**; **NY cash in person no receipt violation**; **NY money order in person no receipt violation**; **NY cashier's check no receipt violation** (15-day non-in-person); **NY personal check no request no obligation**; **NY personal check with request obligation triggered**; **NY 15-day boundary non-in-person compliant**; **NY 16-day non-in-person violation**; **NY missing content violation** (6 elements); **NY no 3-year retention violation**; **CA request triggers obligation**; **CA no request no obligation**; **CA request no receipt violation**; **CA year-end lump sum violation**; **MA last month rent receipt required**; **MA regular cash no obligation**; **MA last month no receipt violation**; **WA cash mandatory obligation**; **WA cash no receipt violation**; **WA non-cash request triggers obligation**; **WA non-cash no request no obligation**; **default jurisdiction no obligation**; **jurisdiction truth table five cells**; **NY uniquely engages 3-year retention invariant**; **citation pins all authorities** (§ 235-e + § 1499 + c. 186 § 15B + § 59.18.063 + Chicago RLTO § 5-12-080(g)); **note pins NY immediate vs 15-day split**; **note pins NY six content elements**; **note pins NY personal check recurring**; **note pins NY 3-year retention**; **note pins CA request signed dated time of payment**; **note pins MA limited last month only**; **note pins WA cash mandatory + request non-cash**; **note pins default local ordinances**; **note pins trader-landlord modern payment methods**; **note pins cross-jurisdictional architecture** (METHOD-TRIGGERED + REQUEST-TRIGGERED + LIMITED LAST-MONTH-ONLY + CASH-TRIGGERED); **multiple NY failures stack**.
+
 `traderview-expense::condominium_conversion_protection` is the **state landlord condominium-conversion tenant protection compliance check** — operational concern for any landlord planning to convert a rental building to condominium / cooperative ownership. Companion to `tenant_relocation_assistance` (general no-fault displacement) and `foreclosure_tenant_rights` (owner default), focused specifically on the OWNER-INITIATED conversion path. Five states + DC have layered protections; other jurisdictions rely on lease enforcement plus common law.
 
 **Six regimes**:

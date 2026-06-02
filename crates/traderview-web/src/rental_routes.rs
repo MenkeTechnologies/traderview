@@ -183,6 +183,10 @@ use traderview_expense::adverse_possession_claim::{
 use traderview_expense::tenant_rent_judgment_wage_garnishment::{
     compute as compute_wage_garnishment, GarnishmentInput, GarnishmentResult,
 };
+use traderview_expense::tenant_rent_receipt_requirement::{
+    check as check_tenant_rent_receipt_requirement,
+    TenantRentReceiptRequirementInput, TenantRentReceiptRequirementResult,
+};
 use traderview_expense::tenant_topa::{
     check as check_tenant_topa, TopaInput, TopaResult,
 };
@@ -909,6 +913,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/tenant-positive-rent-reporting", axum::routing::post(tenant_positive_rent_reporting_route))
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
+        .route("/tenant-rent-receipt-requirement", axum::routing::post(tenant_rent_receipt_requirement_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
@@ -4070,6 +4075,40 @@ async fn tenant_rent_judgment_wage_garnishment_route(
         ));
     }
     Ok(Json(compute_wage_garnishment(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_rent_receipt_requirement: multi-jurisdictional tenant rent
+// receipt requirement framework — N.Y. Real Prop. Law § 235-e (cash /
+// money order / cashier's check / non-personal-check → immediate
+// in-person OR 15-day non-in-person receipt; personal-check on tenant
+// request with monthly-recurring obligation after first request; 6
+// required content elements (date + amount + period + apartment number
+// + signature + title); 3-YEAR record retention for cash receipts);
+// Cal. Civ. Code § 1499 (signed-and-dated receipt at TIME OF PAYMENT
+// upon tenant request; all payment methods); Mass. G.L. c. 186 § 15B
+// (LIMITED last-month's-rent-at-commencement signed receipt mandate;
+// regular monthly rent NOT required); Wash. Rev. Code § 59.18.063
+// (cash mandatory; non-cash on request); Default — common-law
+// payment-of-rent dispute defense; some local ordinances (Chicago RLTO
+// § 5-12-080(g), San Francisco) impose receipt requirements. Mounted
+// at POST /api/rental/tenant-rent-receipt-requirement. Trader-landlord
+// critical because (1) cash rent receipts mandatory in many states;
+// (2) receipt-issuance failures create per-violation civil exposure +
+// evidentiary presumption against landlord in rent-payment disputes;
+// (3) 3-year retention extends beyond tenancy termination; (4) modern
+// payment methods (Zelle, Venmo, ACH) require careful receipt
+// practices. Sibling cluster: landlord_annual_rent_statement,
+// tenant_late_fee_cap, tenant_positive_rent_reporting,
+// rental_junk_fee_transparency.
+// ---------------------------------------------------------------------------
+
+async fn tenant_rent_receipt_requirement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantRentReceiptRequirementInput>,
+) -> Result<Json<TenantRentReceiptRequirementResult>, ApiError> {
+    Ok(Json(check_tenant_rent_receipt_requirement(&b)))
 }
 
 // ---------------------------------------------------------------------------
