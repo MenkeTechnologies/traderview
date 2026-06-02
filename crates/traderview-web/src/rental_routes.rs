@@ -517,6 +517,10 @@ use traderview_expense::tenant_holdover_security_deposit_setoff::{
     check as check_tenant_holdover_security_deposit_setoff,
     TenantHoldoverSecurityDepositSetoffInput, TenantHoldoverSecurityDepositSetoffResult,
 };
+use traderview_expense::rental_video_surveillance_retention::{
+    check as check_rental_video_surveillance_retention,
+    RentalVideoSurveillanceRetentionInput, RentalVideoSurveillanceRetentionResult,
+};
 use traderview_expense::landlord_foreclosure_status_disclosure::{
     check as check_landlord_foreclosure_status_disclosure,
     LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
@@ -1055,6 +1059,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-abatement-construction-nuisance", axum::routing::post(rent_abatement_construction_nuisance_route))
         .route("/landlord-master-key-retention", axum::routing::post(landlord_master_key_retention_route))
         .route("/tenant-holdover-security-deposit-setoff", axum::routing::post(tenant_holdover_security_deposit_setoff_route))
+        .route("/rental-video-surveillance-retention", axum::routing::post(rental_video_surveillance_retention_route))
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
@@ -6440,6 +6445,42 @@ async fn tenant_holdover_security_deposit_setoff_route(
     Json(b): Json<TenantHoldoverSecurityDepositSetoffInput>,
 ) -> Result<Json<TenantHoldoverSecurityDepositSetoffResult>, ApiError> {
     Ok(Json(check_tenant_holdover_security_deposit_setoff(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Rental video surveillance footage retention period framework.
+//
+// Mounted at POST /api/rental/rental-video-surveillance-retention.
+// Four-jurisdiction framework + 5-location matrix: (1) Illinois —
+// BIPA 740 ILCS 14/ (most stringent: written consent under 740
+// ILCS 14/15(b) + 3-year retention cap + $1,000-$5,000 per violation
+// private right of action under 740 ILCS 14/20 + Rosenbach v. Six
+// Flags Entm't Corp., 129 N.E.3d 1197 (Ill. 2019) no-injury-in-fact
+// rule); (2) Texas — CUBI Tex. Bus. & Com. Code § 503.001 (consent
+// + sale prohibition + Texas AG enforcement only at $25,000 per
+// violation; SB 9 of 2024 strengthened for minors); (3) California
+// — CCPA Cal. Civ. Code § 1798.100 + CPRA Prop. 24 (notice at
+// collection + biometric SPI § 1798.140(c)(1) + deletion right
+// § 1798.105 + § 1798.150 breach private right of action $100-$750
+// per consumer + Cal. Civ. Code § 1708.5 intrusion overlay); (4)
+// Default — Restatement (Second) of Torts § 652B intrusion upon
+// seclusion. Universally prohibited: hidden cameras + unit
+// interior + high-privacy areas + audio recording without all-
+// party consent (Wiretap Act 18 U.S.C. § 2510 + Cal. Penal Code
+// § 632 + Illinois Eavesdropping 720 ILCS 5/14-2 + MD § 10-402).
+// 6-element best-practice framework. Sibling cluster: security_
+// camera_disclosure, tenant_smart_lock_biometric_consent,
+// tenant_data_privacy, landlord_master_key_retention (iter 459),
+// landlord_emergency_entry_notice, landlord_harassment,
+// tenant_emotional_distress_damages (iter 453).
+// ---------------------------------------------------------------------------
+
+async fn rental_video_surveillance_retention_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalVideoSurveillanceRetentionInput>,
+) -> Result<Json<RentalVideoSurveillanceRetentionResult>, ApiError> {
+    Ok(Json(check_rental_video_surveillance_retention(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -192,6 +192,7 @@ pub mod rental_smoke_free_housing_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_underground_storage_tank_disclosure;
 pub mod rental_unpermitted_unit_disclosure;
+pub mod rental_video_surveillance_retention;
 pub mod rental_water_submetering_disclosure;
 pub mod rental_window_guard_installation;
 pub mod right_to_dry;
