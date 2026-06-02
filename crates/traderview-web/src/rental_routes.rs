@@ -615,6 +615,11 @@ use traderview_expense::landlord_security_device_obligations::{
     check as check_landlord_security_device_obligations, LandlordSecurityDeviceInput,
     LandlordSecurityDeviceResult,
 };
+use traderview_expense::landlord_self_help_eviction_prohibition::{
+    check as check_landlord_self_help_eviction_prohibition,
+    SelfHelpEvictionInput as LandlordSelfHelpEvictionInput,
+    SelfHelpEvictionResult as LandlordSelfHelpEvictionResult,
+};
 use traderview_expense::landlord_tenant_recording_consent::{
     check as check_landlord_tenant_recording_consent, RecordingConsentInput,
     RecordingConsentResult,
@@ -963,6 +968,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
         .route("/landlord-security-device-obligations", axum::routing::post(landlord_security_device_obligations_route))
+        .route("/landlord-self-help-eviction-prohibition", axum::routing::post(landlord_self_help_eviction_prohibition_route))
         .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
         .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
         .route("/emotional-support-animal-documentation", axum::routing::post(emotional_support_animal_documentation_route))
@@ -6838,6 +6844,38 @@ async fn landlord_retaliation_damages_route(
     }
     Ok(Json(check_landlord_retaliation_damages(&b)))
 }
+
+// ---------------------------------------------------------------------------
+// landlord_self_help_eviction_prohibition: multi-jurisdictional self-help
+// eviction prohibition framework — Cal. Civ. Code § 789.3 ($100/day +
+// $250 minimum + actual + attorney fees with INTENT-to-terminate element);
+// N.Y. Real Prop. Law § 235 + RPAPL § 853 + RPAPL § 768 (CLASS A
+// MISDEMEANOR + TREBLE DAMAGES under RPAPL § 853 + criminal exposure);
+// Fla. Stat. § 83.67 (greater of ACTUAL/CONSEQUENTIAL OR 3 MONTHS' RENT
+// + attorney fees + costs + IRREPARABLE HARM for injunctive relief +
+// SEPARATE awards for non-contemporaneous violations); Tex. Prop. Code
+// § 92.0081(h) + § 92.008 (actual + $1,000 + 1 month's rent less actual
+// + attorney fees); Default common-law wrongful eviction tort with
+// punitive damages in some states. Mounted at POST /api/rental/
+// landlord-self-help-eviction-prohibition. Trader-landlord critical
+// because the trader-landlord pattern (out-of-state owner + non-paying
+// tenant + lost rental income + emotional decision to "just turn off
+// the water") matches precisely the fact pattern these statutes were
+// designed to deter. Court eviction judgment + marshal's writ of
+// possession is the ONLY lawful pathway across all five jurisdictions.
+// Sibling cluster: landlord_retaliation_damages,
+// landlord_emergency_entry_notice, landlord_lien_prohibition,
+// tenant_relocation_assistance.
+// ---------------------------------------------------------------------------
+
+async fn landlord_self_help_eviction_prohibition_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordSelfHelpEvictionInput>,
+) -> Result<Json<LandlordSelfHelpEvictionResult>, ApiError> {
+    Ok(Json(check_landlord_self_help_eviction_prohibition(&b)))
+}
+
 
 // ---------------------------------------------------------------------------
 // landlord_security_device_obligations: Mandatory landlord-provided security

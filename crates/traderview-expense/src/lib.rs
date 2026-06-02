@@ -72,6 +72,7 @@ pub mod landlord_possession_delivery;
 pub mod landlord_repair_response_timeframe;
 pub mod landlord_retaliation_damages;
 pub mod landlord_security_device_obligations;
+pub mod landlord_self_help_eviction_prohibition;
 pub mod landlord_tenant_recording_consent;
 pub mod landlord_lien_prohibition;
 pub mod landlord_mid_tenancy_rekeying;
