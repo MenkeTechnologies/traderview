@@ -158,6 +158,7 @@ pub mod rental_application_denial_disclosure;
 pub mod rental_bed_bug_disclosure;
 pub mod rental_bedroom_egress_window;
 pub mod rental_carbon_monoxide_detector;
+pub mod rental_elevator_safety_inspection;
 pub mod rental_broadband_mte_rules;
 pub mod rental_energy_benchmarking;
 pub mod rental_gas_appliance_ban;

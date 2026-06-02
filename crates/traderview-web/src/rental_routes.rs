@@ -507,6 +507,10 @@ use traderview_expense::rental_bedroom_egress_window::{
     check as check_rental_bedroom_egress_window, RentalBedroomEgressWindowInput,
     RentalBedroomEgressWindowResult,
 };
+use traderview_expense::rental_elevator_safety_inspection::{
+    check as check_rental_elevator_safety_inspection,
+    RentalElevatorSafetyInspectionInput, RentalElevatorSafetyInspectionResult,
+};
 use traderview_expense::rental_carbon_monoxide_detector::{
     check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
     RentalCarbonMonoxideDetectorResult,
@@ -908,6 +912,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
+        .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
@@ -6069,6 +6074,38 @@ async fn rental_carbon_monoxide_detector_route(
     Json(b): Json<RentalCarbonMonoxideDetectorInput>,
 ) -> Result<Json<RentalCarbonMonoxideDetectorResult>, ApiError> {
     Ok(Json(check_rental_carbon_monoxide_detector(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_elevator_safety_inspection: Rental property elevator safety
+// inspection compliance — when a trader-landlord operating a
+// multifamily building with elevators must comply with state-specific
+// periodic inspection, testing, and certification requirements
+// grounded in ASME A17.1 Safety Code for Elevators and Escalators.
+// Mounted at POST /api/rental/rental-elevator-safety-inspection.
+// Three regimes: California Cal. Labor Code §§ 7300-7324.2 + § 7317
+// (Cal/OSHA-certified inspector with 4 years experience) + § 7320
+// (Form 80 permit-to-operate must be posted; $200/day penalty) +
+// Title 8 Subchapter 6 Elevator Safety Orders + annual inspection;
+// New York City NYC Admin Code § 28-304 + § 28-304.6.1 (DOB-
+// approved elevator agency) + § 28-304.6.5 ($3,000-$10,000 per
+// violation civil penalty) + NYC Building Code Chapter 30 +
+// Appendix K Chapter K1 (Category 1 PCT annual + Category 3
+// hydraulic 3-year + Category 5 full 5-year + PVT-A Form filed
+// with DOB within 60 days); Default ASME A17.1-2025 + ANSI/ASME
+// A17.1/CSA B44-2025 (Table N1 inspection schedule + QEI Qualified
+// Elevator Inspector certification). Distinct from siblings
+// rental_swimming_pool_drain_safety (VGB Act), rental_carbon_
+// monoxide_detector, rental_bedroom_egress_window, soft_story_
+// seismic_retrofit.
+// ---------------------------------------------------------------------------
+
+async fn rental_elevator_safety_inspection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalElevatorSafetyInspectionInput>,
+) -> Result<Json<RentalElevatorSafetyInspectionResult>, ApiError> {
+    Ok(Json(check_rental_elevator_safety_inspection(&b)))
 }
 
 // ---------------------------------------------------------------------------
