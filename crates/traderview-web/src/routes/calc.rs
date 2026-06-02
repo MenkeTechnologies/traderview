@@ -168,6 +168,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
+        .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -5053,6 +5054,32 @@ async fn section_6707a_route(
     Json(b): Json<traderview_expense::section_6707a::Section6707AInput>,
 ) -> Result<Json<traderview_expense::section_6707a::Section6707AResult>, ApiError> {
     Ok(Json(traderview_expense::section_6707a::check(&b)))
+}
+
+// ── §6861 jeopardy assessment of income, estate, gift, and certain ──
+// excise taxes. Mounted at /api/calc/section-6861. § 6861(a) emergency
+// authority — if Secretary believes assessment or collection of
+// deficiency will be jeopardized by delay, Secretary shall
+// immediately assess deficiency together with interest, additional
+// amounts, and additions to tax; § 6861(b) 60-day SNOD mailing
+// requirement when assessment precedes § 6212(a) SNOD; § 6861(f)
+// IMMEDIATE § 6321 lien attachment + § 6331 levy authority (no
+// 10-day neglect rule); § 6861(g) abatement if Tax Court determines
+// deficiency less than jeopardy assessment. § 7429 review procedures
+// — § 7429(a)(1)(A) Chief Counsel for IRS personal written approval
+// required; § 7429(a)(1)(B) 5-day written statement requirement;
+// § 7429(a)(2) 30-day administrative review window; § 7429(b)(1)
+// 90-day judicial review in district court; § 7429(g) burden split
+// — Secretary bears burden on reasonableness, taxpayer bears burden
+// on amount appropriateness. Companion to § 6201 (assessment
+// authority), § 6203 (method of assessment), § 6212 (SNOD), § 6303
+// (notice and demand), § 6321 (lien), § 6331 (levy), § 6863 (stay
+// of collection), § 7522 (content of notices).
+async fn section_6861_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6861::Section6861Input>,
+) -> Result<Json<traderview_expense::section_6861::Section6861Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6861::check(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
