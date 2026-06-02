@@ -169,6 +169,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
         .route("/calc/section-6861",          post(section_6861_route))
+        .route("/calc/section-6863",          post(section_6863_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -5080,6 +5081,33 @@ async fn section_6861_route(
     Json(b): Json<traderview_expense::section_6861::Section6861Input>,
 ) -> Result<Json<traderview_expense::section_6861::Section6861Result>, ApiError> {
     Ok(Json(traderview_expense::section_6861::check(&b)))
+}
+
+// ── §6863 stay of collection of jeopardy assessments ────────────────
+// Mounted at /api/calc/section-6863. Procedural pressure-relief valve
+// when § 6861 (income/estate/gift jeopardy), § 6862 (other-tax
+// jeopardy), § 6851 (income tax termination), or § 6852 (qualified-
+// person termination) assessment has been imposed. § 6863(a) bond
+// to stay collection — taxpayer may stay collection by filing bond
+// in amount equal to amount of stay desired (capped at jeopardy
+// amount + interest); § 6863(b)(1) bond filed before § 6213(a)
+// petition triggers further condition requiring payment if petition
+// not filed within 90-day window (150 days outside US); § 6863(b)(2)
+// bond proportionately reduced upon final Tax Court decision if
+// determining amount less than jeopardy assessment AND taxpayer
+// requests; § 6863(b)(3)(A) § 6862(a) seized property may NOT be
+// sold pending § 7429(b) district court judgment; § 6863(b)(3)(B)
+// three sale exceptions (taxpayer consent + excessive conservation
+// costs + perishable); § 6863(g) court abatement authority when
+// assessment unreasonable OR amount inappropriate. Companion to
+// § 6851 + § 6852 + § 6861 + § 6862 jeopardy/termination
+// assessments; preserves § 6213(a) Tax Court petition right;
+// subject to § 7429 review framework.
+async fn section_6863_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6863::Section6863Input>,
+) -> Result<Json<traderview_expense::section_6863::Section6863Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6863::check(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─
