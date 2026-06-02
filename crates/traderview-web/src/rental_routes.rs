@@ -606,6 +606,11 @@ use traderview_expense::rental_carbon_monoxide_detector::{
     check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
     RentalCarbonMonoxideDetectorResult,
 };
+use traderview_expense::rental_chimney_fireplace_inspection_disclosure::{
+    check as check_rental_chimney_fireplace_inspection_disclosure,
+    RentalChimneyFireplaceInspectionDisclosureInput,
+    RentalChimneyFireplaceInspectionDisclosureResult,
+};
 use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
@@ -1091,6 +1096,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
+        .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
@@ -7068,6 +7074,58 @@ async fn rental_carbon_monoxide_detector_route(
     Json(b): Json<RentalCarbonMonoxideDetectorInput>,
 ) -> Result<Json<RentalCarbonMonoxideDetectorResult>, ApiError> {
     Ok(Json(check_rental_carbon_monoxide_detector(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_chimney_fireplace_inspection_disclosure: Multi-jurisdictional
+// rental property CHIMNEY + FIREPLACE + SOLID-FUEL-BURNING APPLIANCE
+// inspection and disclosure compliance framework. When a landlord rents
+// a property with a wood-burning fireplace, pellet stove, wood stove,
+// vented gas fireplace, or chimney-vented oil furnace, what inspection
+// schedule applies, what disclosure must be given to tenant, and what
+// failure-mode liabilities expose landlord after a chimney fire or
+// carbon monoxide event? Mounted at POST /api/rental/rental-chimney-
+// fireplace-inspection-disclosure. Three-jurisdiction framework: Maine
+// (MOST STRINGENT for rental disclosure — State of Maine Professional
+// Financial Regulation Form 2079 chimney/fireplace construction
+// disclosure required at sale/rental + Level II NFPA 211 inspection at
+// title transfer per state fire code + 14 M.R.S. § 6021 implied
+// warranty of habitation); Connecticut (adopts NFPA 211 by reference
+// in Conn. Gen. Stat. § 29-292 State Fire Safety Code + Conn. Public
+// Health Code § 19-13-B105(o) combustion-air/venting + Conn. Gen.
+// Stat. § 47a-7 landlord duties + annual NFPA 211 inspection
+// recommended); Default (NFPA 211 VOLUNTARY national standard
+// recommending annual inspection enforceable as law only when adopted
+// by local code + CSIA Chimney Safety Institute of America
+// certification + common-law implied warranty of habitability per
+// Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) + Green v. Superior
+// Court, 10 Cal. 3d 616 (1974) + Cal. Civ. Code § 1941.1 implied
+// warranty of habitation). NFPA 211 three-level inspection framework:
+// Level I basic visual when no changes; Level II comprehensive
+// accessible inspection required on OCCUPANCY CHANGE (rental
+// transition + sale) or fuel change or damage event or weather event;
+// Level III invasive when concealed defect suspected. NFPA chimney
+// fire data: ~22,000 residential structure fires annually in US,
+// $150M+ property damage; CO events from fireplace/chimney
+// malfunction kill 50-150 Americans annually. Five universal
+// failure-mode liabilities: creosote buildup beyond Stage 3 (Class A
+// fire risk); cracked flue liner (CO release cross-references rental_
+// carbon_monoxide_detector); damaged crown/spalling (water intrusion
+// cross-references rental_basement_water_intrusion_disclosure); animal
+// nesting in flue; improper combustion. Six appliance types modeled:
+// None, WoodBurningFireplace, PelletStove, WoodStove,
+// GasFireplaceVented, OilFurnaceChimneyVented. Distinct from siblings
+// rental_carbon_monoxide_detector, rental_basement_water_intrusion_
+// disclosure, rental_gas_appliance_ban, tenant_emotional_distress_
+// damages, mid_tenancy_temporary_relocation.
+// ---------------------------------------------------------------------------
+
+async fn rental_chimney_fireplace_inspection_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalChimneyFireplaceInspectionDisclosureInput>,
+) -> Result<Json<RentalChimneyFireplaceInspectionDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_chimney_fireplace_inspection_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
