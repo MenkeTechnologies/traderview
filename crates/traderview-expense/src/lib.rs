@@ -401,6 +401,7 @@ pub mod section_4972;
 pub mod section_4973;
 pub mod section_4974;
 pub mod section_4975;
+pub mod section_4978;
 pub mod section_4980;
 pub mod section_4980h;
 pub mod section_475c2;

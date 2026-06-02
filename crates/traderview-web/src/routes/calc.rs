@@ -234,6 +234,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
+        .route("/calc/section-4978",          post(section_4978_route))
         .route("/calc/section-4980",          post(section_4980_route))
         .route("/calc/section-4980h",         post(section_4980h_route))
         .route("/calc/section-453",           post(section_453_route))
@@ -1209,6 +1210,37 @@ async fn section_4975_route(
     Json(b): Json<traderview_expense::section_4975::Section4975Input>,
 ) -> Result<Json<traderview_expense::section_4975::Section4975Result>, ApiError> {
     Ok(Json(traderview_expense::section_4975::check(&b)))
+}
+
+// ── § 4978 tax on certain dispositions by ESOPs ──────────────────────
+// Mounted at /api/calc/section-4978. Pure compute; § 4978(a) 10%
+// excise tax on amount realized on disposition of qualified securities
+// by ESOP or eligible worker-owned cooperative within 3 years after
+// acquisition under § 1042 sale or § 664(g) qualified gratuitous
+// transfer. Tax paid by EMPLOYER that maintains the plan. § 4978(b)
+// triggering conditions (either): (1) § 4978(b)(1) share count test —
+// total employer securities held by plan after disposition less than
+// total held immediately after § 1042 sale; (2) § 4978(b)(2) 30%-value
+// test — value of qualified securities held after disposition less
+// than 30% of total employer securities value at disposition (60% for
+// § 664(g) qualified gratuitous transfer). § 4978(c) exceptions:
+// § 4978(c)(1) distribution on separation from service / death /
+// retirement / disability / divorce; § 4978(c)(2) employee stock
+// purchase; § 4978(c)(3) merger or reorganization under § 354 +
+// § 355 + § 356 + § 368 with ESOP retaining successor securities;
+// § 4978(c)(4) diversification rights under § 401(a)(28)(B).
+// Companion to § 1042 (iter 480): § 1042 provides seller capital
+// gain deferral; § 4978 is employer recapture if ESOP fails 3-year
+// hold. § 1042(b)(3) written consent to § 4978 recapture is
+// prerequisite to seller § 1042 election. Form 5330 filing deadline
+// last day of 7th month after employer tax-year-end. Original
+// enactment Deficit Reduction Act of 1984 Pub. L. 98-369.
+
+async fn section_4978_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4978::Section4978Input>,
+) -> Result<Json<traderview_expense::section_4978::Section4978Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4978::check(&b)))
 }
 
 // ── § 4980 Tax on Reversion of Qualified Plan Assets to Employer ─────
