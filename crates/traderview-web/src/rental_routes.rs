@@ -781,6 +781,11 @@ use traderview_expense::rental_attached_garage_carbon_monoxide_disclosure::{
     RentalAttachedGarageCarbonMonoxideDisclosureInput,
     RentalAttachedGarageCarbonMonoxideDisclosureResult,
 };
+use traderview_expense::rental_pet_breed_restriction_disclosure::{
+    check as check_rental_pet_breed_restriction_disclosure,
+    RentalPetBreedRestrictionDisclosureInput,
+    RentalPetBreedRestrictionDisclosureResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1254,6 +1259,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
+        .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10825,4 +10831,45 @@ async fn rental_attached_garage_carbon_monoxide_disclosure_route(
     Json(b): Json<RentalAttachedGarageCarbonMonoxideDisclosureInput>,
 ) -> Result<Json<RentalAttachedGarageCarbonMonoxideDisclosureResult>, ApiError> {
     Ok(Json(check_rental_attached_garage_carbon_monoxide_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_pet_breed_restriction_disclosure (iter 525): Trader-landlord pet
+// breed restriction disclosure + FHA reasonable-accommodation framework.
+// Six jurisdictions: Maryland (Pet Policy Transparency Act of 2025 + no
+// state preemption of BSL + 21 states permit local BSL), Michigan (no
+// state preemption + local BSL permitted + Michigan Civil Rights
+// Commission), Nevada (SB 245 effective 2025 prohibits landlord
+// liability insurance breed discrimination + Nevada Division of
+// Insurance), California (Cal. Civ. Code § 1942.7 + § 54.2 service-
+// animal access + DFEH + AB 468 ESA 30-day client/provider relationship),
+// New York (NY Civ. Rights Law § 47-a + NY RPL § 235-b + NYC Admin
+// § 8-107(15) + NYS Human Rights Law § 296(2-a) + NYC HPD + NY Division
+// of Human Rights), Default (federal FHA 42 U.S.C. § 3604(f)(3)(B) +
+// 24 C.F.R. § 100.204 + HUD Notice FHEO-2020-01 dated January 28
+// 2020 + 29 states preempt local BSL + CDC 4.5M annual US dog bites).
+// Three animal types: AdaServiceAnimal (Title III task-trained),
+// FhaEmotionalSupportAnimal (HUD-recognized disability accommodation),
+// RegularPetNoFhaProtection. Four breed restriction types: NoBreed-
+// Restriction, SpecificBreedsProhibited, WeightOrSizeRestriction,
+// TotalPetProhibition. Eight-mode severity ladder including
+// DiscriminatoryDenialFhaViolationFineExposure (100pct rent + $25,645
+// HUD first-offense + $128,225 subsequent-offense civil penalty per
+// 24 C.F.R. § 180.671 + 42 U.S.C. § 3610), FhaPreemptsBreedRestriction-
+// AssistanceAnimal (50pct rent), InsuranceBreedBanIneffectiveVsFha
+// (50pct rent — Liberty Mutual + State Farm + Allstate + Farmers +
+// Nationwide common breed bans cannot justify denial), MdPetPolicy-
+// TransparencyActDisclosureRequired (50pct rent), NvSb245Insurance-
+// BreedDiscriminationProhibited (50pct rent), DocumentationRequested-
+// FromTenantPermissible (ADA Title III two-question protocol),
+// BreedRestrictionEnforceableNonAssistance (CDC 4.5M dog bites
+// annually + $50K-$500K premises-liability exposure).
+// ---------------------------------------------------------------------------
+
+async fn rental_pet_breed_restriction_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPetBreedRestrictionDisclosureInput>,
+) -> Result<Json<RentalPetBreedRestrictionDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_pet_breed_restriction_disclosure(&b)))
 }
