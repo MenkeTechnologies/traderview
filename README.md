@@ -3211,6 +3211,49 @@ Mounted at `POST /api/rental/rental-satellite-dish-installation-right`. Thirty-t
 
 Mounted at `POST /api/rental/rental-water-submetering-disclosure`. Thirty-one tests pin: **CA clean compliant**; **CA new construction post-2018 must have submeters** (RUBS violates § 1954.201); **CA old construction RUBS no mandatory violation**; **CA no pre-lease disclosure violation** (§ 1954.202); **CA missing billing method disclosure violation** (§ 1954.203); **CA missing billing frequency disclosure violation**; **CA missing dispute process disclosure violation**; **CA master-metered no billing no disclosure required**; **TX clean compliant**; **TX no PUC registration violation** (§ 13.503); **TX no tenant guide violation** (§ 24.275); **TX 30 percent admin fee boundary compliant** (boundary); **TX 31 percent admin fee violation** (§ 24.275(b)); **TX no quarterly past-usage violation**; **TX master-metered no billing no PUC registration required**; **FL voluntary framework no violation**; **default no pre-lease disclosure violation**; **default clean compliant**; **citation pins CA / TX / FL / default authorities** (all four); **note pins CA January 2018 effective date**; **note pins TX 30 percent cap**; **note pins FL voluntary framework**; **note pins default RUBS 38+ states framework**; **CA uniquely requires mandatory submetering invariant** (only CA mandatory); **TX uniquely requires PUC registration invariant** (only TX); **FL least stringent no pre-lease default invariant**; **billing method truth table for CA** (3-cell — Submetering OK, RUBS fails, MasterMetered OK); **multiple TX violations stack** (4 violations).
 
+`traderview-expense::rental_window_guard_installation` is the **multi-jurisdictional residential rental window guard installation requirement framework module** — trader-landlord critical because child window-fall injuries are among the highest-stakes premises liability claims — wrongful death awards routinely exceed $5M, and many jurisdictions impose STRICT LIABILITY when window guards are required by statute but absent. NYC alone mandates window guards in every apartment of a building with 3+ units where a child age 10 or younger resides; failure exposes landlord to NYC Department of Health civil penalties + tort liability + tenant private rights of action. Distinct from siblings `rental_bedroom_egress_window` (structural), `rental_carbon_monoxide_detector` (CO sensor), `rental_swimming_pool_drain_safety` (VGB Act), `landlord_security_device_obligations`.
+
+**Five-jurisdiction framework**:
+
+| Jurisdiction | Source | Trigger | Penalty |
+|--------------|--------|---------|---------|
+| **NYC** | NYC Health Code Article 131 § 131.15 + NYC Admin Code § 27-2043.1 | **3+ APARTMENTS + child age 10 or younger resides** | $1,000/day per violation under NYC Health Code § 3.11 |
+| **Chicago** | Chicago Building Code § 13-196-550 | Every dwelling unit | Operable window guards limiting opening to 4 inches or less |
+| **Massachusetts** | Mass. G.L. + 105 CMR 410 (State Sanitary Code) | **Tenant request + child under age 10** + applicable-window 3-prong test | Habitability violation + tenant private right of action |
+| **Montgomery County MD** | DHCA Code § 29-23 | Tenant request + child under age 6 | Habitability violation |
+| **Default** | Common-law negligence + ASTM F2090-23 voluntary | None statutory | Negligence-based |
+
+Pinned by `nyc_3_plus_units_child_under_11_obligation_engaged`, `nyc_2_unit_building_no_obligation`, `nyc_3_unit_building_boundary_engages`, `nyc_no_child_no_obligation`, `nyc_no_window_guards_violation`, `nyc_daily_penalty_accrues_at_1000_per_day` (30 days × $1,000 = $30,000), `jurisdiction_truth_table_five_cells`, `nyc_uniquely_engages_daily_penalty_invariant`.
+
+**NYC Health Code § 131.15 four-prong**:
+
+| # | Element |
+|---|---------|
+| 1 | Multiple dwelling with 3+ apartments |
+| 2 | Child age 10 or younger resides in apartment |
+| 3 | Install window guards on EVERY window (carveout: fire escape windows) |
+| 4 | Notice: 30-day lease notice + annual notice January 1–16 |
+
+Pinned by `nyc_fire_escape_window_carveout`, `nyc_no_30_day_notice_violation`, `nyc_no_annual_notice_violation`.
+
+**Massachusetts 105 CMR 410 applicable-window three-prong test**:
+
+| Prong | Requirement |
+|-------|-------------|
+| 1 | Window is **GREATER THAN 6 FEET ABOVE GRADE** |
+| 2 | Window capable of opening sufficiently for **5-INCH DIAMETER BALL** to pass through |
+| 3 | Window is **NOT connected to fire escape** |
+
+All three required for "applicable window" classification + tenant-request-trigger. Pinned by `massachusetts_three_prong_applicable_window_with_child_request`, `massachusetts_no_tenant_request_no_obligation`, `massachusetts_window_under_6_feet_not_applicable`, `massachusetts_window_blocks_5_inch_ball_not_applicable`, `massachusetts_fire_escape_window_not_applicable`. MA annual notice requirement pinned by `massachusetts_no_annual_notice_violation` (with statutory quote: "Parents with children under the age of 10 have the right, at no additional charge, to have window guards installed within the rented apartment and the common areas of the building").
+
+**Chicago Building Code § 13-196-550** — operable window guards limiting window opening to **4 INCHES OR LESS** in dwelling units; screens required April 15 through November 15 each year. Pinned by `chicago_4_inch_opening_compliant`, `chicago_above_4_inch_opening_violation`.
+
+**Montgomery County MD DHCA Code § 29-23** — window guard lease addendum + tenant-request trigger when child under age 6 resides. Pinned by `montgomery_md_child_under_6_with_request`, `montgomery_md_no_child_under_6_no_obligation`, `montgomery_md_installation_failure`.
+
+**Default — common-law negligence + ASTM F2090-23 voluntary standard** — no statewide window guard mandate; general premises liability applies; ASTM F2090-23 voluntary standard for window fall prevention devices including emergency escape (egress) release mechanisms may inform negligence analysis but does NOT satisfy strict-liability statutes.
+
+Mounted at `POST /api/rental/rental-window-guard-installation`. Thirty-six tests pin: **NYC 3+ units child under 11 obligation engaged**; **NYC 2-unit building no obligation**; **NYC 3-unit building boundary engages**; **NYC no child no obligation**; **NYC no window guards violation**; **NYC daily penalty accrues at $1,000/day** (30 days = $30K); **NYC no 30-day notice violation**; **NYC no annual notice violation**; **NYC fire escape window carveout** (compliant despite no guards); **Chicago 4-inch opening compliant**; **Chicago above-4-inch opening violation**; **Massachusetts three-prong applicable window with child request**; **MA no tenant request no obligation**; **MA window under 6 feet not applicable**; **MA window blocks 5-inch ball not applicable**; **MA fire escape window not applicable**; **MA no annual notice violation**; **Montgomery MD child under 6 with request**; **Montgomery MD no child under 6 no obligation**; **Montgomery MD installation failure**; **default no obligation**; **jurisdiction truth table five cells**; **NYC uniquely engages daily penalty invariant**; **citation pins all authorities** (NYC Article 131 § 131.15 + § 27-2043.1 + § 3.11 + § 27-2115 + Chicago § 13-196-550 + Mass. 105 CMR 410 + Montgomery MD § 29-23 + ASTM F2090-23); **note pins NYC 3+ units threshold**; **note pins NYC dual notice requirements**; **note pins NYC daily penalty DHMH**; **note pins Chicago 4-inch opening + seasonal screens**; **note pins MA three-prong test**; **note pins MA annual notice quote**; **note pins Montgomery MD DHCA § 29-23**; **note pins default ASTM F2090-23**; **note pins trader-landlord $5M award + strict liability**; **note pins ASTM voluntary standard**; **note pins cross-jurisdictional architecture**; **multiple NYC failures stack**.
+
 `traderview-expense::rental_unpermitted_unit_disclosure` is the **rental property unpermitted / illegal dwelling unit disclosure compliance module** — when a trader-landlord rents a unit lacking a Certificate of Occupancy (in-law apartment, garage conversion, basement apartment, attic unit, ADU without permits), what statutory disclosure and rent-collection rules apply? Trader-landlord operational concern: an unpermitted-unit lease creates **asymmetric enforceability** — tenant may enforce lease and recover damages, but landlord may NOT collect rent or enforce eviction without first legalizing the unit. Distinct from siblings `rental_bedroom_egress_window` (structural), `rental_carbon_monoxide_detector` (safety), `rental_hot_water_temperature` (habitability), `rental_property_registration` (general registration).
 
 **Four regimes** — California (asymmetric enforceability doctrine) vs Oakland (strictest relocation overlay) vs New York City (MDL § 325 3+ unit threshold) vs Default:

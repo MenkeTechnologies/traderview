@@ -557,6 +557,10 @@ use traderview_expense::rental_water_submetering_disclosure::{
     check as check_rental_water_submetering_disclosure,
     RentalWaterSubmeteringDisclosureInput, RentalWaterSubmeteringDisclosureResult,
 };
+use traderview_expense::rental_window_guard_installation::{
+    check as check_rental_window_guard_installation,
+    RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
+};
 use traderview_expense::rental_unpermitted_unit_disclosure::{
     check as check_rental_unpermitted_unit_disclosure,
     RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
@@ -1001,6 +1005,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
+        .route("/rental-window-guard-installation", axum::routing::post(rental_window_guard_installation_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
@@ -6645,6 +6650,41 @@ async fn rental_property_registration_route(
 // temperature, rental_bed_bug_disclosure, rental_gas_appliance_ban,
 // rental_property_registration.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_window_guard_installation: multi-jurisdictional residential
+// rental window guard installation requirement framework — NYC Health
+// Code Article 131 § 131.15 + NYC Admin Code § 27-2043.1 (multiple
+// dwelling with 3+ apartments must install approved window guards on
+// every window where child age 10 or younger resides; carveout for fire
+// escape windows; 30-day lease notice + annual notice January 1-16; NYC
+// Health Code § 3.11 civil penalties up to $1,000 per violation per
+// day); Chicago Building Code § 13-196-550 (operable window guards
+// limiting opening to 4 inches or less; seasonal screen requirement
+// April 15-November 15); Massachusetts G.L. + 105 CMR 410 State
+// Sanitary Code (landlord must install at tenant's request when child
+// under age 10 resides; applicable window three-prong test: > 6 feet
+// above grade + opens for 5-inch ball + not connected to fire escape;
+// annual notice with statutory quote); Montgomery County MD DHCA Code
+// § 29-23 (tenant-request trigger when child under age 6 resides);
+// Default common-law negligence + ASTM F2090-23 voluntary standard.
+// Mounted at POST /api/rental/rental-window-guard-installation.
+// Trader-landlord critical because child window-fall injuries are
+// among the highest-stakes premises liability claims — wrongful death
+// awards routinely exceed $5M, and many jurisdictions impose STRICT
+// LIABILITY when window guards are required by statute but absent.
+// Sibling cluster: rental_bedroom_egress_window,
+// rental_carbon_monoxide_detector, rental_swimming_pool_drain_safety,
+// landlord_security_device_obligations.
+// ---------------------------------------------------------------------------
+
+async fn rental_window_guard_installation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWindowGuardInstallationInput>,
+) -> Result<Json<RentalWindowGuardInstallationResult>, ApiError> {
+    Ok(Json(check_rental_window_guard_installation(&b)))
+}
 
 async fn rental_water_submetering_disclosure_route(
     _s: State<AppState>,
