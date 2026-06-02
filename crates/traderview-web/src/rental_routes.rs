@@ -485,6 +485,10 @@ use traderview_expense::tenant_late_fee_cap::{
     check as check_tenant_late_fee_cap,
     TenantLateFeeCapInput, TenantLateFeeCapResult,
 };
+use traderview_expense::tenant_lease_guarantor_disclosure::{
+    check as check_tenant_lease_guarantor_disclosure,
+    TenantLeaseGuarantorDisclosureInput, TenantLeaseGuarantorDisclosureResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -986,6 +990,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/tenant-late-fee-cap", axum::routing::post(tenant_late_fee_cap_route))
+        .route("/tenant-lease-guarantor-disclosure", axum::routing::post(tenant_lease_guarantor_disclosure_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6092,6 +6097,38 @@ async fn tenant_late_fee_cap_route(
     Json(b): Json<TenantLateFeeCapInput>,
 ) -> Result<Json<TenantLateFeeCapResult>, ApiError> {
     Ok(Json(check_tenant_late_fee_cap(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_lease_guarantor_disclosure: multi-jurisdictional tenant lease
+// guarantor disclosure and restriction framework — NY HSTPA 2019 + DHCR
+// Operational Bulletin 2020-1 (rent-stabilized one-month aggregate
+// security + guaranty cap; no retroactive guarantor; tenant blacklist
+// $500-$1,000 civil penalty); NY GOL § 5-701(a)(1) Statute of Frauds (>
+// 12-month guaranty in writing); CA Civ. Code § 2787-2856 suretyship +
+// § 2819 material modification rule + § 1670.5 unconscionability +
+// § 2799 continuing guaranty revocation; NJ N.J.S.A. 46:8-26 + NJ
+// Consumer Fraud Act (lease copy + exact monetary limit); Federal FCRA
+// (15 USC § 1681 et seq.) adverse-action notice (§ 1681m) + willful/
+// negligent damages (§ 1681n + § 1681o); Restatement (Third) of
+// Suretyship and Guaranty (1996) § 41 material modification +  § 39
+// novation extinguishes guaranty + strict construction. Mounted at POST
+// /api/rental/tenant-lease-guarantor-disclosure. Trader-landlord
+// critical: NY HSTPA aggregate one-month cap on security + guaranty;
+// FCRA adverse-action notice required when guarantor application denied
+// based on credit report; common-law material-modification rule
+// extinguishes guaranty on subsequent rent increases without consent;
+// NJ + best practice requires exact monetary cap on guaranty. Sibling
+// cluster: tenant_data_privacy, rental_application_denial_disclosure,
+// tenant_late_fee_cap, tenant_rent_receipt_requirement.
+// ---------------------------------------------------------------------------
+
+async fn tenant_lease_guarantor_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantLeaseGuarantorDisclosureInput>,
+) -> Result<Json<TenantLeaseGuarantorDisclosureResult>, ApiError> {
+    Ok(Json(check_tenant_lease_guarantor_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

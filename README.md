@@ -2689,6 +2689,43 @@ BOTH prongs required. Late fee struck down is VOID IN TOTO — landlord recovers
 
 Mounted at `POST /api/rental/tenant-late-fee-cap`. Thirty-six tests pin: **CA 5% late fee with both prongs compliant**; **CA missing impracticable prong voids fee**; **CA missing reasonable endeavor prong voids fee**; **CA void fee recovers charged amount as damages**; **NY $50 or 5% lesser cap** ($200K rent = $50 cap); **NY low rent 5% lower than $50** ($50K rent = $25 cap); **NY late fee at $50 cap exactly compliant**; **NY late fee one cent above cap violation**; **NY 4-day grace period violation**; **NY 5-day grace period boundary compliant**; **NY eviction restriction note present**; **FL manufactured home park 20% or $20 floor**; **FL low rent $20 floor overrides 20%**; **TX 4-or-fewer units 12% safe harbor**; **TX 5-or-more units 10% safe harbor**; **TX late fee above cap triggers treble + $100**; **TX 1-day grace period violation**; **TX 2-day grace period boundary compliant**; **default jurisdiction 5% cap**; **default above cap violation cites Restatement**; **citation pins all authorities** (§ 1671(d) + Orozco + § 238-a HSTPA 2019 + § 83.808 + § 92.019 + Restatement 356); **note pins California two-prong test**; **note pins California 5-6% threshold + void in toto**; **note pins New York $50 or 5% hard cap**; **note pins New York 5-day grace + no eviction**; **note pins Florida manufactured home park $20 or 20%**; **note pins Florida general no statutory cap**; **note pins Texas 12/10 safe harbor**; **note pins Texas 2-day grace**; **note pins Texas treble + $100 remedy**; **note pins default Restatement 356**; **note pins cross-jurisdictional invariant**; **NY uniquely hard-caps at $50 invariant**; **TX uniquely engages treble damages invariant**; **jurisdiction truth table five cells**; **defensive overflow clamped with saturating mul**.
 
+`traderview-expense::tenant_lease_guarantor_disclosure` is the **multi-jurisdictional tenant lease guarantor disclosure and restriction framework module** — trader-landlord critical because (1) lease guarantors are widely used by landlords to secure rent payments from high-risk tenants, but state law increasingly restricts both the amount a guarantor can be obligated to pay AND the procedural protections required when soliciting guarantors; (2) NY HSTPA 2019 + DHCR guidance limits ALL deposits and guarantor security to ONE MONTH'S RENT for rent-stabilized apartments; (3) Federal FCRA requirements apply when landlord pulls guarantor's consumer credit report; (4) common-law suretyship principles (Restatement (Third) of Suretyship and Guaranty) STRICTLY CONSTRUE guarantor liability + EXTINGUISH guaranty on material modifications absent consent. Companion to `tenant_data_privacy`, `rental_application_denial_disclosure`, `tenant_late_fee_cap`, `tenant_rent_receipt_requirement`.
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Source | Key Restriction |
+|--------------|--------|-----------------|
+| **New York** | HSTPA 2019 + DHCR Operational Bulletin 2020-1 + GOL § 5-701(a)(1) + GOL § 7-108 | **ONE MONTH AGGREGATE** security + guaranty cap for rent-stabilized; NO retroactive guarantor; tenant blacklist prohibition $500-$1,000 penalty; > 12-month guaranty must be in writing |
+| **California** | Cal. Civ. Code § 2787-2856 + § 2819 + § 1670.5 + § 2799 | Material modification rule (§ 2819 discharges guarantor); unconscionability (§ 1670.5); continuing guaranty revocation (§ 2799) |
+| **New Jersey** | N.J.S.A. 46:8-26 + NJ Consumer Fraud Act | Landlord must provide guarantor copy of lease + EXACT MONETARY LIMIT |
+| **Default** | Restatement (Third) of Suretyship and Guaranty (1996) | § 41 material modification extinguishes; § 39 novation extinguishes; strict construction |
+
+Pinned by `ny_one_month_aggregate_compliant`, `ny_aggregate_exceeds_one_month_violation`, `ny_non_rent_stabilized_no_aggregate_cap`, `ny_retroactive_guarantor_prohibited`, `ny_blacklist_violation_500_to_1000_penalty`, `ca_material_modification_extinguishes_2819`, `default_material_modification_restatement_41`, `nj_no_copy_of_lease_violation`, `nj_no_monetary_limit_violation`, `jurisdiction_truth_table_four_cells`, `ny_uniquely_engages_blacklist_prohibition_invariant`.
+
+**Statute of Frauds — NY GOL § 5-701(a)(1)** — lease guaranty for term LONGER THAN 12 MONTHS must be IN WRITING signed by guarantor or authorized agent. Pinned by `statute_of_frauds_24_month_oral_unenforceable`, `statute_of_frauds_12_month_oral_enforceable`, `statute_of_frauds_12_month_boundary` (12 = OK orally), `statute_of_frauds_13_month_boundary_requires_writing` (13 = writing required).
+
+**Federal FCRA framework (15 USC § 1681 et seq.)** when landlord pulls guarantor's credit report:
+
+| Section | Rule |
+|---------|------|
+| § 1681b | **Permissible purpose** required |
+| § 1681e | Accuracy requirements for user |
+| § 1681m | **Adverse action notice** required (CRA identity + 60-day free copy + dispute right) |
+| § 1681n | **Willful violation** = actual + PUNITIVE damages + attorney fees |
+| § 1681o | Negligent violation = actual damages + attorney fees |
+
+Pinned by `fcra_adverse_action_notice_required_engages`, `fcra_no_adverse_action_no_notice_required`, `fcra_no_credit_report_no_notice_required`, `fcra_adverse_action_with_notice_no_violation`.
+
+**Common-law suretyship principles (Restatement (Third) of Suretyship and Guaranty (1996))**:
+
+| Section | Rule |
+|---------|------|
+| § 41 | MATERIAL MODIFICATION of underlying obligation without guarantor's consent EXTINGUISHES guaranty |
+| § 39 | NOVATION of underlying obligation EXTINGUISHES guaranty |
+| General | Guaranty STRICTLY CONSTRUED against the creditor (landlord); limited-amount guaranties enforced strictly within monetary cap |
+
+Mounted at `POST /api/rental/tenant-lease-guarantor-disclosure`. Thirty-two tests pin: **NY one-month aggregate compliant**; **NY aggregate exceeds one-month violation**; **NY non-rent-stabilized no aggregate cap**; **NY retroactive guarantor prohibited**; **NY blacklist $500-$1,000 penalty**; **Statute of Frauds 24-month oral unenforceable**; **Statute of Frauds 12-month oral enforceable**; **Statute of Frauds 12-month boundary**; **Statute of Frauds 13-month boundary requires writing**; **CA material modification extinguishes § 2819**; **default material modification Restatement § 41**; **NJ no copy of lease violation**; **NJ no monetary limit violation**; **FCRA adverse action notice required engages**; **FCRA no adverse action no notice required**; **FCRA no credit report no notice required**; **FCRA adverse action with notice no violation**; **jurisdiction truth table four cells**; **NY uniquely engages blacklist prohibition invariant**; **citation pins all authorities** (HSTPA 2019 + DHCR + § 5-701(a)(1) + § 7-108 + § 2787-2856 + § 2819 + § 1670.5 + § 2799 + N.J.S.A. 46:8-26 + Consumer Fraud Act + § 1681 + Restatement); **note pins NY HSTPA one-month aggregate**; **note pins NY blacklist prohibition**; **note pins NY GOL § 5-701 Statute of Frauds**; **note pins CA § 2819 material modification**; **note pins CA § 1670.5 unconscionability**; **note pins CA § 2799 continuing guaranty revocation**; **note pins NJ § 46:8-26 lease copy + monetary limit**; **note pins FCRA adverse action notice**; **note pins FCRA willful punitive damages**; **note pins Restatement (Third) Suretyship 1996**; **note pins trader-landlord critical summary**; **multiple failures stack**.
+
 `traderview-expense::security_deposit_bank_disclosure` is the **security deposit bank-location disclosure module** — when must a landlord disclose to the tenant WHERE the security deposit is held? Distinct from sibling modules `security_deposit_caps` (statutory caps on amount), `deposit_interest` (interest-payment obligation on the deposit), `deposit_return_windows` (refund timelines), and `damage_deduction_itemization` (deductions from the deposit). Four regimes ranging from NY's trust-fund + 6+ unit interest-bearing rule to Massachusetts' harsh immediate-return remedy.
 
 **Four regimes**:
