@@ -728,6 +728,10 @@ use traderview_expense::rental_lead_pipe_disclosure::{
     check as check_rental_lead_pipe_disclosure, RentalLeadPipeDisclosureInput,
     RentalLeadPipeDisclosureResult,
 };
+use traderview_expense::rental_natural_gas_leak_response::{
+    check as check_rental_natural_gas_leak_response,
+    RentalNaturalGasLeakResponseInput, RentalNaturalGasLeakResponseResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1136,6 +1140,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
+        .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
@@ -8392,6 +8397,62 @@ async fn rental_lead_pipe_disclosure_route(
     Json(b): Json<RentalLeadPipeDisclosureInput>,
 ) -> Result<Json<RentalLeadPipeDisclosureResult>, ApiError> {
     Ok(Json(check_rental_lead_pipe_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_natural_gas_leak_response: Multi-jurisdictional rental
+// property natural gas leak detection, response, and landlord-duty
+// compliance framework. When a tenant reports a natural-gas odor
+// (rotten egg / sulfur from mercaptan odorant) or a methane-leak event
+// occurs in or around the rental unit, what immediate response duties
+// attach (evacuate + 911 + utility + do not ignite), what utility-side
+// and landlord-side obligations interact under PHMSA 49 C.F.R. Part
+// 192, and what failure-mode liabilities expose landlord after an
+// explosion, fire, asphyxiation, or carbon-monoxide event? Mounted at
+// POST /api/rental/rental-natural-gas-leak-response. Four-jurisdiction
+// framework: Federal/PHMSA (universal floor — 49 C.F.R. Part 192 +
+// § 192.625 odorization with mercaptan + § 192.706 15-month leakage
+// surveys + PHMSA Final Rule January 17, 2025 strengthened advanced
+// leak detection performance standards and mandatory repair
+// timelines); Massachusetts (220 C.M.R. 100.00 + 220 C.M.R. 101.00 +
+// M.G.L. c. 164 § 105A post-Merrimack Valley 2018 gas safety regime
+// — explosion across Andover/Lawrence/North Andover killed 1 +
+// injured 25 + displaced thousands with aggregate settlements
+// exceeding $1B; engage Eversource/National Grid/Columbia Gas
+// emergency line); California (CPUC G.O. 112-F gas pipeline safety +
+// G.O. 58-A natural gas service standards + Cal. Pub. Util. Code
+// § 451 safe-and-adequate-service mandate + Cal. Civ. Code § 1941.1
+// implied warranty of habitability per Green v. Superior Court, 10
+// Cal. 3d 616 (1974); engage PG&E/SoCalGas/SDG&E); Default (common-
+// law implied warranty per Hilder v. St. Peter, 478 A.2d 202 (Vt.
+// 1984) + tort negligence + premises liability + state PUC consumer-
+// protection rules). Universal landlord IMMEDIATE-RESPONSE six-step
+// protocol: (1) evacuate all occupants immediately; (2) call 911;
+// (3) call utility emergency line FROM SAFE LOCATION outside
+// building; (4) DO NOT operate light switches/electronics/vehicle
+// ignition/cell phones inside building (spark = explosion); (5) DO
+// NOT enter unit to investigate; (6) wait for utility + fire
+// department clearance before re-entry. Post-incident obligations:
+// engage licensed plumber for appliance inspection + document
+// utility report + notify all tenants + update lease addenda + consider
+// methane detector ($25-$100 per unit emerging best practice).
+// Five universal failure-mode liabilities: failed to respond;
+// operated appliances after odor; failed to evacuate; failed to
+// inspect post-restoration; missing methane detector. Distinct from
+// siblings rental_propane_tank_lease_disclosure (iter 475 — LP-gas
+// tank), rental_carbon_monoxide_detector (CO sensor), rental_
+// hardwired_smoke_alarm_responsibility (iter 481 — smoke detection),
+// rental_chimney_fireplace_inspection_disclosure (iter 471), rental_
+// fire_extinguisher_requirement (iter 473), rental_gas_appliance_ban
+// (electrification policy), tenant_emotional_distress_damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_natural_gas_leak_response_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNaturalGasLeakResponseInput>,
+) -> Result<Json<RentalNaturalGasLeakResponseResult>, ApiError> {
+    Ok(Json(check_rental_natural_gas_leak_response(&b)))
 }
 
 // ---------------------------------------------------------------------------
