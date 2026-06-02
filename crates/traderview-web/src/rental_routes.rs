@@ -469,6 +469,10 @@ use traderview_expense::tenant_in_foreclosure_protection::{
     check as check_tenant_foreclosure_protection,
     CheckResult as TenantForeclosureResult, Input as TenantForeclosureInput,
 };
+use traderview_expense::tenant_late_fee_cap::{
+    check as check_tenant_late_fee_cap,
+    TenantLateFeeCapInput, TenantLateFeeCapResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -938,6 +942,7 @@ pub fn router() -> Router<AppState> {
         .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
+        .route("/tenant-late-fee-cap", axum::routing::post(tenant_late_fee_cap_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -5807,6 +5812,35 @@ async fn tenant_in_foreclosure_protection_route(
         ));
     }
     Ok(Json(check_tenant_foreclosure_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_late_fee_cap: multi-jurisdictional residential tenant late fee
+// cap framework — Cal. Civ. Code § 1671(d) + Orozco v. Casimiro, 121
+// Cal.App.4th Supp. 7 (2004) (liquidated damages 2-prong reasonableness
+// test; 5-6% threshold; void in toto on failure); N.Y. Real Prop. Law
+// § 238-a (HSTPA of 2019) (LESSER of $50 OR 5% statutory hard cap; 5-day
+// mandatory grace period; no eviction solely for late fees); Fla. Stat.
+// § 83.808 (manufactured home park reasonable cap; common $20 or 20%
+// floor) and Chapter 83 Part II (no statutory cap; court reasonableness);
+// Tex. Prop. Code § 92.019 (12% safe harbor for ≤ 4 units / 10% for > 4
+// units; 2-day mandatory grace; TREBLE damages + $100 + attorney fees
+// for violation); Default common-law liquidated damages under
+// Restatement (Second) of Contracts § 356. Mounted at POST /api/rental/
+// tenant-late-fee-cap. Trader-landlord critical because late-fee over-
+// collection is one of the most common landlord mistakes — each over-cap
+// charge can trigger statutory damages plus attorney fees. Sibling
+// cluster: rental_security_deposit_interest,
+// landlord_self_help_eviction_prohibition,
+// landlord_retaliation_damages, rental_junk_fee_transparency.
+// ---------------------------------------------------------------------------
+
+async fn tenant_late_fee_cap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantLateFeeCapInput>,
+) -> Result<Json<TenantLateFeeCapResult>, ApiError> {
+    Ok(Json(check_tenant_late_fee_cap(&b)))
 }
 
 // ---------------------------------------------------------------------------
