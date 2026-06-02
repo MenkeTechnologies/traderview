@@ -120,6 +120,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7434",          post(section_7434_route))
         .route("/calc/section-7463",          post(section_7463_route))
         .route("/calc/section-7491",          post(section_7491_route))
+        .route("/calc/section-162a",          post(section_162a_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-162m",          post(section_162m_route))
         .route("/calc/section-7502",          post(section_7502_route))
@@ -4387,6 +4388,32 @@ async fn section_7433_route(
 // harassment-NDA restriction. TCJA § 13306 grandfathers pre-December
 // 22, 2017 binding orders. Trader-relevant for FINRA / SEC / CFTC /
 // exchange disciplinary fines.
+
+// ── § 162(a) Trade or Business Expenses (FOUNDATIONAL) ───────────────
+// Mounted at /api/calc/section-162a. Pure compute; FOUNDATIONAL
+// deduction provision; Welch v. Helvering, 290 U.S. 111 (1933)
+// four-element test (ordinary + necessary + carrying on trade or
+// business + not capital expenditure); § 162(a)(1) reasonable
+// compensation (subject to § 162(m) iter 446 $1M cap + § 280G
+// iter 444 golden parachute); § 162(a)(2) traveling expenses
+// (subject to § 274 iter 454 specific limits — meals 50% + entertainment
+// disallowed + $25 gift cap + foreign convention reasonableness +
+// luxury water travel cap); § 162(a)(3) rentals/other payments;
+// § 162(c) illegal payment exceptions; § 162(e) lobbying; § 162(f)
+// fines and penalties; INDOPCO 503 U.S. 79 (1992) § 263 long-term-
+// benefit capitalization; Higgins 312 U.S. 212 (1941) investor
+// vs trade or business; § 475(f) iter 458 trader mark-to-market
+// election converts to trade or business; § 280E cannabis
+// trafficking complete disallowance; § 183 hobby loss profit
+// motive (3-of-5 year presumption + 9-factor Treas. Reg.
+// § 1.183-2(b) test).
+
+async fn section_162a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_162a::Section162aInput>,
+) -> Result<Json<traderview_expense::section_162a::Section162aResult>, ApiError> {
+    Ok(Json(traderview_expense::section_162a::check(&b)))
+}
 
 async fn section_162f_route(
     _u: AuthUser,
