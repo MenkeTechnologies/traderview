@@ -107,6 +107,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
+        .route("/calc/section-7508a",         post(section_7508a_route))
         .route("/calc/section-7521",          post(section_7521_route))
         .route("/calc/section-7525",          post(section_7525_route))
         .route("/calc/section-7811",          post(section_7811_route))
@@ -2891,6 +2892,35 @@ async fn section_7502_route(
     Json(b): Json<traderview_expense::section_7502::Section7502Input>,
 ) -> Result<Json<traderview_expense::section_7502::Section7502Result>, ApiError> {
     Ok(Json(traderview_expense::section_7502::compute(&b)))
+}
+
+// ── §7508A presidentially-declared disaster deadline postponement ───
+// Mounted at /api/calc/section-7508a. § 7508A(a) Secretary's
+// discretionary postponement (up to ONE YEAR / 365 days) for taxpayers
+// affected by federally declared disaster (Stafford Act / 42 USC §
+// 5121 et seq.) or significant fire. § 7508A(b) terroristic or
+// military action postponement. § 7508A(c) special rules for pensions
+// + retirement plan loan repayments. § 7508A(d) MANDATORY 60-day
+// postponement period for federally declared disasters with specified
+// incident date declared after December 20, 2019 (Taxpayer Certainty
+// and Disaster Tax Relief Act of 2019, Pub. L. 116-94 Div. Q § 205);
+// runs CONCURRENTLY with Secretary's discretionary postponement if
+// Secretary period ≥ 60 days. Disaster area defined under § 1033(h)
+// (3) = area eligible for federal assistance under Stafford Act.
+// Postponed acts include filing returns + paying tax + filing amended
+// returns + Tax Court petitions + § 6511 refund claims + § 6212 SNOD
+// responses + § 6213 deficiency challenges. Trader-relevant for any
+// trader in federally-declared disaster area (CA wildfires + FL
+// hurricanes + TX flooding + tornado disasters) needing to extend
+// filing/payment/refund-claim deadlines. Procedural-companion to §
+// 7421 + § 7426 + § 7433 + § 7430 + § 6212 + § 6213 + § 6511. 26 CFR
+// § 301.7508A-1.
+
+async fn section_7508a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7508a::Section7508AInput>,
+) -> Result<Json<traderview_expense::section_7508a::Section7508AResult>, ApiError> {
+    Ok(Json(traderview_expense::section_7508a::check(&b)))
 }
 
 // ── §7811 Taxpayer Assistance Orders (TAOs) ─────────────────────────
