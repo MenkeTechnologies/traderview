@@ -222,6 +222,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-401k",          post(section_401k_route))
         .route("/calc/section-415",           post(section_415_route))
         .route("/calc/section-408a",          post(section_408a_route))
+        .route("/calc/section-421",           post(section_421_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
         .route("/calc/section-4940",          post(section_4940_route))
@@ -822,6 +823,38 @@ async fn section_422_route(
     Json(b): Json<traderview_expense::section_422::Section422Input>,
 ) -> Result<Json<traderview_expense::section_422::Section422Result>, ApiError> {
     Ok(Json(traderview_expense::section_422::check(&b)))
+}
+
+// ── § 421 General rules for statutory stock options ──────────────────
+// Mounted at /api/calc/section-421. Pure compute; § 421(a) general
+// rule — no income at grant or exercise of statutory option (§ 422
+// ISO or § 423 ESPP) for regular income tax purposes + no § 162
+// deduction to employer + only option price considered as received
+// by corporation. § 421(b) disqualifying disposition — increase in
+// FMV over option price at time of exercise treated as compensation
+// (ordinary income) in year of disposition; § 162 deduction allowed
+// to employer; additional gain treated as capital gain per § 1222
+// holding period from exercise date. ISO qualifying-disposition
+// holding requirements per § 422(a)(1): no disposition within 2
+// years from grant date AND no disposition within 1 year from
+// transfer (exercise) date; ESPP similar requirements per § 423(a)(1).
+// Employment requirement per § 422(a)(2): individual must be employee
+// of granting corporation (or related corp under § 424(e)/(f)) at all
+// times from grant date through 3 months before exercise (death or
+// disability extends). AMT preference per § 56(b)(3) on exercise
+// spread creates 'phantom income' for trader-employees. Information
+// reporting per § 6039 + Form 3921 (ISO) + Form 3922 (ESPP).
+// Coordination with § 1042 (iter 480): ISO-exercised shares NOT
+// 'qualified securities' for ESOP rollover. Coordination with § 83:
+// § 421 OVERRIDES § 83 for qualifying ISO/ESPP exercises. Original
+// framework Tax Reform Act of 1976 + Economic Recovery Tax Act of
+// 1981 + American Jobs Creation Act of 2004.
+
+async fn section_421_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_421::Section421Input>,
+) -> Result<Json<traderview_expense::section_421::Section421Result>, ApiError> {
+    Ok(Json(traderview_expense::section_421::check(&b)))
 }
 
 // ── § 423 Employee Stock Purchase Plans (ESPPs) ──────────────────────
