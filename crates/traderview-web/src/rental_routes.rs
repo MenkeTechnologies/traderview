@@ -80,6 +80,9 @@ use traderview_expense::broker_fee_allocation::{
 use traderview_expense::application_fees::{
     check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
 };
+use traderview_expense::balcony_inspection::{
+    check as check_balcony_inspection, BalconyInspectionInput, BalconyInspectionResult,
+};
 use traderview_expense::bedbug_disclosure::{
     check as check_bedbug_disclosure, BedbugCheckInput, BedbugCheckResult,
 };
@@ -684,6 +687,7 @@ pub fn router() -> Router<AppState> {
         .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
         .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
         .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
+        .route("/balcony-inspection", axum::routing::post(balcony_inspection_route))
         .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
         .route("/radon-disclosure-check", axum::routing::post(radon_disclosure_check_route))
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
@@ -6205,6 +6209,34 @@ async fn bedbug_disclosure_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_bedbug_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// balcony_inspection: California SB 721 (multifamily rental Cal. Health
+// & Safety Code § 17973) + SB 326 (Davis-Stirling condos Cal. Civ.
+// Code § 5551) Exterior Elevated Elements (EEE) inspection compliance.
+// Mounted at POST /api/rental/balcony-inspection. Three regimes:
+// CaliforniaSb721 (3+ unit multifamily rental; first inspection
+// Jan 1 2026 per AB 2579 extension from Jan 1 2025; recurring every
+// 6 years; qualified inspector = licensed architect / civil or
+// structural engineer / contractor A/B/C-5 + 5 years exp / certified
+// building inspector; NOT local gov employee NOT entity performing
+// repairs; min 15% of each EEE type direct visual + exploratory
+// openings; 120-day repair deadline); CaliforniaSb326 (Davis-Stirling
+// condos; first inspection Jan 1 2025; recurring every 9 years;
+// qualified inspector LIMITED to licensed architect or licensed
+// civil/structural engineer — NO contractors); Default (no statutory
+// regime; common-law premises-liability duty + local ordinances).
+// Trader-landlord critical for multi-unit owners with EEE elements
+// elevated 6+ feet above ground.
+// ---------------------------------------------------------------------------
+
+async fn balcony_inspection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<BalconyInspectionInput>,
+) -> Result<Json<BalconyInspectionResult>, ApiError> {
+    Ok(Json(check_balcony_inspection(&b)))
 }
 
 // ---------------------------------------------------------------------------
