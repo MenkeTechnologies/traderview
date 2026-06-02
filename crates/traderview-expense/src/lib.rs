@@ -216,6 +216,7 @@ pub mod tenant_domestic_violence_lease_termination;
 pub mod tenant_ev_charging_installation_right;
 pub mod tenant_fire_safety_plan_disclosure;
 pub mod tenant_death_termination;
+pub mod tenant_noise_nuisance_enforcement;
 pub mod tenant_organizing;
 pub mod tenant_positive_rent_reporting;
 pub mod tenant_solar_installation;

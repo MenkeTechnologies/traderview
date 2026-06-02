@@ -673,6 +673,10 @@ use traderview_expense::lease_nondisparagement_prohibition::{
     CheckResult as LeaseNondisparagementResult,
     Input as LeaseNondisparagementInput,
 };
+use traderview_expense::tenant_noise_nuisance_enforcement::{
+    check as check_tenant_noise_nuisance_enforcement,
+    TenantNoiseNuisanceEnforcementInput, TenantNoiseNuisanceEnforcementResult,
+};
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
@@ -914,6 +918,7 @@ pub fn router() -> Router<AppState> {
         .route("/late-payment-grace-period-check", axum::routing::post(late_payment_grace_period_check_route))
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
+        .route("/tenant-noise-nuisance-enforcement", axum::routing::post(tenant_noise_nuisance_enforcement_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/tenant-positive-rent-reporting", axum::routing::post(tenant_positive_rent_reporting_route))
         .route("/tenant-rent-escrow-withholding", axum::routing::post(tenant_rent_escrow_withholding_route))
@@ -3907,6 +3912,38 @@ async fn lease_copy_delivery_check_route(
 // 180-day protected window); NoStatewideTenantOrganizingProtection
 // (46 other states; general anti-retaliation may apply).
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// tenant_noise_nuisance_enforcement: multi-jurisdictional tenant noise
+// nuisance enforcement framework — Cal. Civ. Code § 1941.4 + Andrews v.
+// Mobile Aire Estates, 125 Cal. App. 4th 578 (2005) (covenant of quiet
+// enjoyment IMPLIED in every lease); NYC Admin. Code § 24-218 (no
+// unreasonable noise; nighttime 10pm-7am 7 dB(A) above ambient; daytime
+// 10 dB(A); residential apartment-to-apartment amplified-audible
+// violation at ANY HOUR; DEP + NYPD enforcement; 311 complaint pathway);
+// Chicago Municipal Code § 8-32 (quiet hours 10pm-8am weekdays /
+// 10pm-10am weekends; 75-feet-audible presumptive violation; amplified
+// music 9pm-8am prohibited); Mass. G.L. c. 186 § 14 (willful interference
+// CRIMINAL + TREBLE DAMAGES + attorney fees + Berman & Sons v. Jefferson
+// 379 Mass. 196 (1979) constructive eviction); Default common-law
+// nuisance + implied covenant of quiet enjoyment. Mounted at POST /api/
+// rental/tenant-noise-nuisance-enforcement. Trader-landlord critical
+// because noise complaints among most common multifamily grievances;
+// landlord has DUTY TO ABATE known noise nuisances; failure exposes
+// landlord to rent abatement + warranty of habitability claim + lease
+// termination + constructive eviction + damages. Sibling cluster:
+// landlord_self_help_eviction_prohibition, tenant_rent_escrow_
+// withholding, landlord_emergency_entry_notice, rental_window_guard_
+// installation.
+// ---------------------------------------------------------------------------
+
+async fn tenant_noise_nuisance_enforcement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantNoiseNuisanceEnforcementInput>,
+) -> Result<Json<TenantNoiseNuisanceEnforcementResult>, ApiError> {
+    Ok(Json(check_tenant_noise_nuisance_enforcement(&b)))
+}
 
 async fn tenant_organizing_check_route(
     _s: State<AppState>,
