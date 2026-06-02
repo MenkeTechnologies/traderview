@@ -180,6 +180,10 @@ use traderview_expense::adverse_action_notice::{
 use traderview_expense::adverse_possession_claim::{
     check as check_adverse_possession, AdversePossessionInput, AdversePossessionResult,
 };
+use traderview_expense::tenant_rent_escrow_withholding::{
+    check as check_tenant_rent_escrow_withholding,
+    TenantRentEscrowWithholdingInput, TenantRentEscrowWithholdingResult,
+};
 use traderview_expense::tenant_rent_judgment_wage_garnishment::{
     compute as compute_wage_garnishment, GarnishmentInput, GarnishmentResult,
 };
@@ -912,6 +916,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
         .route("/tenant-positive-rent-reporting", axum::routing::post(tenant_positive_rent_reporting_route))
+        .route("/tenant-rent-escrow-withholding", axum::routing::post(tenant_rent_escrow_withholding_route))
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-rent-receipt-requirement", axum::routing::post(tenant_rent_receipt_requirement_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
@@ -4075,6 +4080,38 @@ async fn tenant_rent_judgment_wage_garnishment_route(
         ));
     }
     Ok(Json(compute_wage_garnishment(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_rent_escrow_withholding: multi-jurisdictional tenant rent escrow
+// / rent withholding for habitability violations framework — Cal. Civ.
+// Code § 1942 + § 1942.4 (repair-and-deduct up to 1 month rent twice per
+// 12-month period + § 1942.4 statutory damages $100-$5,000 + attorney
+// fees + 35-day governmental notice trigger + violation-not-caused-by-
+// tenant prong); N.Y. Real Prop. Law § 235-b (implied warranty of
+// habitability + WAIVER VOID + rent abatement + repair-and-deduct + rent
+// withholding under RPAPL § 711 nonpayment defense; Park West Management
+// Corp. v. Mitchell, 47 N.Y.2d 316 (1979)); Mass. G.L. c. 239 § 8A +
+// 105 CMR 410 (rent withholding defense + LOCAL BOARD OF HEALTH report
+// + INTO ESCROW payment); Chicago RLTO § 5-12-110 (14-day cure + half-
+// month/$500 repair-and-deduct cap + lease termination option); Pugh v.
+// Holmes, 486 Pa. 272 (1979) (common-law implied warranty); Default —
+// common-law habitability framework. Mounted at POST /api/rental/
+// tenant-rent-escrow-withholding. Trader-landlord critical because
+// implied warranty of habitability is among the most powerful tenant
+// defenses — tenant can REDUCE OR WITHHOLD RENT without losing
+// possession; many state waivers VOID as contrary to public policy.
+// Sibling cluster: rental_carbon_monoxide_detector,
+// rental_basement_water_intrusion_disclosure,
+// rental_bedroom_egress_window, landlord_repair_response_timeframe.
+// ---------------------------------------------------------------------------
+
+async fn tenant_rent_escrow_withholding_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantRentEscrowWithholdingInput>,
+) -> Result<Json<TenantRentEscrowWithholdingResult>, ApiError> {
+    Ok(Json(check_tenant_rent_escrow_withholding(&b)))
 }
 
 // ---------------------------------------------------------------------------
