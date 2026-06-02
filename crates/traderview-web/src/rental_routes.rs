@@ -698,6 +698,10 @@ use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
 };
+use traderview_expense::rental_propane_tank_lease_disclosure::{
+    check as check_rental_propane_tank_lease_disclosure,
+    RentalPropaneTankLeaseDisclosureInput, RentalPropaneTankLeaseDisclosureResult,
+};
 use traderview_expense::rental_organic_waste_collection_disclosure::{
     check as check_rental_organic_waste_collection_disclosure,
     RentalOrganicWasteCollectionDisclosureInput, RentalOrganicWasteCollectionDisclosureResult,
@@ -1114,6 +1118,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
+        .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
@@ -8071,6 +8076,62 @@ async fn rental_pet_deposit_separate_security_route(
     Json(b): Json<RentalPetDepositSeparateSecurityInput>,
 ) -> Result<Json<RentalPetDepositSeparateSecurityResult>, ApiError> {
     Ok(Json(check_rental_pet_deposit_separate_security(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_propane_tank_lease_disclosure: Multi-jurisdictional rental
+// property propane (Liquefied Petroleum Gas / LP-Gas) tank disclosure
+// and compliance framework. When a landlord rents a property served
+// by a propane tank (either leased from supplier or owned outright),
+// what disclosure must be given to tenant, what NFPA 58 installation/
+// clearance/venting standards apply, and what failure-mode liabilities
+// expose landlord after a leak, fire, or carbon monoxide event?
+// Mounted at POST /api/rental/rental-propane-tank-lease-disclosure.
+// Three-jurisdiction framework: Massachusetts (MOST PRESCRIPTIVE —
+// 248 C.M.R. 8.00 amendments to NFPA 58 imposed by Mass. Board of
+// Fire Prevention Regulations + M.G.L. c. 148 § 9 gas-fitter
+// licensing + M.G.L. c. 142 § 1 plumbing/gas authority); New York
+// (19 NYCRR Department of State Uniform Code adopting NFPA 58 by
+// reference; NY courts hold property owners and service providers
+// responsible for personal injury + property damage + environmental
+// harm; insurance compliance condition of coverage); Default (NFPA
+// 58 Liquefied Petroleum Gas Code 2024 edition + DOT 49 C.F.R. Part
+// 173 transport + 49 C.F.R. Part 192 pipeline integrity + 13 VAC
+// 5-52-580 IFC Chapter 61 LP gases + common-law habitability per
+// Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) + Green v. Superior
+// Court, 10 Cal. 3d 616 (1974) + Cal. Civ. Code § 1941.1 implied
+// warranty). Two ownership models: LEASED TANK (most common
+// residential, tank owned by Suburban Propane/AmeriGas/Ferrellgas/
+// etc., customer pays lease fee plus fuel, supplier retains refill
+// access, customer may be LOCKED TO ORIGINAL SUPPLIER with tank
+// removal fees $500-$1500; supplier typically responsible for NFPA
+// 58 compliance + inspection); OWNED TANK (customer purchased
+// outright, full supplier-switching freedom, owner responsible for
+// NFPA 58 compliance + inspection + maintenance + 20-30 year
+// lifecycle). NFPA 58 (2024 edition) above-ground clearance: 0-125
+// gallon residential 0-foot building if ASME-spec + 10-foot ignition
+// source; 125-500 gallon 10-foot building + 25-foot property line;
+// 500-2000 gallon 10-foot building + 50-foot property line;
+// underground requires cathodic protection. Five universal failure-
+// mode liabilities: tank leak (fire/explosion + tort negligence +
+// emergency relocation); improper venting/back-draft (CO poisoning
+// cross-references rental_carbon_monoxide_detector); frost-heave
+// dislocation (corrosion + cathodic protection failure); tenant
+// refill obstruction; unauthorized supplier switch on leased tank
+// (contract breach + tank removal). Distinct from siblings
+// rental_gas_appliance_ban (electrification), rental_chimney_
+// fireplace_inspection_disclosure (iter 471), rental_carbon_monoxide_
+// detector, rental_fire_extinguisher_requirement (iter 473), rental_
+// underground_storage_tank_disclosure (UST/LUST petroleum),
+// mid_tenancy_temporary_relocation, tenant_emotional_distress_damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_propane_tank_lease_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPropaneTankLeaseDisclosureInput>,
+) -> Result<Json<RentalPropaneTankLeaseDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_propane_tank_lease_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

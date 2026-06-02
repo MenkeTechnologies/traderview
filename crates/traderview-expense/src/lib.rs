@@ -185,6 +185,7 @@ pub mod rental_lead_pipe_disclosure;
 pub mod rental_organic_waste_collection_disclosure;
 pub mod rental_pesticide_application_notification;
 pub mod rental_pet_deposit_separate_security;
+pub mod rental_propane_tank_lease_disclosure;
 pub mod rental_property_registration;
 pub mod rental_satellite_dish_installation_right;
 pub mod rental_security_deposit_interest;
