@@ -222,6 +222,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
+        .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
@@ -873,6 +874,43 @@ async fn section_4974_route(
     Json(b): Json<traderview_expense::section_4974::Section4974Input>,
 ) -> Result<Json<traderview_expense::section_4974::Section4974Result>, ApiError> {
     Ok(Json(traderview_expense::section_4974::check(&b)))
+}
+
+// ── § 4958 intermediate sanctions on excess benefit transactions ─────
+// Mounted at /api/calc/section-4958. Pure compute; § 4958(a)(1)
+// 25% excise tax on disqualified person who receives an excess
+// benefit from a transaction with an applicable tax-exempt
+// organization (ATEO); § 4958(b) additional 200% excise tax if
+// not corrected within taxable period; § 4958(a)(2) 10% excise
+// tax on knowing willful organization manager capped at $20K per
+// transaction under § 4958(d)(2); § 4958(e) ATEO = § 501(c)(3)
+// public charity (NOT private foundation — those use § 4941) +
+// § 501(c)(4) social welfare + § 501(c)(29) qualified nonprofit
+// health insurance issuer (added by ACA 2010) + 5-year look-back;
+// § 4958(f)(1) disqualified person = substantial influence at
+// any time during 5-year period including § 4958(f)(4) family +
+// § 4958(f)(3) 35%-controlled entity; § 4958(f)(5) taxable
+// period; § 4958(f)(6) correction via cash plus AFR interest;
+// Treas. Reg. § 53.4958-6 rebuttable presumption of
+// reasonableness three-prong safe harbor (advance approval by
+// independent body + comparability data + contemporaneous
+// documentation) shifts burden of proof to IRS; § 4961(b) 90-day
+// post-assessment abatement for tier-2 200% tax; § 4958(c)(1)(A)
+// excess benefit transaction = economic benefit exceeding
+// consideration received including excessive compensation +
+// bargain sale + above-market purchase + below-market loan +
+// below-market rental + personal expense + automatic excess
+// benefit per Treas. Reg. § 53.4958-4(c). Coordinate with § 4960
+// (iter 464) ATEO 21% remuneration tax, not duplicative; original
+// enactment Taxpayer Bill of Rights 2, Pub. L. 104-168 (July 30,
+// 1996); PPA 2006 extended to donor-advised funds + supporting
+// orgs.
+
+async fn section_4958_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4958::Section4958Input>,
+) -> Result<Json<traderview_expense::section_4958::Section4958Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4958::check(&b)))
 }
 
 // ── § 4960 excise tax on excess tax-exempt org executive comp ────────
