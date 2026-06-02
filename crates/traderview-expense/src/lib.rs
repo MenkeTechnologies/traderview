@@ -254,6 +254,7 @@ pub mod tenant_solar_installation;
 pub mod tenant_relocation_assistance;
 pub mod tenant_rights_statement_disclosure;
 pub mod tenant_smart_lock_biometric_consent;
+pub mod tenant_smart_thermostat_install_right;
 pub mod tenant_utility_account_designation;
 pub mod tenant_window_air_conditioner_install_right;
 pub mod tenant_rent_escrow_withholding;

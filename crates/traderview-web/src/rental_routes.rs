@@ -821,6 +821,10 @@ use traderview_expense::tenant_smart_lock_biometric_consent::{
     check as check_tenant_smart_lock_biometric_consent, TenantSmartLockBiometricInput,
     TenantSmartLockBiometricResult,
 };
+use traderview_expense::tenant_smart_thermostat_install_right::{
+    check as check_tenant_smart_thermostat_install_right,
+    TenantSmartThermostatInstallRightInput, TenantSmartThermostatInstallRightResult,
+};
 use traderview_expense::tenant_utility_account_designation::{
     check as check_tenant_utility_account_designation, TenantUtilityAccountInput,
     TenantUtilityAccountResult,
@@ -1061,6 +1065,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
+        .route("/tenant-smart-thermostat-install-right", axum::routing::post(tenant_smart_thermostat_install_right_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/tenant-window-air-conditioner-install-right", axum::routing::post(tenant_window_air_conditioner_install_right_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
@@ -10242,4 +10247,34 @@ async fn rental_solar_panel_disclosure_route(
     Json(b): Json<RentalSolarPanelDisclosureInput>,
 ) -> Result<Json<RentalSolarPanelDisclosureResult>, ApiError> {
     Ok(Json(check_rental_solar_panel_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_smart_thermostat_install_right (iter 497): Tenant right to install
+// Nest / Ecobee / Honeywell smart thermostat in rental unit; parallel to
+// tenant_solar_installation, tenant_ev_charging_installation_right,
+// tenant_clothesline_drying_right, tenant_window_air_conditioner_install_
+// right. Five-jurisdiction framework: CA (Cal. Civ. Code § 1947.6 + § 1942.1
+// + Title 24 eff. January 1, 2023 + SB 1136 pending), NY (NYC Local Law 97
+// Climate Mobilization Act signed April 18, 2019 / eff. 2024 carbon caps +
+// Real Property Law § 235-b + NYC Admin Code § 27-2029), MA (Mass Save
+// $100 rebate + 520 CMR 13.00 Stretch Code adopted by 299 municipalities
+// + M.G.L. ch. 186 § 14), Default (42 U.S.C. § 3604(f)(3)(B) FHA reasonable
+// modification + 24 C.F.R. § 100.203 + common-law habitability). Four
+// HVAC wiring types: 24V low-voltage with C-wire (compatible), 24V without
+// C-wire (needs adapter), 120V baseboard (line-voltage thermostat only —
+// Mysa / Sinopé), steam / hot-water radiator (smart TRV alternative).
+// Eight-mode severity ladder: NotApplicable, InstallationPermittedRoutine,
+// WiringIncompatibilityRefusalPermitted, HvacWarrantyVoidRefusalPermitted,
+// HistoricDistrictRestrictionApplies, AdaFhaReasonableAccommodationRequired
+// (100% rent at risk), EnergyEfficiencyRebateEligibleApprovalLikely,
+// LandlordRefusalUnreasonableHabitabilityBreach (50% rent at risk).
+// ---------------------------------------------------------------------------
+
+async fn tenant_smart_thermostat_install_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantSmartThermostatInstallRightInput>,
+) -> Result<Json<TenantSmartThermostatInstallRightResult>, ApiError> {
+    Ok(Json(check_tenant_smart_thermostat_install_right(&b)))
 }
