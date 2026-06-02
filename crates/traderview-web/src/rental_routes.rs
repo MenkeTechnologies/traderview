@@ -552,6 +552,10 @@ use traderview_expense::rental_sex_offender_registry_notice::{
     check as check_rental_sex_offender_registry_notice,
     RentalSexOffenderRegistryNoticeInput, RentalSexOffenderRegistryNoticeResult,
 };
+use traderview_expense::rental_sinkhole_disclosure::{
+    check as check_rental_sinkhole_disclosure, RentalSinkholeDisclosureInput,
+    RentalSinkholeDisclosureResult,
+};
 use traderview_expense::rental_swimming_pool_drain_safety::{
     check as check_rental_swimming_pool_drain_safety,
     RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
@@ -934,6 +938,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
+        .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -6485,6 +6490,35 @@ async fn rental_sex_offender_registry_notice_route(
     Json(b): Json<RentalSexOffenderRegistryNoticeInput>,
 ) -> Result<Json<RentalSexOffenderRegistryNoticeResult>, ApiError> {
     Ok(Json(check_rental_sex_offender_registry_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_sinkhole_disclosure: Rental property sinkhole disclosure
+// compliance — when a trader-landlord operating Florida (or other
+// karst-prone) rental property must disclose past sinkhole claims,
+// paid insurance proceeds, and known sinkhole conditions. Mounted at
+// POST /api/rental/rental-sinkhole-disclosure. Two regimes: Florida
+// FL Statute § 627.7073(1)(c) (seller of property with paid sinkhole
+// claim must disclose to buyer BEFORE CLOSING + whether full
+// proceeds used for repair) + § 627.707 (professional engineer or
+// geologist report and certification) + § 627.706 (sinkhole loss
+// definition) + § 689.25 (narrow disclosure exemptions for homicide/
+// suicide/HIV) + § 689.261 (Florida Property Tax Disclosure
+// Summary) + Johnson v. Davis 480 So. 2d 625 (Fla. 1985) common-
+// law material fact disclosure doctrine; Default common-law material
+// fact doctrine + PA Real Estate Seller Disclosure Law 68 Pa.C.S. §
+// 7301 + karst-prone state common-law warranty of habitability.
+// Distinct from siblings rental_underground_storage_tank_disclosure
+// (UST), rental_basement_water_intrusion_disclosure (water/mold),
+// flood_disclosure, radon_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn rental_sinkhole_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSinkholeDisclosureInput>,
+) -> Result<Json<RentalSinkholeDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_sinkhole_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
