@@ -262,6 +262,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-951a",          post(section_951a_route))
+        .route("/calc/section-956",           post(section_956_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
@@ -2898,6 +2899,35 @@ async fn section_951a_route(
     Json(b): Json<traderview_expense::section_951a::Section951aInput>,
 ) -> Result<Json<traderview_expense::section_951a::Section951aResult>, ApiError> {
     Ok(Json(traderview_expense::section_951a::check(&b)))
+}
+
+// ── § 956 Investment of CFC Earnings in United States Property ──────
+// Mounted at /api/calc/section-956 (iter 504). Pure compute. § 956
+// anti-deferral rule treats CFC investment in US property (tangible
+// property in US, domestic-corp stock, US-person obligations including
+// pledges + guarantees per Rev. Rul. 90-112 / Notice 88-108, US-source
+// intangible rights) as constructive distribution to US shareholders.
+// § 956(a) caps inclusion at CFC E&P. § 956(c)(2) statutory exceptions:
+// US bank deposits, export property, shipping property, insurance
+// reserves, certain securities, aircraft/vessels in international
+// commerce, related-US-person working capital. **§ 245A coordination
+// rule** (Treas. Reg. § 1.956-1(a)(2)-(4), effective for CFC tax years
+// beginning on or after July 22, 2019): CORPORATE US shareholder's §
+// 956 inclusion REDUCED by hypothetical-distribution offset to extent
+// § 245A 100% DRD would apply. Ordering: hypothetical distribution
+// attributable first to § 959(c)(2) PTEP then § 959(c)(3) non-PTEP
+// E&P. Non-corporate shareholders (individuals, RICs, REITs, S corps,
+// partnerships) DO NOT benefit absent § 962 election. Form 5471
+// Schedule I-1. Coordinates with § 951A (GILTI/NCTI residual), § 245A
+// (DRD hypothetical basis), § 1297 (PFIC mutually exclusive), § 959
+// (PTEP ordering), § 962 (election for individual shareholder), § 59A
+// (BEAT separate regime).
+
+async fn section_956_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_956::Section956Input>,
+) -> Result<Json<traderview_expense::section_956::Section956Result>, ApiError> {
+    Ok(Json(traderview_expense::section_956::check(&b)))
 }
 
 // ── §1058 securities loan non-recognition ─────────────────────────────
