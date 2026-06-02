@@ -218,6 +218,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-248",           post(section_248_route))
         .route("/calc/section-709",           post(section_709_route))
         .route("/calc/section-197",           post(section_197_route))
+        .route("/calc/section-199a",          post(section_199a_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
         .route("/calc/section-1091",          post(section_1091_route))
@@ -1088,6 +1089,31 @@ async fn section_197_route(
         ));
     }
     Ok(Json(traderview_expense::section_197::compute(&b)))
+}
+
+// ── §199A Qualified Business Income (QBI) deduction ─────────────────
+// Mounted at /api/calc/section-199a. § 199A(a) basic 20% deduction =
+// LESSER of (1) 20% × QBI (combined QBI amount) or (2) 20% × (Taxable
+// Income − Net Capital Gain). § 199A(b)(2) W-2 wage / UBIA phase-in
+// limitation applies when TI exceeds threshold: limits 20% × QBI to
+// GREATER of (a) 50% × W-2 wages or (b) 25% × W-2 wages + 2.5% ×
+// UBIA. § 199A(e)(2) 2026 thresholds: Single / HoH $201,750 phase-in
+// begin / $276,750 phase-out complete; MFJ / QSS $403,500 / $553,500.
+// § 199A(d)(2) SSTB phases out completely above upper threshold.
+// OBBBA 2025 (Pub. L. 119-21) made § 199A PERMANENT, expanded phase-
+// in window from $50K → $75K single / $100K → $150K joint, and added
+// $400 minimum deduction when QBI ≥ $1,000 + material participation.
+// Rev. Proc. 2019-38 — rental real estate safe harbor (250+ hours/yr
+// + separate books + contemporaneous records) treats rental as trade
+// or business for § 199A. Trader-critical for traders with § 475(f)
+// MTM election + trader-landlords with rental real estate qualifying
+// as trade or business. IRS Form 8995 / 8995-A.
+
+async fn section_199a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_199a::Section199AInput>,
+) -> Result<Json<traderview_expense::section_199a::Section199AResult>, ApiError> {
+    Ok(Json(traderview_expense::section_199a::check(&b)))
 }
 
 // ── §170(e) charitable contribution of appreciated property ─────────
