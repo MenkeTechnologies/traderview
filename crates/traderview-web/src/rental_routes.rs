@@ -435,6 +435,10 @@ use traderview_expense::landlord_emergency_entry_notice::{
     check as check_landlord_emergency_entry_notice, LandlordEmergencyEntryInput,
     LandlordEmergencyEntryResult,
 };
+use traderview_expense::landlord_mid_tenancy_rekeying::{
+    check as check_landlord_mid_tenancy_rekeying, LandlordMidTenancyRekeyingInput,
+    LandlordMidTenancyRekeyingResult,
+};
 use traderview_expense::landlord_harassment::{
     check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
     Input as LandlordHarassmentInput,
@@ -769,6 +773,7 @@ pub fn router() -> Router<AppState> {
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
+        .route("/landlord-mid-tenancy-rekeying", axum::routing::post(landlord_mid_tenancy_rekeying_route))
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
@@ -5361,6 +5366,31 @@ async fn landlord_emergency_entry_notice_route(
     Json(b): Json<LandlordEmergencyEntryInput>,
 ) -> Result<Json<LandlordEmergencyEntryResult>, ApiError> {
     Ok(Json(check_landlord_emergency_entry_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// landlord_mid_tenancy_rekeying: Mandatory landlord-paid mid-tenancy
+// rekeying obligations. Mounted at POST /api/rental/landlord-mid-tenancy-
+// rekeying. Three regimes: Texas Tex. Prop. Code §§ 92.156-92.158 (most
+// explicit framework — landlord MUST perform additional rekeying at
+// tenant's request unlimited times within 7-day reasonable window;
+// landlord pays for master-key changes and security upgrades; excludes
+// interior doors; § 92.164 + § 92.165 remedies = actual damages +
+// punitive + $500 civil penalty + one month's rent + court costs +
+// attorney fees); California Cal. Civ. Code §§ 1954 + 1941.3 (limited
+// framework; common-law reasonable-time obligation for tenant-requested
+// rekey + § 1941.3 security device maintenance at landlord's expense);
+// Default common-law quiet enjoyment + reasonable-time. Distinct from
+// `lock_change_between_tenancies` (between-tenancy), `dv_survivor_lock_
+// change` (DV-survivor), and `tenant_smart_lock_biometric_consent`.
+// ---------------------------------------------------------------------------
+
+async fn landlord_mid_tenancy_rekeying_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordMidTenancyRekeyingInput>,
+) -> Result<Json<LandlordMidTenancyRekeyingResult>, ApiError> {
+    Ok(Json(check_landlord_mid_tenancy_rekeying(&b)))
 }
 
 async fn landlord_harassment_route(
