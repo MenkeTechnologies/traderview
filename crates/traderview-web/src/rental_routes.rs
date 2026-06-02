@@ -576,6 +576,11 @@ use traderview_expense::landlord_possession_delivery::{
     CheckResult as LandlordPossessionDeliveryResult,
     Input as LandlordPossessionDeliveryInput,
 };
+use traderview_expense::landlord_post_eviction_tenant_property_storage_disposal::{
+    check as check_landlord_post_eviction_tenant_property_storage_disposal,
+    LandlordPostEvictionTenantPropertyStorageDisposalInput,
+    LandlordPostEvictionTenantPropertyStorageDisposalResult,
+};
 use traderview_expense::rental_application_denial_disclosure::{
     check as check_rental_application_denial_disclosure,
     RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
@@ -1102,6 +1107,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-mid-tenancy-rekeying", axum::routing::post(landlord_mid_tenancy_rekeying_route))
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
+        .route("/landlord-post-eviction-tenant-property-storage-disposal", axum::routing::post(landlord_post_eviction_tenant_property_storage_disposal_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
         .route("/rental-basement-water-intrusion-disclosure", axum::routing::post(rental_basement_water_intrusion_disclosure_route))
@@ -6973,6 +6979,56 @@ async fn landlord_possession_delivery_route(
         ));
     }
     Ok(Json(check_landlord_possession_delivery(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// landlord_post_eviction_tenant_property_storage_disposal: Multi-
+// jurisdictional landlord post-eviction tenant property storage and
+// disposal compliance framework. When a tenant vacates (voluntarily,
+// by eviction, or by abandonment) and leaves personal property in or
+// around the rental unit, what notice procedures, storage durations,
+// valuation thresholds, and disposal pathways apply, and what failure-
+// mode liabilities expose landlord to conversion + statutory damages?
+// Mounted at POST /api/rental/landlord-post-eviction-tenant-property-
+// storage-disposal. Four-jurisdiction framework: California (MOST
+// PROCEDURALLY DETAILED — Cal. Civ. Code §§ 1980-1991 'Disposition of
+// Personal Property Remaining on Premises at Termination of Tenancy':
+// § 1983 written notice with 15-day personal / 18-day mail response
+// window; § 1984 notice content requirements (description + location
+// + response deadline + reasonable storage cost); § 1985 $700
+// VALUATION THRESHOLD determining whether public sale required;
+// § 1988 storage cost reimbursement; § 1989 tenant right of
+// redemption upon payment + $250 minimum statutory damages plus
+// actual damages plus attorney fees); Texas (Tex. Prop. Code
+// § 92.0081 removal and exclusion of residential tenant + § 92.014
+// — written notice required + reasonable storage period + post-
+// storage sale or disposal procedure); New York (N.Y. RPAPL § 749(3)
+// sheriff/marshal supervised removal REQUIRED — landlord cannot
+// unilaterally remove tenant property; warrant of eviction
+// authorizes sheriff physical removal; N.Y. RPL § 235-b implied
+// warranty overlay; NYC Admin. Code § 26-521 unlawful eviction);
+// Default (common-law conversion liability + bailee ordinary-care
+// duty + tort negligence + implied warranty of habitability per
+// Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) + Cal. Civ. Code
+// § 1941.1). Five universal failure-mode liabilities: disposal
+// without notice (conversion + § 1989 $250 minimum); notice
+// deficient missing description/location/deadline; premature
+// disposal before statutory window expires; sale below FMV without
+// public-sale procedure on $700+ property; loss/damage during
+// storage (bailee liability). Distinct from siblings tenant_
+// abandonment (premises abandonment without eviction), landlord_
+// self_help_eviction_prohibition (illegal lockout/property hold),
+// squatter_unauthorized_occupant_removal (squatter scenario),
+// abandoned_property_handling (general framework), landlord_
+// retaliation_damages.
+// ---------------------------------------------------------------------------
+
+async fn landlord_post_eviction_tenant_property_storage_disposal_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordPostEvictionTenantPropertyStorageDisposalInput>,
+) -> Result<Json<LandlordPostEvictionTenantPropertyStorageDisposalResult>, ApiError> {
+    Ok(Json(check_landlord_post_eviction_tenant_property_storage_disposal(&b)))
 }
 
 // ---------------------------------------------------------------------------

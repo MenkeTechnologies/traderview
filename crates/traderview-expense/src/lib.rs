@@ -72,6 +72,7 @@ pub mod landlord_foreclosure_status_disclosure;
 pub mod landlord_harassment;
 pub mod landlord_identification_disclosure;
 pub mod landlord_possession_delivery;
+pub mod landlord_post_eviction_tenant_property_storage_disposal;
 pub mod landlord_property_sale_notice;
 pub mod landlord_repair_response_timeframe;
 pub mod landlord_retaliation_damages;
