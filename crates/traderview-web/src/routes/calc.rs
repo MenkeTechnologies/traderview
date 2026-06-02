@@ -260,6 +260,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-911",           post(section_911_route))
+        .route("/calc/section-951a",          post(section_951a_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
@@ -2865,6 +2866,37 @@ async fn section_911_route(
         ));
     }
     Ok(Json(traderview_expense::section_911::compute(&b)))
+}
+
+// ── § 951A GILTI / NCTI (Global Intangible Low-Taxed Income / Net CFC
+// Tested Income) ─────────────────────────────────────────────────────
+// Mounted at /api/calc/section-951a (iter 500 milestone). Pure compute.
+// TCJA 2017 Pub. L. 115-97 § 14201 enacted GILTI effective for foreign
+// corp taxable years beginning after December 31, 2017. OBBBA Pub. L.
+// 119-21 signed July 4, 2025 effective for tax years beginning after
+// December 31, 2025: (1) renames GILTI to Net CFC Tested Income (NCTI);
+// (2) REPEALS QBAI 10% deduction (full tested income inclusion); (3)
+// permanently sets § 250 deduction to 40% (was 50% pre-2026, scheduled
+// to 37.5%); (4) reduces § 960(d) FTC haircut from 20% to 10% (90%
+// FTCs allowed); (5) excludes interest + R&E expense from GILTI / NCTI
+// basket allocation per § 864(e) clarification. Pre-OBBBA effective
+// rate ~10.5%; post-OBBBA effective rate ~12.6% at 21% corporate rate.
+// Six-mode severity ladder: NotApplicable, NotUsShareholderNoInclusion,
+// NotACfcNoInclusion, Pre2026GiltiInclusionWithQbai, Post2026Ncti-
+// InclusionNoQbai, TestedLossNoCurrentInclusion. Coordinates with §
+// 250 (FDII / GILTI / NCTI deduction), § 59A (BEAT — separate base-
+// erosion regime), § 56A (CAMT — CFC income flows through AFSI), §
+// 988 (forex on CFC distributions), § 1297 (PFIC mutually exclusive),
+// § 911 (foreign earned income exclusion — individual regime), § 962
+// (election for individual / S-corp / partnership shareholder to be
+// taxed at corporate rate plus claim § 250 + § 960(d) FTC). Form 5471
+// + Form 8992 reporting.
+
+async fn section_951a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_951a::Section951aInput>,
+) -> Result<Json<traderview_expense::section_951a::Section951aResult>, ApiError> {
+    Ok(Json(traderview_expense::section_951a::check(&b)))
 }
 
 // ── §1058 securities loan non-recognition ─────────────────────────────
