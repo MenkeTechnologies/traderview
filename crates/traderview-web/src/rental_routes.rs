@@ -577,6 +577,10 @@ use traderview_expense::rental_organic_waste_collection_disclosure::{
     check as check_rental_organic_waste_collection_disclosure,
     RentalOrganicWasteCollectionDisclosureInput, RentalOrganicWasteCollectionDisclosureResult,
 };
+use traderview_expense::rental_lead_pipe_disclosure::{
+    check as check_rental_lead_pipe_disclosure, RentalLeadPipeDisclosureInput,
+    RentalLeadPipeDisclosureResult,
+};
 use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
@@ -933,6 +937,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
+        .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
@@ -6655,6 +6660,35 @@ async fn rental_pet_deposit_separate_security_route(
     Json(b): Json<RentalPetDepositSeparateSecurityInput>,
 ) -> Result<Json<RentalPetDepositSeparateSecurityResult>, ApiError> {
     Ok(Json(check_rental_pet_deposit_separate_security(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_lead_pipe_disclosure: Rental property lead service line /
+// lead pipe disclosure compliance — when a trader-landlord operating
+// a property served by a water service line containing lead must
+// notify tenants of lead service line presence and replacement plans
+// under EPA Lead and Copper Rule Revisions (LCRR, eff. October 16,
+// 2024) and Lead and Copper Rule Improvements (LCRI, eff. November
+// 1, 2027). Mounted at POST /api/rental/rental-lead-pipe-disclosure.
+// Three regimes: Federal 40 CFR Part 141 Subpart I + Safe Drinking
+// Water Act 42 USC § 300f et seq. (LCRR service line inventory + 24-
+// hour Tier 1 public notification + LCRI 10 ppb action level + 2037
+// replacement mandate); Illinois 415 ILCS 5/17.12 + IL EPA Act § 42
+// (30-day tenant notice + $50,000 penalty cap); New Jersey N.J.S.A.
+// 58:12A-40 et seq. P.L. 2021 c.183 + N.J.S.A. 58:10A-10 (pre-lease
+// disclosure + $50K per day penalty + 2031 replacement deadline).
+// Distinct from siblings rental_underground_storage_tank_disclosure
+// (UST), rental_basement_water_intrusion_disclosure (water/mold),
+// rental_sinkhole_disclosure, federal § 4852d lead-based paint
+// disclosure (paint not pipes).
+// ---------------------------------------------------------------------------
+
+async fn rental_lead_pipe_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalLeadPipeDisclosureInput>,
+) -> Result<Json<RentalLeadPipeDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_lead_pipe_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
