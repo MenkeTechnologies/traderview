@@ -162,6 +162,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1298",          post(section_1298_route))
         .route("/calc/section-6020",          post(section_6020_route))
         .route("/calc/section-6038a",         post(section_6038a_route))
+        .route("/calc/section-6038b",         post(section_6038b_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
@@ -4926,6 +4927,42 @@ async fn section_6038a_route(
         ));
     }
     Ok(Json(traderview_expense::section_6038a::check(&b)))
+}
+
+// ── §6038B Form 926 / Form 8865 transfer to foreign corp + partnership ─
+// Mounted at /api/calc/section-6038b. § 6038B(a)(1)(A) Form 926
+// transfers to foreign corp (§ 332/§ 351/§ 354/§ 355/§ 356/§ 361
+// exchanges); § 6038B(a)(1)(B) Form 8865 § 721 contribution to
+// foreign partnership. § 6038B(b)(1) BASE PENALTY = 10% of FMV at
+// time of transfer; § 6038B(b)(1)(A) CAPPED at $100,000;
+// § 6038B(b)(1)(B) INTENTIONAL DISREGARD removes cap. § 6038B(b)(2)
+// failure forces § 367 gain recognition AS IF property sold at FMV
+// (in addition to monetary penalty). § 6038B(c) reasonable cause
+// defense under Treas. Reg. § 1.6038B-1(f)(3) / § 1.6038B-2(j)(3).
+// § 367(d) intangibles trigger DEEMED-SALE treatment requiring
+// annual commensurate-with-income inclusion. § 721(c) gain-deferral
+// method under Treas. Reg. § 1.721(c)-3 available for related-party
+// foreign partnership transfers (multi-year reporting + remedial
+// allocations). § 6501(c)(8) — § 6501 assessment SOL OPEN
+// INDEFINITELY on non-filing. Trader-critical for cryptocurrency
+// transfers to foreign exchanges/wallets (Notice 2014-21 property
+// classification), intangible asset transfers (trading algorithms,
+// proprietary models, IP), § 351 contributions to foreign-
+// incorporated trading entities, § 721 contributions to foreign
+// partnership trading vehicles, and master/feeder/parallel fund
+// structures. Sibling cluster: § 6038A + § 6038D + § 367 + § 721 +
+// § 721(c) + § 6501(c)(8).
+
+async fn section_6038b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6038b::Section6038bInput>,
+) -> Result<Json<traderview_expense::section_6038b::Section6038bResult>, ApiError> {
+    if b.ownership_pct_after_transfer_bps > 10_000 {
+        return Err(ApiError::BadRequest(
+            "ownership_pct_after_transfer_bps must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6038b::check(&b)))
 }
 
 async fn section_6038d_route(

@@ -4941,6 +4941,55 @@ Pinned by `us_corp_failure_to_file_base_penalty_25k`, `us_corp_failure_to_mainta
 
 Mounted at `POST /api/calc/section-6038a`. Thirty-three tests pin: **US corp 30% foreign-owned subject to section**; **US corp 24.99% does not meet threshold**; **US corp exactly 25% meets threshold** (2500 bps exact boundary); **US corp failure to file base penalty $25K**; **US corp failure to maintain records triggers penalty**; **US corp continuation penalty 1 30-day period = $25K** (day 120); **US corp continuation penalty 3 30-day periods = $75K** (day 180); **US corp continuation penalty fraction counts as full period** (day 91 = $25K); **US corp no continuation at 90-day boundary exactly** ($0 continuation precision); **reasonable cause zeros base and continuation penalty**; **foreign-owned single-member LLC post-2017 subject**; **foreign-owned single-member LLC pre-2017 NOT subject**; **foreign-owned single-member LLC 2017 boundary subject**; **foreign-owned DRE requires filing even without reportable transactions**; **foreign corp engaged in US business subject to section**; **not-subject entity type no obligation**; **§ 6501(c)(8) SOL tolled on non-filing**; **§ 6501(c)(8) SOL not tolled when form filed**; **citation pins all authorities** (§ 6038A(a)-(e) + § 6501(c)(8) + Treas. Reg. § 1.6038A-1 to -7 + T.D. 9796 + Form 5472 + IRM 8.11.5 + IRM 20.1.9); **note pins subsection (a) filing requirement**; **note pins subsection (c)(1) 25% definition**; **note pins DRE carveout 2017 T.D. 9796**; **note pins subsection (c)(2) reportable transactions**; **note pins subsection (d)(1) $25K base penalty**; **note pins subsection (d)(2) continuation uncapped**; **note pins subsection (d)(3) reasonable cause**; **note pins records retention (b)(1)(C)**; **note pins § 6501(c)(8) SOL tolling**; **note pins Form 1120 pro-forma attachment**; **entity type truth table four cells**; **ownership threshold truth table** (6-cell sweep 0/2499/2500/2501/5000/10000 bps); **defensive overflow clamped with saturating mul**; **multiple failure reasons stack**.
 
+`traderview-expense::section_6038b` is the **IRC § 6038B Form 926 / Form 8865 transfer to foreign corporation + foreign partnership reporting module**. Direct sibling to `section_6038a` (Form 5472 25%-foreign-owned domestic corp / DRE), `section_6038d` (Form 8938 individual FATCA), `section_367` (transfers to foreign corp gain recognition), `section_721` (partnership contribution non-recognition), `section_6501` (assessment SOL — § 6038B non-filing TOLLS § 6501(c)(8) indefinitely).
+
+Trader-critical fact patterns:
+
+- **Cryptocurrency transfers to foreign exchanges or foreign-incorporated wallet entities** — treated as property under Notice 2014-21; § 6038B reporting triggered.
+- **Intangible asset transfers** — trading algorithms, proprietary models, software, copyrights, patents, brand IP transferred to foreign corp → § 367(d) DEEMED-SALE treatment with annual commensurate-with-income inclusion.
+- **§ 351 contribution to foreign-incorporated trading entity** — initial capitalization of offshore trading structure with appreciated securities, real estate, or intangible assets.
+- **§ 721 contribution to foreign partnership trading vehicle** — fund-of-funds, master/feeder, parallel structures with foreign GP/LP.
+- **§ 721(c) related-party gain-deferral method** — Treas. Reg. § 1.721(c)-3 multi-year reporting + remedial allocations to avoid immediate gain recognition.
+
+**§ 6038B(a) Two-prong reporting requirement**:
+
+| Subsection | Transfer | Form | Triggering exchanges |
+|-------------|----------|------|----------------------|
+| § 6038B(a)(1)(A) | To foreign corporation | Form 926 | § 332, § 351, § 354, § 355, § 356, § 361 |
+| § 6038B(a)(1)(B) | To foreign partnership | Form 8865 | § 721 contributions |
+
+Pinned by `foreign_corp_filed_no_penalty` (Form 926 baseline compliant), `foreign_partnership_above_100k_aggregate_reporting_required` (Form 8865 trigger).
+
+**§ 6038B(b) Penalty framework — 10% of FMV with intentional-disregard uncap**:
+
+| Subsection | Trigger | Penalty |
+|-------------|---------|---------|
+| § 6038B(b)(1) | Failure to file Form 926 / Form 8865 | **10% of FMV at time of exchange/transfer** |
+| § 6038B(b)(1)(A) | Standard cap | **$100,000** |
+| § 6038B(b)(1)(B) | **INTENTIONAL DISREGARD** | **NO CAP — full 10% of FMV** |
+| § 6038B(b)(2) | Failure to comply | **Forced § 367 gain recognition AS IF property sold at FMV** (in addition to monetary penalty) |
+| § 6038B(c) | Reasonable cause + NOT willful neglect | Penalty abatement under Treas. Reg. § 1.6038B-1(f)(3) / § 1.6038B-2(j)(3) |
+
+Pinned by `foreign_corp_failed_to_file_10_percent_penalty_capped` (10% of $500K = $50K), `foreign_corp_failed_to_file_above_100k_cap_clamped` ($500M FMV → $50M raw 10% clamped at $100K cap), `foreign_corp_intentional_disregard_uncapped` ($500M FMV + intentional disregard → $50M full penalty), `foreign_corp_reasonable_cause_zeros_penalty`, `intentional_disregard_uniquely_uncaps_penalty_invariant` (10x penalty differential), `foreign_corp_gain_recognition_forced_on_failure` (FMV $500K - basis $100K = $400K forced gain on top of monetary penalty).
+
+**§ 367(d) Intangible deemed-sale treatment** — only intangible-property transfers to foreign corp engage § 367(d) DEEMED-SALE treatment requiring annual commensurate-with-income inclusion under § 367(d)(2). Pinned by `foreign_corp_intangible_engages_section_367d` and `intangible_uniquely_engages_367d_deemed_sale_invariant` (intangible engages; tangible/cash/securities/cryptocurrency do not).
+
+**Treas. Reg. § 1.6038B-2(c) Form 8865 reporting threshold matrix**:
+
+| Aggregate 12-month contribution | Ownership immediately after | Reporting required |
+|---------------------------------|-----------------------------|---------------------|
+| ≤ $100,000 | < 10% | NO |
+| > $100,000 | Any | YES |
+| Any | ≥ 10% | YES |
+
+Pinned by `foreign_partnership_under_100k_no_ownership_no_reporting`, `foreign_partnership_above_100k_aggregate_reporting_required`, `foreign_partnership_10_percent_ownership_triggers_reporting`, `foreign_partnership_exactly_100k_boundary` ($100K exact = no obligation; $100K + 1 cent = obligation).
+
+**Notice 2014-21 Cryptocurrency classification** — cryptocurrency classified as PROPERTY for federal tax purposes; transfers to foreign exchanges OR foreign-incorporated wallet entities trigger § 6038B reporting. Pinned by `foreign_corp_cryptocurrency_engages_reporting`.
+
+**§ 6501(c)(8) SOL tolling — same as § 6038A** — § 6501 assessment SOL does NOT start running until required § 6038B information is filed; non-filing keeps § 6501 ASED OPEN INDEFINITELY for the entire tax year. Pinned by `section_6501_c8_sol_tolled_on_non_filing` and `section_6501_c8_sol_not_tolled_when_filed`.
+
+Mounted at `POST /api/calc/section-6038b`. Thirty-five tests pin: **foreign corp filed no penalty**; **foreign corp failed to file 10% penalty capped** ($50K of $500K FMV); **foreign corp failed to file above $100K cap clamped** ($500M FMV → $100K); **foreign corp intentional disregard uncapped** ($500M FMV + intentional disregard → $50M); **foreign corp reasonable cause zeros penalty**; **foreign corp gain recognition forced on failure** ($400K = $500K FMV - $100K basis); **foreign corp intangible engages § 367(d)**; **foreign corp cash-only under $100K no obligation** (safe harbor); **foreign corp cash-only above $100K reporting required**; **foreign corp cryptocurrency engages reporting**; **foreign partnership above $100K aggregate reporting required**; **foreign partnership under $100K + < 10% no reporting**; **foreign partnership 10% ownership triggers reporting**; **foreign partnership exactly $100K boundary** ($100K = no; $100,001 = yes); **not-reportable transfer no obligation**; **§ 6501(c)(8) SOL tolled on non-filing**; **§ 6501(c)(8) SOL not tolled when filed**; **citation pins all authorities** (§ 6038B(a)-(c) + § 6501(c)(8) + § 367(a)/(d) + § 721/§ 721(c) + Treas. Reg. § 1.6038B-1/-2 + § 1.721(c)-3 + Form 926 + Form 8865 + Notice 2014-21 + IRM 8.11.5 + IRM 20.1.9); **note pins subsection (a)(1)(A) foreign corp Form 926**; **note pins subsection (a)(1)(B) foreign partnership Form 8865**; **note pins subsection (b)(1) 10% FMV penalty**; **note pins subsection (b)(1)(A) $100K cap**; **note pins subsection (b)(1)(B) intentional disregard uncapped**; **note pins subsection (b)(2) gain recognition forced**; **note pins subsection (c) reasonable cause**; **note pins § 367(d) intangible deemed sale**; **note pins Form 8865 $100K or 10% threshold**; **note pins § 721(c) gain-deferral method**; **note pins § 6501(c)(8) SOL tolling**; **note pins Notice 2014-21 cryptocurrency**; **property category truth table five cells** (Tangible + CashOnly + Intangible + Securities + Cryptocurrency); **intangible uniquely engages § 367(d) deemed-sale invariant**; **intentional disregard uniquely uncaps penalty invariant** (10x differential); **defensive zero basis full gain recognition**; **defensive basis exceeds FMV no negative gain**.
+
 `traderview-expense::section_6038d` is the **IRC §6038D Form 8938 foreign-financial-asset reporting module** — trader-critical for anyone with offshore brokerage accounts, foreign mutual fund holdings (PFICs covered by `section_1297` + `section_1298`), foreign retirement accounts, foreign-issued bonds, or interests in foreign entities. § 6038D requires individuals to attach Form 8938 disclosing such assets when aggregate value crosses the applicable filing threshold. Distinct from FinCEN Form 114 (FBAR) — both regimes often apply to the same taxpayer but have separate thresholds, content requirements, and penalty regimes.
 
 **§ 6038D operative provisions**:
