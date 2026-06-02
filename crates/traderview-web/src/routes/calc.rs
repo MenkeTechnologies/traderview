@@ -196,6 +196,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6863",          post(section_6863_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
+        .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-1033",          post(section_1033_route))
@@ -2711,6 +2712,45 @@ async fn section_409a_route(
 // of a mandatory interest haircut; §382(h) NUBIG recognition can
 // increase the limit during the 5-year recognition period. Pairs with
 // /api/calc/section-172 for the underlying NOL deduction.
+
+// ── § 367 Foreign Corporations ────────────────────────────────────────
+// Mounted at /api/calc/section-367 (iter 524). Pure compute. § 367
+// overrides nonrecognition treatment that would otherwise apply under
+// § 332 + § 351 + § 354 + § 355 + § 356 + § 361 + § 721 when a transfer
+// involves a foreign corporation — prevents US shareholders from using
+// cross-border reorganizations to permanently avoid US tax on appreciated
+// property. § 367(a)(1) outbound transfer general rule: US person
+// transferring property to foreign corp in § 332/351/354/356/361
+// exchange treated as TAXABLE exchange at FMV. § 367(a)(2) exception
+// for stock/securities of foreign corp party to exchange. § 367(a)(8)
+// gain-recognition agreement (GRA) — Treas. Reg. § 1.367(a)-8 5-year
+// deferral. TCJA § 14102(e) effective transfers after Dec 31 2017
+// REPEALED former § 367(a)(3) active trade or business exception.
+// § 367(b) inbound transfer regs (foreign corp → domestic corp in
+// § 332 liquidation or § 368(a)(1) reorg) — domestic acquiring corp
+// includes foreign corp's post-1986 accumulated E&P as deemed dividend
+// per Treas. Reg. § 1.367(b)-3. Coordinates with Notice 2024-16
+// § 961(c) basis carryover. § 367(d) outbound intangible transfer:
+// treated as deemed annual royalty over useful life; TCJA § 14221
+// effective Dec 31 2017 expanded § 936(h)(3)(B) intangible definition
+// to include goodwill + going-concern value + workforce-in-place +
+// any item value not attributable to tangible property or individual
+// services. § 367(e) distributions to foreign corp shareholders. Form
+// 926 filing required. Six-mode severity ladder: NotApplicable,
+// OutboundTangibleFullGainRecognition, OutboundStockGainRecognition-
+// AgreementAvailable, OutboundIntangibleDeemedRoyalty, InboundEarnings-
+// AndProfitsInclusion, ForeignToForeignNoUsConsequence. Coordinates
+// with § 332 + § 351 + § 354 + § 355 + § 361 + § 368 + § 721 + § 951A
+// + § 956 + § 959 (PTEP) + § 960 (FTC) + § 961 (CFC basis Notice
+// 2024-16 carryover — iter 522) + § 245A (DRD) + § 1248 (CFC stock
+// gain recharacterization).
+
+async fn section_367_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_367::Section367Input>,
+) -> Result<Json<traderview_expense::section_367::Section367Result>, ApiError> {
+    Ok(Json(traderview_expense::section_367::check(&b)))
+}
 
 async fn section_382_route(
     _u: AuthUser,
