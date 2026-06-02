@@ -766,6 +766,11 @@ use traderview_expense::rental_radiator_steam_heat_safety::{
     check as check_rental_radiator_steam_heat_safety,
     RentalRadiatorSteamHeatSafetyInput, RentalRadiatorSteamHeatSafetyResult,
 };
+use traderview_expense::rental_property_tax_pass_through_disclosure::{
+    check as check_rental_property_tax_pass_through_disclosure,
+    RentalPropertyTaxPassThroughDisclosureInput,
+    RentalPropertyTaxPassThroughDisclosureResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1236,6 +1241,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-short-term-subletting-airbnb-restriction", axum::routing::post(rental_short_term_subletting_airbnb_restriction_route))
         .route("/rental-grill-propane-bbq-restriction", axum::routing::post(rental_grill_propane_bbq_restriction_route))
         .route("/rental-radiator-steam-heat-safety", axum::routing::post(rental_radiator_steam_heat_safety_route))
+        .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10679,4 +10685,51 @@ async fn rental_radiator_steam_heat_safety_route(
     Json(b): Json<RentalRadiatorSteamHeatSafetyInput>,
 ) -> Result<Json<RentalRadiatorSteamHeatSafetyResult>, ApiError> {
     Ok(Json(check_rental_radiator_steam_heat_safety(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_property_tax_pass_through_disclosure (iter 519): Trader-landlord
+// property-tax + MCI + IAI + special-assessment pass-through framework.
+// Five jurisdictions: California (Cal. Const. Art. XIII A § 1 Proposition
+// 13 enacted 1978 — 2pct annual cap until change-of-ownership or new
+// construction triggers reassessment + Costa-Hawkins Rental Housing Act
+// Cal. Civ. Code § 1954.50-.535 exempts post-1995 construction plus SFR
+// plus condos from local rent control + AB 1482 statewide 5pct + CPI cap
+// for non-Costa-Hawkins units + local rent boards preempt landlord-tenant
+// contract on reassessment pass-through), NYC (9 NYCRR § 2522.4 Major
+// Capital Improvement (MCI) amortized 12 years + Housing Stability and
+// Tenant Protection Act of 2019 (HSTPA) capped MCI annual pass-through
+// at 2pct of base rent + reduced amortization + 30-year removal from
+// rent calendar + Individual Apartment Improvement (IAI) capped at
+// $15K total over 15-year amortization + NYS DHCR enforcement +
+// 9 NYCRR § 2526.1 overcharge refund + Emergency Tenant Protection Act
+// § 11 treble damages), San Francisco (SF Rent Ordinance § 37 +
+// § 37.7 capital improvement requires Rent Board approval + § 37.10B
+// unauthorized impositions void), Boston (Mass. Gen. Laws ch. 40P rent
+// control REPEALED 1994 + common-law contract + Mayor Wu rent-
+// stabilization pending state enabling + M.G.L. ch. 186 § 14 quiet
+// enjoyment), Default (state-specific rent control — Oregon SB 608
+// statewide cap + Maine + Minneapolis ballot rent control + NJ municipal
+// rent control). Six unit classes: Pre1995MultifamilyRentControlled,
+// Post1995CostaHawkinsExempt, SingleFamilyOrCondo (Costa-Hawkins exempt),
+// NycRentStabilized, NycMarketRate, NonRentControlled. Six pass-through
+// types: PropertyTaxReassessment, MajorCapitalImprovementMci, Individual-
+// ApartmentImprovementIai, SpecialAssessmentLid, OperatingCostIncrease-
+// Petition, NoPassThrough. Eight-mode severity ladder including Property-
+// TaxPassThroughVoidNonCommercial (100pct rent), MciExceeds2PctAnnualCap-
+// Violation (50pct rent), IaiExceeds15KOver15YearCapViolation (50pct
+// rent), MciNotRegisteredWithRentBoardViolation (100pct rent + DHCR
+// treble damages), ChangeOfOwnershipReassessmentImproperlyPassed (100pct
+// rent). Constants: 2pct MCI annual cap, 12-year MCI amortization, 30-
+// year MCI removal from rent calendar, $15K IAI cap, 15-year IAI
+// amortization, CA Prop 13 1978 enacted, Costa-Hawkins 1995 threshold,
+// NYC HSTPA 2019.
+// ---------------------------------------------------------------------------
+
+async fn rental_property_tax_pass_through_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPropertyTaxPassThroughDisclosureInput>,
+) -> Result<Json<RentalPropertyTaxPassThroughDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_property_tax_pass_through_disclosure(&b)))
 }
