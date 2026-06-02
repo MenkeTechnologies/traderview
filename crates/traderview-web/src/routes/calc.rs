@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6212",          post(section_6212_route))
         .route("/calc/section-6213",          post(section_6213_route))
+        .route("/calc/section-6201",          post(section_6201_route))
         .route("/calc/section-6303",          post(section_6303_route))
         .route("/calc/section-6304",          post(section_6304_route))
         .route("/calc/section-6306",          post(section_6306_route))
@@ -2754,6 +2755,27 @@ async fn section_6213_route(
         ));
     }
     Ok(Json(traderview_expense::section_6213::compute(&b)))
+}
+
+// ── §6201 Assessment authority ──────────────────────────────────────
+// Mounted at /api/calc/section-6201. Foundational grant of IRS power
+// to determine and assess tax liability. § 6201(a)(1) taxes shown on
+// return; § 6201(a)(2) stamp taxes; § 6201(a)(3) erroneous prepayment
+// credits assessed as math/clerical error WITHOUT § 6213(b)(2)
+// abatement availability; § 6201(b) deficiency restriction
+// cross-references § 6213(a) (SNOD + 90-day Tax Court window
+// prerequisite); § 6201(c) child compensation assessment;
+// § 6201(d) (RRA 98 § 3201) burden-shifting rule — Secretary bears
+// burden of producing reasonable and probative information beyond
+// information return itself when taxpayer asserts reasonable dispute
+// AND fully cooperates; trader-critical for 1099-B + 1099-K + K-1
+// disputes. Procedural predicate for § 6203 (method of assessment)
+// + § 6303 (notice and demand) + § 6321 (lien) + § 6331 (levy).
+async fn section_6201_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6201::Section6201Input>,
+) -> Result<Json<traderview_expense::section_6201::Section6201Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6201::check(&b)))
 }
 
 // ── §6303 notice and demand for tax ─────────────────────────────────
