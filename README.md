@@ -12089,6 +12089,49 @@ Pinned by `contribution_principal_always_tax_free_penalty_free`, `conversion_pri
 
 Mounted at `POST /api/calc/section-408a`. Thirty-six tests pin: **under 50 2026 base limit $7,500**; **age 50 catch-up $8,600**; **single phase-out thresholds 2026** ($153K-$168K); **MFJ phase-out thresholds 2026** ($242K-$252K); **MFS phase-out thresholds $0 to $10K**; **below phase-out full contribution allowed**; **above phase-out zero contribution backdoor required**; **in phase-out partial contribution allowed**; **excess contribution violation** (§ 4973 6% excise tax); **qualified distribution 5-year + age 60**; **non-qualified earnings under 5-year taxable + penalty**; **earnings pre-59½ taxable + 10% penalty**; **disability qualifies distribution under age**; **post-death beneficiary qualifies distribution**; **first home purchase qualifies under $10K cap**; **first home cumulative $10K exhausts lifetime cap**; **conversion principal within 5-year 10% penalty**; **conversion principal after 5-year no penalty**; **contribution principal always tax-free penalty-free**; **citation pins all authorities** (§ 408A(a)-(f) + § 408 + § 219 + § 72(t) + § 401(a)(9) + § 1411 + § 415 + § 4973 + Taxpayer Relief Act of 1997 § 302 + Pub. L. 105-34 + August 5, 1997 + SECURE Act of 2019 § 401 + SECURE Act 2.0 of 2022 + IRS Notice 2025-77 + Treas. Reg. § 1.408A-1 to -10 + Form 5498); **note pins 2026 limits**; **note pins 2026 phase-out thresholds**; **note pins MAGI disregards conversion income**; **note pins qualified distribution two-prong**; **note pins § 408A(d)(3) ordering rules**; **note pins § 408A(d)(3)(A) conversion 5-year per-conversion**; **note pins § 408A(e) backdoor Roth pro-rata**; **note pins § 408A(c)(5) no RMD during lifetime**; **note pins § 1411 NIIT exempt**; **note pins trader-critical fact patterns four**; **note pins Taxpayer Relief Act 1997 origin**; **note pins § 4973 excess contribution excise tax**; **filing status truth table four cells**; **MFJ uniquely highest phase-out invariant**; **MFS uniquely zero low threshold invariant**; **defensive overflow saturating**.
 
+`traderview-expense::section_4941` is the **IRC § 4941 — Taxes on self-dealing (private foundation regime) module** — direct private-foundation parallel to `section_4958` (intermediate sanctions for public charities — iter 466), companion to `section_4960` (ATEO executive comp 21% — iter 464), `section_4973` (excess contribution excise — iter 442), `section_4974` (RMD excise — iter 436), `section_4975` (qualified plan prohibited transactions — iter 434), `section_4980` (employer reversion — iter 460). § 4941 was originally enacted by the Tax Reform Act of 1969, Pub. L. 91-172, as part of Congress's response to abuses by tax-exempt private foundations.
+
+**Four-tier excise tax structure**:
+- **Tier 1 DP** — § 4941(a)(1): **10%** of amount involved per year of taxable period, on the disqualified person
+- **Tier 1 Manager** — § 4941(a)(2): **5%** of amount involved per year on foundation manager (knowing willful participant), **capped at $20,000 per act** per § 4941(c)(2)
+- **Tier 2 DP** — § 4941(b)(1): **200%** of amount involved on disqualified person if act not corrected within taxable period
+- **Tier 2 Manager** — § 4941(b)(2): **50%** of amount involved on foundation manager refusing to agree to correction, **capped at $20,000 per act**
+
+**Six self-dealing categories per § 4941(d)(1)** (per-se prohibited unless exception applies):
+1. **§ 4941(d)(1)(A)** — Sale, exchange, or leasing of property between PF and DP (direct or indirect)
+2. **§ 4941(d)(1)(B)** — Lending of money or other extension of credit between PF and DP
+3. **§ 4941(d)(1)(C)** — Furnishing of goods, services, or facilities between PF and DP
+4. **§ 4941(d)(1)(D)** — Payment of compensation (or reimbursement of expenses) by PF to DP
+5. **§ 4941(d)(1)(E)** — Transfer to, or use by or for benefit of, DP of PF income or assets
+6. **§ 4941(d)(1)(F)** — Agreement by PF to make any payment of money or other property to a government official (§ 4946(c))
+
+**Four statutory exceptions per § 4941(d)(2)**:
+- **§ 4941(d)(2)(B)** — Interest-free loan FROM DP TO PF used exclusively for charitable purposes
+- **§ 4941(d)(2)(C)** — DP furnishes goods, services, or facilities to PF **WITHOUT CHARGE**
+- **§ 4941(d)(2)(D)** — PF furnishes goods, services, or facilities to DP on **NO MORE FAVORABLE BASIS** than to general public
+- **§ 4941(d)(2)(E)** — **REASONABLE COMPENSATION** for **PERSONAL SERVICES** necessary to carrying out the exempt purpose — **NOT permitted to government official**
+
+**Disqualified person per § 4946** (seven categories):
+1. § 4946(a)(1)(A) — Substantial contributor (§ 507(d)(2): aggregate > $5,000 AND > 2% of total contributions)
+2. § 4946(a)(1)(B) — Foundation manager (officer, director, trustee, or similar; § 4946(b))
+3. § 4946(a)(1)(C) — Owner of more than 20% of contributor entity (voting power / profits / beneficial interest)
+4. § 4946(a)(1)(D) — Family member per § 4946(d): spouse, ancestors, lineal descendants, spouses of lineal descendants
+5. § 4946(a)(1)(E) — 35%-controlled entities (corporation, partnership, trust where DPs hold > 35%)
+6. § 4946(a)(1)(F) — Other related private foundations
+7. § 4946(a)(1)(G) — Government officials (only for § 4941(d)(1)(F) agreement category)
+
+**Amount involved per § 4941(e)(1)** = the GREATER of (i) money + FMV of property given OR (ii) money + FMV of property received. **Loans per § 4941(e)(2)**: amount involved = FMV of the use of the money/property for the use period.
+
+**Taxable period per § 4941(e)(3)** begins on date of self-dealing act; ends on EARLIEST of (a) statutory notice of deficiency, (b) § 4941(b)(1) tax assessment, or (c) correction completed.
+
+**Correction per § 4941(e)(4)** = **UNDO** the transaction to the extent possible AND place the PF in a **financial position no worse than** it would have been in had the DP been dealing with another person under the **HIGHEST FIDUCIARY STANDARDS**.
+
+**Trader-foundation critical fact patterns**: (1) Trader-founder of family private foundation sells personal art collection to PF at FMV — **per-se self-dealing under § 4941(d)(1)(A) regardless of fair value**, Tier-1 $10K on $100K transaction + Tier-2 $200K (if uncorrected) + potential manager taxes; (2) PF lends $500K to family-trust DP at AFR — per-se self-dealing under § 4941(d)(1)(B) (no exception for arm's-length terms); (3) DP loans $500K interest-free to PF for grant-making — § 4941(d)(2)(B) exception applies, no tax; (4) DP CFO of PF receives $200K compensation for personal accounting services necessary to PF operations — § 4941(d)(2)(E) exception if reasonable; (5) PF leases office space FROM DP at FMV — per-se self-dealing (no FMV exception); (6) PF leases office space TO DP at FMV on no-more-favorable-basis than to public — § 4941(d)(2)(D) exception applies.
+
+**Coordination with § 4958** (iter 466): § 4958 applies to PUBLIC charities + § 501(c)(4) + § 501(c)(29); private foundations are **EXCLUDED from § 4958 per § 4958(e)** and instead use § 4941 self-dealing regime. § 4941 has **LOWER threshold** (per se prohibition — no excess-benefit comparison required) but **LOWER initial tax rate** (10% vs § 4958's 25%). The two regimes are mutually exclusive.
+
+Mounted at `POST /api/calc/section-4941`. Thirty-six tests pin: **public charity not subject to § 4941** (uses § 4958); **non-exempt not applicable**; **non-DP counterparty not applicable**; **sale/exchange/lease per-se self-dealing**; **corrected within period no Tier-2**; **partial correction Tier-2 imposed**; **manager knowing 5% capped at $20K**; **manager knowing under cap**; **manager not knowing no Tier-1 manager tax**; **manager refuses correction 50% capped at $20K**; **manager refuses correction under cap**; **manager refuses but act corrected no Tier-2 manager**; **lending exception interest-free DP→PF charitable** (§ 4941(d)(2)(B)); **lending no exception self-dealing**; **furnish goods without charge exception** (§ 4941(d)(2)(C)); **furnish to DP no more favorable than public exception** (§ 4941(d)(2)(D)); **reasonable compensation for personal services exception** (§ 4941(d)(2)(E)); **reasonable compensation to government official NO exception**; **government official payment category**; **use of assets self-dealing**; **all four tiers stack** ($10K + $5K + $200K + $20K = $235K); **citation pins all authorities** (§ 4941(a)(1)/(a)(2)/(b)(1)/(b)(2)/(c)(2)/(d)(1)/(d)(2)/(e)(1)/(e)(2)/(e)(3)/(e)(4) + § 4946/(b)/(c)/(d) + § 507(d)(2) + § 4958); **note pins six self-dealing categories**; **note pins four tax tiers** (10/5/200/50 + $20K cap); **note pins disqualified person categories**; **note pins four exceptions** (B/C/D/E); **note pins § 4958 coordination** (LOWER threshold + per se + LOWER initial tax); **note pins correction highest fiduciary standards + UNDO**; **note pins amount involved definition**; **note pins companion modules**; **3-cell truth table**; **saturating arithmetic overflow defense** (both manager caps bind); **boundary 1-cent amount**; **boundary correction exact amount sufficient**; **correction overpaid sufficient**; **correction late outside period no relief**.
+
 `traderview-expense::section_4958` is the **IRC § 4958 — Intermediate sanctions on excess benefit transactions module** — direct trader-board companion to `section_4960` (ATEO executive comp 21% excise — iter 464), `section_4973` (excess contributions excise — iter 442), `section_4974` (RMD excise — iter 436), `section_4975` (prohibited transactions — iter 434), `section_4980` (employer reversion excise — iter 460), `section_162m` ($1M public-company exec comp cap — iter 446). § 4958 enacted by Taxpayer Bill of Rights 2, Pub. L. 104-168 (July 30, 1996); extended to donor-advised funds + supporting orgs by Pension Protection Act of 2006.
 
 **Three-tier tax structure**:

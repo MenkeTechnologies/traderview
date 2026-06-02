@@ -222,6 +222,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
+        .route("/calc/section-4941",          post(section_4941_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
@@ -874,6 +875,47 @@ async fn section_4974_route(
     Json(b): Json<traderview_expense::section_4974::Section4974Input>,
 ) -> Result<Json<traderview_expense::section_4974::Section4974Result>, ApiError> {
     Ok(Json(traderview_expense::section_4974::check(&b)))
+}
+
+// ── § 4941 taxes on self-dealing (private foundation regime) ─────────
+// Mounted at /api/calc/section-4941. Pure compute; four-tier excise
+// tax structure on private-foundation self-dealing: § 4941(a)(1)
+// Tier-1 disqualified person 10% of amount involved per year of
+// taxable period; § 4941(a)(2) Tier-1 foundation manager 5% (knowing
+// willful participant) capped at $20,000 per act per § 4941(c)(2);
+// § 4941(b)(1) Tier-2 DP 200% (uncorrected within taxable period);
+// § 4941(b)(2) Tier-2 manager 50% (refusing correction) capped at
+// $20,000. Six self-dealing categories per § 4941(d)(1): (A) sale/
+// exchange/lease; (B) lending of money or extension of credit; (C)
+// furnishing goods/services/facilities; (D) compensation/expense
+// reimbursement; (E) transfer/use of income or assets; (F) agreement
+// to pay government official (§ 4946(c)). Four statutory exceptions
+// per § 4941(d)(2): § 4941(d)(2)(B) interest-free loan from DP to PF
+// for charitable purpose; § 4941(d)(2)(C) DP furnishes goods to PF
+// without charge; § 4941(d)(2)(D) PF furnishes to DP on no more
+// favorable basis than to general public; § 4941(d)(2)(E) reasonable
+// compensation for personal services necessary to exempt purpose
+// (NOT permitted to government official). Disqualified person per
+// § 4946: substantial contributors (§ 507(d)(2) > $5K AND > 2%) +
+// foundation managers (§ 4946(b)) + 20%-owners of contributor
+// entities + family per § 4946(d) + 35%-controlled entities + other
+// related PFs + government officials (§ 4946(c)). Amount involved
+// per § 4941(e)(1): greater of money + FMV given vs received; loans
+// per § 4941(e)(2). Taxable period per § 4941(e)(3) begins on
+// transaction date, ends on earliest of statutory notice / tax
+// assessment / correction. Correction per § 4941(e)(4): undo +
+// place PF in position no worse than under highest fiduciary
+// standards. Distinct from § 4958 (iter 466) intermediate sanctions:
+// § 4941 applies to PRIVATE FOUNDATIONS only (excluded from § 4958
+// per § 4958(e)), uses lower 10% Tier-1 rate but per-se rule (no
+// excess-benefit comparison required); original enactment Tax
+// Reform Act of 1969, Pub. L. 91-172.
+
+async fn section_4941_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4941::Section4941Input>,
+) -> Result<Json<traderview_expense::section_4941::Section4941Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4941::check(&b)))
 }
 
 // ── § 4958 intermediate sanctions on excess benefit transactions ─────
