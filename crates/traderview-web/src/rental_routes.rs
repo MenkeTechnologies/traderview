@@ -296,6 +296,10 @@ use traderview_expense::tenant_cannabis_use_protection::{
     check as check_tenant_cannabis_use_protection, CannabisProtectionInput,
     CannabisProtectionResult,
 };
+use traderview_expense::tenant_clothesline_drying_right::{
+    check as check_tenant_clothesline_drying_right, TenantClotheslineDryingRightInput,
+    TenantClotheslineDryingRightResult,
+};
 use traderview_expense::snow_removal_responsibility::{
     check as check_snow_removal_responsibility, SnowRemovalInput, SnowRemovalResult,
 };
@@ -756,6 +760,7 @@ pub fn router() -> Router<AppState> {
         .route("/abandoned-property-handling", axum::routing::post(abandoned_property_handling_route))
         .route("/right-to-counsel-eviction", axum::routing::post(right_to_counsel_eviction_route))
         .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
+        .route("/tenant-clothesline-drying-right", axum::routing::post(tenant_clothesline_drying_right_route))
         .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
         .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
         .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
@@ -4137,6 +4142,32 @@ async fn tenant_cannabis_use_protection_route(
     Json(b): Json<CannabisProtectionInput>,
 ) -> Result<Json<CannabisProtectionResult>, ApiError> {
     Ok(Json(check_tenant_cannabis_use_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_clothesline_drying_right: Tenant clothesline / drying-rack
+// right under California Civil Code § 1940.20 (eff. January 1, 2016
+// per AB 1448 Stats. 2015 ch. 415). Mounted at POST /api/rental/
+// tenant-clothesline-drying-right. Two regimes: California (Cal. Civ.
+// Code §§ 1940.20 + 4750.10 — clothesline = cord/rope/wire; drying
+// rack = apparatus; balcony/railing/awning EXCLUDED from definitions;
+// private area = outdoor or enclosed area with door access; common
+// areas EXCLUDED; six conditions: (1) no interference with maintenance
+// (2) no health/safety hazard (3) no blocking doorways/walkways/
+// utility equipment (4) tenant consent if affixed to building (5) no
+// violation of reasonable time/location restrictions); Default (no
+// specific tenant right; lease provisions controlling; HOA right-to-
+// dry laws exist in 20+ states for HOMEOWNERS but rental rare outside
+// CA). Distinct from siblings tenant_solar_installation, ev_charger_
+// installation, tenant_organizing, flag_display_right.
+// ---------------------------------------------------------------------------
+
+async fn tenant_clothesline_drying_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantClotheslineDryingRightInput>,
+) -> Result<Json<TenantClotheslineDryingRightResult>, ApiError> {
+    Ok(Json(check_tenant_clothesline_drying_right(&b)))
 }
 
 // ---------------------------------------------------------------------------

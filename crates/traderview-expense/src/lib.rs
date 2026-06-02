@@ -175,6 +175,7 @@ pub mod submetering_rules;
 pub mod tenant_abandonment;
 pub mod tenant_in_foreclosure_protection;
 pub mod tenant_cannabis_use_protection;
+pub mod tenant_clothesline_drying_right;
 pub mod tenant_data_privacy;
 pub mod tenant_death_termination;
 pub mod tenant_organizing;
