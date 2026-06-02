@@ -5483,6 +5483,40 @@ PLUS **Marinello v. United States, 138 S. Ct. 1101 (2018) nexus** to known pendi
 
 Mounted at `POST /api/calc/section-7212`. Thirty-two tests pin: **officer-specific full authorizes felony**; **officer-specific missing force defeats**; **officer-specific missing intimidation defeats**; **officer-specific missing official capacity defeats**; **omnibus full with Marinello authorizes felony**; **omnibus without Marinello nexus defeats** (routine non-compliance carveout); **omnibus missing corrupt defeats**; **omnibus missing unlawful benefit defeats**; **omnibus missing obstruction defeats**; **threats-only pathway engages misdemeanor**; **threats-only with intimidation engages misdemeanor path** (1-year + $100K individual); **threats-only individual max fine $100K**; **threats-only corporation max fine $200K**; **felony individual max fine $250K** (18 U.S.C. § 3571); **felony corporation max fine $500K**; **corrupt act alone does not trigger threats-only**; **Marinello nexus satisfied note present when satisfied**; **Marinello routine noncompliance carveout note when missing**; **corrupt definition note present** (INTENTION TO SECURE UNLAWFUL BENEFIT); **criminal SOL 3 years general** (§ 6531); **parallel civil consequences note present** (§ 6663 + § 6672 + § 6501(c)(1)); **citation pins all authorities** (§§ 7212(a)/(b) + 6531 + 6663 + 6672 + 6501(c)(1) + 18 U.S.C. § 3571 + Marinello + IRM 9.1.3); **officer-specific three-element truth table** (8-cell sweep); **omnibus Marinello required alongside three elements**; **imprisonment 3 years when felony**; **imprisonment 1 year when misdemeanor threats-only**; **CFIA 18 U.S.C. § 3571 supersedes note when felony**; **threats-only downgrade note when misdemeanor**; **prosecution authorized note describes pathway** (FELONY vs misdemeanor); **two clauses note always present** (officer-specific + omnibus); **IRM 9.1.3 note present**; **clause target routing distinct** (officer-specific vs omnibus notes).
 
+`traderview-expense::section_7216` is the **IRC § 7216 disclosure or use of return information by preparers (criminal misdemeanor)** module — pairs with **§ 6713 civil penalty** ($250 per prohibited disclosure + $10,000 annual cap) for the same conduct. Criminal misdemeanor 1-year imprisonment + $100K individual / $200K corporation fine under 18 U.S.C. § 3571 (supersedes § 7216's original $1K cap). Distinct trader-relevant: when broker, CPA, or tax preparer discloses trader's return information without authorization for purpose other than preparing the return.
+
+**§ 7216(a) — Criminal misdemeanor**. Preparer who KNOWINGLY OR RECKLESSLY discloses or uses tax return information for any purpose other than preparing the tax return.
+
+**§ 7216(b) two-pathway exceptions**:
+
+| Exception | Authority | Requirement |
+|-----------|-----------|---------------|
+| Taxpayer consent | 26 CFR § 301.7216-3 + Rev. Proc. 2013-14 | Written + signed BEFORE disclosure + specific recipient + specific purpose + duration + prominent and separate |
+| Permissible non-consent | 26 CFR § 301.7216-2 | Court orders + IRS inquiries + peer review + malpractice insurance + payment processing |
+
+Either exception defeats both criminal and civil liability. Pinned by `consent_truth_table` (4-cell sweep) and `either_exception_pathway_defeats_violation`.
+
+**Penalties**:
+- Imprisonment up to **1 YEAR** (misdemeanor)
+- Fine $100K individual / $200K corporation under 18 U.S.C. § 3571 (supersedes original $1K cap)
+- Costs of prosecution
+- **Identity-theft enhancement**: monetary penalty up to $100,000 (separate from § 3571) when disclosure or use is in connection with crime involving identity theft
+
+**§ 6713 civil penalty — paired with § 7216 same conduct**:
+- $250 per prohibited disclosure or use
+- $10,000 ANNUAL CAP per preparer per calendar year
+- **NO-FAULT CIVIL** — does NOT require knowing or reckless conduct (lower standard than § 7216 criminal)
+
+Pinned by `civil_vs_criminal_no_fault_distinction`, `civil_penalty_calculation_5_disclosures`, `civil_penalty_capped_at_10000_annual`, `civil_penalty_at_40_disclosures_at_cap`, `civil_penalty_at_39_disclosures_below_cap`, `civil_penalty_proportional_until_cap` (9-disclosure sweep).
+
+**"Tax return information" broadly defined** — includes any information furnished for, or in connection with, the preparation of any tax return. Reaches financial records, brokerage statements, K-1s, payroll information, source documents.
+
+**§ 6531 general 3-year criminal SOL** applies to § 7216 (NOT extended 6-year as for § 7201 / § 7203 / § 7206(1)-(4) / § 7207).
+
+**Consent regulations 26 CFR § 301.7216-3 + Rev. Proc. 2013-14** — taxpayer consent must satisfy: WRITTEN consent (electronic permitted) + SIGNED BEFORE the disclosure + specifies SPECIFIC RECIPIENT + specifies PURPOSE + DURATION of consent + PROMINENT and SEPARATE from other documents. Consent invalid if extracted by inadequate notice. Pinned by `invalid_consent_does_not_defeat`.
+
+Mounted at `POST /api/calc/section-7216`. Twenty-nine tests pin: **full violation criminal and civil authorized**; **individual max fine $100K** (18 U.S.C. § 3571); **corporation max fine $200K**; **no disclosure no violation**; **no knowing or reckless no criminal but civil still engages** (no-fault distinction); **preparation purpose no violation**; **valid consent defeats both criminal and civil** (§ 7216(b) + 26 CFR § 301.7216-3); **invalid consent does not defeat** (regs noncompliance); **non-consent authorized exception defeats** (26 CFR § 301.7216-2); **identity theft enhancement engaged** ($100,000 separate from § 3571); **civil penalty calculation 5 disclosures** ($250 × 5 = $1,250); **civil penalty capped at $10,000 annual**; **civil penalty at 40 disclosures at cap**; **civil penalty at 39 disclosures below cap**; **civil penalty zero when no violation**; **criminal SOL 3 years general** (§ 6531); **consent regulations note describes format requirements** (written + signed before + recipient + purpose + duration + prominent); **non-consent disclosure note lists categories** (court orders + malpractice insurance); **tax return information broad definition note** (brokerage statements + K-1s); **CFIA 18 U.S.C. § 3571 note present**; **IRM notes present** (IRM 25.5.1 + IRM 4.10); **citation pins all authorities** (§§ 7216(a)/(b) + 6713(a) + 6531 + 26 CFR §§ 301.7216-1/2/3 + Rev. Proc. 2013-14 + 18 U.S.C. § 3571 + IRM 25.5.1/4.10); **criminal authorized note describes misdemeanor**; **consent truth table** (4-cell sweep obtained × compliant); **civil vs criminal no-fault distinction**; **either exception pathway defeats violation**; **imprisonment always 1 year misdemeanor**; **civil penalty proportional until cap** (9-disclosure sweep); **no violation no civil penalty**.
+
 `traderview-expense::section_7201` is the **IRC § 7201 attempt to evade or defeat tax (apex criminal felony)** module — the most severe criminal tax statute in the Code. Pairs with `section_7206` (fraud and false statements / tax perjury — 3-year felony) and `section_6663` (civil fraud 75% penalty). 5-year felony with $250K individual / $500K corporation fine under 18 U.S.C. § 3571 (supersedes § 7201's original $100K cap). Natural sibling to `section_6501` (§ 6501(c)(1)/(c)(2) unlimited ASED for fraud), `section_6664` (reasonable cause defense), and `section_7491` (burden shifts excluded for criminal cases).
 
 **§ 7201 four-element test** (government bears BEYOND REASONABLE DOUBT burden):

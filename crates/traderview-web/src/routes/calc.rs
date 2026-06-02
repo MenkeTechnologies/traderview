@@ -92,6 +92,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7202",          post(section_7202_route))
         .route("/calc/section-7203",          post(section_7203_route))
         .route("/calc/section-7212",          post(section_7212_route))
+        .route("/calc/section-7216",          post(section_7216_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7434",          post(section_7434_route))
@@ -2934,6 +2935,30 @@ async fn section_7212_route(
     Json(b): Json<traderview_expense::section_7212::Section7212Input>,
 ) -> Result<Json<traderview_expense::section_7212::Section7212Result>, ApiError> {
     Ok(Json(traderview_expense::section_7212::check(&b)))
+}
+
+// ── §7216 disclosure or use by preparers (criminal misdemeanor) ─────
+// Mounted at /api/calc/section-7216. Pairs with § 6713 civil
+// penalty ($250/disclosure + $10K annual cap). Criminal misdemeanor
+// 1-year + $100K individual / $200K corporation fine (18 U.S.C. §
+// 3571 supersedes original $1K cap) for preparer who knowingly or
+// recklessly discloses or uses tax return info for purpose other
+// than preparing return. § 7216(b) exceptions: taxpayer consent +
+// non-consent permissible disclosures under 26 CFR § 301.7216-2.
+// Consent must comply with 26 CFR § 301.7216-3 + Rev. Proc.
+// 2013-14 (written + signed before disclosure + specific recipient
+// + specific purpose + duration + prominent and separate).
+// Identity-theft enhancement up to $100,000 separate from § 3571.
+// § 6531 general 3-year criminal SOL. § 6713(a) no-fault civil
+// penalty does not require knowing or reckless conduct. Pairs with
+// section_6531 + section_6713 (civil counterpart). IRM 25.5.1 +
+// IRM 4.10 preparer penalty procedural manuals.
+
+async fn section_7216_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7216::Section7216Input>,
+) -> Result<Json<traderview_expense::section_7216::Section7216Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7216::check(&b)))
 }
 
 // ── §7206 fraud and false statements (criminal felony) ──────────────
