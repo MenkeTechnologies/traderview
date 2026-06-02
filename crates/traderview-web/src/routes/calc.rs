@@ -262,6 +262,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
+        .route("/calc/section-901",           post(section_901_route))
         .route("/calc/section-904",           post(section_904_route))
         .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-951a",          post(section_951a_route))
@@ -2859,6 +2860,44 @@ async fn section_871m_route(
 // US-gov / passive / pension) + §911(c)(2) housing cap 30% × FEIE +
 // §911(d)(1)(A) bona fide residence test + §911(d)(1)(B) physical
 // presence test ≥ 330 full days + §911(d)(7) base housing 16% × FEIE.
+
+// ── § 901 Taxes of Foreign Countries / Foreign Tax Credit ───────────
+// Mounted at /api/calc/section-901 (iter 518). Pure compute. § 901 is
+// the operative FTC provision — allows credit for foreign income, war
+// profits, and excess profits taxes paid or accrued to foreign
+// governments or US possessions. § 901(a) general rule for domestic
+// corp + US citizen / resident alien individuals; § 901(b)(1)
+// creditable for 10pct-or-more foreign corp shareholder via § 960
+// deemed-paid mechanism. § 901(j) sanctioned-country disallowance
+// (Iran + North Korea + Syria + Cuba + Sudan partial per Secretary
+// of State designation) plus § 901(j)(5) treaty resourcing carve-out
+// plus separate § 904(d) basket. § 901(k) dividend holding-period
+// requirement: common stock + preferred short-period = 16 days in
+// 31-day window; preferred long-period (dividends > 366 days) = 46
+// days in 91-day window. § 901(l) holding-period for other income.
+// § 901(m) covered asset acquisition disallowance — Pub. L. 111-226
+// (2010) — disqualified portion = (US basis step-up / total basis) ×
+// foreign tax; Notice 2014-44 + Notice 2014-45 + Treas. Reg. § 1.901(m)-
+// 1 through § 1.901(m)-8 (proposed) implement. § 901(b)(5) US-
+// possessions analogous credit (Puerto Rico + USVI + Guam + American
+// Samoa + Northern Mariana Islands). Six-mode severity ladder:
+// NotApplicable, FullyCreditable, PartiallyCreditableCaaDisqualified-
+// Portion, NonCreditableSanctionedCountryFull, NonCreditableHolding-
+// PeriodFailed, NonCreditableNonIncomeTax (VAT + customs + penalty +
+// interest — deductible under § 164(a)(3) instead). Coordinates with
+// § 904 (FTC limitation — iter 516), § 960 (deemed-paid FTC), § 903
+// (in-lieu-of tax extension), § 245A (DRD — iter 502 § 245A(d) FTC
+// disallowance), § 951A (GILTI/NCTI — iter 500), § 956 (CFC US
+// property — iter 504), § 959 (PTEP — iter 512), § 962 (individual
+// election — iter 510), § 965 (transition tax § 965(g) FTC denial
+// percentage — iter 514), § 164 (foreign tax deduction alternative).
+
+async fn section_901_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_901::Section901Input>,
+) -> Result<Json<traderview_expense::section_901::Section901Result>, ApiError> {
+    Ok(Json(traderview_expense::section_901::check(&b)))
+}
 
 // ── § 904 Limitation on Foreign Tax Credit (FTC) ─────────────────────
 // Mounted at /api/calc/section-904 (iter 516). Pure compute. § 904 caps
