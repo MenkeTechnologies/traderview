@@ -9031,6 +9031,67 @@ Tax shelter disqualification blocks ALL cascade exemptions even at $0 receipts. 
 
 Mounted at `POST /api/calc/section-448`. Twenty tests pin: **5-year threshold table** (2018 $25M / 2024 $30M / 2025 $31M / 2026 $32M + unknown-year falls back to 2025); **small C-corp qualifies — full cascade** (cash method + all 4 exemptions); **large C-corp fails — mandatory accrual + all 4 apply**; **exact threshold qualifies** (≤ test); **$1 over threshold fails** (boundary); **tax shelter disqualifies even when receipts test satisfied** with all cascade off + TAX SHELTER DISQUALIFICATION note priority; **aggregation can blow through threshold** (entity $10M / aggregated $40M); partnership-with-C-corp-partner subject to § 448(a) mandatory accrual; **S-corp at $50M can use cash but NOT exempt from § 163(j)** (entity-type / cascade decoupling); **sole proprietor at $100M same** ($163(j) still applies); average computed from 3 prior years ($5M + $10M + $15M → $10M); qualified note describes all 4 cascade exemptions by name; failed-test note describes "ALL apply"; citation mentions all 8 relevant authorities (§448(a), §448(b)(3), §448(c), §448(c)(2), §448(a)(3), TCJA, §263A, §163(j)); $1B aggregated receipts handled safely; zero receipts qualifies.
 
+`traderview-expense::section_415` is the **IRC § 415 — Limitations on Benefits and Contributions umbrella statute module** — direct trader companion to `section_401k` (iter 448), `section_408` (traditional IRA — iter 432), `section_408a` (Roth IRA — iter 430), `section_457b` (iter 450), `section_4973` (excess contribution excise — iter 442), `section_4974` (RMD excise — iter 436), `section_162m` ($1M public-company exec comp deduction — iter 446). § 415 is the UMBRELLA STATUTE governing maximum limits on retirement plan benefits and contributions; sets ceilings that interact with lower limits in § 401(k) elective deferrals, § 457(b) governmental DC plans, § 403(b) annuity plans, § 408 IRAs, and § 1402 self-employed contributions.
+
+§ 415(a) **disqualification cascade** — denies qualified status under § 401(a) to any trust that is part of a plan exceeding § 415(b) or § 415(c) limits; disqualification cascades to ALL PARTICIPANTS, not just over-limit individual. Harsh consequence motivates strict compliance.
+
+**§ 415(b) Defined Benefit (DB) plan limit** — maximum annual benefit (life-only, age 62-65 commencement) is lesser of:
+1. § 415(b)(1)(A) DOLLAR LIMIT — **$290,000 for 2026** (up from $280,000 for 2025); indexed annually under § 415(d)
+2. § 415(b)(1)(B) COMPENSATION LIMIT — 100% of participant's average compensation for highest 3 consecutive years; NOT subject to § 401(a)(17) cap when computing DB limit
+
+§ 415(b)(2) actuarial adjustments for commencement age (reduction below 62; increase above 65), form of benefit (joint and survivor), and cost-of-living adjustments at retirement.
+
+**§ 415(c) Defined Contribution (DC) plan limit** — annual addition to participant's account cannot exceed lesser of:
+1. § 415(c)(1)(A) DOLLAR LIMIT — **$72,000 for 2026** (up from $70,000 for 2025); indexed annually
+2. § 415(c)(1)(B) — 100% of participant's COMPENSATION for the year (subject to § 401(a)(17) $360,000 cap)
+
+**§ 415(c)(2) annual addition INCLUDES**: employer contributions; employee contributions (pretax + Roth designated deferrals); forfeitures. **EXCLUDES**: § 414(v) catch-up contributions; rollovers from other plans; § 408A Roth IRA contributions; investment earnings.
+
+**2026 dollar limits framework (IRS Notice 2025-67)**:
+
+| Limit | 2026 Amount |
+|-------|-------------|
+| § 415(b)(1)(A) DB annual benefit | **$290,000** |
+| § 415(c)(1)(A) DC annual addition | **$72,000** |
+| § 401(a)(17) compensation limit | $360,000 |
+| § 402(g)(1) elective deferral | $24,500 |
+| Age 50+ catch-up § 414(v) | $8,000 |
+| Ages 60-63 enhanced catch-up § 414(v)(2)(E) | $11,250 |
+| HCE threshold | $160,000 |
+| Roth catch-up wage threshold § 414(v)(7) | $150,000 |
+
+**§ 415(f) aggregation rules**:
+1. All DC plans of single employer **AGGREGATED** for § 415(c) limit
+2. All DB plans of single employer **AGGREGATED** for § 415(b) limit
+3. § 415(f)(2) — DC and DB limits applied **SEPARATELY** (participant may be at maximum in both; no combined limit since 2002 TEFRA repeal)
+4. § 414(b)/(c)/(m)/(o) — controlled group, common control, affiliated service group, ASG rules treat related employers as single employer
+5. UNRELATED employers — separate § 415 limits apply at each employer
+
+**§ 415(g) anti-cutback rule** — § 411(d)(6) protected benefits cannot be reduced when § 415 limits adjust.
+
+**§ 415(k) grandfathered old-limit benefits** — pre-1976 accrued benefits grandfathered; pre-1982 accrued benefits subject to old TEFRA $90,000 dollar limit if greater than current § 415(b) limit.
+
+**§ 415(n) USERRA reinstatement** — qualifying military service member returning under USERRA may receive make-up contributions during reemployment period without violating § 415 limits; make-up period equals lesser of 3× period of military service OR 5 years.
+
+**§ 415 INTERACTION WITH § 401(k) / § 402(g)**:
+- § 415(c) ANNUAL ADDITION = elective deferrals + employer match + after-tax + forfeitures
+- § 402(g)(1) ELECTIVE DEFERRAL LIMIT applies separately to participant's pretax + Roth deferrals ($24,500 for 2026)
+- § 414(v) CATCH-UP contributions are **DISREGARDED** for § 415(c) purposes (separate limit)
+- MEGA BACKDOOR ROTH uses available § 415(c) room after elective deferral + employer match for after-tax contributions converted to Roth via § 408A(d)(3)
+
+**§ 415 INTERACTION WITH § 457(b)**:
+- § 457(b) **NOT subject to § 415(c) limits** (governmental and tax-exempt § 457(b) have SEPARATE $24,500 limit)
+- § 402(g)(1) AGGREGATION rule does NOT apply to § 457(b) (key for DOUBLE DEFERRAL strategy with § 401(k)/§ 403(b))
+
+**§ 415 INTERACTION WITH DB+DC dual participation**:
+- § 415(b) APPLIES SEPARATELY from § 415(c) — a participant in BOTH a DB plan and DC plan may receive MAXIMUM benefit under § 415(b) AND maximum annual addition under § 415(c) in same year
+- No combined limit since 2002 TEFRA repeal
+- Maximum tax-deferred wealth accumulation strategy for high-comp employees
+
+**Trader-critical fact patterns**: (1) age 35 maxes § 401(k) — $24,500 elective + $7,500 match + $40,000 after-tax = $72,000 § 415(c) annual addition (exactly at 2026 limit); (2) age 50 maxes § 401(k) AND § 415(c) — $24,500 + $8,000 catch-up (DISREGARDED for § 415(c)) + $7,500 match + $40,000 after-tax = $80,000 total cash flow / $72,000 § 415(c); (3) controlled-group corporation — § 414 aggregation treats all related as single employer; $72,000 cap applies ACROSS plans; (4) two unrelated employers — $72,000 SEPARATELY at each = $144,000 total / § 402(g)(1) still aggregates elective at $24,500; (5) DB + DC dual participation — $290K + $72,000 / no combined limit since 2002 TEFRA repeal.
+
+Mounted at `POST /api/calc/section-415`. Thirty-three tests pin: **DC max 2026 compliant**; **DC over $72K violation**; **DC compensation limit constrains at low comp**; **DC compensation over $360K capped at § 401(a)(17)** (DB plan exempt); **catch-up disregarded for DC**; **DB max 2026 compliant**; **DB over $290K violation**; **DB compensation limit lower than dollar limit constrains**; **both DC and DB apply separately** (§ 415(f)(2) + 2002 TEFRA repeal); **controlled group aggregation disclosed**; **unrelated employers separate limits** (with § 402(g)(1) aggregation note); **unrelated with controlled group no separate disclosure**; **USERRA reinstatement disclosed**; **limits pinned at 2026**; **plan type truth table three cells**; **DC dollar limit uniquely constrains at high comp invariant**; **citation pins all authorities** (§ 415(a)-(n) + § 415(b)(1)(A) + § 415(b)(1)(B) + § 415(c)(1)(A) + § 415(c)(2) + § 415(d) + § 415(f) + § 415(g) + § 415(k) + § 415(n) + § 401(a)(17) + § 402(g)(1) + § 408A(d)(3) + § 414(b) + § 414(c) + § 414(m) + § 414(o) + § 414(v) + IRS Notice 2025-67 + Treas. Reg. § 1.415-1); **note pins umbrella statute**; **note pins § 415(a) disqualification cascade**; **note pins § 415(b) DB limit**; **note pins § 415(c) DC limit**; **note pins § 415(d) COLA**; **note pins 2026 eight limits**; **note pins § 415(f) aggregation rules**; **note pins § 415(g) anti-cutback**; **note pins § 415(k) grandfathered**; **note pins § 415(n) USERRA**; **note pins § 401(k) interaction**; **note pins § 457(b) interaction**; **note pins DB+DC dual participation**; **note pins trader fact patterns five**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_422` is the **IRC § 422 Incentive Stock Options (ISO) module** — trader-critical because traders working at venture-backed companies routinely receive ISO grants where the choice between qualifying disposition (LTCG at 0/15/20% plus § 1411 NIIT 3.8%) and disqualifying disposition (ordinary income up to 37%) determines net wealth at exit. Companion to `section_475c2` (mark-to-market for trader stock), `section_1411` (NIIT 3.8% on qualifying disposition LTCG), `section_408a` (Roth IRA — note ISOs cannot be held in IRA), `section_53` (AMT credit recovery), `section_56` (AMT preference items).
 
 **§ 422(b) ISO statutory requirements (6 conditions)**:

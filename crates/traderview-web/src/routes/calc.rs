@@ -216,6 +216,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-408",           post(section_408_route))
         .route("/calc/section-401k",          post(section_401k_route))
+        .route("/calc/section-415",           post(section_415_route))
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
@@ -758,6 +759,31 @@ async fn section_401k_route(
     Json(b): Json<traderview_expense::section_401k::Section401kInput>,
 ) -> Result<Json<traderview_expense::section_401k::Section401kResult>, ApiError> {
     Ok(Json(traderview_expense::section_401k::check(&b)))
+}
+
+// ── § 415 Limits on Benefits and Contributions (umbrella statute) ────
+// Mounted at /api/calc/section-415. Pure compute; 2026 limits per
+// IRS Notice 2025-67: § 415(b)(1)(A) DB annual benefit $290,000;
+// § 415(c)(1)(A) DC annual addition $72,000; § 401(a)(17)
+// compensation limit $360,000. § 415(a) disqualification cascade
+// (denial of § 401(a) qualified status for entire plan if any
+// participant exceeds). § 415(b) DB limit = lesser of dollar limit
+// or 100% of average high-3-year compensation (NOT subject to
+// § 401(a)(17)). § 415(c) DC annual addition = employer + employee
+// pretax + Roth + forfeitures (EXCLUDES § 414(v) catch-up). § 415(d)
+// CPI-U annual COLA adjustment. § 415(f) aggregation: all DC plans
+// of single employer aggregated; all DB plans of single employer
+// aggregated; DC and DB limits applied SEPARATELY (§ 415(f)(2));
+// § 414(b)/(c)/(m)/(o) controlled group + affiliated service group
+// treat related employers as single employer. § 415(g) anti-cutback;
+// § 415(k) grandfathered old-limit benefits; § 415(n) USERRA make-up
+// rights.
+
+async fn section_415_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_415::Section415Input>,
+) -> Result<Json<traderview_expense::section_415::Section415Result>, ApiError> {
+    Ok(Json(traderview_expense::section_415::check(&b)))
 }
 
 // ── § 422 Incentive Stock Options (ISOs) ─────────────────────────────
