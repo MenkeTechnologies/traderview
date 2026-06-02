@@ -556,6 +556,11 @@ use traderview_expense::rental_swimming_pool_drain_safety::{
     check as check_rental_swimming_pool_drain_safety,
     RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
 };
+use traderview_expense::rental_underground_storage_tank_disclosure::{
+    check as check_rental_underground_storage_tank_disclosure,
+    RentalUndergroundStorageTankDisclosureInput,
+    RentalUndergroundStorageTankDisclosureResult,
+};
 use traderview_expense::rental_satellite_dish_installation_right::{
     check as check_rental_satellite_dish_installation_right,
     RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
@@ -930,6 +935,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
+        .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
@@ -6513,6 +6519,38 @@ async fn rental_swimming_pool_drain_safety_route(
     Json(b): Json<RentalSwimmingPoolDrainSafetyInput>,
 ) -> Result<Json<RentalSwimmingPoolDrainSafetyResult>, ApiError> {
     Ok(Json(check_rental_swimming_pool_drain_safety(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_underground_storage_tank_disclosure: Rental property
+// underground storage tank (UST) disclosure compliance — when a
+// trader-landlord operating a property with an active, inactive, or
+// abandoned-in-place UST must disclose UST presence to tenants and
+// buyers. Mounted at POST /api/rental/rental-underground-storage-
+// tank-disclosure. Four regimes: Federal RCRA Subtitle I (42 USC §
+// 6991 et seq.) + 40 CFR Part 280 EPA UST regulations (heating oil
+// residential on-premises EXEMPT from federal; 2015 EPA final rule
+// integrity testing); California Cal. Health & Safety Code §§
+// 25280-25299.8 Chapter 6.7 + § 25288 annual inspection (CUPAs +
+// Cal. Civ. Code § 1102 TDS at sale + common-law fraud); Florida
+// FL Statute §§ 376.30-376.317 + § 689.25 + Johnson v. Davis, 480
+// So. 2d 625 (Fla. 1985) material fact disclosure doctrine + FDEP
+// administration + Petroleum Liability Insurance and Restoration
+// Program); New Jersey N.J.A.C. 7:14B (STRICTEST — Property
+// Condition Disclosure Statement requires disclosure of UST whether
+// active/inactive/abandoned in place + NJ Spill Compensation and
+// Control Act N.J.S.A. 58:10-23.11 strict joint-and-several
+// liability + NJEDA PUSTP up to $250,000 grant). Distinct from
+// siblings rental_basement_water_intrusion_disclosure (water/mold),
+// radon_disclosure, asbestos_disclosure, mold_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn rental_underground_storage_tank_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalUndergroundStorageTankDisclosureInput>,
+) -> Result<Json<RentalUndergroundStorageTankDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_underground_storage_tank_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
