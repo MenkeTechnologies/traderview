@@ -2936,6 +2936,42 @@ Mounted at `POST /api/rental/landlord-emergency-entry-notice`. Twenty-five tests
 
 Mounted at `POST /api/rental/landlord-mid-tenancy-rekeying`. Twenty-six tests pin: **TX compliant passes**; **TX tenant pays for key lost**; **TX landlord pays for master key change**; **TX landlord pays for security upgrade**; **TX past 7-day window violates**; **TX at 168 boundary compliant**; **TX 169 hours violates**; **TX no new keys violates**; **TX interior door excluded**; **TX remedies note describes one month rent and $500**; **TX citation pins Subchapter D sections**; **CA compliant within reasonable time**; **CA burglary landlord pays**; **CA past reasonable time violates**; **CA citation pins subsections**; **default compliant always**; **default tenant pays for key lost**; **default landlord pays for security upgrade**; **three regimes routed correctly**; **TX unique remedies invariant**; **rekey reason cost allocation truth table** (6-reason sweep); **no tenant request no engagement**; **TX clean no violations**; **CA clean no violations**; **default clean no violations**; **TX uniquely explicit 7-day window invariant** (3-regime sweep).
 
+`traderview-expense::landlord_negative_credit_reporting` is the **landlord negative credit reporting framework module** — when may a landlord report unpaid rent, collection accounts, or eviction history to consumer reporting agencies (Equifax/Experian/TransUnion + tenant-screening CRAs)? Distinct from sibling `rent_credit_reporting` (POSITIVE rent reporting under Cal. Civ. Code § 1954.06 / AB 2747) which addresses the landlord's OFFER to report positive payment history. This module addresses NEGATIVE reporting of delinquent rent / collection accounts. Trader-landlord critical because furnishing inaccurate or unverifiable negative information to a CRA exposes landlord to STATUTORY DAMAGES of $100-$1,000 per violation plus actual and attorney's fees plus PUNITIVE damages for willful violations.
+
+**Federal FCRA framework**:
+
+| Provision | Rule |
+|-----------|------|
+| **§ 1681s-2(a)** | Accuracy and integrity of information; cannot report known-inaccurate info; must promptly correct and notify all CRAs |
+| **§ 1681s-2(b)** | **MANDATORY AND NON-DISCRETIONARY** investigation duty upon CRA dispute notice (5-element: investigate + review + report + cross-CRA correction + delete unverifiable) |
+| **§ 1681c(a)(4)** | **7-YEAR limitation** on negative information from DATE OF DELINQUENCY (not collection placement or judgment) |
+| **§ 1681c(a)(1)** | Chapter 7 bankruptcies — 10 years |
+| **§ 1681n** | **WILLFUL** noncompliance — $100-$1,000 statutory damages per violation OR actual damages whichever greater + PUNITIVE + attorney's fees (Safeco Ins. Co. v. Burr, 551 U.S. 47 (2007)) |
+| **§ 1681o** | NEGLIGENT noncompliance — actual damages + attorney's fees only |
+| **§ 1681e(b)** | CRA accuracy |
+| **§ 1681i** | CRA investigation of disputes within 30 days (45 days if consumer provides additional information) |
+| **§ 1681m** | Adverse action notice when landlord denies/raises rent based on CRA report |
+
+**FDCPA § 1692 interaction** when landlord places debt with third-party collector:
+- **§ 1692e** — prohibits false or misleading representations including disputed debt not flagged as disputed
+- **§ 1692f** — prohibits unfair or unconscionable collection means
+- **§ 1692g(a)** — 5-day VALIDATION NOTICE with debt amount + original creditor + dispute rights
+- **§ 1692g(b)** — tenant disputes in writing within 30 days, collector must VERIFY before continuing
+- **§ 1692k** — civil liability statutory damages up to $1,000 + actual + fees
+- **CFPB Regulation F** (12 CFR § 1006) requires itemization date
+
+**Tenant-screening CRA subset** (CoreLogic SafeRent + TransUnion SmartMove + RentBureau by Experian + LexisNexis) subject to all FCRA § 1681 requirements; eviction records controversial — many jurisdictions seal or expunge under Just Cause laws making CRA reporting impermissible.
+
+**State law overlay**:
+- **NEW YORK** — NY GBL § 380 NY Fair Credit Reporting Act mirrors FCRA; § 380-d investigation requirement; HSTPA 2019 + NY RPL § 227-f **TENANT BLACKLIST PROHIBITION** with $500-$1,000 civil penalty per violation
+- **CALIFORNIA** — Cal. Civ. Code § 1785 CA Consumer Credit Reporting Agencies Act + Cal. Civ. Code § 1786 Investigative Consumer Reporting Agencies Act covering tenant-screening CRAs
+- **OREGON / WASHINGTON** — Oregon SB 970 + Washington RCW 59.18.367 eviction record sealing prohibits CRA reporting of sealed evictions
+- **CONNECTICUT** — Conn. Gen. Stat. § 47a-71 requires **30-DAY PRE-REPORTING NOTICE** before landlord may report to CRA
+
+**Trader-landlord critical fact patterns**: (1) trader reports $5K unpaid rent + tenant disputes within 30 days + trader fails to investigate within 30 days — § 1681s-2(b) MANDATORY investigation violated + $100-$1,000 statutory damages + actual + fees; (2) trader reports 8 years after original delinquency — § 1681c(a)(4) 7-year limit exceeded + willful § 1681n punitive; (3) NY trader reports to tenant blacklist database — NY RPL § 227-f $500-$1,000 civil penalty; (4) collection agency without § 1692g(a) 5-day validation notice — FDCPA § 1692k $1K statutory + actual + fees; (5) CA trader engages CRA that reports SEALED EVICTION — § 1786 + § 1681e(b) accuracy violation against CRA AND furnishing landlord.
+
+Mounted at `POST /api/rental/landlord-negative-credit-reporting`. Thirty-two tests pin: **compliant baseline no violations**; **inaccurate information violation** (§ 1681s-2(a)); **investigation failure violation** (§ 1681s-2(b) MANDATORY); **7-year aging compliant at 7 years boundary**; **7-year aging violation at 8 years**; **FDCPA no validation notice violation** (§ 1692g(a) + Regulation F); **FDCPA dispute without verification violation** (§ 1692g(b)); **NY tenant blacklist violation** (HSTPA + § 227-f); **NY tenant blacklist not engaged outside NY**; **CT 30-day notice required in CT** (§ 47a-71); **CT 30-day notice with notice compliant**; **CT 30-day notice not required outside CT**; **sealed eviction record violation** (OR SB 970 + WA RCW 59.18.367); **willful violation punitive damages available** (Safeco standard); **willful without underlying violation no punitive**; **jurisdiction truth table four cells**; **NY uniquely engages tenant blacklist invariant**; **CT uniquely requires 30-day notice invariant**; **statutory damages range pinned** ($100-$1,000 cents); **citation pins all authorities** (§ 1681s-2(a) + § 1681s-2(b) + § 1681c + § 1681c(a)(4) + § 1681n + § 1681o + § 1681e(b) + § 1681i + § 1681m + § 1692e + § 1692f + § 1692g + § 1692k + 12 CFR § 1006 + NY GBL § 380 + NY GBL § 380-d + NY RPL § 227-f + Cal. Civ. Code § 1785 + Cal. Civ. Code § 1786 + Conn. Gen. Stat. § 47a-71 + Oregon SB 970 + Washington RCW 59.18.367 + Safeco Ins. Co. v. Burr); **note pins federal FCRA framework**; **note pins § 1681s-2(a) accuracy**; **note pins § 1681s-2(b) 5-element investigation**; **note pins § 1681c 7-year limitation**; **note pins § 1681n willful Safeco**; **note pins § 1681o negligent**; **note pins FDCPA 6-element framework**; **note pins tenant-screening CRA subset**; **note pins state law overlay four jurisdictions**; **note pins trader fact patterns five**; **note pins companion modules**; **multiple failures stack**.
+
 `traderview-expense::landlord_pest_extermination_timeline` is the **multi-jurisdictional landlord pest extermination response timeline framework module** — general pest infestation response (rodents, cockroaches, ants, termites, beyond bed bugs). Distinct from sibling `bedbug_extermination_cost` (bed-bug specific cost allocation), `bedbug_disclosure` (bed-bug prior-occurrence disclosure within 1-3 years), `rental_pesticide_application_notification` (24-72 hour pre-application notice), `pesticide_application_notice` (general pesticide framework). Trader-landlord critical because pest infestations routinely give rise to tenant rent-withholding claims, NYC HPD violations + $250-$1,000 daily fines, civil penalties under state habitability warranties, and tort liability for disease transmission.
 
 **Four-jurisdiction framework**:

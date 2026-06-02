@@ -530,6 +530,10 @@ use traderview_expense::tenant_emotional_distress_damages::{
     check as check_tenant_emotional_distress_damages,
     TenantEmotionalDistressDamagesInput, TenantEmotionalDistressDamagesResult,
 };
+use traderview_expense::landlord_negative_credit_reporting::{
+    check as check_landlord_negative_credit_reporting,
+    LandlordNegativeCreditReportingInput, LandlordNegativeCreditReportingResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1042,6 +1046,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-pest-extermination-timeline", axum::routing::post(landlord_pest_extermination_timeline_route))
         .route("/landlord-water-heat-emergency-response", axum::routing::post(landlord_water_heat_emergency_response_route))
         .route("/tenant-emotional-distress-damages", axum::routing::post(tenant_emotional_distress_damages_route))
+        .route("/landlord-negative-credit-reporting", axum::routing::post(landlord_negative_credit_reporting_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6535,6 +6540,41 @@ async fn tenant_emotional_distress_damages_route(
     Json(b): Json<TenantEmotionalDistressDamagesInput>,
 ) -> Result<Json<TenantEmotionalDistressDamagesResult>, ApiError> {
     Ok(Json(check_tenant_emotional_distress_damages(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord negative credit reporting framework.
+//
+// Mounted at POST /api/rental/landlord-negative-credit-reporting.
+// Federal FCRA furnisher framework + FDCPA + 7-year statute of
+// limitations + state-law overlay. FCRA § 1681s-2(a) accuracy and
+// integrity + § 1681s-2(b) mandatory non-discretionary
+// investigation duty (5-element: investigate + review + report +
+// cross-CRA correction + delete unverifiable per § 1681s-2(b)(1)
+// (E)) + § 1681c 7-year limitation from DATE OF DELINQUENCY +
+// § 1681n willful civil liability (statutory $100-$1,000 +
+// punitive + fees per Safeco Ins. Co. v. Burr 551 U.S. 47 (2007))
+// + § 1681o negligent civil liability. FDCPA § 1692e/§ 1692f/
+// § 1692g(a) 5-day validation notice + § 1692g(b) verification on
+// dispute + § 1692k civil liability + CFPB Regulation F (12 CFR
+// § 1006). State overlay: NY GBL § 380 + § 380-d + NY RPL
+// § 227-f tenant blacklist prohibition ($500-$1,000 per
+// violation); Cal. Civ. Code § 1785 + § 1786; Conn. Gen. Stat.
+// § 47a-71 30-day pre-reporting notice; Oregon SB 970 +
+// Washington RCW 59.18.367 sealed eviction record protection.
+// Distinct from sibling rent_credit_reporting (positive reporting
+// under Cal. Civ. Code § 1954.06 / AB 2747). Companion to
+// tenant_data_privacy, adverse_action_notice, credit_check_
+// authorization, application_fees, tenant_rent_judgment_wage_
+// garnishment.
+// ---------------------------------------------------------------------------
+
+async fn landlord_negative_credit_reporting_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordNegativeCreditReportingInput>,
+) -> Result<Json<LandlordNegativeCreditReportingResult>, ApiError> {
+    Ok(Json(check_landlord_negative_credit_reporting(&b)))
 }
 
 // ---------------------------------------------------------------------------
