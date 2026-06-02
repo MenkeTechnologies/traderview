@@ -509,6 +509,10 @@ use traderview_expense::rent_abatement_construction_nuisance::{
     check as check_rent_abatement_construction_nuisance,
     RentAbatementConstructionNuisanceInput, RentAbatementConstructionNuisanceResult,
 };
+use traderview_expense::landlord_master_key_retention::{
+    check as check_landlord_master_key_retention,
+    LandlordMasterKeyRetentionInput, LandlordMasterKeyRetentionResult,
+};
 use traderview_expense::landlord_foreclosure_status_disclosure::{
     check as check_landlord_foreclosure_status_disclosure,
     LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
@@ -1045,6 +1049,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
         .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
         .route("/rent-abatement-construction-nuisance", axum::routing::post(rent_abatement_construction_nuisance_route))
+        .route("/landlord-master-key-retention", axum::routing::post(landlord_master_key_retention_route))
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
@@ -6355,6 +6360,44 @@ async fn rent_abatement_construction_nuisance_route(
     Json(b): Json<RentAbatementConstructionNuisanceInput>,
 ) -> Result<Json<RentAbatementConstructionNuisanceResult>, ApiError> {
     Ok(Json(check_rent_abatement_construction_nuisance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord master key retention and access disclosure framework.
+//
+// Mounted at POST /api/rental/landlord-master-key-retention.
+// Four-jurisdiction framework: (1) California — Cal. Civ. Code
+// § 1954 landlord entry 24-hour written notice + normal business
+// hours; § 1954(c) civil penalty up to $2,000 per unauthorized
+// incident; six permitted entry categories (emergency + necessary
+// repair + show unit + court order + tenant abandonment + water
+// conservation); (2) Texas — Tex. Prop. Code § 92.156 7-day rekey
+// at landlord expense + § 92.156(b) landlord-master-key change
+// expense MUST be paid by landlord; (3) New York — NY Multiple
+// Dwelling Law § 51 + § 53 key management; NYC HMC § 27-2008
+// minimum lock standards; NY RPL § 235-d landlord harassment +
+// NYC Tenant Anti-Harassment Act 2018 $1,000-$10,000 civil penalty
+// per unauthorized entry incident; (4) Massachusetts — Mass. Gen.
+// Laws c. 186 § 15B (provide keys at lease start) + § 15F
+// (UNAUTHORIZED ENTRY TRIPLE DAMAGES + attorney fees + injunctive
+// relief); 105 CMR 410.480 minimum lock standards; Boston Housing
+// Auth. v. Hemingway, 363 Mass. 184 (1973). Master-key system
+// best-practice elements: written lease disclosure + key-issuance
+// log + § 1954/§ 235-d/§ 15B notice protocols + controlled access
+// (locked safe) + per-contractor receipt + prohibition on personal
+// use. Sibling cluster: entry_notice, landlord_emergency_entry_
+// notice, landlord_mid_tenancy_rekeying, lock_change_between_
+// tenancies, dv_survivor_lock_change, tenant_smart_lock_biometric_
+// consent, landlord_harassment, tenant_emotional_distress_damages,
+// landlord_water_heat_emergency_response.
+// ---------------------------------------------------------------------------
+
+async fn landlord_master_key_retention_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordMasterKeyRetentionInput>,
+) -> Result<Json<LandlordMasterKeyRetentionResult>, ApiError> {
+    Ok(Json(check_landlord_master_key_retention(&b)))
 }
 
 // ---------------------------------------------------------------------------

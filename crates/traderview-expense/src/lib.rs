@@ -80,6 +80,7 @@ pub mod landlord_self_help_eviction_prohibition;
 pub mod landlord_tenant_recording_consent;
 pub mod landlord_water_heat_emergency_response;
 pub mod landlord_lien_prohibition;
+pub mod landlord_master_key_retention;
 pub mod landlord_mid_tenancy_rekeying;
 pub mod landlord_negative_credit_reporting;
 pub mod landlord_pest_extermination_timeline;

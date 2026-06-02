@@ -1097,6 +1097,47 @@ Mounted at `POST /api/rental/water-heater-earthquake-strap`. Twenty-eight tests 
 
 Mounted at `POST /api/rental/landlord-lien-prohibition`. Twenty-three tests pin: **TX statutory lien exists + contractual lien without bold print unenforceable + with bold print enforceable + self-help permitted without court order**; **CA court order required + self-help without court order violation + with court order no violation + livelihood property carve-out violation + livelihood carve-out even with court order**; **NY no statutory lien + self-help violation**; **MA no statutory lien (UCC Article 9 only)**; **IL judgment required first + self-help without judgment violation + with judgment compliant**; **Default court order required**; **only-Texas-has-statutory-lien 6-regime invariant**; **only-California-has-livelihood-carve-out 6-regime invariant**; **only-Texas-requires-conspicuous-bold 6-regime invariant**; **only-Texas-does-not-require-court-order 6-regime invariant**; **self-help without court order violates 5 regimes invariant** (TX excluded); **citation pins authority per regime**; **sibling-module note across all 6 regimes** (UX-text regression for abandoned_property_handling + DURING tenancy scope).
 
+`traderview-expense::landlord_master_key_retention` is the **multi-jurisdictional landlord master key retention and access disclosure framework module** — when may a landlord retain master/duplicate keys to tenant-occupied units, what disclosure obligations attach, and what restrictions govern landlord access? Distinct from sibling `entry_notice` (general 24-hour pre-entry notice), `landlord_emergency_entry_notice` (post-entry notice after emergency), `landlord_mid_tenancy_rekeying` (mid-tenancy rekey requests), `lock_change_between_tenancies` (between-tenancy locks), `dv_survivor_lock_change` (DV-survivor locks), and `tenant_smart_lock_biometric_consent` (biometric locks). Trader-landlord critical because traders operating multi-unit rental portfolios routinely maintain master-key systems for emergency response + repair access + pest control; mismanagement exposes landlord to statutory civil penalties for unauthorized entry, tort claims for invasion of privacy and trespass, tenant constructive eviction, emotional distress damages (iter 453), and criminal trespass liability.
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Key Statutes | Penalty for Unauthorized Entry |
+|--------------|--------------|--------------------------------|
+| **California** | Cal. Civ. Code § 1954 (24-hour notice + normal business hours) | § 1954(c) **CIVIL PENALTY up to $2,000 per incident** |
+| **Texas** | Tex. Prop. Code § 92.156 (7-day rekey + landlord master-key expense) | § 92.156 statutory remedies + § 92.157 tenant request rekey |
+| **New York** | NY Multiple Dwelling Law § 51 + § 53; NYC HMC § 27-2008; NY RPL § 235-d; NYC Tenant Anti-Harassment Act 2018 | **$1,000-$10,000 civil penalty per unauthorized entry incident** |
+| **Massachusetts** | Mass. Gen. Laws c. 186 § 15B + § 15F; 105 CMR 410.480; Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973) | **TRIPLE DAMAGES** + attorney fees + injunctive relief |
+
+**Cal. Civ. Code § 1954 permitted entry categories (six)**:
+1. **§ 1954(a)(1)** — EMERGENCY (fire, gas leak, burst water pipe; no notice required)
+2. **§ 1954(a)(2)** — necessary or agreed-upon repairs/decorations/alterations/improvements (24-hour notice)
+3. **§ 1954(a)(3)** — show unit to prospective tenants/purchasers/mortgagees/lenders/appraisers/contractors (24-hour notice; oral notice permitted for sale within 120 days of listing)
+4. **§ 1954(a)(4)** — court order
+5. **§ 1954(a)(5)** — tenant has abandoned or surrendered premises
+6. **§ 1954(a)(6)** — install/repair/test/maintain water-conserving plumbing fixtures (40-hour notice)
+
+**Cal. Civ. Code § 1954 notice requirements (5 elements)**: (1) written notice (oral permitted only for sale within 120 days of listing); (2) 24 hours presumptively reasonable; (3) date + approximate time + PURPOSE of entry; (4) entry only during NORMAL BUSINESS HOURS (typically 8 AM - 6 PM Monday-Friday); (5) § 1954(c) civil penalty up to $2,000 per unauthorized-purpose incident.
+
+**Texas § 92.156 rekey requirements (4 elements)**:
+1. § 92.156(a) — security device must be REKEYED by landlord at landlord's expense not later than **7th day after tenant turnover date**
+2. § 92.156(b) — expense of rekeying for use or change of landlord's master key **MUST be paid by landlord**
+3. § 92.156(c) — landlord cannot require tenant to pay for landlord-master-key change
+4. § 92.157 — tenant request for rekey at tenant expense permitted; landlord must perform within 7 days of tenant request
+
+**NYC Multiple Dwelling Law § 51 + § 53 key management (4 elements)**:
+1. § 51 — owner shall furnish front door key + apartment door key + mailbox key to tenant at occupancy
+2. § 53 — owner-installed locks must permit tenant lock change at tenant expense subject to providing copy to landlord
+3. NYC HMC § 27-2008 — locks must conform to minimum standards
+4. NYC Tenant Anti-Harassment Act 2018 — $1,000-$10,000 civil penalty per unauthorized entry incident
+
+**Mass. Gen. Laws c. 186 § 15B + § 15F (3 elements)**: (1) § 15B landlord must provide keys at lease start; cannot retain keys after tenant vacates; (2) 105 CMR 410.480 minimum lock standards; (3) **§ 15F UNAUTHORIZED ENTRY exposes landlord to TRIPLE DAMAGES** + attorney fees + injunctive relief; combined with c. 186 § 14 quiet enjoyment breach.
+
+**Master-key system best-practice elements (6)**: (1) WRITTEN LEASE DISCLOSURE that landlord retains master/duplicate keys; (2) LOG of every key issuance to maintenance staff + contractors + vendors; (3) § 1954/§ 235-d/§ 15B advance notice for every non-emergency entry; (4) RECEIVE RECEIPTS / log entries with date + time + purpose + person entering; (5) CONTROLLED ACCESS protocols (master copy in locked landlord safe; key cards electronically logged); (6) PROHIBITION on landlord personal use of master keys for non-business purposes.
+
+**Trader-landlord critical fact patterns**: (1) CA trader enters tenant unit with master key without 24-hour notice for routine inspection — § 1954 violation plus civil penalty up to $2,000 per incident plus invasion of privacy claim plus IIED under iter 453; (2) TX trader fails to rekey unit within 7 days of new tenancy — § 92.156 violation plus actual damages plus one month's rent plus $500 civil penalty plus attorney's fees; (3) NY trader enters rent-stabilized unit repeatedly without notice claiming non-emergency — NY RPL § 235-d landlord harassment plus NYC Tenant Anti-Harassment Act 2018 $1,000-$10,000 per violation plus constructive eviction; (4) MA trader enters with master key during tenant vacation without notice — c. 186 § 15F UNAUTHORIZED ENTRY TRIPLE DAMAGES plus attorney fees plus injunctive relief plus quiet enjoyment breach; (5) trader best-practice mitigation: written lease disclosure + key-issuance log + § 1954 notice + locked safe + per-contractor receipt + electronic log.
+
+Mounted at `POST /api/rental/landlord-master-key-retention`. Thirty-one tests pin: **CA compliant repair authorized**; **CA emergency no notice required**; **CA repair no 24-hour notice unauthorized**; **CA repair outside business hours violation**; **CA routine inspection without notice civil penalty** ($2,000); **CA show unit with notice authorized**; **CA water conservation with notice authorized**; **TX rekey within 7 days paid by landlord compliant**; **TX no rekey within 7 days violation**; **TX tenant paid master key violation** (§ 92.156(b) + § 92.157); **NY unauthorized entry civil penalty per violation** ($1,000-$10,000); **MA unauthorized entry triple damages engaged** (§ 15F + § 14); **MA authorized entry no triple damages**; **best-practice score maxed** (5/5); **no lease disclosure best-practice gap**; **no key log best-practice gap**; **court order entry authorized**; **tenant abandonment entry authorized**; **entry purpose truth table eight cells**; **MA uniquely triple damages invariant**; **citation pins all authorities** (Cal. Civ. Code § 1954 + § 1954(a)(1)-(6) + § 1954(c) + Tex. Prop. Code § 92.156 + § 92.156(a) + § 92.156(b) + § 92.157 + NY Multiple Dwelling Law § 51 + § 53 + NYC HMC § 27-2008 + NY RPL § 235-b + § 235-d + NYC Tenant Anti-Harassment Act 2018 + Mass. Gen. Laws c. 186 § 15B + § 15F + 105 CMR 410.480 + Boston Housing Auth. v. Hemingway + HSTPA 2019); **note pins four-jurisdiction framework**; **note pins CA six entry categories**; **note pins CA notice requirements five elements**; **note pins TX § 92.156 four elements**; **note pins NYC MDL § 51 + § 53 four elements**; **note pins MA § 15B + § 15F three elements**; **note pins master-key best-practice six elements**; **note pins trader fact patterns five**; **note pins companion modules**; **multiple failures stack**.
+
 `traderview-expense::abandoned_property_handling` is the **state abandoned-tenant-personal-property landlord compliance check** — addresses WHAT the landlord must do with BELONGINGS the tenant left behind after vacating. Distinct from `tenant_abandonment` (which addresses when the tenant has vacated and the landlord may declare the unit abandoned); this module handles the BELONGINGS leftover. Three states ship detailed statutory procedures with materially different timeline + value thresholds + sale duties.
 
 **Four regimes**:
