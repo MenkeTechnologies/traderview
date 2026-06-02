@@ -222,6 +222,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
+        .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
@@ -872,6 +873,39 @@ async fn section_4974_route(
     Json(b): Json<traderview_expense::section_4974::Section4974Input>,
 ) -> Result<Json<traderview_expense::section_4974::Section4974Result>, ApiError> {
     Ok(Json(traderview_expense::section_4974::check(&b)))
+}
+
+// ── § 4960 excise tax on excess tax-exempt org executive comp ────────
+// Mounted at /api/calc/section-4960. Pure compute; § 4960(a) imposes
+// 21% excise tax on applicable tax-exempt organization (ATEO) for sum
+// of (i) remuneration paid by ATEO to covered employee exceeding
+// $1,000,000 in the taxable year, plus (ii) any excess parachute
+// payment paid by ATEO to covered employee; § 4960(c)(1) ATEO
+// definition (§ 501(a) exempt org + § 521(b)(1) farmers coop +
+// § 115(1) state/political subdivision instrumentality + § 527(e)(1)
+// political org); § 4960(c)(2) covered employee — PRE-OBBBA regime
+// (2018-2025): five highest-compensated employees for taxable year
+// OR any preceding year beginning after 12/31/2016 forever-covered
+// rule; POST-OBBBA regime (after 12/31/2025 per One Big Beautiful
+// Bill Act, Pub. L. 119-21, July 4, 2025): five-employee cap REMOVED,
+// any current or former employee over $1M triggers tax; § 4960(c)(3)
+// remuneration = § 3401(a) wages excluding designated Roth plus
+// § 457(f) vested deferred comp, EXCLUDES medical services by
+// licensed medical professional (doctor, nurse, veterinarian) per
+// § 4960(c)(3)(B); § 4960(c)(5) excess parachute payment modeled on
+// § 280G — aggregate payments contingent on SEPARATION FROM
+// EMPLOYMENT with present value ≥ 3× base amount triggers tax on
+// amount EXCEEDING 1× base amount; § 4960(c)(7) coordination with
+// § 162(m) $1M deduction cap (publicly held corporations); Final
+// Treasury Regulations 26 C.F.R. § 53.4960-0 through § 53.4960-6
+// effective January 15, 2021; original enactment Tax Cuts and Jobs
+// Act, Pub. L. 115-97 (Dec. 22, 2017).
+
+async fn section_4960_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4960::Section4960Input>,
+) -> Result<Json<traderview_expense::section_4960::Section4960Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4960::check(&b)))
 }
 
 // ── § 4975 prohibited transactions in IRA / qualified plans ──────────
