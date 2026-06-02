@@ -474,6 +474,10 @@ use traderview_expense::landlord_possession_delivery::{
     CheckResult as LandlordPossessionDeliveryResult,
     Input as LandlordPossessionDeliveryInput,
 };
+use traderview_expense::rental_broadband_mte_rules::{
+    check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
+    RentalBroadbandMteRulesResult,
+};
 use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
@@ -814,6 +818,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
+        .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
@@ -5740,6 +5745,34 @@ async fn rental_junk_fee_transparency_route(
     Json(b): Json<RentalJunkFeeTransparencyInput>,
 ) -> Result<Json<RentalJunkFeeTransparencyResult>, ApiError> {
     Ok(Json(check_rental_junk_fee_transparency(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_broadband_mte_rules: FCC Multiple Tenant Environment (MTE)
+// broadband-access rules — when may a trader-landlord lawfully enter a
+// contract with ISP granting exclusive access + revenue sharing +
+// bulk billing arrangements for residential or commercial multifamily
+// buildings? Mounted at POST /api/rental/rental-broadband-mte-rules.
+// Two regimes: Federal FCC (47 CFR § 64.2500-64.2503 + FCC Open
+// Internet Order FCC 24-52 July 2024 + FCC 22-12 MTE R&O + FCC 10-49
+// 2010 bulk billing confirmation — exclusive access contracts
+// categorically PROHIBITED for telecom + cable + broadband providers;
+// exclusive revenue-sharing agreements PROHIBITED; graduated
+// revenue-sharing agreements for broadband-only providers PROHIBITED
+// under 2024 Open Internet Order; flat licensing fees PERMITTED; bulk
+// billing arrangements REMAIN PERMITTED — Chairman Carr withdrew 2024
+// proposed bulk-billing ban January 2025); Default (common-law lease
+// analysis + state-specific broadband disclosure CA SB 1130 + NY
+// HSTPA 2019). Distinct from siblings tenant_data_privacy, tenant_
+// organizing, landlord_identification_disclosure, lease_disclosures.
+// ---------------------------------------------------------------------------
+
+async fn rental_broadband_mte_rules_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBroadbandMteRulesInput>,
+) -> Result<Json<RentalBroadbandMteRulesResult>, ApiError> {
+    Ok(Json(check_rental_broadband_mte_rules(&b)))
 }
 
 // ---------------------------------------------------------------------------
