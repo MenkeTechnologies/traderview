@@ -214,6 +214,7 @@ pub mod tenant_cannabis_use_protection;
 pub mod tenant_clothesline_drying_right;
 pub mod tenant_data_privacy;
 pub mod tenant_domestic_violence_lease_termination;
+pub mod tenant_estoppel_certificate;
 pub mod tenant_ev_charging_installation_right;
 pub mod tenant_fire_safety_plan_disclosure;
 pub mod tenant_death_termination;

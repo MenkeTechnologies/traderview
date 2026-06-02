@@ -489,6 +489,10 @@ use traderview_expense::tenant_lease_guarantor_disclosure::{
     check as check_tenant_lease_guarantor_disclosure,
     TenantLeaseGuarantorDisclosureInput, TenantLeaseGuarantorDisclosureResult,
 };
+use traderview_expense::tenant_estoppel_certificate::{
+    check as check_tenant_estoppel_certificate,
+    TenantEstoppelCertificateInput, TenantEstoppelCertificateResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -991,6 +995,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/tenant-late-fee-cap", axum::routing::post(tenant_late_fee_cap_route))
         .route("/tenant-lease-guarantor-disclosure", axum::routing::post(tenant_lease_guarantor_disclosure_route))
+        .route("/tenant-estoppel-certificate", axum::routing::post(tenant_estoppel_certificate_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6129,6 +6134,42 @@ async fn tenant_lease_guarantor_disclosure_route(
     Json(b): Json<TenantLeaseGuarantorDisclosureInput>,
 ) -> Result<Json<TenantLeaseGuarantorDisclosureResult>, ApiError> {
     Ok(Json(check_tenant_lease_guarantor_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant estoppel certificate requirements and protections.
+//
+// Mounted at POST /api/rental/tenant-estoppel-certificate.
+// Three-jurisdiction framework for estoppel certificates used by
+// trader-landlords during refinance / sale: (1) New York —
+// commercial enforceable with express lease provision; residential
+// deemed-admission and attorney-in-fact clauses VOID AS
+// UNCONSCIONABLE under RPL § 235-c + GOL § 5-321; GOL § 5-703
+// Statute of Frauds for leases > 1 year; (2) California —
+// commercial enforceable with express provision; Cal. Civ. Code
+// § 1962 landlord identification disclosure; Cal. Civ. Code
+// § 1668 NO EXCULPATION FOR FRAUD limits scope of deemed-admission
+// clauses; (3) Default — Restatement (Second) of Contracts § 90
+// promissory estoppel binds tenant on clear/definite promise +
+// foreseeable reliance + actual reliance + injustice avoidable
+// only by enforcement. Standard COMMERCIAL response window: 10-15
+// business days; failure to return triggers deemed-admission +
+// attorney-in-fact + monetary penalty + event of default. Tenant
+// protections: cannot bind tenant to facts not known; cannot waive
+// statutory rights (rent-stabilization succession in NY); cannot
+// serve as pre-dispute waiver of yet-to-accrue claims. Sibling
+// cluster: lease_disclosures, lease_copy_delivery,
+// tenant_lease_guarantor_disclosure, tenant_rights_statement_
+// disclosure, lease_waiver_enforceability, landlord_
+// identification_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn tenant_estoppel_certificate_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantEstoppelCertificateInput>,
+) -> Result<Json<TenantEstoppelCertificateResult>, ApiError> {
+    Ok(Json(check_tenant_estoppel_certificate(&b)))
 }
 
 // ---------------------------------------------------------------------------
