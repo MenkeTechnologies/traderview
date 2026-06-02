@@ -254,6 +254,7 @@ pub mod section_121;
 pub mod section_121d;
 pub mod section_132;
 pub mod section_1045;
+pub mod section_1058;
 pub mod section_1092;
 pub mod section_1202;
 pub mod section_1212;

@@ -206,6 +206,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1295",          post(section_1295_route))
+        .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
@@ -2033,6 +2034,33 @@ async fn section_911_route(
         ));
     }
     Ok(Json(traderview_expense::section_911::compute(&b)))
+}
+
+// ── §1058 securities loan non-recognition ─────────────────────────────
+// Mounted at /api/calc/section-1058. Pure compute; § 1058(a) provides
+// non-recognition treatment for securities loans satisfying four-prong
+// § 1058(b) qualification test: (1) return identical securities; (2)
+// dividend-equivalent payments to transferor during loan period; (3)
+// risk of loss / opportunity for gain preserved; (4) terminable on
+// demand per Treas. Reg. § 1.1058-1 + Rev. Proc. 2008-63 (5 business
+// days). § 1058(a)(2) holding period tacking — loan period adds to
+// transferor's holding period in returned securities. § 1058(c)
+// "securities" definition = § 1236(c). Anshutz v. Commissioner, 135
+// T.C. No. 5 (2010) + Calloway v. Commissioner, 135 T.C. No. 3 (2010)
+// — variable prepaid forward contract bundled with stock loan FAILS
+// § 1058(b)(3). Failure consequence: TAXABLE SALE at FMV + basis reset
+// + holding period restart + potential § 1259 constructive sale.
+// Trader-critical for Interactive Brokers SYEP + Robinhood Securities
+// Lending + Schwab SLFPS + TD Ameritrade Securities Lending + hedge
+// fund prime brokerage stock-loan + short seller's borrow (lender
+// side). Companion: § 1259 (constructive sales), § 1092 (straddles),
+// § 1236(c), § 475.
+
+async fn section_1058_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1058::Section1058Input>,
+) -> Result<Json<traderview_expense::section_1058::Section1058Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1058::check(&b)))
 }
 
 // ── §1092 straddle loss deferral ──────────────────────────────────────
