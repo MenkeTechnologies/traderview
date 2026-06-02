@@ -11138,6 +11138,43 @@ Mounted at `POST /api/calc/section-280b`. Nineteen tests pin: **standard demolit
 
 Mounted at `POST /api/calc/section-280e`. Twenty-four tests pin: **traditional cannabis §280E applies + $300k trafficking expenses fully disallowed**; **traditional cannabis taxable income = gross income − COGS only** ($1M revenue − $400k COGS = $600k taxable, $300k §162 expenses DISALLOWED); **effective tax disadvantage = trafficking-disallowed amount** ($300k); **COGS always reduces gross income under §61**; **very large COGS ($9M) still allowed**; **Champ bifurcation** — traditional cannabis $300k disallowed + $50k non-trafficking allowed (taxable income $550k); **pure non-trafficking business no §280E** + $200k bifurcated allowed; **FDA-approved Schedule III no §280E** ($300k expenses allowed → $300k taxable); **state-licensed medical pre-Final-Order still §280E applies** (rescheduling not yet effective for year); **state-licensed medical post-Final-Order no §280E**; **bulk / unlicensed still §280E after partial rescheduling** (regression — DOJ Final Order does NOT move bulk to Schedule III); no §280E → zero effective disadvantage; higher trafficking expenses → higher disadvantage; zero revenue zero income; zero trafficking expenses no disadvantage; **Champ bifurcation + FDA-approved combined** ($400k total allowed → $200k taxable); **4 citation regression targets** (P.L. 97-248 § 351 origin + Edmondson + Champ + COGS carve-out + EO 14370 + DOJ Final Order + 2025-12-18); note for traditional says "§280E applies"; note for FDA says "§280E does NOT apply"; note describes rescheduling status; **$1B precision case** ($1B revenue / $400M COGS / $300M expenses → $600M taxable + $300M effective disadvantage).
 
+`traderview-expense::section_280g` is the **IRC § 280G Golden Parachute Payments module** — direct trader-critical companion to `section_422` (ISO acceleration on change of control), `section_423` (ESPP — purchase right acceleration), `section_409a` (NQDC vesting acceleration), `section_4973` (different excise-tax regime). Trader-critical because traders at venture-backed startups frequently encounter § 280G calculations during ACQUISITIONS when accelerated equity vesting + transaction bonuses + severance payments trigger "parachute payment" status.
+
+§ 280G(a) DENIES employer DEDUCTION for any "excess parachute payment" to a "disqualified individual" that is "contingent on a change in ownership or control" of the corporation. § 4999 imposes a 20% EXCISE TAX on the recipient disqualified individual on any excess parachute payment.
+
+**§ 280G(b)(1) cliff effect — three-times-base threshold**:
+
+| Aggregate parachute | Result |
+|---------------------|--------|
+| < 3× base amount | NO excess parachute payment; § 4999 inapplicable |
+| ≥ 3× base amount | **CLIFF triggered**: ENTIRE EXCESS OVER 1× base (NOT just over-3× portion) becomes excess parachute payment + 20% recipient excise tax + lost employer § 162 deduction |
+
+**§ 280G(b)(3) base amount** — annualized includible compensation for **base period = 5 most recent tax years** ending before change-in-control date.
+
+**§ 280G(c) disqualified individual (three categories)**:
+1. **OFFICER** (Treas. Reg. § 1.280G-1 Q&A 18: max 50 employees treated as officers regardless of title)
+2. **1%+ SHAREHOLDER** (stock FMV exceeds 1% of total stock FMV at any time during 12-month period ending on change-in-control date)
+3. **HIGHLY COMPENSATED EMPLOYEE** (top 1% of all employees or top 250 employees — whichever is less — with 2026 threshold $155,000+)
+
+**§ 280G(b)(2)(A) change in ownership or control** (Treas. Reg. § 1.280G-1 Q&A 27-29):
+- CHANGE IN OWNERSHIP — > 50% of FMV or voting power acquired
+- CHANGE IN EFFECTIVE CONTROL — 35% voting power within 12 months OR majority of board replaced within 12 months
+- CHANGE IN OWNERSHIP OF SUBSTANTIAL ASSETS — 40%+ of total gross FMV of assets within 12 months
+
+**§ 280G(b)(5) small business exception** (eliminates § 280G entirely):
+- **§ 280G(b)(5)(A)(i)** — private corporation with § 1361 S corporation election; OR
+- **§ 280G(b)(5)(A)(ii)** — private corporation with > 75% SHAREHOLDER VOTE / CLEANSING VOTE after adequate disclosure under Treas. Reg. § 1.280G-1 Q&A 7
+
+**§ 280G(b)(4) reasonable compensation exception** — payment is NOT parachute payment to extent it is reasonable compensation for services rendered ON OR AFTER change in control; BURDEN ON TAXPAYER to establish by CLEAR AND CONVINCING EVIDENCE under Treas. Reg. § 1.280G-1 Q&A 40.
+
+**§ 280G employment-agreement structures**:
+- **GROSS-UP CLAUSE** — employer pays additional cash to make recipient whole for § 4999 excise tax + federal/state income tax on gross-up; expensive to employer; controversial post-Dodd-Frank
+- **MODIFIED CUTBACK / BEST-AFTER-TAX** — payment cut to maximum of (1) just-under 3× base OR (2) full payment net of excise; whichever leaves disqualified individual with GREATER AFTER-TAX AMOUNT
+
+**Trader-critical fact patterns**: (1) trader at startup acquired $500M; $4.5M parachute on $1M base; 3× threshold = $3M MET → entire $3.5M excess over 1× base = excess parachute → $700K § 4999 + employer loses § 162 deduction; (2) private S-corp acquisition with 75%+ shareholder vote + adequate disclosure eliminates § 280G entirely via § 280G(b)(5); (3) 60% of parachute treated as reasonable compensation for post-change services under § 280G(b)(4); (4) trader holds 0.5% stock + NOT officer + NOT top 1% comp → not disqualified individual; (5) gross-up clause vs modified-cutback structure.
+
+Mounted at `POST /api/calc/section-280g`. Thirty-four tests pin: **three-times threshold met triggers excess** ($4.5M parachute on $1M base → $3.5M excess); **excise tax at 20%** ($700K on $3.5M excess); **employer deduction lost full excess**; **just under 3× no excess**; **3× boundary triggers cliff**; **not disqualified individual no excise**; **no change in control no excise**; **S-corp election small business exception**; **shareholder 75% vote small business exception**; **public corp no small business exception**; **reasonable compensation carveout reduces parachute**; **reasonable compensation carveout full neutralizes**; **1% shareholder qualifies**; **highly compensated employee qualifies** ($155K threshold); **change in effective control engages**; **change in substantial assets engages**; **gross-up clause disclosed when excess**; **modified cutback clause disclosed when threshold met**; **disqualified individual truth table 4 cells**; **change in control truth table 4 cells**; **cliff effect invariant one dollar over 3×**; **citation pins all authorities** (§ 280G(a)-(e) + § 4999 + § 162 + § 1361 + Treas. Reg. § 1.280G-1 Q&A 1-45 + Rev. Rul. 2005-39 + IRS Pub. 5975); **note pins § 280G(a) deduction denial**; **note pins § 280G(b)(1) cliff definition**; **note pins § 280G(b)(3) base amount**; **note pins § 280G(c) three categories**; **note pins § 280G(b)(2) change categories**; **note pins § 280G(b)(5) small business exception**; **note pins § 280G(b)(4) reasonable compensation**; **note pins § 4999 and gross-up/modified-cutback**; **note pins trader fact patterns five**; **note pins Form 1120 Schedule M-3 and W-2 Box 12 Code K**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::credit_check_authorization` is the **state credit-check authorization and disclosure landlord compliance check** — addresses the upfront disclosures required BEFORE a landlord pulls a tenant-screening consumer report. Distinct from `adverse_action_notice` (post-denial notice AFTER the report is used to deny) and from `application_fees` (which caps the dollar amount of the screening fee). This module addresses the pre-screening disclosure step.
 
 **Three regimes**:

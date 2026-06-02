@@ -196,6 +196,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-280b",          post(section_280b_route))
         .route("/calc/section-280e",          post(section_280e_route))
+        .route("/calc/section-280g",          post(section_280g_route))
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
@@ -2511,6 +2512,32 @@ async fn section_280e_route(
         ));
     }
     Ok(Json(traderview_expense::section_280e::compute(&b)))
+}
+
+// ── § 280G Golden Parachute Payments + § 4999 20% recipient excise ───
+// Mounted at /api/calc/section-280g. Pure compute; § 280G(a) denies
+// employer compensation deduction for "excess parachute payment" to
+// "disqualified individual" "contingent on change in ownership or
+// control"; § 280G(b)(1) parachute = aggregate present value ≥ 3×
+// base amount triggers CLIFF on entire excess over 1× base (not
+// just over 3× portion); § 280G(b)(3) base amount = 5-year
+// annualized includible compensation; § 280G(c) disqualified
+// individual = (1) officer (max 50 employees regardless of title);
+// (2) 1%+ shareholder; (3) highly compensated (top 1% or top 250);
+// § 280G(b)(2)(A) change in control = > 50% ownership / 35% voting
+// in 12 months / majority board in 12 months / 40%+ asset
+// acquisition; § 280G(b)(5) small business exception = private
+// corp + (S election or > 75% shareholder vote with adequate
+// disclosure cleansing vote); § 280G(b)(4) reasonable compensation
+// for post-change services exception with clear and convincing
+// evidence burden; § 4999 20% recipient excise tax on excess
+// parachute payment; gross-up vs modified-cutback structures.
+
+async fn section_280g_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_280g::Section280gInput>,
+) -> Result<Json<traderview_expense::section_280g::Section280gResult>, ApiError> {
+    Ok(Json(traderview_expense::section_280g::check(&b)))
 }
 
 // ── §481(a) accounting method change adjustment ──────────────────────

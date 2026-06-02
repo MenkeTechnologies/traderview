@@ -330,6 +330,7 @@ pub mod section_280a_d2;
 pub mod section_280b;
 pub mod section_280e;
 pub mod section_280f;
+pub mod section_280g;
 pub mod section_30d;
 pub mod section_305;
 pub mod section_3406;
