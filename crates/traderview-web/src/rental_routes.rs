@@ -493,6 +493,10 @@ use traderview_expense::tenant_estoppel_certificate::{
     check as check_tenant_estoppel_certificate,
     TenantEstoppelCertificateInput, TenantEstoppelCertificateResult,
 };
+use traderview_expense::landlord_property_sale_notice::{
+    check as check_landlord_property_sale_notice,
+    LandlordPropertySaleNoticeInput, LandlordPropertySaleNoticeResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -996,6 +1000,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-late-fee-cap", axum::routing::post(tenant_late_fee_cap_route))
         .route("/tenant-lease-guarantor-disclosure", axum::routing::post(tenant_lease_guarantor_disclosure_route))
         .route("/tenant-estoppel-certificate", axum::routing::post(tenant_estoppel_certificate_route))
+        .route("/landlord-property-sale-notice", axum::routing::post(landlord_property_sale_notice_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6170,6 +6175,41 @@ async fn tenant_estoppel_certificate_route(
     Json(b): Json<TenantEstoppelCertificateInput>,
 ) -> Result<Json<TenantEstoppelCertificateResult>, ApiError> {
     Ok(Json(check_tenant_estoppel_certificate(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord property sale notice and security deposit transfer disclosure.
+//
+// Mounted at POST /api/rental/landlord-property-sale-notice.
+// Four-jurisdiction framework for when a trader-landlord sells
+// rental property: (1) California — Cal. Civ. Code § 1950.5(h):
+// reasonable time + transfer deposit (less lawful deductions) to
+// successor + notify tenant by PERSONAL DELIVERY or FIRST-CLASS
+// MAIL with deposit amount + claims against deposit + new owner
+// name/address/phone; failure triggers joint and several
+// liability; (2) New York — NY GOL § 7-105: 5-DAY transfer +
+// REGISTERED/CERTIFIED MAIL notice; NY GOL § 7-103(2) requires
+// accrued interest transfer for 6+ family dwelling units; failure
+// triggers joint and several liability of grantee + seller for
+// principal + accrued interest; (3) Massachusetts — Mass. Gen.
+// Laws c. 186 § 15B(7): 45-DAY new-owner notice; willful
+// violation triggers TREBLE DAMAGES + attorney's fees; successor
+// liable for return regardless of receipt from seller;
+// (4) Default — common-law reasonable time; 12 USC § 5220
+// Protecting Tenants at Foreclosure Act stacks 90-day notice on
+// top of state-law obligations during foreclosure sales.
+// Sibling cluster: security_deposit_bank_disclosure,
+// deposit_interest, deposit_return_windows,
+// foreclosure_tenant_rights, landlord_identification_disclosure,
+// tenant_estoppel_certificate.
+// ---------------------------------------------------------------------------
+
+async fn landlord_property_sale_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordPropertySaleNoticeInput>,
+) -> Result<Json<LandlordPropertySaleNoticeResult>, ApiError> {
+    Ok(Json(check_landlord_property_sale_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------
