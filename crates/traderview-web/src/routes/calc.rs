@@ -243,6 +243,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4980h",         post(section_4980h_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
+        .route("/calc/section-457a",          post(section_457a_route))
         .route("/calc/section-457b",          post(section_457b_route))
         .route("/calc/section-461g",          post(section_461g_route))
         .route("/calc/section-461l",          post(section_461l_route))
@@ -1453,6 +1454,29 @@ async fn section_457b_route(
     Json(b): Json<traderview_expense::section_457b::Section457bInput>,
 ) -> Result<Json<traderview_expense::section_457b::Section457bResult>, ApiError> {
     Ok(Json(traderview_expense::section_457b::check(&b)))
+}
+
+// ── § 457A Nonqualified Deferred Compensation From Tax Indifferent Parties ──
+// Mounted at /api/calc/section-457a (iter 494). Pure compute. EESA 2008
+// anti-deferral provision targeting US hedge-fund / PE managers operating
+// through Cayman / BVI master-feeder structures. Computes (1) nonqualified-
+// entity classification per § 457A(b) (foreign corp w/o comprehensive
+// foreign tax or ECI; partnership w/ substantially-all tax-indifferent
+// allocations); (2) substantial-risk-of-forfeiture test under § 457A(d)(2)
+// (future-performance-of-substantial-services standard, stricter than §
+// 409A); (3) immediate-inclusion when SROF absent OR amount-not-determinable
+// 20% additional tax + AFR + 1% interest under § 457A(c)(1)(B)(i)–(ii);
+// (4) pre-2009 transition rule per § 457A(e) (must include by last tax year
+// before 2017 per Notice 2009-8); (5) § 409A-exempt stock-right safe harbor
+// per Notice 2009-8 Q&A 2 + Rev. Rul. 2014-18. Coordinates with § 409A
+// (applies IN ADDITION per § 457A(d)(4)), § 457(b) (governmental NQDC), §
+// 280G (golden parachutes on change in control).
+
+async fn section_457a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_457a::Section457aInput>,
+) -> Result<Json<traderview_expense::section_457a::Section457aResult>, ApiError> {
+    Ok(Json(traderview_expense::section_457a::check(&b)))
 }
 
 // ── §168(e)(6) Qualified Improvement Property ────────────────────────
