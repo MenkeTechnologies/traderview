@@ -195,6 +195,10 @@ use traderview_expense::lease_translation::{
 use traderview_expense::rent_receipts::{
     check as check_rent_receipts, ReceiptInput, ReceiptResult,
 };
+use traderview_expense::rent_stabilized_mci_iai_passthrough::{
+    check as check_rent_stabilized_mci_iai_passthrough, RentStabilizedPassthroughInput,
+    RentStabilizedPassthroughResult,
+};
 use traderview_expense::repair_and_deduct::{
     check as check_repair_and_deduct, RepairDeductInput, RepairDeductResult,
 };
@@ -748,6 +752,7 @@ pub fn router() -> Router<AppState> {
         .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
         .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
         .route("/rent-receipt-check", axum::routing::post(rent_receipt_check_route))
+        .route("/rent-stabilized-mci-iai-passthrough", axum::routing::post(rent_stabilized_mci_iai_passthrough_route))
         .route("/repair-deduct-check", axum::routing::post(repair_and_deduct_check_route))
         .route("/cosigner-check", axum::routing::post(cosigner_rules_check_route))
         .route("/mobile-home-park-check", axum::routing::post(mobile_home_park_check_route))
@@ -3142,6 +3147,36 @@ async fn rent_receipt_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_rent_receipts(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rent_stabilized_mci_iai_passthrough: NY rent-stabilized Major Capital
+// Improvement (MCI) + Individual Apartment Improvement (IAI) rent
+// passthrough compliance — when a trader-landlord owning a rent-
+// stabilized NYC building may lawfully pass through capital-
+// improvement costs to tenants via rent increase. Mounted at POST
+// /api/rental/rent-stabilized-mci-iai-passthrough. Three improvement
+// types: MajorCapitalImprovement (9 NYCRR § 2202.4(d); 2% annual cap
+// on collectibility; amortization 12 years ≤ 35 units / 12.5 years
+// > 35 units; requires DHCR application + tenant notification +
+// approval); IndividualApartmentStandard (9 NYCRR § 2202.4; eff. Oct
+// 17, 2024 NY Budget — $30,000 cap up from HSTPA 2019 $15,000; now
+// PERMANENT; rent formula 1/168 ≤ 35 units / 1/180 > 35 units);
+// IndividualApartmentSpecialTier ($50,000 cap for units continuously
+// occupied ≥ 25 years OR registered vacant in 2022 + 2023 + 2024;
+// formula 1/144 ≤ 35 units / 1/156 > 35 units). NY HSTPA 2019 (Pub.
+// L. 2019 ch. 36); DHCR Fact Sheet #24; DHCR Operational Bulletin
+// 2024-2. Distinct from siblings rent_control, rent_control_lease_
+// disclosure, landlord_annual_rent_statement, rent_increase_notice_
+// period.
+// ---------------------------------------------------------------------------
+
+async fn rent_stabilized_mci_iai_passthrough_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentStabilizedPassthroughInput>,
+) -> Result<Json<RentStabilizedPassthroughResult>, ApiError> {
+    Ok(Json(check_rent_stabilized_mci_iai_passthrough(&b)))
 }
 
 // ---------------------------------------------------------------------------

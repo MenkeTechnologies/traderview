@@ -150,6 +150,7 @@ pub mod right_to_counsel_eviction;
 pub mod renters_insurance;
 pub mod roommate_authorization;
 pub mod rent_receipts;
+pub mod rent_stabilized_mci_iai_passthrough;
 pub mod repair_and_deduct;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
