@@ -265,6 +265,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-901",           post(section_901_route))
+        .route("/calc/section-903",           post(section_903_route))
         .route("/calc/section-904",           post(section_904_route))
         .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-951a",          post(section_951a_route))
@@ -2979,6 +2980,45 @@ async fn section_901_route(
     Json(b): Json<traderview_expense::section_901::Section901Input>,
 ) -> Result<Json<traderview_expense::section_901::Section901Result>, ApiError> {
     Ok(Json(traderview_expense::section_901::check(&b)))
+}
+
+// ── § 903 In-Lieu-Of Tax Creditability ───────────────────────────────
+// Mounted at /api/calc/section-903 (iter 528). Pure compute. § 903 extends
+// § 901 FTC creditability to foreign taxes that are NOT a generally-imposed
+// foreign income/war-profits/excess-profits tax but SUBSTITUTE for such a
+// tax (the "in-lieu-of" branch). Classic application: foreign withholding
+// tax on services/royalties where the foreign jurisdiction waives its
+// generally-imposed net-income tax in favor of a gross-basis withholding
+// levy. Treas. Reg. § 1.903-1(c)(2) SUBSTITUTION TEST: in-lieu-of tax must
+// substitute for an income tax that would otherwise be imposed on the same
+// taxpayer/income; additive levies that supplement (rather than replace)
+// the underlying income tax fail substitution. Treas. Reg. § 1.903-1(c)
+// (1)(iii) SOAK-UP RULE: foreign tax whose liability depends on availability
+// of US foreign tax credit (only payable to extent FTC is allowed) is
+// non-creditable regardless of substitution — disqualifying ahead of all
+// other tests because the soak-up structure absorbs the credit it claims
+// to enable. TD 9959 FINAL REGULATIONS (effective January 4, 2022) added
+// "attribution requirement" to § 903: the generally-imposed income tax
+// which the levy substitutes for must independently satisfy sourcing-nexus
+// attribution rules. Notice 2023-55 (July 21, 2023) deferred attribution
+// requirement for tax years ending on or before December 31, 2023.
+// Notice 2025-23 (per practitioner reporting) extended deferral through
+// tax years ending in 2024 and 2025; verify against IRS published guidance
+// before relying. Six-mode severity ladder: NotApplicable, Creditable-
+// UnderInLieuOfBranchAttributionDeferred, CreditableUnderInLieuOfBranch-
+// AttributionMet, NonCreditableSoakUpTaxRule, NonCreditableFailsSubstitution,
+// NonCreditableFailsAttributionPostDeferral. Disallowed foreign tax remains
+// deductible under § 164(a)(3) in lieu of credit. Creditable amount remains
+// subject to § 904(d) basket limitations and § 904(c) carryover rules.
+// Coordinates with § 901 (net-basis branch) + § 904 (limitation) + § 164
+// (deduction alternative) + § 960 (deemed-paid for § 951A inclusions where
+// § 903 in-lieu-of withholding occurs at CFC level).
+
+async fn section_903_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_903::Section903InLieuOfTaxCreditabilityInput>,
+) -> Result<Json<traderview_expense::section_903::Section903InLieuOfTaxCreditabilityOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_903::check(&b)))
 }
 
 // ── § 904 Limitation on Foreign Tax Credit (FTC) ─────────────────────
