@@ -761,6 +761,10 @@ use traderview_expense::tenant_voting_address_protection::{
     check as check_tenant_voting_address_protection,
     TenantVotingAddressProtectionInput, TenantVotingAddressProtectionResult,
 };
+use traderview_expense::tenant_kitchen_appliance_replacement::{
+    check as check_tenant_kitchen_appliance_replacement,
+    TenantKitchenApplianceReplacementInput, TenantKitchenApplianceReplacementResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1083,6 +1087,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
         .route("/tenant-smart-thermostat-install-right", axum::routing::post(tenant_smart_thermostat_install_right_route))
         .route("/tenant-voting-address-protection", axum::routing::post(tenant_voting_address_protection_route))
+        .route("/tenant-kitchen-appliance-replacement", axum::routing::post(tenant_kitchen_appliance_replacement_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/tenant-window-air-conditioner-install-right", axum::routing::post(tenant_window_air_conditioner_install_right_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
@@ -10431,4 +10436,38 @@ async fn tenant_voting_address_protection_route(
     Json(b): Json<TenantVotingAddressProtectionInput>,
 ) -> Result<Json<TenantVotingAddressProtectionResult>, ApiError> {
     Ok(Json(check_tenant_voting_address_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_kitchen_appliance_replacement (iter 507): Trader-landlord
+// refrigerator + stove provision plus continuing maintenance duty
+// framework. California AB 628 (Cal. Civ. Code § 1941.1 amended effective
+// January 1, 2026) makes refrigerator + stove NEW MANDATORY habitability
+// provisions for leases entered, amended, or renewed on or after that
+// date. CPSC recall response window 30 days. Refrigerator opt-out
+// permitted only by voluntary written tenant election at lease signing;
+// stove opt-out PROHIBITED regardless of tenant preference. Exemptions:
+// permanent supportive housing, single-room occupancy, residential
+// hotels, communal-kitchen assisted living facilities. Five jurisdictions:
+// California (AB 628 + Cal. Civ. Code § 1942 + Cal. Health and Safety
+// Code § 17920.3 + IRA § 50121 HOMES rebate + § 50122 HEEHRA rebate for
+// ENERGY STAR + induction range upgrades), Massachusetts (105 CMR
+// 410.100(E) + M.G.L. ch. 186 § 14 + ch. 111 § 127A — stove required
+// since 1976), New York (NYC Admin Code § 27-2017.2 + MDL § 76 + RPL
+// § 235-b), Illinois (Chicago Municipal Code § 5-12-110 RLTO),
+// Default (common-law habitability + 15 U.S.C. § 2064 CPSC). Two
+// appliance types: Refrigerator (opt-out eligible), Stove (no opt-out).
+// Four appliance conditions: WorkingProperly, FailingPastNoticeWindow,
+// CpscRecalled, NotProvided. Eight-mode severity ladder including
+// NoApplianceProvidedAb628Violation (100pct rent) + CpscRecalledNot-
+// ReplacedWithin30DaysHabitabilityBreach (100pct rent) + StoveOptOut-
+// AttemptedProhibited (50pct rent — void against public policy).
+// ---------------------------------------------------------------------------
+
+async fn tenant_kitchen_appliance_replacement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantKitchenApplianceReplacementInput>,
+) -> Result<Json<TenantKitchenApplianceReplacementResult>, ApiError> {
+    Ok(Json(check_tenant_kitchen_appliance_replacement(&b)))
 }
