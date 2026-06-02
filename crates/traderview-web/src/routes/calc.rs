@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6212",          post(section_6212_route))
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6201",          post(section_6201_route))
+        .route("/calc/section-6203",          post(section_6203_route))
         .route("/calc/section-6303",          post(section_6303_route))
         .route("/calc/section-6304",          post(section_6304_route))
         .route("/calc/section-6306",          post(section_6306_route))
@@ -2776,6 +2777,28 @@ async fn section_6201_route(
     Json(b): Json<traderview_expense::section_6201::Section6201Input>,
 ) -> Result<Json<traderview_expense::section_6201::Section6201Result>, ApiError> {
     Ok(Json(traderview_expense::section_6201::check(&b)))
+}
+
+// ── §6203 Method of assessment ──────────────────────────────────────
+// Mounted at /api/calc/section-6203. Mechanical procedure by which
+// IRS assessment under § 6201 becomes effective. § 6203 — assessment
+// made by recording liability of taxpayer in office of Secretary;
+// upon request of taxpayer, Secretary shall furnish taxpayer copy
+// of record of assessment. 26 CFR § 301.6203-1 — assessment officer
+// signs summary record providing (1) identification of taxpayer,
+// (2) character of liability, (3) taxable period if applicable, (4)
+// amount of assessment. Form 23-C signed assessment certificate
+// (internal IRS document, NOT released to taxpayers); Form 4340
+// Certificate of Assessments is the document IRS provides per Rev.
+// Rul. 2007-21 and is presumptive evidence per March v. IRS, 335
+// F.3d 1186 (10th Cir. 2003). Trader-procedural-critical because
+// no lawful § 6321 lien attachment OR § 6331 levy authority engages
+// without valid § 6203 record of assessment.
+async fn section_6203_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6203::Section6203Input>,
+) -> Result<Json<traderview_expense::section_6203::Section6203Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6203::check(&b)))
 }
 
 // ── §6303 notice and demand for tax ─────────────────────────────────
