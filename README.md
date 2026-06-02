@@ -5475,6 +5475,43 @@ All five required; failure of any element defeats prosecution. Pinned by `sectio
 
 Mounted at `POST /api/calc/section-7206`. Twenty-nine tests pin: **§ 7206(1) all five elements authorizes prosecution**; **§ 7206(1) missing any element no prosecution**; **§ 7206(1) five-element truth table** (32-cell sweep e1 × e2 × e3 × e4 × e5); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek defense unsuccessful does not defeat**; **Cheek not asserted no Cheek engagement**; **Cheek case note describes subjective belief test**; **Cheek only defeats when successful and asserted** (4-cell sweep); **individual max fine $250K** (18 U.S.C. § 3571); **corporation max fine $500K**; **maximum imprisonment always 3 years** (5-subsection invariant); **§ 7206(1)/(2)/(3)/(4) six-year SOL** (§ 6531); **§ 7206(5) three-year SOL**; **SOL truth table per subsection** (5-subsection sweep); **§ 7206(2) aiding full elements authorizes**; **§ 7206(2) aiding missing aid no prosecution**; **§ 7206(2) aiding missing willfulness no prosecution**; **§ 7206(2) Cheek defeats aiding**; **§ 7206(2) aiding element note describes reach** (preparers + advisors + third parties even when taxpayer-signer innocent); **§ 6663 civil parallel always available** (Spies-Daly doctrine); **unlimited ASED cross-reference note** (§ 6501(c)(1)); **§ 7491 burden shifts excluded note** (BEYOND REASONABLE DOUBT); **CFIA 18 U.S.C. § 3571 supersedes note**; **IRM 9.1.3 note present**; **citation pins all subsections** (§§ 7206(1)/(2)/(3)/(4)/(5) + § 6531 + § 6663 + § 6501(c)(1) + § 6501(c)(2) + 18 U.S.C. § 3571 + Cheek + IRM 9.1.3); **five subsections routed correctly**; **elements count zero when no elements**; **elements count increments per element**; **§ 7206(1) five-element note present** (5/5 satisfied note).
 
+`traderview-expense::section_7207` is the **IRC § 7207 fraudulent returns, statements, or other documents (criminal misdemeanor)** module — pairs with `section_7206` (felony perjury alternative when document signed under penalties of perjury) and `section_7434` (civil damages for fraudulent information return). Completes the false-documents criminal statute trio. Criminal misdemeanor 1-year imprisonment + $100K individual / $200K corporation fine under 18 U.S.C. § 3571 (supersedes original $10K / $50K caps).
+
+**Three-element test** (BEYOND REASONABLE DOUBT):
+
+1. DELIVERY OR DISCLOSURE to an IRS officer or employee of any list, return, account, statement, or OTHER DOCUMENT
+2. Document was FALSE OR FRAUDULENT as to a MATERIAL MATTER
+3. Done WILLFULLY or with knowledge of the falsity or fraud
+
+All three required; failure of any defeats prosecution. Pinned by `three_element_truth_table` (8-cell sweep).
+
+**Distinction from § 7206**:
+
+| Provision | Penalty | Document scope |
+|-----------|---------|------------------|
+| § 7206(1) FELONY | 3-year imprisonment | Documents signed under penalties of perjury (e.g., tax returns) |
+| § 7207 MISDEMEANOR | 1-year imprisonment | ANY false document delivered to IRS regardless of perjury verification |
+
+Government typically charges § 7207 when (a) computed tax deficiency is de minimis, (b) document was NOT signed under penalties of perjury, or (c) prosecutorial discretion favors misdemeanor over felony. Pinned by `de_minimis_deficiency_note_present`, `distinction_from_7206_note_describes_perjury_scope`.
+
+**§ 7206(1) felony alternative available** — when document IS signed under penalties of perjury AND all § 7207 elements satisfied, § 7206(1) felony alternative becomes available (prosecutor's discretion). Pinned by `signed_under_perjury_triggers_7206_alternative`, `felony_alternative_only_when_signed_and_all_three_elements`, `cheek_engaged_disables_felony_alternative`.
+
+**Cheek defense — Cheek v. United States, 498 U.S. 192 (1991)**. Good-faith subjective belief negates willfulness element. Same defense as § 7201 / § 7203 / § 7206. Pinned by `cheek_only_defeats_when_successful_and_asserted` (4-cell sweep) and `cheek_engaged_disables_felony_alternative`.
+
+**§ 6531(2) 6-year criminal SOL** for § 7207 (enumerated 6-year offense). Pinned by `criminal_sol_6_years`.
+
+**Penalties**:
+- Imprisonment up to **1 YEAR** (misdemeanor — invariant regardless of perjury verification)
+- Fine $100K individual / $200K corporation under 18 U.S.C. § 3571 (supersedes original $10K / $50K)
+- BOTH imprisonment and fine permitted
+- Costs of prosecution
+
+**Typical § 7207 fact patterns** — fabricated receipts during audit + altered Schedule K-1 + fraudulent supporting documents + false Form 433 collection information statement. Pinned by `typical_fact_patterns_note_present`.
+
+**Spies-Daly parallel civil consequences** — § 7434 civil damages for fraudulent information return + § 6663 civil fraud 75% penalty + § 6501(c)(1) UNLIMITED ASED for fraud. Pinned by `spies_daly_parallel_civil_note_present`.
+
+Mounted at `POST /api/calc/section-7207`. Twenty-six tests pin: **full three elements authorizes misdemeanor**; **individual max fine $100K** (18 U.S.C. § 3571); **corporation max fine $200K**; **missing delivery element defeats**; **missing falsity element defeats**; **missing willfulness element defeats**; **three-element truth table** (8-cell sweep); **Cheek defense successful defeats prosecution** (498 U.S. 192 (1991)); **Cheek only defeats when successful and asserted** (4-cell sweep); **signed under perjury triggers § 7206 alternative** (felony 3-year + $250K); **not signed under perjury no § 7206 alternative**; **de minimis deficiency note present** (prosecutorial discretion); **criminal SOL 6 years** (§ 6531(2)); **CFIA supersedes fine caps note** (18 U.S.C. § 3571); **Spies-Daly parallel civil note present** (§ 7434 + § 6663 + § 6501(c)(1)); **typical fact patterns note present** (fabricated receipts + altered K-1 + Form 433); **citation pins all authorities** (§§ 7207/6531/7206/7434/7212/6663/6501(c)(1) + 18 U.S.C. § 3571 + Cheek + IRM 9.1.3); **maximum imprisonment always 1 year** (perjury-invariant); **distinction from § 7206 note describes perjury scope**; **three-element count increments per element**; **misdemeanor authorized note describes pathway**; **felony alternative only when signed and all three elements**; **Cheek engaged disables felony alternative**; **IRM 9.1.3 note present**; **Cheek case note describes subjective belief**; **prosecution not authorized when elements missing note**.
+
 `traderview-expense::section_7212` is the **IRC § 7212 attempts to interfere with administration of internal revenue laws (criminal felony)** module — pairs with `section_7201` (5-year evasion felony), `section_7202` (5-year trust-fund-tax felony), `section_7203` (1-year misdemeanor failure to file), `section_7206` (3-year felony perjury), and `section_7434` (civil damages for fraudulent information return). 3-year FELONY for corruptly OR by force/threats impeding IRS administration + $250K individual / $500K corporation fine under 18 U.S.C. § 3571.
 
 **§ 7212(a) two clauses**:

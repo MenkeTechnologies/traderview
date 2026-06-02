@@ -94,6 +94,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7212",          post(section_7212_route))
         .route("/calc/section-7216",          post(section_7216_route))
         .route("/calc/section-7206",          post(section_7206_route))
+        .route("/calc/section-7207",          post(section_7207_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7434",          post(section_7434_route))
         .route("/calc/section-7491",          post(section_7491_route))
@@ -2992,6 +2993,32 @@ async fn section_7206_route(
     Json(b): Json<traderview_expense::section_7206::Section7206Input>,
 ) -> Result<Json<traderview_expense::section_7206::Section7206Result>, ApiError> {
     Ok(Json(traderview_expense::section_7206::check(&b)))
+}
+
+// ── §7207 fraudulent returns/statements/other documents (misdemeanor)
+// Mounted at /api/calc/section-7207. Pairs with § 7206 (felony perjury
+// alternative when document signed under penalties of perjury) and §
+// 7434 (civil damages for fraudulent information return). Criminal
+// MISDEMEANOR 1-year cap + $100K individual / $200K corporation fine
+// (18 U.S.C. § 3571 supersedes § 7207's original $10K / $50K caps).
+// Three-element test BEYOND REASONABLE DOUBT: (1) delivery or
+// disclosure to IRS officer or employee of list/return/account/
+// statement/other document + (2) document false or fraudulent as to
+// material matter + (3) willfully or with knowledge of falsity.
+// Broader scope than § 7206 (covers documents NOT signed under
+// penalties of perjury) but lower penalty. Cheek v. United States,
+// 498 U.S. 192 (1991) good-faith subjective belief defeats willfulness.
+// § 6531(2) 6-year SOL (enumerated 6-year offense). Typical fact
+// patterns: fabricated receipts during audit + altered K-1 + fraudulent
+// supporting documents + false Form 433 collection information
+// statement. Spies-Daly parallel civil § 7434 + § 6663 + § 6501(c)(1)
+// UNLIMITED ASED. IRM 9.1.3.
+
+async fn section_7207_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7207::Section7207Input>,
+) -> Result<Json<traderview_expense::section_7207::Section7207Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7207::check(&b)))
 }
 
 // ── §7434 civil damages for fraudulent information return ──────────
