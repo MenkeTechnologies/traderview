@@ -92,6 +92,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6325",          post(section_6325_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6331",          post(section_6331_route))
+        .route("/calc/section-6332",          post(section_6332_route))
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
@@ -2946,6 +2947,33 @@ async fn section_6331_route(
     Json(b): Json<traderview_expense::section_6331::Section6331Input>,
 ) -> Result<Json<traderview_expense::section_6331::Section6331Result>, ApiError> {
     Ok(Json(traderview_expense::section_6331::check(&b)))
+}
+
+// ── §6332 surrender of property subject to levy ─────────────────────
+// Mounted at /api/calc/section-6332. § 6332(a) any person in
+// possession of property subject to levy must surrender upon demand
+// by Secretary. § 6332(c) 21-day bank hold: banks surrender deposits
+// ONLY AFTER 21 days after service of levy (error-correction window).
+// § 6332(b) wage/salary cross-references § 6331(e) continuous wage
+// levy. § 6332(d)(1) personal liability — failure to surrender =
+// liability equal to value of property NOT surrendered, capped at
+// tax + costs + § 6621 underpayment interest. § 6332(d)(2) 50%
+// additional penalty for failure WITHOUT REASONABLE CAUSE; NO credit
+// against underlying tax. § 6332(e) discharge safe harbor —
+// compliant surrender DISCHARGES third party from any obligation to
+// delinquent taxpayer. Trader-relevant on both sides: trader-traders
+// facing IRS levy on brokerage accounts (broker as third party);
+// trader-landlords as third-party levy recipients (employers,
+// vendors). Pair with § 6331 (levy authority) + § 6321 (lien) +
+// § 6303 (notice and demand) + § 6334 (exempt property) + § 7426
+// (third-party wrongful levy INVERSE pathway). 26 CFR § 301.6332-1;
+// IRM 5.17.3.
+
+async fn section_6332_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6332::Section6332Input>,
+) -> Result<Json<traderview_expense::section_6332::Section6332Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6332::check(&b)))
 }
 
 // ── §6334 property exempt from levy ─────────────────────────────────
