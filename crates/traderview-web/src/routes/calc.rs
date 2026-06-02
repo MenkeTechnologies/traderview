@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6330",          post(section_6330_route))
+        .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
         .route("/calc/section-7201",          post(section_7201_route))
@@ -2727,6 +2728,34 @@ async fn section_6330_route(
         ));
     }
     Ok(Json(traderview_expense::section_6330::compute(&b)))
+}
+
+// ── §6334 property exempt from levy ─────────────────────────────────
+// Mounted at /api/calc/section-6334. § 6334(a) thirteen enumerated
+// exemption categories: (1) wearing apparel + school books; (2) fuel
+// + provisions + furniture + household ≤ $11,980 (2026 indexed); (3)
+// books + tools of trade ≤ $5,990 (2026 indexed); (4) unemployment;
+// (5) undelivered mail; (6) annuity/pension; (7) workmen's comp; (8)
+// child support; (9) wage minimum exemption; (10) military disability;
+// (11) public assistance; (12) Job Training Partnership Act; (13)
+// residence in small-deficiency cases (unpaid tax ≤ $5,000). §
+// 6334(d)(4)(B) — 2026 wage exemption parameter $5,300. § 6334(e)(1)
+// — principal residence (§ 121) requires district court judge or
+// magistrate WRITTEN approval before levy; district courts have
+// EXCLUSIVE jurisdiction. § 6334(e)(2) — self-employed assets +
+// non-rental residential real property require IRS area director
+// approval. Trader-relevant for tools-of-trade exemption (trading
+// rigs / monitors / books), wage exemption, principal-residence
+// judicial-approval gate. Companion to § 7421 (Anti-Injunction Act +
+// § 7426 wrongful-levy exception) + § 7433 (civil damages for
+// unauthorized collection) + § 7430 (litigation costs) + § 7811
+// (TAOs). Rev. Proc. 2025-32 + Pub. L. 119-21 (OBBBA).
+
+async fn section_6334_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6334::Section6334Input>,
+) -> Result<Json<traderview_expense::section_6334::Section6334Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6334::check(&b)))
 }
 
 // ── §6402 refund offsets / Treasury Offset Program ──────────────────
