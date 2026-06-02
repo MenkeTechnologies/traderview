@@ -240,6 +240,10 @@ use traderview_expense::tenant_relocation_assistance::{
 use traderview_expense::fair_chance_housing::{
     check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
 };
+use traderview_expense::family_childcare_home_right::{
+    check as check_family_childcare_home_right, FamilyChildcareHomeInput,
+    FamilyChildcareHomeResult,
+};
 use traderview_expense::source_of_income_discrimination::{
     check as check_source_of_income_discrimination, SourceOfIncomeInput,
     SourceOfIncomeResult,
@@ -732,6 +736,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
+        .route("/family-childcare-home-right", axum::routing::post(family_childcare_home_right_route))
         .route("/source-of-income-discrimination", axum::routing::post(source_of_income_discrimination_route))
         .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
@@ -3660,6 +3665,36 @@ async fn fair_chance_housing_route(
         ));
     }
     Ok(Json(check_fair_chance_housing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// family_childcare_home_right: Tenant family child-care home (FCCH)
+// operation right — when may a landlord lawfully prohibit a tenant
+// from operating a licensed family day care home for children in a
+// residential rental unit? Mounted at POST /api/rental/family-
+// childcare-home-right. Three regimes: California Cal. Health & Safety
+// Code §§ 1597.40-1597.46 + Cal. Civ. Code § 1950.5 (most explicit —
+// lease prohibition VOID under § 1597.40(a); 30-day advance written
+// notice required from tenant under § 1597.40(c); landlord may require
+// increased FCCH security deposit under § 1597.40(d) but capped by AB
+// 12 / § 1950.5 1-month rent ceiling; § 1597.40(e) state preemption
+// over municipal zoning/building/fire codes; § 1597.42 requires Title
+// 22 CDSS license); New York N.Y. Social Services Law § 390 + N.Y.
+// Real Property Law § 235-b (licensed FCCH + group FCCH protected;
+// landlord may not unreasonably withhold consent; OCFS license
+// required); Default federal Fair Housing Act 42 USC § 3604 familial
+// status (covers families with children from refusal but NOT
+// childcare-business operation). Distinct from siblings
+// `tenant_organizing`, `tenant_data_privacy`, and `fair_chance_
+// housing`.
+// ---------------------------------------------------------------------------
+
+async fn family_childcare_home_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FamilyChildcareHomeInput>,
+) -> Result<Json<FamilyChildcareHomeResult>, ApiError> {
+    Ok(Json(check_family_childcare_home_right(&b)))
 }
 
 // ---------------------------------------------------------------------------

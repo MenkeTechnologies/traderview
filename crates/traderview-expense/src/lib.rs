@@ -45,6 +45,7 @@ pub mod disposition;
 pub mod emotional_support_animal_documentation;
 pub mod ev_charger_installation;
 pub mod fair_chance_housing;
+pub mod family_childcare_home_right;
 pub mod fha_design_construction;
 pub mod fire_sprinkler_disclosure;
 pub mod firearms_in_rental_unit;
