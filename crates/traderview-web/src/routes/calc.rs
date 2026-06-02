@@ -179,6 +179,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-6707",          post(section_6707_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
+        .route("/calc/section-6708",          post(section_6708_route))
         .route("/calc/section-6713",          post(section_6713_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
@@ -5458,6 +5459,39 @@ async fn section_6707a_route(
 // AICPA sample consent forms. Companion to § 7216 criminal +
 // § 7525 FATP + § 6694 preparer substantive + § 6695 preparer
 // procedural + Circular 230 § 10.50.
+// ── §6708 material advisor failure to maintain list of advisees ─────
+// Mounted at /api/calc/section-6708. § 6708(a)(1) — material advisor
+// required to maintain § 6112 list FAILS to make list available
+// upon WRITTEN IRS request within 20 BUSINESS DAYS = $10,000 PER DAY
+// for each day after 20th day, NO STATUTORY MAXIMUM. § 6708(a)(2)
+// reasonable cause exception (distinct from § 6664(d)). Treas. Reg.
+// § 301.6708-1(c)(3)(ii) extension request requires reason + period
+// required + good-faith-effort description. § 6112(b) cross-reference:
+// list content (advisee identifiers + transaction ID + timing +
+// amount + tax treatment); 30 CALENDAR DAYS preparation period; 7
+// YEARS retention; separate list per transaction; one list for
+// substantially similar transactions. Coordination: § 6707 penalizes
+// failure to FILE Form 8918 disclosure; § 6708 penalizes failure to
+// MAINTAIN AND PRODUCE the § 6112 list — TWO INDEPENDENT penalties
+// on same material advisor for same transaction. Enacted by American
+// Jobs Creation Act of 2004 § 815 (Pub. L. 108-357, October 22,
+// 2004). Trader-critical for material advisors on basket option
+// contracts (Notice 2015-73), conservation easement syndications
+// (Notice 2017-10), micro-captive insurance (Notice 2016-66), § 643
+// distribution-tier-out trusts, STARS foreign-tax-credit shelters.
+
+async fn section_6708_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6708::Section6708Input>,
+) -> Result<Json<traderview_expense::section_6708::Section6708Result>, ApiError> {
+    if b.business_days_since_irs_request > 100_000 {
+        return Err(ApiError::BadRequest(
+            "business_days_since_irs_request out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6708::check(&b)))
+}
+
 async fn section_6713_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_6713::Section6713Input>,

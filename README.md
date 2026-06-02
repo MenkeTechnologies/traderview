@@ -9705,6 +9705,53 @@ Pinned by `other_reportable_reasonable_cause_zeros_penalty`, `listed_transaction
 
 Mounted at `POST /api/calc/section-6707`. Thirty tests pin: **other reportable flat $50K penalty**; **other reportable reasonable cause zeros penalty**; **other reportable Commissioner rescission zeros penalty**; **other reportable false information triggers penalty**; **listed transaction unintentional GREATER of $200K or 50%**; **listed transaction low gross income floor $200K**; **listed transaction intentional 75% rate**; **listed transaction NO rescission available**; **listed transaction NO reasonable cause defense**; **not reportable no penalty**; **NO judicial review of rescission denial**; **intentional listed 75% uniquely engages invariant**; **listed uniquely disables reasonable cause defense invariant**; **citation pins all authorities** (§ 6707(a)-(d) + 2004 AJCA § 815 + Pub. L. 108-357 + 26 CFR § 301.6707-1 + § 6111 + § 6112 + § 6707A + § 6664(d) + IRM 20.1.13 + Form 8918 + Notice 2015-73 + Notice 2017-10 + Notice 2016-66); **note pins subsection (a) filing requirement**; **note pins subsection (b)(1) flat $50K**; **note pins subsection (b)(2) GREATER of $200K or 50%/75%**; **note pins subsection (c)(1) rescission for OTHER only**; **note pins subsection (c)(2) listed NOT eligible for rescission**; **note pins subsection (c)(3) NO judicial review**; **note pins § 6664(d) two-tier reasonable cause**; **note pins 2004 AJCA origin** (KPMG/E&Y/BDO Seidman scandals); **note pins material advisor threshold $50K/$250K**; **note pins Form 8918 quarterly filing**; **note pins listed transaction examples** (Notice 2015-73/2017-10/2016-66); **note pins 26 CFR § 301.6707-1 implementing regulations** (T.D. 9683); **note pins IRM 20.1.13**; **transaction category truth table three cells**; **defensive overflow clamped with saturating mul**; **listed penalty uniquely uses percentage invariant** (50% vs 10% disparity).
 
+`traderview-expense::section_6708` is the **IRC § 6708 failure to maintain lists of advisees with respect to reportable transactions module** — direct sibling to `section_6707` (material-advisor failure-to-disclose penalty) and `section_6112` (list-maintenance substantive obligation). Where § 6707 penalizes failure to FILE Form 8918 disclosure under § 6111, § 6708 penalizes failure to MAINTAIN AND PRODUCE the § 6112 list of advisees when IRS makes written request. These are TWO INDEPENDENT penalties — same material advisor can be hit with both for same transaction. Enacted by **American Jobs Creation Act of 2004 § 815** (Pub. L. 108-357, October 22, 2004). Trader-critical for material advisors on basket option contracts (Notice 2015-73), conservation easement syndications (Notice 2017-10), micro-captive insurance (Notice 2016-66), § 643 distribution-tier-out trusts, STARS foreign-tax-credit shelters.
+
+**§ 6708(a) Penalty framework — daily, uncapped, reasonable-cause defense**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 6708(a)(1) | Material advisor required to maintain § 6112 list FAILS to make list available within **20 BUSINESS DAYS** of IRS written request → **$10,000 PER DAY for each day after 20th day; NO STATUTORY MAXIMUM** |
+| § 6708(a)(2) | Reasonable cause exception — distinct from § 6664(d); applies regardless of whether transaction is listed or other reportable |
+
+Pinned by `within_20_days_no_penalty`, `at_day_20_no_penalty_boundary`, `at_day_21_one_day_penalty_10k` ($10K = 1M cents), `at_day_30_ten_day_penalty_100k` ($100K = 10M cents), `at_day_120_one_hundred_day_penalty_1m` ($1M = 100M cents), `penalty_uncapped_progressive_invariant` (day 50/100/365/1000 sweep), `reasonable_cause_zeros_penalty`, `reasonable_cause_uniquely_zeros_penalty_invariant`.
+
+**Treas. Reg. § 301.6708-1(c)(3)(ii) Extension request** — material advisor may request extension of 20-business-day period by providing IRS:
+
+1. Reason for the requested extension
+2. Period of time required to comply
+3. Description of advisor's good-faith effort to comply within original 20-business-day period
+
+IRS may grant or deny extension in discretionary judgment. Pinned by `extension_granted_no_penalty`, `extension_distinct_from_reasonable_cause_invariant`.
+
+**Treas. Reg. § 301.6112-1(b) Required list content** (five required elements):
+
+| # | Element |
+|---|---------|
+| 1 | **Advisee identifiers**: full legal name + current mailing address + TIN |
+| 2 | **Transaction identification**: listed or other category + citation OR § 6111 reportable transaction number |
+| 3 | **Timing**: date the advisee entered the transaction (if known) |
+| 4 | **Amount**: amount invested (if known and reasonably determinable) |
+| 5 | **Tax treatment**: intended or expected tax treatment (concise schedule or summary) |
+
+Pinned by `missing_content_violation`.
+
+**Treas. Reg. § 301.6112-1 List preparation + retention rules**:
+
+| Rule | Source | Requirement |
+|------|--------|-------------|
+| Preparation timeline | Treas. Reg. § 301.6112-1 | **30 CALENDAR DAYS** from date list-maintenance requirement first arises |
+| Per-transaction lists | Treas. Reg. § 301.6112-1 | Separate list per reportable transaction; ONE list for substantially similar transactions |
+| 7-year retention | § 6112(b)(2) + Treas. Reg. § 301.6112-1 | **7 YEARS** following EARLIER of (1) date material advisor last made tax statement OR (2) date transaction last entered (if known); readily accessible form |
+
+Pinned by `missing_30_day_prep_violation`, `missing_7_year_retention_violation`.
+
+**Coordination with § 6707** — § 6707 penalizes failure to FILE Form 8918 disclosure under § 6111; § 6708 penalizes failure to MAINTAIN AND PRODUCE the § 6112 list of advisees. TWO INDEPENDENT PENALTIES — same material advisor can be hit with both for same transaction.
+
+**Federal Register agency-collection activity (March 4, 2025, 90 Fed. Reg. 11209)** signals continued IRS focus on § 6708 enforcement.
+
+Mounted at `POST /api/calc/section-6708`. Twenty-nine tests pin: **within 20 days no penalty**; **at day 20 no penalty boundary** (exact boundary precision); **at day 21 one-day penalty $10K**; **at day 30 ten-day penalty $100K**; **at day 120 hundred-day penalty $1M**; **reasonable cause zeros penalty**; **extension granted no penalty**; **missing 30-day prep violation**; **missing 7-year retention violation**; **missing content violation**; **list production status truth table four cells** (Provided20/After20/NotProvided/Extension); **penalty uncapped progressive invariant** (day 50/100/365/1000 sweep — $30K/$80K/$345K/$980K); **citation pins all authorities** (§ 6708(a)(1) + § 6708(a)(2) + § 6112(a)-(b) + 2004 AJCA § 815 + Pub. L. 108-357 + 26 CFR § 301.6708-1 + § 301.6112-1 + § 6707 + § 6111 + IRM 20.1.13 + Form 8918 + Notice 2015-73/2017-10/2016-66); **note pins subsection (a)(1) 20-day trigger $10K per day uncapped**; **note pins subsection (a)(2) reasonable cause**; **note pins extension request Treas. Reg. § 301.6708-1(c)(3)(ii)**; **note pins list content five elements**; **note pins 30 calendar day preparation**; **note pins 7-year retention**; **note pins 2004 AJCA origin** (KPMG/E&Y/BDO Seidman); **note pins coordination with § 6707** (two independent penalties); **note pins 26 CFR § 301.6708-1 implementing regulations** (T.D. 9762); **note pins IRM 20.1.13**; **note pins 2025 Federal Register continued enforcement**; **note pins listed transaction examples**; **defensive overflow clamped with saturating mul**; **multiple failure reasons stack**; **reasonable cause uniquely zeros penalty invariant**; **extension distinct from reasonable cause invariant**.
+
 `traderview-expense::section_6707a` is the **IRC § 6707A reportable transaction penalty module** — fifth member of the abusive-tax-transaction penalty cluster after § 6694 (preparer substantive position), § 6695 (preparer procedural failures), § 6700 (promoter penalties), § 6701 (aiding-and-abetting). § 6707A targets the TAXPAYER directly for failure to disclose reportable / listed transactions on their own return — distinct from § 6700 (penalizes the promoter selling the shelter) and § 6701 (penalizes the aider preparing the document). Trader-relevant for traders caught in partnership-distributed listed transactions: syndicated conservation easements + § 831(b) micro-captive insurance + monetized installment sales + abusive § 6011 reportable transactions. Stacks on top of § 6662A accuracy-related penalty.
 
 **§ 6707A(b)(1) base computation** — penalty = **75%** of the decrease in tax shown on the return as a result of the transaction (or which would have resulted if the transaction were respected). Pinned by `np_listed_75_percent_mid_range` ($40K decrease → $30K base = 75%), `base_75_percent_precision_at_decrease_133` (133¢ → 99¢), and `base_75_percent_precision_at_decrease_400` (400¢ → 300¢).
