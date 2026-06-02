@@ -817,6 +817,11 @@ use traderview_expense::tenant_utility_account_designation::{
     check as check_tenant_utility_account_designation, TenantUtilityAccountInput,
     TenantUtilityAccountResult,
 };
+use traderview_expense::tenant_window_air_conditioner_install_right::{
+    check as check_tenant_window_air_conditioner_install_right,
+    TenantWindowAirConditionerInstallRightInput,
+    TenantWindowAirConditionerInstallRightResult,
+};
 use traderview_expense::plain_language_lease::{
     check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
 };
@@ -1049,6 +1054,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
+        .route("/tenant-window-air-conditioner-install-right", axum::routing::post(tenant_window_air_conditioner_install_right_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
         .route("/family-childcare-home-right", axum::routing::post(family_childcare_home_right_route))
         .route("/source-of-income-discrimination", axum::routing::post(source_of_income_discrimination_route))
@@ -4197,6 +4203,56 @@ async fn tenant_utility_account_designation_route(
     Json(b): Json<TenantUtilityAccountInput>,
 ) -> Result<Json<TenantUtilityAccountResult>, ApiError> {
     Ok(Json(check_tenant_utility_account_designation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_window_air_conditioner_install_right: Multi-jurisdictional
+// tenant window air conditioner installation right and landlord cooling
+// provision compliance framework. When may a tenant install a window
+// air conditioner unit in a rental property, what bracket safety and
+// falling-AC liability rules apply, when must landlord provide cooling
+// under emerging state and municipal heat-mandate laws, and what
+// failure-mode liabilities expose landlord after a heat-stress fatality
+// or falling-AC injury? Mounted at POST /api/rental/tenant-window-air-
+// conditioner-install-right. Three-jurisdiction framework: New York
+// City (MOST RECENT + MOST PRESCRIPTIVE — NYC Int 0994 of 2024 'Cool
+// Homes for All Act' enacted 2024-2025, fully effective 2026, requires
+// landlord to provide AC + maintain bedroom temperature ≤78°F from
+// June 15 to September 15 when outdoor temp > 82°F; market-rate and
+// rent-stabilized apply; NYC Window AC Bracket requirements for
+// buildings taller than 6 stories; NYC Admin. Code § 27-2029 heating
+// code framework); California (Cal. Civ. Code § 1941.1 implied
+// warranty of habitability heating; Cal. Health & Safety Code
+// § 17920.3 substandard conditions includes inability to maintain
+// reasonable temperature; select CA cities like Palm Springs require
+// landlord cooling); Arizona (Phoenix City Code § 39-16 + Pima
+// County Code 8.20 + ARS § 33-1324(C) require landlord-provided
+// cooling in summer months); Default (common-law implied warranty
+// per Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) + Green v.
+// Superior Court 10 Cal. 3d 616 (1974) + tort negligence + premises
+// liability). Three install paths: tenant-installed with lease
+// provision; landlord-provided pre-installed (NYC Cool Homes Act);
+// reasonable accommodation request under FHA 42 U.S.C. § 3604(f).
+// Window AC bracket safety: buildings taller than 6 stories require
+// bracket; window frame load capacity test; bracket per manufacturer
+// specifications with fasteners into structural framing; annual
+// inspection. Five failure modes: landlord unreasonable prohibition;
+// AC installed without bracket on upper floor → falling-AC injury;
+// NYC Cool Homes Act violation post-2026 → ECB + rent reduction;
+// heat-stress event → $1M+ tort settlement; bracket not maintained →
+// premises liability. Distinct from siblings cooling_requirements,
+// rental_gas_appliance_ban, tenant_solar_installation, tenant_ev_
+// charging_installation_right, rental_window_guard_installation,
+// tenant_emotional_distress_damages, rental_natural_gas_leak_response
+// (iter 485).
+// ---------------------------------------------------------------------------
+
+async fn tenant_window_air_conditioner_install_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantWindowAirConditionerInstallRightInput>,
+) -> Result<Json<TenantWindowAirConditionerInstallRightResult>, ApiError> {
+    Ok(Json(check_tenant_window_air_conditioner_install_right(&b)))
 }
 
 // ---------------------------------------------------------------------------
