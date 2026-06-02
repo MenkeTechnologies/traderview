@@ -41,17 +41,29 @@ struct RQ {
     account_id: Uuid,
     #[serde(default)]
     starting_cash: Option<Decimal>,
+    /// Optional rolling-window filter (in days). When set, only trades whose
+    /// closed_at (falling back to opened_at for still-open trades) is within
+    /// the last N days are returned. Powers the dashboard's 30/60/90 toggle.
+    #[serde(default)]
+    days: Option<i64>,
 }
 
-async fn load(s: &AppState, user_id: Uuid, account_id: Uuid) -> Result<Vec<Trade>, ApiError> {
-    ensure_account_owner(s, user_id, account_id).await?;
+async fn load(s: &AppState, user_id: Uuid, q: &RQ) -> Result<Vec<Trade>, ApiError> {
+    ensure_account_owner(s, user_id, q.account_id).await?;
     let f = TradeFilter {
         limit: Some(100_000),
         ..Default::default()
     };
-    traderview_db::trades::list_for_account(&s.pool, account_id, &f)
+    let mut trades = traderview_db::trades::list_for_account(&s.pool, q.account_id, &f)
         .await
-        .map_err(ApiError::Internal)
+        .map_err(ApiError::Internal)?;
+    if let Some(d) = q.days {
+        if d > 0 {
+            let cutoff = chrono::Utc::now() - chrono::Duration::days(d);
+            trades.retain(|t| t.closed_at.unwrap_or(t.opened_at) >= cutoff);
+        }
+    }
+    Ok(trades)
 }
 
 async fn overview(
@@ -59,7 +71,7 @@ async fn overview(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::Summary>, ApiError> {
-    let t = load(&s, user.id, q.account_id).await?;
+    let t = load(&s, user.id, &q).await?;
     Ok(Json(stats::summary(&t)))
 }
 
@@ -77,7 +89,7 @@ async fn by_symbol(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_symbol(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn by_side(
@@ -86,7 +98,7 @@ async fn by_side(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_side(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn by_asset_class(
@@ -95,7 +107,7 @@ async fn by_asset_class(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_asset_class(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn by_dow(
@@ -104,7 +116,7 @@ async fn by_dow(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_day_of_week(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn by_hour(
@@ -113,7 +125,7 @@ async fn by_hour(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_hour_of_day(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn by_hold(
@@ -122,7 +134,7 @@ async fn by_hold(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_hold_bucket(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn by_month(
@@ -131,7 +143,7 @@ async fn by_month(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_month(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 
@@ -141,7 +153,7 @@ async fn r_distribution(
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::RMultipleDistribution>, ApiError> {
     Ok(Json(stats::r_distribution(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn streaks(
@@ -150,7 +162,7 @@ async fn streaks(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Streak>>, ApiError> {
     Ok(Json(stats::streaks(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn comparison(
@@ -159,7 +171,7 @@ async fn comparison(
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::Comparison>, ApiError> {
     Ok(Json(stats::comparison(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn exit_eff(
@@ -168,7 +180,7 @@ async fn exit_eff(
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::ExitEfficiency>, ApiError> {
     Ok(Json(stats::exit_efficiency(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 async fn commissions(
@@ -177,7 +189,7 @@ async fn commissions(
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::CommissionReport>, ApiError> {
     Ok(Json(stats::commissions(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 
@@ -187,7 +199,7 @@ async fn calendar(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::CalendarCell>>, ApiError> {
     Ok(Json(stats::calendar(
-        &load(&s, user.id, q.account_id).await?,
+        &load(&s, user.id, &q).await?,
     )))
 }
 
@@ -196,7 +208,7 @@ async fn equity(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::EquityPoint>>, ApiError> {
-    let trades = load(&s, user.id, q.account_id).await?;
+    let trades = load(&s, user.id, &q).await?;
     let cash = q.starting_cash.unwrap_or(Decimal::ZERO);
     Ok(Json(stats::equity_curve(&trades, cash)))
 }
@@ -206,7 +218,7 @@ async fn drawdown(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::MaxDrawdown>, ApiError> {
-    let trades = load(&s, user.id, q.account_id).await?;
+    let trades = load(&s, user.id, &q).await?;
     let cash = q.starting_cash.unwrap_or(Decimal::ZERO);
     let eq = stats::equity_curve(&trades, cash);
     Ok(Json(stats::max_drawdown(&eq)))
@@ -217,7 +229,7 @@ async fn risk_adjusted(
     user: AuthUser,
     Query(q): Query<RQ>,
 ) -> Result<Json<stats::RiskAdjusted>, ApiError> {
-    let trades = load(&s, user.id, q.account_id).await?;
+    let trades = load(&s, user.id, &q).await?;
     let cash = q.starting_cash.unwrap_or(Decimal::ZERO);
     let eq = stats::equity_curve(&trades, cash);
     Ok(Json(stats::risk_adjusted(&eq)))
@@ -229,7 +241,7 @@ async fn risk_report(
     Query(q): Query<RQ>,
 ) -> Result<Json<risk::RiskSummary>, ApiError> {
     Ok(Json(risk::risk_summary(
-        load(&s, user.id, q.account_id).await?.iter(),
+        load(&s, user.id, &q).await?.iter(),
     )))
 }
 

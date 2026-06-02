@@ -43,6 +43,13 @@ pub struct ColumnMap {
     pub multiplier: Option<ColSpec>,
     /// Skip rows whose symbol is blank or matches one of these literals.
     pub skip_symbols: &'static [&'static str],
+    /// Optional status column. When set together with `status_allow`, rows whose
+    /// status (case-insensitive, trimmed) is not in `status_allow` are skipped.
+    /// Brokers like Webull export Cancelled / Failed orders in the same CSV
+    /// as Filled ones; this lets us drop them without erroring on missing
+    /// fill prices.
+    pub status: Option<ColSpec>,
+    pub status_allow: &'static [&'static str],
 }
 
 #[derive(Debug, Clone)]
@@ -108,6 +115,26 @@ pub fn parse_with(bytes: &[u8], map: &ColumnMap) -> Result<Vec<ParsedExecution>,
             }
             _ => continue, // skip blank-symbol rows (totals etc.)
         };
+
+        // Optional status filter — drop non-executed orders (Cancelled, Failed, …)
+        // before parsing fields that are only populated on fills. When the
+        // configured status column isn't present in the CSV header at all,
+        // skip filtering so older exports without a Status column still
+        // import.
+        if let Some(status_col) = map.status.as_ref() {
+            if !map.status_allow.is_empty() {
+                if let Some(raw) = row.field(status_col) {
+                    let s = raw.trim();
+                    if !map
+                        .status_allow
+                        .iter()
+                        .any(|a| a.eq_ignore_ascii_case(s))
+                    {
+                        continue;
+                    }
+                }
+            }
+        }
 
         let side_raw = row.field(&map.side).ok_or_else(|| {
             ImportError::Parse(format!("row {}: missing side column", row_idx + 1))
@@ -290,14 +317,16 @@ fn parse_decimal(raw: &str) -> Option<Decimal> {
 
 fn parse_datetime(raw: &str, formats: &[&str], utc_assumed: bool) -> Option<DateTime<Utc>> {
     let s = raw.trim();
-    // Try datetime formats.
-    for fmt in formats {
-        if let Ok(ndt) = NaiveDateTime::parse_from_str(s, fmt) {
-            return Some(if utc_assumed {
-                Utc.from_utc_datetime(&ndt)
-            } else {
-                Utc.from_local_datetime(&ndt).single()?
-            });
+    let attempts: [&str; 2] = [s, strip_trailing_tz_abbrev(s)];
+    for candidate in attempts.iter().copied() {
+        for fmt in formats {
+            if let Ok(ndt) = NaiveDateTime::parse_from_str(candidate, fmt) {
+                return Some(if utc_assumed {
+                    Utc.from_utc_datetime(&ndt)
+                } else {
+                    Utc.from_local_datetime(&ndt).single()?
+                });
+            }
         }
     }
     // Try ISO 8601 with offset.
@@ -306,6 +335,23 @@ fn parse_datetime(raw: &str, formats: &[&str], utc_assumed: bool) -> Option<Date
     }
     // Fallback: date-only → midnight UTC.
     parse_date(s).map(|d| Utc.from_utc_datetime(&d.and_hms_opt(0, 0, 0).unwrap()))
+}
+
+/// Strip a trailing 2-5 letter alphabetic timezone abbreviation (e.g. " EST",
+/// " EDT", " PST", " UTC", " GMT"). Some brokers (Webull) append the local
+/// market timezone to every timestamp, which chrono's `%Z` cannot
+/// unambiguously parse. Returns the input unchanged if no such suffix is
+/// present.
+fn strip_trailing_tz_abbrev(s: &str) -> &str {
+    let trimmed = s.trim_end();
+    if let Some(idx) = trimmed.rfind(' ') {
+        let tail = &trimmed[idx + 1..];
+        let len = tail.len();
+        if (2..=5).contains(&len) && tail.chars().all(|c| c.is_ascii_alphabetic()) {
+            return trimmed[..idx].trim_end();
+        }
+    }
+    s
 }
 
 fn parse_date(raw: &str) -> Option<NaiveDate> {
@@ -712,6 +758,8 @@ mod tests {
             expiration: None,
             multiplier: None,
             skip_symbols: &["", "total"],
+            status: None,
+            status_allow: &[],
         };
         let csv = "Symbol,Side,Qty,Price,Date\nSPY,buy,1,3.40,2026-03-04 10:00:00\n";
         let out = parse_with(csv.as_bytes(), &map).unwrap();
@@ -746,6 +794,8 @@ mod tests {
             expiration: None,
             multiplier: None,
             skip_symbols: &[""],
+            status: None,
+            status_allow: &[],
         };
         let csv = "Symbol,Side,Qty,Price,Date\n\
                    AAPL,buy,0,150,2026-03-04 10:00:00\n\
@@ -781,6 +831,8 @@ mod tests {
             expiration: None,
             multiplier: None,
             skip_symbols: &[""],
+            status: None,
+            status_allow: &[],
         };
         let csv = "Symbol,Side,Qty,Price,Fee,Date\n\
                    AAPL,buy,10,150,-1.25,2026-03-04 10:00:00\n";

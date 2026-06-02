@@ -44,7 +44,32 @@ pub async fn insert_parsed(
     import_id: Uuid,
     p: &ParsedExecution,
 ) -> anyhow::Result<bool> {
-    let r = sqlx::query(
+    let r = build_insert_parsed(account_id, import_id, p)
+        .execute(pool)
+        .await?;
+    Ok(r.rows_affected() > 0)
+}
+
+/// Transactional variant — used by the import endpoint so a mid-file error
+/// rolls back the entire batch instead of leaving stranded rows.
+pub async fn insert_parsed_tx(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    account_id: Uuid,
+    import_id: Uuid,
+    p: &ParsedExecution,
+) -> anyhow::Result<bool> {
+    let r = build_insert_parsed(account_id, import_id, p)
+        .execute(&mut **tx)
+        .await?;
+    Ok(r.rows_affected() > 0)
+}
+
+fn build_insert_parsed<'q>(
+    account_id: Uuid,
+    import_id: Uuid,
+    p: &'q ParsedExecution,
+) -> sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments> {
+    sqlx::query(
         "INSERT INTO executions (
             account_id, symbol, side, qty, price, fee, executed_at,
             broker_order_id, raw, import_id,
@@ -53,7 +78,7 @@ pub async fn insert_parsed(
          ) VALUES (
             $1, $2, $3::side_t, $4, $5, $6, $7,
             $8, $9, $10,
-            $11::asset_class_t, $12, $13, $14, $15,
+            $11::asset_class_t, $12::option_type_t, $13, $14, $15,
             $16, $17, $18, $19, $20
          )
          ON CONFLICT DO NOTHING",
@@ -78,9 +103,6 @@ pub async fn insert_parsed(
     .bind(p.base_ccy.as_deref())
     .bind(p.quote_ccy.as_deref())
     .bind(p.pip_size)
-    .execute(pool)
-    .await?;
-    Ok(r.rows_affected() > 0)
 }
 
 pub async fn insert_manual(
@@ -95,7 +117,7 @@ pub async fn insert_manual(
             tick_size, tick_value, base_ccy, quote_ccy, pip_size
          ) VALUES (
             $1, $2, $3::side_t, $4, $5, $6, $7,
-            $8, $9, $10::asset_class_t, $11, $12, $13, $14,
+            $8, $9, $10::asset_class_t, $11::option_type_t, $12, $13, $14,
             $15, $16, $17, $18, $19
          ) RETURNING id",
     )

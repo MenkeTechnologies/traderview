@@ -134,16 +134,24 @@ async fn upload(
     .await
     .map_err(ApiError::Internal)?;
 
+    // Insert all executions in one transaction so a mid-file failure does
+    // not leave a partial import behind. Without this, a CSV that fails on
+    // row 39 would land rows 1-38, and the user's retry would re-insert
+    // 1-38 a second time (compounded if the dedupe index doesn't cover the
+    // null-broker_order_id case).
+    let mut tx = s.pool.begin().await.map_err(|e| ApiError::Internal(e.into()))?;
     let mut inserted = 0usize;
     let mut duplicates = 0usize;
     for p in &parsed {
-        match traderview_db::executions::insert_parsed(&s.pool, account_id, import_row.id, p).await
+        match traderview_db::executions::insert_parsed_tx(&mut tx, account_id, import_row.id, p)
+            .await
         {
             Ok(true) => inserted += 1,
             Ok(false) => duplicates += 1,
             Err(e) => return Err(ApiError::Internal(e)),
         }
     }
+    tx.commit().await.map_err(|e| ApiError::Internal(e.into()))?;
 
     let trades_rolled = traderview_db::trades::rollup_account(&s.pool, account_id)
         .await

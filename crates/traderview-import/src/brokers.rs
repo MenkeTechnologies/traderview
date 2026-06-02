@@ -56,6 +56,8 @@ const MAP_WEBULL: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["total", "subtotal", ""],
+    status: Some(ColSpec::HeaderAny(&["status", "state"])),
+    status_allow: &["filled", "executed", "complete"],
 };
 
 // ===========================================================================
@@ -102,6 +104,8 @@ const MAP_IBKR: ColumnMap = ColumnMap {
     expiration: Some(ColSpec::HeaderAny(&["expiry", "expiration"])),
     multiplier: Some(ColSpec::HeaderAny(&["multiplier"])),
     skip_symbols: &["total", "subtotal", ""],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -137,6 +141,8 @@ const MAP_TD: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "***", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -172,6 +178,8 @@ const MAP_SCHWAB: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -207,6 +215,8 @@ const MAP_TS: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -242,6 +252,8 @@ const MAP_LIGHTSPEED: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -282,6 +294,8 @@ const MAP_DAS: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -325,6 +339,8 @@ const MAP_TOS: ColumnMap = ColumnMap {
     expiration: Some(ColSpec::HeaderAny(&["exp"])),
     multiplier: None,
     skip_symbols: &["", "total", "***"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -360,6 +376,8 @@ const MAP_ETRADE: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -404,6 +422,8 @@ const MAP_FIDELITY: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -439,6 +459,8 @@ const MAP_TZ: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -477,6 +499,8 @@ const MAP_RH: ColumnMap = ColumnMap {
     expiration: None,
     multiplier: None,
     skip_symbols: &["", "total"],
+    status: None,
+    status_allow: &[],
 };
 
 // ===========================================================================
@@ -532,6 +556,8 @@ const MAP_GENERIC: ColumnMap = ColumnMap {
     expiration: Some(ColSpec::HeaderAny(&["expiration", "expiry", "exp"])),
     multiplier: Some(ColSpec::HeaderAny(&["multiplier"])),
     skip_symbols: &["", "total", "subtotal"],
+    status: None,
+    status_allow: &[],
 };
 
 // ============================================================================
@@ -809,6 +835,35 @@ mod tests {
             "100",
             "Webull must use Total Qty (order size), not Filled (partial)"
         );
+    }
+
+    /// Webull's "Orders Records" export populates a `Status` column with
+    /// Cancelled / Failed entries that have blank fill prices. They must be
+    /// dropped during parse rather than erroring on the empty price field.
+    #[test]
+    fn webull_skips_cancelled_and_failed_orders() {
+        let csv = "Symbol,Side,Status,Total Qty,Avg Price,Filled Time\n\
+                   AAPL,Buy,Filled,100,150.00,01/15/2026 09:30:00\n\
+                   FEED,Short,Cancelled,285,,01/15/2026 10:37:21\n\
+                   AAPL,Sell,Failed,50,,01/15/2026 11:00:00\n\
+                   AAPL,Sell,Filled,100,151.50,01/15/2026 14:55:00\n";
+        let out = WebullParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2, "Cancelled + Failed rows must be skipped");
+        assert_eq!(out[0].price.to_string(), "150.00");
+        assert_eq!(out[1].price.to_string(), "151.50");
+    }
+
+    /// Webull appends the local market timezone abbreviation (" EST",
+    /// " EDT") to every timestamp. chrono can't parse %Z unambiguously, so
+    /// the mapping layer strips a trailing 2-5 letter alphabetic suffix
+    /// before re-attempting the configured date formats.
+    #[test]
+    fn webull_parses_trailing_timezone_abbrev() {
+        let csv = "Symbol,Side,Status,Total Qty,Avg Price,Filled Time\n\
+                   AAPL,Buy,Filled,100,150.00,01/15/2026 09:30:00 EST\n\
+                   AAPL,Sell,Filled,100,151.00,07/15/2026 14:30:00 EDT\n";
+        let out = WebullParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 2);
     }
 
     /// TOS: "type" was previously aliased for BOTH `side` and `asset_class`.

@@ -126,6 +126,20 @@ export function barChart(el, labels, values, opts = {}) {
         return null;
     };
 
+    // Y-axis formatter. Caller picks 'money' (default: -$30,000 → "-$30K") or
+    // 'count' (1700 → "1.7K", no $ prefix). Keeps negative signs visible
+    // when uPlot's default y-axis size would otherwise crop them.
+    const yKind = opts.yKind || 'money';
+    const fmtY = (v) => {
+        if (v == null || !Number.isFinite(v)) return '';
+        const a = Math.abs(v);
+        const sign = v < 0 ? '-' : '';
+        const prefix = yKind === 'money' ? '$' : '';
+        if (a >= 1e6) return `${sign}${prefix}${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1)}M`;
+        if (a >= 1e3) return `${sign}${prefix}${(a / 1e3).toFixed(a >= 1e4 ? 0 : 1)}K`;
+        return `${sign}${prefix}${a.toFixed(0)}`;
+    };
+
     new window.uPlot({
         title: opts.title || '',
         width: w,
@@ -140,6 +154,10 @@ export function barChart(el, labels, values, opts = {}) {
             values: (_, ticks) => ticks.map(t => labels[Math.round(t)] || ''),
             rotate: -45,
             size: 60,
-        }, { stroke: '#aab' }],
+        }, {
+            stroke: '#aab',
+            size: 64,
+            values: (_, ticks) => ticks.map(fmtY),
+        }],
     }, [xs, vs], el);
 }

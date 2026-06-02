@@ -2769,7 +2769,7 @@ export async function dispatch() {
                                 else await renderCommunity(mount, state, rest[0]); break;
             case 'shares':      await renderShares(mount, state); break;
             case 'shared':      await renderSharedTrade(mount, state, rest[0]); break;
-            case 'accounts':    await renderAccounts(mount, state, () => { renderAccountStrip(); }); break;
+            case 'accounts':    await renderAccounts(mount, state, async () => { await loadAccounts(); renderAccountStrip(); }); break;
             case 'settings':    await renderSettings(mount, state); break;
             case 'tutorial':    await renderTutorial(mount, state); break;
             case 'tax-workshop': await renderTaxWorkshop(mount, state); break;

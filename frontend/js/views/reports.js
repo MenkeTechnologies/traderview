@@ -6,6 +6,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const TABS = [
     ['overview',       'Overview'],
+    ['year-month-day', 'Year / Month / Day'],
     ['by-symbol',      'By Symbol'],
     ['by-side',        'By Side'],
     ['by-asset',       'By Asset'],
@@ -53,6 +54,12 @@ export async function renderReports(mount, state, sub) {
         else if (sub === 'by-hour')      setBody(bucketTable(await api.byHour(acct), t('view.reports.col.hour')));
         else if (sub === 'by-hold')      setBody(bucketTable(await api.byHold(acct), t('view.reports.col.hold')));
         else if (sub === 'by-month')     setBody(bucketTable(await api.byMonth(acct), t('view.reports.col.month')));
+        else if (sub === 'year-month-day') {
+            const [monthly, cal] = await Promise.all([api.byMonth(acct), api.calendar(acct)]);
+            if (!viewIsCurrent(tok)) return;
+            const body = mount.querySelector('#report-body');
+            if (body) renderYearMonthDay(body, monthly, cal);
+        }
         else if (sub === 'r-dist') {
             const dist = await api.rDist(acct);
             if (!viewIsCurrent(tok)) return;
@@ -311,4 +318,100 @@ function riskAdjustedHtml(ra) {
         ${statCard(t('view.reports.ra.downside_stdev'), fmtMoney(ra.downside_stdev_daily))}
     </div>
     <p data-i18n="view.reports.hint.annualized_values_assume_252_trading_days_year_and" class="muted">Annualized values assume 252 trading days/year and rf = 0.</p>`;
+}
+
+// ---------- Year / Month / Day (Tradervue parity) ----------------------------
+function renderYearMonthDay(body, monthly, cal) {
+    // monthly buckets carry key "YYYY-MM"; aggregate up to year + take a
+    // year-picker (default = most recent year that has data).
+    const years = new Map();
+    for (const m of monthly || []) {
+        const y = String(m.key || '').slice(0, 4);
+        if (!y || y.length !== 4) continue;
+        const acc = years.get(y) || { key: y, trades: 0, wins: 0, losses: 0, net_pnl: 0 };
+        acc.trades += Number(m.trades) || 0;
+        acc.wins   += Number(m.wins)   || 0;
+        acc.losses += Number(m.losses) || 0;
+        acc.net_pnl += Number(m.net_pnl) || 0;
+        years.set(y, acc);
+    }
+    const yearRows = [...years.values()].sort((a, b) => a.key.localeCompare(b.key));
+    if (!yearRows.length) {
+        body.innerHTML = '<p class="boot">' + esc(t('view.reports.hint.no_data')) + '</p>';
+        return;
+    }
+    const selectedYear = yearRows[yearRows.length - 1].key;
+
+    body.innerHTML = `
+        <div class="panel-grid">
+            <div class="chart-panel">
+                <h2 data-i18n="view.reports.ymd.trades_year">Trade Distribution By Year</h2>
+                <div id="ymd-trades-year" style="width:100%;height:240px"></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.reports.ymd.perf_year">Performance By Year</h2>
+                <div id="ymd-perf-year" style="width:100%;height:240px"></div>
+            </div>
+        </div>
+        <h2 class="view-title" style="margin-top:16px"><span id="ymd-year-label">${esc(selectedYear)}</span></h2>
+        <div class="panel-grid">
+            <div class="chart-panel">
+                <h2 data-i18n="view.reports.ymd.trades_month">Trade Distribution By Month</h2>
+                <div id="ymd-trades-month" style="width:100%;height:240px"></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.reports.ymd.perf_month">Performance By Month</h2>
+                <div id="ymd-perf-month" style="width:100%;height:240px"></div>
+            </div>
+        </div>
+        <div class="panel-grid">
+            <div class="chart-panel">
+                <h2 data-i18n="view.reports.ymd.trades_day">Trade Distribution By Day</h2>
+                <div id="ymd-trades-day" style="width:100%;height:240px"></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.reports.ymd.perf_day">Performance By Day</h2>
+                <div id="ymd-perf-day" style="width:100%;height:240px"></div>
+            </div>
+        </div>
+    `;
+
+    barChart(body.querySelector('#ymd-trades-year'),
+        yearRows.map(r => r.key),
+        yearRows.map(r => r.trades),
+        { color: '#39ff14', yKind: 'count', seriesLabel: t('view.reports.ymd.trades_year') });
+    barChart(body.querySelector('#ymd-perf-year'),
+        yearRows.map(r => r.key),
+        yearRows.map(r => Number(r.net_pnl) || 0),
+        { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_year') });
+
+    // Monthly rows for the selected year, padded to 12 months.
+    const monthsInYear = Array.from({ length: 12 }, (_, i) => {
+        const key = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
+        const row = (monthly || []).find(m => m.key === key);
+        return {
+            key: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i],
+            trades: row ? Number(row.trades) : 0,
+            net_pnl: row ? Number(row.net_pnl) : 0,
+        };
+    });
+    barChart(body.querySelector('#ymd-trades-month'),
+        monthsInYear.map(r => r.key),
+        monthsInYear.map(r => r.trades),
+        { color: '#39ff14', yKind: 'count', seriesLabel: t('view.reports.ymd.trades_month') });
+    barChart(body.querySelector('#ymd-perf-month'),
+        monthsInYear.map(r => r.key),
+        monthsInYear.map(r => r.net_pnl),
+        { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_month') });
+
+    // Daily breakdown comes from the calendar cells, filtered to selected year.
+    const days = (cal || []).filter(c => c.day && c.day.startsWith(selectedYear));
+    barChart(body.querySelector('#ymd-trades-day'),
+        days.map(d => d.day),
+        days.map(d => Number(d.trades) || 0),
+        { color: '#39ff14', yKind: 'count', seriesLabel: t('view.reports.ymd.trades_day') });
+    barChart(body.querySelector('#ymd-perf-day'),
+        days.map(d => d.day),
+        days.map(d => Number(d.net_pnl) || 0),
+        { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_day') });
 }

@@ -211,6 +211,9 @@ export const api = {
         return request('/imports', { method: 'POST', body: fd });
     },
 
+    rebuildTrades: (account_id) =>
+        request(`/accounts/${account_id}/rebuild-trades`, { method: 'POST' }),
+
     // reports
     overview: (account_id) => request(`/reports/overview?account_id=${account_id}`),
     bySymbol: (account_id) => request(`/reports/by-symbol?account_id=${account_id}`),

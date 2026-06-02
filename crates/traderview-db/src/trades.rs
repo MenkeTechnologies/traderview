@@ -152,7 +152,7 @@ async fn insert_rolled(tx: &mut sqlx::PgConnection, rt: &RolledTrade) -> anyhow:
          ) VALUES (
             $1, $2, $3, $4::trade_side_t, $5::trade_status_t, $6, $7,
             $8, $9, $10, $11, $12, $13,
-            $14::asset_class_t, $15, $16, $17, $18,
+            $14::asset_class_t, $15::option_type_t, $16, $17, $18,
             $19, $20, $21, $22, $23
          )",
     )
@@ -185,7 +185,9 @@ async fn insert_rolled(tx: &mut sqlx::PgConnection, rt: &RolledTrade) -> anyhow:
     for leg in &rt.legs {
         sqlx::query(
             "INSERT INTO trade_executions (trade_id, execution_id, qty_used)
-                  VALUES ($1, $2, $3)",
+                  VALUES ($1, $2, $3)
+              ON CONFLICT (trade_id, execution_id)
+              DO UPDATE SET qty_used = trade_executions.qty_used + EXCLUDED.qty_used",
         )
         .bind(leg.trade_id)
         .bind(leg.execution_id)
@@ -314,7 +316,7 @@ pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
          ) VALUES (
             $1, $2, $3::trade_side_t, $4::trade_status_t, $5, $6,
             $7, $8, $9, $10, $11, $12,
-            $13::asset_class_t, $14, $15, $16, $17,
+            $13::asset_class_t, $14::option_type_t, $15, $16, $17,
             $18, $19, $20, $21, $22
          ) RETURNING id",
     )

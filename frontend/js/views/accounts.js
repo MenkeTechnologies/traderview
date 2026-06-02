@@ -42,7 +42,10 @@ export async function renderAccounts(mount, _state, onChange) {
                 <tr data-context-scope="account-row" data-id="${esc(a.id)}" data-name="${esc(a.name)}"><td>${esc(a.broker)}</td><td>${esc(a.name)}</td>
                 <td>${esc(a.base_currency)}</td>
                 <td>${fmtDateTime(a.created_at)}</td>
-                <td><button data-i18n="view.accounts.btn.delete" class="link" data-del="${a.id}">delete</button></td></tr>
+                <td>
+                    <button class="link" data-rebuild="${a.id}" data-i18n="view.accounts.btn.rebuild" style="margin-right:8px">rebuild trades</button>
+                    <button data-i18n="view.accounts.btn.delete" class="link" data-del="${a.id}">delete</button>
+                </td></tr>
             `).join('') || `<tr><td colspan="5" class="muted">${esc(t('view.accounts.empty'))}</td></tr>`}
             </tbody>
         </table>
@@ -87,6 +90,19 @@ export async function renderAccounts(mount, _state, onChange) {
                 renderAccounts(mount, _state, onChange);
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            }
+        }));
+    mount.querySelectorAll('[data-rebuild]').forEach(b =>
+        b.addEventListener('click', async () => {
+            try {
+                b.disabled = true;
+                const r = await api.rebuildTrades(b.dataset.rebuild);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.accounts.toast.rebuilt', { n: r.trades_rolled }), { level: 'success' });
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+            } finally {
+                b.disabled = false;
             }
         }));
 }

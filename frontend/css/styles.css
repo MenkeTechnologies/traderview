@@ -202,6 +202,42 @@ body:not(.no-neon-glow) .chart-panel {
     gap: 14px;
 }
 
+.dash-tv-header { display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap }
+.dash-tv-header h1 { margin:0 }
+.dash-tv-range { color: var(--text-muted); font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:2px; margin:8px 0 12px }
+
+.dash-tv-toggle { margin-left:auto; display:inline-flex; gap:0; border:1px solid var(--cyan); border-radius:2px; overflow:hidden }
+.dash-tv-toggle button { background:transparent; color:var(--text-muted); border:0; padding:6px 14px; font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:1.5px; cursor:pointer }
+.dash-tv-toggle button:hover { background:rgba(0,229,255,0.08); color:var(--cyan) }
+.dash-tv-toggle button.active { background:var(--cyan); color:#000 }
+
+.dash-tv-day-strip { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:14px }
+.dash-tv-day { background:var(--bg-card); border:1px solid var(--border); border-radius:2px; padding:10px 12px; min-height:84px; display:flex; flex-direction:column; gap:6px }
+.dash-tv-day-head { display:flex; justify-content:space-between; align-items:baseline }
+.dash-tv-day-num { font-size:22px; font-weight:700; color:var(--text) }
+.dash-tv-day-name { font-size:11px; color:var(--text-muted); text-transform:lowercase }
+.dash-tv-day-pnl { font-size:14px; font-weight:600; margin-top:auto }
+.dash-tv-day-trades { font-size:11px; color:var(--text-muted) }
+.dash-tv-day.pos { border-color: rgba(57,255,20,0.55) }
+.dash-tv-day.neg { border-color: rgba(255,56,96,0.55) }
+
+.dash-tv-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:14px }
+.dash-tv-grid .chart-panel { margin-bottom:0 }
+.dash-tv-grid .dash-tv-span-2 { grid-column: span 2 }
+@media (max-width: 900px) { .dash-tv-grid .dash-tv-span-2 { grid-column: span 1 } }
+
+.dash-tv-compare { display:flex; flex-direction:column; gap:14px; padding-top:6px }
+.dash-tv-compare-row { display:grid; grid-template-columns:90px 1fr 110px; align-items:center; gap:10px }
+.dash-tv-compare-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px }
+.dash-tv-compare-track { background:rgba(255,255,255,0.05); height:10px; border-radius:2px; overflow:hidden }
+.dash-tv-compare-fill { height:100%; transition:width 200ms ease }
+.dash-tv-compare-fill.pos { background:linear-gradient(90deg, rgba(57,255,20,0.4), #39ff14) }
+.dash-tv-compare-fill.neg { background:linear-gradient(90deg, rgba(255,56,96,0.4), #ff3860) }
+.dash-tv-compare-value { font-size:13px; font-weight:600; text-align:right; font-family:'JetBrains Mono', monospace }
+.dash-tv-compare-value.pos { color:#39ff14 }
+.dash-tv-compare-value.neg { color:#ff3860 }
+.dash-tv-na { color:var(--text-muted); font-style:italic; padding:18px 0 }
+
 /* ---- table ----------------------------------------------------- */
 table.trades { width: 100%; border-collapse: collapse; background: var(--bg-card); }
 table.trades th, table.trades td {
