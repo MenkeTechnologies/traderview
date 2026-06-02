@@ -431,6 +431,10 @@ use traderview_expense::landlord_annual_rent_statement::{
     check as check_landlord_annual_rent_statement, LandlordAnnualRentStatementInput,
     LandlordAnnualRentStatementResult,
 };
+use traderview_expense::landlord_emergency_entry_notice::{
+    check as check_landlord_emergency_entry_notice, LandlordEmergencyEntryInput,
+    LandlordEmergencyEntryResult,
+};
 use traderview_expense::landlord_harassment::{
     check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
     Input as LandlordHarassmentInput,
@@ -764,6 +768,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
+        .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
@@ -5329,6 +5334,33 @@ async fn landlord_annual_rent_statement_route(
     Json(b): Json<LandlordAnnualRentStatementInput>,
 ) -> Result<Json<LandlordAnnualRentStatementResult>, ApiError> {
     Ok(Json(check_landlord_annual_rent_statement(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// landlord_emergency_entry_notice: Mandatory landlord-paid post-entry
+// notice after emergency entry. Mounted at POST /api/rental/landlord-
+// emergency-entry-notice. Four regimes: California Cal. Civ. Code §§
+// 1954(e) + 1940.2 (emergency entry permitted without prior notice but
+// landlord MUST leave written notice describing date + time + purpose +
+// provide notice within reasonable time; pretextual emergency entries
+// actionable as prohibited harassing acts with $2K per-violation civil
+// penalty); Texas Tex. Prop. Code § 92.0081 (emergency entry permitted;
+// no specific post-entry written-notice obligation but unauthorized
+// entry civil penalty = actual damages + one month's rent + $1K +
+// attorney fees); New York N.Y. Mult. Dwell. Law § 78 + common-law
+// quiet enjoyment (emergency entry permitted but landlord must provide
+// post-entry notification + leave premises SECURED); Default common-law
+// necessity doctrine + quiet enjoyment covenant + trespass. Distinct
+// from `entry_notice` (general 24-hour pre-entry), `pesticide_
+// application_notice`, and `landlord_harassment`.
+// ---------------------------------------------------------------------------
+
+async fn landlord_emergency_entry_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordEmergencyEntryInput>,
+) -> Result<Json<LandlordEmergencyEntryResult>, ApiError> {
+    Ok(Json(check_landlord_emergency_entry_notice(&b)))
 }
 
 async fn landlord_harassment_route(
