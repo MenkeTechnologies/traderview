@@ -265,6 +265,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-951a",          post(section_951a_route))
         .route("/calc/section-956",           post(section_956_route))
+        .route("/calc/section-962",           post(section_962_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
@@ -2930,6 +2931,44 @@ async fn section_956_route(
     Json(b): Json<traderview_expense::section_956::Section956Input>,
 ) -> Result<Json<traderview_expense::section_956::Section956Result>, ApiError> {
     Ok(Json(traderview_expense::section_956::check(&b)))
+}
+
+// ── § 962 Election by Individuals to Be Subject to Tax at Corporate
+// Rates ─────────────────────────────────────────────────────────────
+// Mounted at /api/calc/section-962 (iter 510). Pure compute. § 962
+// permits individual US shareholder (plus estate plus US trust) of CFC
+// to elect taxation at corporate § 11 rate (21%) on (1) Subpart F
+// inclusions under § 951(a), (2) GILTI / NCTI inclusions under § 951A,
+// (3) § 956 US property investment inclusions — instead of individual
+// marginal rate (up to 37%). Election unlocks § 250 GILTI / NCTI
+// deduction (50% pre-OBBBA / 40% post-OBBBA) plus § 960 deemed-paid
+// FTC (80% pre-OBBBA / 90% post-OBBBA per Pub. L. 119-21 effective
+// for taxable years beginning after December 31 2025). § 962(b)
+// ceiling rule. § 962(d) ACTUAL DISTRIBUTION RULE — multi-year
+// consideration: when CFC later makes actual distribution of § 962
+// E&P, includible in gross income to extent EXCEEDS cumulative US tax
+// paid under § 962 in prior years; SECOND layer of tax at qualified
+// dividend / treaty preferential rate. § 245A 100% DRD NOT available
+// to § 962 electors per Treas. Reg. § 1.245A-5(b)(2) — election
+// forecloses participation-exemption pathway. Treas. Reg. § 1.962-
+// 2(b)(1) annual election via Form 1040 statement; election applies
+// to ALL CFCs of shareholder. Rev. Rul. 2019-10 permits partner /
+// S corp shareholder to elect at individual level for flowed-through
+// inclusions. Six-mode severity ladder: NotApplicable, NotEligible-
+// ShareholderType (partnership entity-level / domestic C corp),
+// ElectionNotMadeIndividualRateApplies, ElectionMadeCurrentYear-
+// Benefit, ActualDistributionExceedsTaxPaidSecondLayerTriggered,
+// ActualDistributionWithinTaxPaidNoSecondLayer. Coordinates with
+// § 951 (Subpart F), § 951A (GILTI/NCTI), § 956 (US property),
+// § 245A (DRD pathway alternative — mutually exclusive with § 962
+// on actual distribution), § 250 (deduction), § 960 (FTC), § 59A
+// (BEAT separate regime), § 911 (FEIE individual regime).
+
+async fn section_962_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_962::Section962Input>,
+) -> Result<Json<traderview_expense::section_962::Section962Result>, ApiError> {
+    Ok(Json(traderview_expense::section_962::check(&b)))
 }
 
 // ── §1058 securities loan non-recognition ─────────────────────────────
