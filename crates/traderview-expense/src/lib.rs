@@ -188,6 +188,7 @@ pub mod tenant_topa;
 pub mod utility_shutoff;
 pub mod source_of_income_discrimination;
 pub mod vehicle_towing_from_rental_property;
+pub mod water_heater_earthquake_strap;
 pub mod window_guard_requirements;
 pub mod winter_eviction_protections;
 pub mod written_lease_requirement;

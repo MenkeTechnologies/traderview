@@ -170,6 +170,10 @@ use traderview_expense::vehicle_towing_from_rental_property::{
     check as check_vehicle_towing, TowingInput as VehicleTowingInput,
     TowingResult as VehicleTowingResult,
 };
+use traderview_expense::water_heater_earthquake_strap::{
+    check as check_water_heater_earthquake_strap, WaterHeaterEarthquakeStrapInput,
+    WaterHeaterEarthquakeStrapResult,
+};
 use traderview_expense::adverse_action_notice::{
     check as check_adverse_action, AdverseActionInput, AdverseActionResult,
 };
@@ -709,6 +713,7 @@ pub fn router() -> Router<AppState> {
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
         .route("/vehicle-towing-from-rental-property", axum::routing::post(vehicle_towing_from_rental_property_route))
+        .route("/water-heater-earthquake-strap", axum::routing::post(water_heater_earthquake_strap_route))
         .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
         .route("/adverse-possession-claim", axum::routing::post(adverse_possession_claim_route))
         .route("/topa-check", axum::routing::post(tenant_topa_check_route))
@@ -2927,6 +2932,37 @@ async fn vehicle_towing_from_rental_property_route(
         ));
     }
     Ok(Json(check_vehicle_towing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// water_heater_earthquake_strap: California Health & Safety Code §
+// 19211 (Article 8 Water Heater Strapping and Installation, Chapter 2
+// Earthquake Protection) compliance — § 19211(a) all new + replacement
+// + existing residential water heaters must be braced / anchored /
+// strapped to resist falling or horizontal displacement due to
+// earthquake motion; minimum standard = California Plumbing Code Title
+// 24 Part 5 or local modifications. § 19211(b) "water heater" means
+// standard water heater capacity ≤ 120 gallons for which pre-engineered
+// strapping kit is readily available. § 19211(c) building or dwelling
+// unit in violation = NUISANCE; breaches implied warranty of
+// habitability. § 19211(d) seller must certify § 19211 compliance IN
+// WRITING to prospective purchaser. Two regimes: California (strict §
+// 19211 + Plumbing Code + nuisance + cert); Default (no statutory
+// strap requirement; IPC where adopted + common-law premises
+// liability). Mounted at POST /api/rental/water-heater-earthquake-
+// strap. Trader-landlord critical for CA rental owners — insurance
+// carriers may deny earthquake / fire / flood claims tied to non-
+// compliant water heaters. Distinct from siblings meth_contamination_
+// disclosure, mold_disclosure, fire_sprinkler_disclosure,
+// detector_requirements.
+// ---------------------------------------------------------------------------
+
+async fn water_heater_earthquake_strap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<WaterHeaterEarthquakeStrapInput>,
+) -> Result<Json<WaterHeaterEarthquakeStrapResult>, ApiError> {
+    Ok(Json(check_water_heater_earthquake_strap(&b)))
 }
 
 // ---------------------------------------------------------------------------
