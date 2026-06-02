@@ -543,6 +543,10 @@ use traderview_expense::rental_sex_offender_registry_notice::{
     check as check_rental_sex_offender_registry_notice,
     RentalSexOffenderRegistryNoticeInput, RentalSexOffenderRegistryNoticeResult,
 };
+use traderview_expense::rental_swimming_pool_drain_safety::{
+    check as check_rental_swimming_pool_drain_safety,
+    RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
+};
 use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
@@ -909,6 +913,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
+        .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
@@ -6393,6 +6398,40 @@ async fn rental_sex_offender_registry_notice_route(
     Json(b): Json<RentalSexOffenderRegistryNoticeInput>,
 ) -> Result<Json<RentalSexOffenderRegistryNoticeResult>, ApiError> {
     Ok(Json(check_rental_sex_offender_registry_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_swimming_pool_drain_safety: Rental property swimming pool
+// drain safety compliance — when a trader-landlord operating a
+// multifamily building with pool or spa must comply with federal
+// Virginia Graeme Baker Pool and Spa Safety Act (VGB Act) drain
+// cover + anti-entrapment requirements. Mounted at POST /api/rental/
+// rental-swimming-pool-drain-safety. Three regimes: Federal VGB Act
+// of 2007 (Pub. L. 110-140 EISA Title 14, eff. December 19, 2008;
+// 15 USC §§ 8001-8008) — applies to apartment complexes as public
+// pools; ASME/ANSI A112.19.8-2007 drain covers + ANSI/APSP/ICC-16
+// successor standard; single-drain pools require one of six
+// secondary anti-entrapment safeguards (separated drains / SVRS /
+// vent system / gravity drainage / automatic pump shutoff / CPSC-
+// approved equivalent); $120,000/violation CPSC civil penalty (15
+// USC § 2069); California Cal. Health & Safety Code § 116064.1 +
+// § 115922 + § 116064.4 (incorporates VGB Act + adds 5-foot pool
+// fence + self-latching gate requirements; CDPH enforcement); SB
+// 442 of 2017 strengthened residential pool safety; Florida Building
+// Code § 454.2.17 + FL Statute § 514.0315 (FL Department of Health
+// enforcement + drain cover recertification cycle). Private
+// residential pools NOT covered by federal VGB Act. Distinct from
+// siblings swimming_pool_safety (general pool fencing/barrier
+// framework), rental_carbon_monoxide_detector, rental_bedroom_
+// egress_window.
+// ---------------------------------------------------------------------------
+
+async fn rental_swimming_pool_drain_safety_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSwimmingPoolDrainSafetyInput>,
+) -> Result<Json<RentalSwimmingPoolDrainSafetyResult>, ApiError> {
+    Ok(Json(check_rental_swimming_pool_drain_safety(&b)))
 }
 
 // ---------------------------------------------------------------------------
