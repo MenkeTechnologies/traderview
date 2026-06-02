@@ -303,6 +303,10 @@ use traderview_expense::tenant_clothesline_drying_right::{
 use traderview_expense::snow_removal_responsibility::{
     check as check_snow_removal_responsibility, SnowRemovalInput, SnowRemovalResult,
 };
+use traderview_expense::soft_story_seismic_retrofit::{
+    check as check_soft_story_seismic_retrofit, SoftStorySeismicRetrofitInput,
+    SoftStorySeismicRetrofitResult,
+};
 use traderview_expense::security_camera_disclosure::{
     check as check_security_camera_disclosure, SecurityCameraInput, SecurityCameraResult,
 };
@@ -766,6 +770,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
         .route("/tenant-clothesline-drying-right", axum::routing::post(tenant_clothesline_drying_right_route))
         .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
+        .route("/soft-story-seismic-retrofit", axum::routing::post(soft_story_seismic_retrofit_route))
         .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
         .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
         .route("/pre-move-out-inspection", axum::routing::post(pre_move_out_inspection_route))
@@ -4204,6 +4209,41 @@ async fn snow_removal_responsibility_route(
         ));
     }
     Ok(Json(check_snow_removal_responsibility(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// soft_story_seismic_retrofit: Mandatory soft-story seismic retrofit
+// ordinance compliance — when a trader-landlord owning a wood-frame
+// multifamily building with a soft/weak first story (open ground-
+// floor parking, retail, or similar large openings lacking lateral
+// bracing) must commission a mandatory structural retrofit. Mounted at
+// POST /api/rental/soft-story-seismic-retrofit. Four regimes: San
+// Francisco (Building Code Chapter 34B, Ord. 66-13 operative June 17,
+// 2013 — wood-frame 5+ residential units + 2+ stories over soft story;
+// all tier deadlines PASSED September 15, 2021; non-compliance = SF
+// Building Code § 102A.16 UNSAFE + ~$840/day penalty); Los Angeles
+// (Ordinance 183893 Nov 22, 2015 — ~13,500 wood-frame soft-story
+// buildings; 3-phase compliance timeline 2yr structural report / 3.5yr
+// permits / 7yr retrofit-complete; Priority 2 deadline April 2026 +
+// LAMC § 91.6314 enforcement); Berkeley (BMC Chapter 19.39 eff. 2015 —
+// wood-frame multifamily ≥ 3 units + soft-story first floor; ongoing
+// certification); Default (no statutory requirement; common-law
+// premises liability + state building code + local ordinances; Oakland
+// + San Jose + Pasadena + West Hollywood have analogous programs).
+// Trader-landlord critical for CA multifamily owners — non-compliance
+// exposes owner to ordinance penalties + uninhabitable-building
+// findings + insurance non-renewal. Distinct from siblings balcony_
+// inspection (SB 721/326 EEE visual inspection), water_heater_
+// earthquake_strap (CA § 19211 individual appliance), fire_sprinkler_
+// disclosure (fire suppression).
+// ---------------------------------------------------------------------------
+
+async fn soft_story_seismic_retrofit_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SoftStorySeismicRetrofitInput>,
+) -> Result<Json<SoftStorySeismicRetrofitResult>, ApiError> {
+    Ok(Json(check_soft_story_seismic_retrofit(&b)))
 }
 
 // ---------------------------------------------------------------------------

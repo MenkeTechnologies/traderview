@@ -167,6 +167,7 @@ pub mod service_animal;
 pub mod sex_offender_database_notice;
 pub mod smoke_free_housing;
 pub mod snow_removal_responsibility;
+pub mod soft_story_seismic_retrofit;
 pub mod soi_protection;
 pub mod squatter_unauthorized_occupant_removal;
 pub mod str_regulation;
