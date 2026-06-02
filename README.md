@@ -10805,6 +10805,49 @@ Mounted at `POST /api/calc/section-267`. Fourteen tests pin: unrelated full loss
 
 Mounted at `POST /api/calc/section-164`. Twenty-three tests pin: **TCJA 2024 cap $10K** + "TCJA" citation regression; **TCJA 2024 MFS cap $5K**; **OBBBA 2025 single under threshold full $40K cap**; **OBBBA 2025 at $500K boundary no reduction** (regression — > strict required); **OBBBA 2025 one dollar above threshold 30-cent reduction** (off-by-one); **OBBBA 2025 high MAGI phaseout to $10K floor** ($1M MAGI → $150K reduction → cap clamped at floor); **OBBBA 2025 statutory floor protects high income** ($10M MAGI still gets $10K); **OBBBA 2025 MFS half-amounts** ($20K cap + $250K threshold + $5K floor); **OBBBA 2026 cap rises 1%** ($40K → $40,400); **OBBBA 2027 compounds** ($40K × 1.01² = $40,804); **OBBBA 2029 final year** (computed via compound_one_percent regression); **OBBBA 2030 sunsets to TCJA $10K** + "sunset" + § 164(b)(6)(B) citation; **OBBBA 2030 MFS sunsets to $5K**; **OBBBA 2031 still TCJA**; **salt paid under cap no blocking**; **salt paid exactly cap no blocking**; **phaseout partial reduction above floor** ($550K MAGI → $15K reduction → $25K cap); **MFS phaseout at $250K threshold**; **MFJ uses $500K threshold not $250K**; **citations pin authorities** (TCJA + § 70413 + OBBBA + $500,000 + sunset); **blocked_by_cap = salt_paid − allowed_deduction invariant** (4-year regression in single test); **negative inputs clamped**; **compound growth strictly monotonic across OBBBA years 2025-2029** (year-over-year cap growth invariant).
 
+`traderview-expense::section_162m` is the **IRC § 162(m) $1M public-company executive compensation deduction limit module** — direct trader-critical companion to `section_280g` (Golden Parachute change-in-control regime — iter 444), `section_409a` (NQDC compliance), `section_422` (ISO — iter 438), `section_423` (ESPP — iter 440), `section_280e` (different deduction disallowance regime — controlled-substance trafficking). Trader-critical because traders at venture-backed startups that go public, or who later become C-suite executives at public companies, encounter § 162(m) on every compensation package: cash bonus, deferred compensation, equity awards, severance.
+
+§ 162(m)(1) DENIES employer deduction for "applicable employee remuneration" of "covered employees" of a "publicly held corporation" that **EXCEEDS $1,000,000** for the taxable year. The "ONCE COVERED, ALWAYS COVERED" rule under TCJA 2017 amendments means the deduction limitation follows the executive FOREVER, even after departure and after death (paid to estate).
+
+**§ 162(m)(2) publicly held corporation**:
+1. Securities registered under § 12 of the Securities Exchange Act of 1934 (NYSE/NASDAQ/AMEX)
+2. § 15(d) reporting requirement
+3. TCJA 2017 expansion: foreign private issuers + any corporation required to file SEC reports
+
+**§ 162(m)(3) covered employee (5 categories)**:
+1. CEO at any time during taxable year
+2. CFO at any time during taxable year
+3. Top 3 other most highly compensated officers
+4. ANY individual who was a covered employee for any taxable year beginning AFTER 2016 (**ONCE-COVERED-ALWAYS-COVERED** rule)
+5. **ARPA FIVE** (Pub. L. 117-2 § 9708, effective taxable years beginning after December 31, 2026) — next 5 most highly compensated employees; bringing total to 10; includes NON-OFFICERS; retested ANNUALLY (no permanent status)
+
+**§ 162(m)(4) applicable employee remuneration includes**: cash compensation; equity compensation (RSU vesting, NQSO exercise spread); bonus payments; deferred compensation when paid; severance payments; post-termination payments (under once-covered-always-covered rule).
+
+**TCJA 2017 changes (Pub. L. 115-97 § 13601)**:
+1. ELIMINATED performance-based compensation exception
+2. ELIMINATED commission exception
+3. Introduced ONCE-COVERED-ALWAYS-COVERED rule (post-2016)
+4. Expanded publicly held corporation definition
+5. **TRANSITION RULE** — written binding contract IN EFFECT ON NOVEMBER 2, 2017 and NOT MATERIALLY MODIFIED preserves former § 162(m)(4)(C) qualified performance-based compensation exception
+
+**ARPA 2021 changes (Pub. L. 117-2 § 9708)**:
+1. Effective taxable years beginning AFTER DECEMBER 31, 2026
+2. Adds NEXT FIVE most highly compensated employees beyond CEO + CFO + top 3
+3. ARPA FIVE includes employees who are NOT officers
+4. ARPA FIVE retested ANNUALLY (no permanent once-covered status)
+5. Brings total covered employees from 5 to 10
+6. Treas. Reg. § 1.162-33 proposed January 16, 2025 implementation
+
+**§ 162(m) interaction with § 280G** — both regimes deny employer deduction for executive compensation but DIFFERENT TRIGGERS:
+- § 162(m) — $1M cap on ANNUAL remuneration to covered employees of public corporation
+- § 280G — CHANGE-IN-CONTROL parachute payment ≥ 3× base amount denies deduction on entire excess over 1× base PLUS § 4999 20% recipient excise tax
+
+Both apply simultaneously; same compensation can be disallowed under BOTH if it exceeds $1M cap AND is change-in-control parachute.
+
+**Trader-critical fact patterns**: (1) NASDAQ CEO total comp $5M cash + $3M RSU vesting = $8M — $1M deductible, $7M non-deductible to employer; (2) trader departs 2023, receives $2M deferred bonus in 2026 — STILL covered under once-always rule; (3) post-2027 ARPA FIVE — sixth-highest-paid employee $1.5M comp triggers § 162(m); (4) pre-TCJA grandfather — binding contract October 15, 2017 with qualified performance-based RSU preserves exception; (5) § 162(m) + § 280G dual regime — same compensation disallowed under both.
+
+Mounted at `POST /api/calc/section-162m`. Thirty tests pin: **CEO $8M comp $1M deductible $7M non-deductible**; **CEO under $1M fully deductible**; **CEO at $1M boundary fully deductible**; **not publicly held no cap**; **not covered employee fully deductible**; **CFO subject to cap**; **top three officer subject to cap**; **once-covered-always-covered rule** ($13601 + survives departure + death); **ARPA FIVE pre-2027 not yet effective**; **ARPA FIVE post-2027 effective**; **ARPA expansion disclosed post-2027**; **pre-TCJA grandfather with performance-based exempt**; **pre-TCJA contract without performance-based not exempt**; **dual regime § 280G disclosed**; **covered employee type truth table six cells** (2026 + 2027 sweep); **ARPA FIVE uniquely year-gated invariant**; **$1M cap pinned at 100M cents**; **citation pins all authorities** (§ 162(m)(1)-(6) + Pub. L. 115-97 § 13601 TCJA + Pub. L. 117-2 § 9708 ARPA + Treas. Reg. § 1.162-27 + Treas. Reg. § 1.162-33 + IRS Pub. 6014 + Notice 2018-68 + Rev. Proc. 2024-19); **note pins § 162(m)(1) deduction denial**; **note pins § 162(m)(2) publicly held**; **note pins § 162(m)(3) covered employee**; **note pins once-covered-always-covered TCJA**; **note pins § 162(m)(4) applicable remuneration**; **note pins TCJA 2017 five changes**; **note pins ARPA 2021 five features**; **note pins § 280G interaction**; **note pins trader fact patterns**; **note pins authority guidance**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_163d` is the **IRC §163(d) investment interest expense limitation** — the §163(j) equivalent for non-trader investors (anyone NOT making the §475(f) trader-in-securities election). Margin interest is deductible only up to **net investment income** under §163(d)(1); excess carries forward **indefinitely** under §163(d)(2). Pairs with iter 16's `section_163j` — together they cover the two §163 limitation paths a margin-debt taxpayer can hit.
 
 Net investment income per §163(d)(4) sums: **interest income** (always counted), **ordinary dividends** (always), **net short-term capital gain** (always — STCG is ordinary regardless), and OPTIONALLY **qualified dividends** + **net long-term capital gain** if the taxpayer makes the **§1(h)(11)(D)(i)** / **§163(d)(4)(B)(iii)** election to treat them as investment income. Investment expenses other than interest (§163(d)(4)(C) — e.g. portion of management fees) reduce the NII figure.

@@ -120,6 +120,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7463",          post(section_7463_route))
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
+        .route("/calc/section-162m",          post(section_162m_route))
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-7503",          post(section_7503_route))
         .route("/calc/section-7508",          post(section_7508_route))
@@ -4248,6 +4249,29 @@ async fn section_162f_route(
         ));
     }
     Ok(Json(traderview_expense::section_162f::compute(&b)))
+}
+
+// ── § 162(m) $1M public-company executive comp deduction limit ───────
+// Mounted at /api/calc/section-162m. Pure compute; § 162(m)(1)
+// $1,000,000 annual cap on covered-employee remuneration deductible
+// to publicly held corporation; § 162(m)(2) PUBLICLY HELD = SEC § 12
+// registration OR § 15(d) reporting (TCJA-expanded to include
+// foreign private issuers); § 162(m)(3) COVERED EMPLOYEE = CEO +
+// CFO + top 3 most highly compensated officers + ONCE-COVERED-
+// ALWAYS-COVERED (post-2016 status survives departure + death);
+// post-2026 ARPA FIVE (Pub. L. 117-2 § 9708) adds next 5 most
+// highly compensated (NOT necessarily officers; retested
+// annually); TCJA 2017 § 13601 eliminated performance-based and
+// commission exceptions; pre-TCJA written binding contract on
+// November 2, 2017 transition rule preserves former § 162(m)(4)(C)
+// performance-based exception; § 162(m) and § 280G can apply
+// simultaneously on same compensation.
+
+async fn section_162m_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_162m::Section162mInput>,
+) -> Result<Json<traderview_expense::section_162m::Section162mResult>, ApiError> {
+    Ok(Json(traderview_expense::section_162m::check(&b)))
 }
 
 // ── §6404 abatement of interest + tax + penalties ───────────────────
