@@ -80,6 +80,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-6042",          post(section_6042_route))
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6049",          post(section_6049_route))
         .route("/calc/section-6050i",         post(section_6050i_route))
@@ -2637,6 +2638,32 @@ async fn section_59a_route(
 // 2014-01-01 + more-complex debt 2016-01-01 + digital asset 2026-01-01
 // (NEW under IIJA § 80603 amending § 6045; requires continuous broker-
 // account holding). NO DE MINIMIS — even one cent triggers reporting.
+
+// ── §6042 returns regarding payments of dividends (1099-DIV) ────────
+// Mounted at /api/calc/section-6042. § 6042(a)(1) — every person who
+// makes dividend payments aggregating $10 or more (or who receives
+// as nominee) shall make a return. § 6042(b) — dividend defined per
+// § 316 (corporate distributions out of E&P) + § 852 RIC + § 857
+// REIT + stockbroker substitute payments; EXCLUDES exempt-interest
+// dividends (§ 852(b)(5)) and § 3406 backup-withheld amounts.
+// § 6042(c) — written statement to recipient by January 31. § 6042
+// (d)(1) substitute dividend payments by broker on short sales
+// reportable; § 6042(d)(2) uncertain payments rule — entire amount
+// treated as dividend. Form 1099-DIV box breakdown: 1a ordinary +
+// 1b qualified (§ 1(h)(11) 60-day holding period) + 2a-d capital
+// gain (including § 1202 QSBS + § 1250 unrecaptured) + 3 return of
+// capital + 5 § 199A REIT/PTP (20% deduction) + 8 foreign tax (§
+// 901 FTC) + 12 exempt-interest + 13 specified private activity
+// bond (AMT). Trader-critical: § 1411 NIIT 3.8% on dividends + §
+// 988 foreign currency ADR conversions. Companion to § 6041 + §
+// 6045 + § 6049 + § 6050W + § 3406 + § 1(h)(11) + § 199A + § 1411
+// + § 1202 + § 988 + § 901.
+async fn section_6042_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6042::Section6042Input>,
+) -> Result<Json<traderview_expense::section_6042::Section6042Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6042::check(&b)))
+}
 
 async fn section_6045_route(
     _u: AuthUser,

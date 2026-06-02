@@ -383,6 +383,7 @@ pub mod section_6020;
 pub mod section_6038d;
 pub mod section_6111;
 pub mod section_6112;
+pub mod section_6042;
 pub mod section_6045;
 pub mod section_6045a;
 pub mod section_6045b;
