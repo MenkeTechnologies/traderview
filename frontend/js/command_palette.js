@@ -54,6 +54,13 @@ function close() {
 function paint() {
     const root = document.getElementById('palette-root');
     if (!root) return;
+    // Capture caret position from the live input so a full re-render
+    // (which rebuilds the <input> element) doesn't silently drop focus —
+    // losing focus lets keystrokes bubble to the document and trip the
+    // global symbol hotkey.
+    const prevInput = document.getElementById('palette-input');
+    const hadFocus = prevInput && document.activeElement === prevInput;
+    const caret = prevInput ? prevInput.selectionStart : null;
     const items = buildAllItems();
     _results = filterAndRank(items, _query, 50);
     if (_selected >= _results.length) _selected = 0;
@@ -85,6 +92,14 @@ function paint() {
     if (input) {
         input.addEventListener('input', onInput);
         input.addEventListener('keydown', onInputKey);
+        // Re-focus after the rebuild so typing stays in the palette
+        // instead of leaking to the global symbol hotkey.
+        if (hadFocus) {
+            input.focus();
+            if (caret != null) {
+                try { input.setSelectionRange(caret, caret); } catch (_) { /* noop */ }
+            }
+        }
     }
     const list = document.getElementById('palette-results');
     if (list) {

@@ -31,6 +31,7 @@ mod crypto;
 mod csv_wizard;
 mod custom_indicators;
 mod darkpool;
+mod data_sources;
 mod dashboards;
 mod discipline;
 mod disclosures;
@@ -42,6 +43,7 @@ mod executions;
 mod export;
 mod fear_greed;
 mod fill_quality;
+mod finnhub_extras;
 mod goals;
 mod halts;
 mod heatmap;
@@ -77,6 +79,7 @@ mod sentiment;
 mod settings;
 mod shares;
 mod short_interest;
+mod squeeze_scanner;
 mod strategy_alerts;
 mod tags;
 mod tape_replay;
@@ -182,6 +185,9 @@ pub fn api_router() -> Router<AppState> {
         .merge(trade_compare::router())
         .merge(csv_wizard::router())
         .merge(accounts_overview::router())
+        .merge(data_sources::router())
+        .merge(squeeze_scanner::router())
+        .merge(finnhub_extras::router())
 }
 
 #[cfg(test)]

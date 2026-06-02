@@ -226,23 +226,23 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'hawkes_run',                   keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hawkes',            descKey: 'shortcut.hawkes_run',                   actionKey: 'tv:hawkes-run' },
     { id: 'kagi_run',                     keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'kagi',              descKey: 'shortcut.kagi_run',                     actionKey: 'tv:kagi-run' },
     { id: 'risk_parity_solver_run',       keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'risk-parity-solver', descKey: 'shortcut.risk_parity_solver_run',      actionKey: 'tv:risk-parity-solver-run' },
-    { id: 'volume_at_price_run',          keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vap',               descKey: 'shortcut.volume_at_price_run',          actionKey: 'tv:volume-at-price-run' },
-    { id: 'herfindahl_run',               keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'hhi',               descKey: 'shortcut.herfindahl_run',               actionKey: 'tv:herfindahl-run' },
+    { id: 'volume_at_price_run',          keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'volume-at-price',               descKey: 'shortcut.volume_at_price_run',          actionKey: 'tv:volume-at-price-run' },
+    { id: 'herfindahl_run',               keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'herfindahl',               descKey: 'shortcut.herfindahl_run',               actionKey: 'tv:herfindahl-run' },
     { id: 'roll_spread_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'roll-spread',       descKey: 'shortcut.roll_spread_run',              actionKey: 'tv:roll-spread-run' },
-    { id: 'three_line_break_run',         keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'tlb',               descKey: 'shortcut.three_line_break_run',         actionKey: 'tv:three-line-break-run' },
-    { id: 'momentum_crash_run',           keys: { key: 'm', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mcp',               descKey: 'shortcut.momentum_crash_run',           actionKey: 'tv:momentum-crash-run' },
-    { id: 'effective_spread_run',         keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'eff-spread',        descKey: 'shortcut.effective_spread_run',         actionKey: 'tv:effective-spread-run' },
-    { id: 'weighted_midprice_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'wmp',               descKey: 'shortcut.weighted_midprice_run',        actionKey: 'tv:weighted-midprice-run' },
-    { id: 'marginal_var_run',             keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'mvar',              descKey: 'shortcut.marginal_var_run',             actionKey: 'tv:marginal-var-run' },
+    { id: 'three_line_break_run',         keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'three-line-break',               descKey: 'shortcut.three_line_break_run',         actionKey: 'tv:three-line-break-run' },
+    { id: 'momentum_crash_run',           keys: { key: 'm', meta: false, ctrl: false, shift: false, alt: false }, scope: 'momentum-crash',               descKey: 'shortcut.momentum_crash_run',           actionKey: 'tv:momentum-crash-run' },
+    { id: 'effective_spread_run',         keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'effective-spread',        descKey: 'shortcut.effective_spread_run',         actionKey: 'tv:effective-spread-run' },
+    { id: 'weighted_midprice_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'weighted-midprice',               descKey: 'shortcut.weighted_midprice_run',        actionKey: 'tv:weighted-midprice-run' },
+    { id: 'marginal_var_run',             keys: { key: 'a', meta: false, ctrl: false, shift: false, alt: false }, scope: 'marginal-var',              descKey: 'shortcut.marginal_var_run',             actionKey: 'tv:marginal-var-run' },
     { id: 'range_bar_run',                keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'range-bar',         descKey: 'shortcut.range_bar_run',                actionKey: 'tv:range-bar-run' },
     { id: 'tick_bar_run',                 keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'tick-bar',          descKey: 'shortcut.tick_bar_run',                 actionKey: 'tv:tick-bar-run' },
-    { id: 'volume_bar_run',               keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'vol-bar',           descKey: 'shortcut.volume_bar_run',               actionKey: 'tv:volume-bar-run' },
+    { id: 'volume_bar_run',               keys: { key: 'b', meta: false, ctrl: false, shift: false, alt: false }, scope: 'volume-bar',           descKey: 'shortcut.volume_bar_run',               actionKey: 'tv:volume-bar-run' },
     { id: 'abc_pattern_run',              keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'abc-pattern',       descKey: 'shortcut.abc_pattern_run',              actionKey: 'tv:abc-pattern-run' },
     { id: 'absorption_run',               keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'absorption',        descKey: 'shortcut.absorption_run',               actionKey: 'tv:absorption-run' },
     { id: 'acf_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'acf',               descKey: 'shortcut.acf_run',                      actionKey: 'tv:acf-run' },
     { id: 'active_share_run',             keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'active-share',      descKey: 'shortcut.active_share_run',             actionKey: 'tv:active-share-run' },
     { id: 'ad_oscillator_run',            keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'ad-oscillator',     descKey: 'shortcut.ad_oscillator_run',            actionKey: 'tv:ad-oscillator-run' },
-    { id: 'adf_test_run',                 keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'adf',               descKey: 'shortcut.adf_test_run',                 actionKey: 'tv:adf-test-run' },
+    { id: 'adf_test_run',                 keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'adf-test',               descKey: 'shortcut.adf_test_run',                 actionKey: 'tv:adf-test-run' },
     { id: 'ad_normality_run',             keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'ad-normality',      descKey: 'shortcut.ad_normality_run',             actionKey: 'tv:ad-normality-run' },
     { id: 'adl_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'adl',               descKey: 'shortcut.adl_run',                      actionKey: 'tv:adl-run' },
     { id: 'alma_run',                     keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'alma',              descKey: 'shortcut.alma_run',                     actionKey: 'tv:alma-run' },
@@ -252,10 +252,10 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'aroon_run',                    keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'aroon',             descKey: 'shortcut.aroon_run',                    actionKey: 'tv:aroon-run' },
     { id: 'anchored_momentum_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'anchored-momentum', descKey: 'shortcut.anchored_momentum_run',        actionKey: 'tv:anchored-momentum-run' },
     { id: 'atr_channel_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'atr-channel',       descKey: 'shortcut.atr_channel_run',              actionKey: 'tv:atr-channel-run' },
-    { id: 'balance_of_power_run',         keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bop',               descKey: 'shortcut.balance_of_power_run',         actionKey: 'tv:balance-of-power-run' },
+    { id: 'balance_of_power_run',         keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'balance-of-power',               descKey: 'shortcut.balance_of_power_run',         actionKey: 'tv:balance-of-power-run' },
     { id: 'asi_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'asi',               descKey: 'shortcut.asi_run',                      actionKey: 'tv:asi-run' },
     { id: 'atr_trailing_stop_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'atr-trailing-stop', descKey: 'shortcut.atr_trailing_stop_run',        actionKey: 'tv:atr-trailing-stop-run' },
-    { id: 'bartlett_run',                 keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bartlett',          descKey: 'shortcut.bartlett_run',                 actionKey: 'tv:bartlett-run' },
+    { id: 'bartlett_run',                 keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bartlett-variance',          descKey: 'shortcut.bartlett_run',                 actionKey: 'tv:bartlett-run' },
     { id: 'bb_pb_run',                    keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-percent-b', descKey: 'shortcut.bb_pb_run',                  actionKey: 'tv:bb-pb-run' },
     { id: 'bbw_run',                      keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-band-width', descKey: 'shortcut.bbw_run',                   actionKey: 'tv:bbw-run' },
     { id: 'bb_osc_run',                   keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bollinger-oscillators', descKey: 'shortcut.bb_osc_run',               actionKey: 'tv:bb-osc-run' },
@@ -265,7 +265,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bg_test_run',                  keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breusch-godfrey',   descKey: 'shortcut.bg_test_run',                  actionKey: 'tv:bg-test-run' },
     { id: 'beta_run',                     keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'beta',              descKey: 'shortcut.beta_run',                     actionKey: 'tv:beta-run' },
     { id: 'bid_ask_vol_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bid-ask-volume-ratio', descKey: 'shortcut.bid_ask_vol_run',           actionKey: 'tv:bid-ask-vol-run' },
-    { id: 'bipower_variation_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bpv',               descKey: 'shortcut.bipower_variation_run',        actionKey: 'tv:bipower-variation-run' },
+    { id: 'bipower_variation_run',        keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bipower-variation',               descKey: 'shortcut.bipower_variation_run',        actionKey: 'tv:bipower-variation-run' },
     { id: 'borrow_rate_run',              keys: { key: 'c', meta: false, ctrl: false, shift: false, alt: false }, scope: 'borrow-rate-indicator', descKey: 'shortcut.borrow_rate_run',          actionKey: 'tv:borrow-rate-run' },
     { id: 'black_litterman_run',          keys: { key: 's', meta: false, ctrl: false, shift: false, alt: false }, scope: 'black-litterman',   descKey: 'shortcut.black_litterman_run',          actionKey: 'tv:black-litterman-run' },
     { id: 'block_bootstrap_run',          keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'block-bootstrap',   descKey: 'shortcut.block_bootstrap_run',          actionKey: 'tv:block-bootstrap-run' },
@@ -273,7 +273,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'bollinger_squeeze_run',        keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'bb-squeeze',        descKey: 'shortcut.bollinger_squeeze_run',        actionKey: 'tv:bollinger-squeeze-run' },
     { id: 'bp_test_run',                  keys: { key: 'e', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breusch-pagan',     descKey: 'shortcut.bp_test_run',                  actionKey: 'tv:bp-test-run' },
     { id: 'breadth_thrust_run',           keys: { key: 'd', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breadth-thrust',    descKey: 'shortcut.breadth_thrust_run',           actionKey: 'tv:breadth-thrust-run' },
-    { id: 'breadth_refresh',              keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'market-breadth',    descKey: 'shortcut.breadth_refresh',              actionKey: 'tv:market-breadth-refresh' },
+    { id: 'breadth_refresh',              keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'breadth',    descKey: 'shortcut.breadth_refresh',              actionKey: 'tv:market-breadth-refresh' },
     { id: 'live_refresh',         keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'live',       descKey: 'shortcut.live_refresh',         actionKey: 'tv:live-refresh' },
     { id: 'trades_refresh',       keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'trades',     descKey: 'shortcut.trades_refresh',       actionKey: 'tv:trades-refresh' },
     { id: 'journal_refresh',      keys: { key: 'r', meta: false, ctrl: false, shift: false, alt: false }, scope: 'journal',    descKey: 'shortcut.journal_refresh',      actionKey: 'tv:journal-refresh' },
@@ -380,14 +380,18 @@ export function saveOverrides(overrides, setItem) {
 }
 
 // Should the shortcut fire even when the user is typing? Most shortcuts
-// should NOT — leave room for the user to type 'k' in a textbox. But a
-// few (Escape, Cmd+K, Cmd+/) DO want to fire from inside text fields
-// because they are how you EXIT the field.
+// should NOT — leave room for the user to type 'k' in a textbox. But two
+// classes DO fire from inside text fields:
+//   1. Escape — it's how you EXIT the field.
+//   2. Any shortcut using a command modifier (⌘/Ctrl/Alt). Those combos are
+//      not normal text entry, so a custom-bound chord like ⌃⇧G or ⌥T must
+//      still fire even when an input is focused (e.g. the auto-focused Home
+//      tab filter box). Shift alone is excluded — it produces capitals.
 export function firesInEditableContext(sc) {
     if (!sc) return false;
     if (sc.id === 'escape') return true;
-    // Cmd+K-like (meta && ctrl-tolerant) always fires.
-    return !!(sc.keys && sc.keys.meta && sc.keys.ctrl);
+    const k = sc.keys;
+    return !!(k && (k.meta || k.ctrl || k.alt));
 }
 
 // True if the event target is a text-entry element (input/textarea/select/

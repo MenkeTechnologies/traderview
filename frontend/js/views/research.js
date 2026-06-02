@@ -1,6 +1,6 @@
 // Per-symbol research page — quote + signals + chart + news + fundamentals.
 import { api } from '../api.js';
-import { ohlcChart } from '../charts.js';
+import { createTradingChart } from '../components/trading_chart.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
@@ -31,45 +31,57 @@ export async function renderResearch(mount, _state, sym) {
         </h1>
         <div id="rs-quote" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="view.research.loading_quote">loading quote…</div></div></div>
         <div class="chart-panel">
-            <h2 data-i18n="view.research.h2.daily_chart_1y">Daily chart (1y)</h2>
+            <h2 data-i18n="view.research.h2.price_chart">Price chart</h2>
             <div id="rs-chart"></div>
         </div>
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.signals_score">Signals + Score</h2>
-                <div id="rs-signals" data-i18n="common.loading">loading…</div>
+                <div id="rs-signals"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.indicators">Indicators</h2>
-                <div id="rs-indicators" data-i18n="common.loading">loading…</div>
+                <div id="rs-indicators"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.pivots_classic">Pivots (classic)</h2>
-                <div id="rs-pivots" data-i18n="common.loading">loading…</div>
+                <div id="rs-pivots"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.latest_news">Latest News</h2>
-                <div id="rs-news" data-i18n="common.loading">loading…</div>
+                <div id="rs-news"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.analyst_recommendations">Analyst Recommendations</h2>
-                <div id="rs-recs" data-i18n="common.loading">loading…</div>
+                <div id="rs-recs"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.fundamentals">Fundamentals</h2>
-                <div id="rs-fund" data-i18n="common.loading">loading…</div>
+                <div id="rs-fund"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.earnings">Earnings</h2>
-                <div id="rs-earn" data-i18n="common.loading">loading…</div>
+                <div id="rs-earn"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.insider_activity">Insider Activity</h2>
-                <div id="rs-ins" data-i18n="common.loading">loading…</div>
+                <div id="rs-ins"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.holders">Holders</h2>
-                <div id="rs-hold" data-i18n="common.loading">loading…</div>
+                <div id="rs-hold"><span data-i18n="common.loading">loading…</span></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.research.h2.profile">Company Profile</h2>
+                <div id="rs-profile"><span data-i18n="common.loading">loading…</span></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.research.h2.peers">Peers / Sympathy</h2>
+                <div id="rs-peers"><span data-i18n="common.loading">loading…</span></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.research.h2.upgrades">Analyst Upgrades / Downgrades</h2>
+                <div id="rs-upgrades"><span data-i18n="common.loading">loading…</span></div>
             </div>
         </div>
     `;
@@ -83,20 +95,16 @@ export async function renderResearch(mount, _state, sym) {
     const recs = api.symbolRecs(sym).catch(() => null);
     const ins  = api.symbolInsiders(sym).catch(() => null);
     const hold = api.symbolHolders(sym).catch(() => null);
-
-    const to = Math.floor(Date.now() / 1000);
-    const from = to - 365 * 86400;
-    const bars = api.bars(sym, '1d', from, to).catch(() => ({ bars: [] }));
+    const prof = api.symbolProfile(sym).catch(() => null);
+    const peer = api.symbolPeers(sym).catch(() => null);
+    const upgr = api.symbolUpgrades(sym).catch(() => null);
 
     const qv = await q;
     if (!viewIsCurrent(tok)) return;
     const quoteEl = mount.querySelector('#rs-quote');
     if (quoteEl) renderQuote(quoteEl, qv);
-    bars.then(r => {
-        if (!viewIsCurrent(tok)) return;
-        const el = mount.querySelector('#rs-chart');
-        if (el) ohlcChart(el, r.bars || [], [], { height: 380 });
-    });
+    const chartEl = mount.querySelector('#rs-chart');
+    if (chartEl) createTradingChart(chartEl, { symbol: sym, interval: '1d', height: 380 });
     sig.then(s => {
         if (!viewIsCurrent(tok)) return;
         renderSignals(s, mount);
@@ -131,6 +139,97 @@ export async function renderResearch(mount, _state, sym) {
         const el = mount.querySelector('#rs-hold');
         if (el) renderHolders(el, h);
     });
+    prof.then(p => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-profile');
+        if (el) renderProfile(el, p);
+    });
+    peer.then(p => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-peers');
+        if (el) renderPeers(el, p);
+    });
+    upgr.then(u => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-upgrades');
+        if (el) renderUpgrades(el, u);
+    });
+}
+
+function renderProfile(el, p) {
+    if (!p || typeof p !== 'object' || !Object.keys(p).length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.research.empty.no_profile">No profile data.</p>`;
+        return;
+    }
+    const rows = [
+        [t('view.research.profile.name'),     p.name],
+        [t('view.research.profile.ticker'),   p.ticker],
+        [t('view.research.profile.exchange'), p.exchange],
+        [t('view.research.profile.country'),  p.country],
+        [t('view.research.profile.currency'), p.currency],
+        [t('view.research.profile.industry'), p.finnhubIndustry],
+        [t('view.research.profile.ipo'),      p.ipo],
+        [t('view.research.profile.market_cap'),
+            p.marketCapitalization != null ? '$' + (p.marketCapitalization).toLocaleString() + 'M' : null],
+        [t('view.research.profile.share_outstanding'),
+            p.shareOutstanding != null ? p.shareOutstanding.toLocaleString() + 'M' : null],
+        [t('view.research.profile.weburl'),
+            p.weburl ? `<a href="${esc(p.weburl)}" target="_blank" rel="noopener">${esc(p.weburl)}</a>` : null, true],
+        [t('view.research.profile.phone'),    p.phone],
+    ];
+    el.innerHTML = `<table class="trades"><tbody>${rows
+        .filter(([_, v]) => v != null && v !== '')
+        .map(([k, v, html]) => `<tr><td>${k}</td><td>${html ? v : esc(String(v))}</td></tr>`)
+        .join('')}</tbody></table>`;
+    if (p.logo) {
+        el.insertAdjacentHTML('afterbegin',
+            `<img src="${esc(p.logo)}" alt="" style="max-height:48px;margin-bottom:8px;display:block">`);
+    }
+}
+
+function renderPeers(el, p) {
+    const peers = Array.isArray(p) ? p : [];
+    if (!peers.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.research.empty.no_peers">No peer data.</p>`;
+        return;
+    }
+    el.innerHTML = peers.map(sym =>
+        `<a class="tile-badge link" style="margin:3px;display:inline-block" href="#research/${esc(sym)}">${esc(sym)}</a>`
+    ).join('');
+}
+
+function renderUpgrades(el, u) {
+    const rows = Array.isArray(u) ? u : [];
+    if (!rows.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.research.empty.no_upgrades">No analyst actions.</p>`;
+        return;
+    }
+    // Finnhub returns objects like {company, fromGrade, toGrade, action,
+    // gradeTime}. Sort newest-first defensively.
+    const sorted = [...rows].sort((a, b) => (b.gradeTime || 0) - (a.gradeTime || 0));
+    el.innerHTML = `<table class="trades">
+        <thead><tr>
+            <th data-i18n="view.research.upgrades.date">Date</th>
+            <th data-i18n="view.research.upgrades.firm">Firm</th>
+            <th data-i18n="view.research.upgrades.action">Action</th>
+            <th data-i18n="view.research.upgrades.from">From</th>
+            <th data-i18n="view.research.upgrades.to">To</th>
+        </tr></thead>
+        <tbody>${sorted.slice(0, 30).map(r => {
+            const cls = /upgrade|init|reiterate/i.test(r.action) ? 'pos'
+                      : /downgrade|cut|sell/i.test(r.action) ? 'neg' : '';
+            const date = r.gradeTime
+                ? new Date(r.gradeTime * 1000).toLocaleDateString()
+                : '—';
+            return `<tr>
+                <td class="muted">${esc(date)}</td>
+                <td>${esc(r.company || '—')}</td>
+                <td class="${cls}">${esc(r.action || '—')}</td>
+                <td class="muted">${esc(r.fromGrade || '—')}</td>
+                <td>${esc(r.toGrade || '—')}</td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table>`;
 }
 
 function renderQuote(el, q) {

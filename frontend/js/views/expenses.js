@@ -157,6 +157,7 @@ function drawShell(mount) {
         <button data-i18n="view.expenses.btn.seed_default_rules" id="exp-seed-rules">Seed default rules</button>
         <button data-i18n="view.expenses.btn.rules" id="exp-rules-btn">Rules</button>
         <button data-i18n="view.expenses.btn.receipts" id="exp-receipts-btn">Receipts</button>
+        <button data-i18n="view.expenses.btn.scan_folder" id="exp-scan-folder">Scan folder</button>
         <button data-i18n="view.expenses.btn.schedule_c" id="exp-report-btn">Schedule C</button>
     </div>
 
@@ -164,6 +165,7 @@ function drawShell(mount) {
         <span data-i18n-html="view.expenses.receipt.dropzone"><strong>Drop receipt</strong> — JPG, PNG, WebP, or PDF.
         OCR runs in the background; results auto-match candidate transactions.</span>
         <input type="file" id="receipt-file" class="hidden" accept="image/jpeg,image/png,image/webp,image/bmp,application/pdf">
+        <input type="file" id="receipt-folder" class="hidden" webkitdirectory directory multiple>
     </div>
 
     <div class="expense-filters">
@@ -208,6 +210,13 @@ function drawShell(mount) {
     mount.querySelector('#exp-seed-rules').addEventListener('click', seedRulesFlow);
     mount.querySelector('#exp-rules-btn').addEventListener('click', openRulesModal);
     mount.querySelector('#exp-receipts-btn').addEventListener('click', openReceiptsModal);
+    mount.querySelector('#exp-scan-folder').addEventListener('click', () => {
+        mount.querySelector('#receipt-folder').click();
+    });
+    mount.querySelector('#receipt-folder').addEventListener('change', e => {
+        receiptScanFolder(e.target.files);
+        e.target.value = '';
+    });
     mount.querySelector('#exp-report-btn').addEventListener('click', () => openScheduleCModal());
 
     bindReceiptDropzone();
@@ -557,6 +566,64 @@ async function receiptUploadAll(fileList) {
             setStatus(t('view.expenses.receipt.upload_err', { err: e.message }));
         }
     }
+}
+
+const RECEIPT_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'pdf'];
+
+function isReceiptFile(file) {
+    const name = (file.name || '').toLowerCase();
+    const dot = name.lastIndexOf('.');
+    const ext = dot >= 0 ? name.slice(dot + 1) : '';
+    return RECEIPT_EXTS.includes(ext);
+}
+
+// Scan a chosen directory: upload every receipt file found (recursively, via
+// webkitdirectory) through the OCR pipeline. Non-receipt files are skipped and
+// the backend dedups by sha256, so re-scanning a folder is idempotent.
+async function receiptScanFolder(fileList) {
+    const setStatus = (txt) => {
+        const s = state.mount.querySelector('#exp-status');
+        if (s) s.textContent = txt;
+    };
+    const all = Array.from(fileList || []);
+    if (!all.length) return;
+    const receipts = all.filter(isReceiptFile);
+    const skipped = all.length - receipts.length;
+    if (!receipts.length) {
+        setStatus(t('view.expenses.receipt.scan_none', { skipped }));
+        return;
+    }
+    const folder = (receipts[0].webkitRelativePath || '').split('/')[0] || receipts[0].name;
+    const total = receipts.length;
+    const tok = state.tok;
+    let uploaded = 0, failed = 0, done = 0;
+
+    setStatus(t('view.expenses.receipt.scanning', { folder, done, total }));
+
+    let idx = 0;
+    const worker = async () => {
+        while (idx < receipts.length) {
+            const file = receipts[idx++];
+            if (!viewIsCurrent(tok)) return;
+            try {
+                await api.uploadReceipt(file);
+                uploaded++;
+            } catch (e) {
+                failed++;
+            }
+            done++;
+            if (!viewIsCurrent(tok)) return;
+            setStatus(t('view.expenses.receipt.scanning', { folder, done, total }));
+        }
+    };
+    const CONCURRENCY = 3;
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, worker));
+    if (!viewIsCurrent(tok)) return;
+
+    setStatus(t('view.expenses.receipt.scan_done', { folder, uploaded, failed, skipped }));
+    showToast(t('view.expenses.receipt.scan_done', { folder, uploaded, failed, skipped }),
+        { level: failed ? 'warn' : 'success' });
+    openReceiptsModal();
 }
 
 async function pollReceiptUntilReady(receiptId) {

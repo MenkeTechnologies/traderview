@@ -15,7 +15,7 @@ export async function renderOptions(mount, _state, rest) {
             <label>r <input name="r" value="0.045" type="number" step="any" style="width:80px"></label>
             <button data-i18n="view.options_chain.btn.load" class="primary" type="submit">Load</button>
         </form>
-        <div id="oc-mount" data-i18n="common.loading">loading…</div>
+        <div id="oc-mount"><span data-i18n="common.loading">loading…</span></div>
         <div class="chart-panel" style="margin-top:14px">
             <h2 data-i18n="view.options_chain.h2.greeks_calculator">Greeks calculator</h2>
             <form id="gf" class="inline-form">

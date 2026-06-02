@@ -70,12 +70,12 @@ export async function renderDashboard(mount, state) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.dashboard.h2.risk_gate_today">🛡 Risk Gate · today</h2>
-            <div id="dash-rg" class="muted small" data-i18n="common.loading">loading…</div>
+            <div id="dash-rg" class="muted small"><span data-i18n="common.loading">loading…</span></div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.dashboard.h2.discipline_score_last_7_days">📐 Discipline score · last 7 days</h2>
-            <div id="dash-disc" data-i18n="common.loading">loading…</div>
+            <div id="dash-disc"><span data-i18n="common.loading">loading…</span></div>
         </div>
     `;
 

@@ -50,7 +50,15 @@ function wireTopbarIndicator() {
     onGlobalSymbolChanged(sync);
 }
 
+/** True when a modal overlay (command palette, dialog) is on screen.
+ *  These own the keyboard, so the global hotkey must stand down even if
+ *  focus momentarily slips to the body during a re-render. */
+function isModalOpen() {
+    return !!document.querySelector('.palette-overlay, .tv-dialog-overlay');
+}
+
 function onKeydown(e) {
+    if (isModalOpen()) return;
     const kind = classifyKey(e);
     if (kind === null) return;
 

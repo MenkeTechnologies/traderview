@@ -685,6 +685,144 @@ export const api = {
     // settings
     settings: () => request('/settings'),
     updateSettings: (body) => request('/settings', { method: 'POST', body: JSON.stringify(body) }),
+
+    // data-source provider keys (Finnhub, Alpaca, …). Persisted in user_settings.
+    // GET returns secrets masked as "***"; POST treats "***" / empty as "leave alone".
+    dataSources: () => request('/data-sources'),
+    updateDataSources: (body) =>
+        request('/data-sources', { method: 'POST', body: JSON.stringify(body) }),
+
+    // Live squeeze scanner — candidate aggregator + rolling-window detector.
+    // /ws/squeeze emits {type:'snapshot',events:[…]} on connect, then
+    // {type:'event',event:{…}} per fire. Reconnect on close.
+    squeezeCandidates: () => request('/squeeze/candidates'),
+    squeezeEvents: (limit = 50) => request(`/squeeze/events?limit=${limit}`),
+    squeezeConfig: () => request('/squeeze/config'),
+    updateSqueezeConfig: (body) =>
+        request('/squeeze/config', { method: 'POST', body: JSON.stringify(body) }),
+
+    // Direct Finnhub-backed routes (Finnhub-shaped responses, not Yahoo-shimmed).
+    symbolProfile:              (sym) => request(`/symbols/${encodeURIComponent(sym)}/profile`),
+    symbolPeers:                (sym) => request(`/symbols/${encodeURIComponent(sym)}/peers`),
+    symbolUpgrades:             (sym) => request(`/symbols/${encodeURIComponent(sym)}/upgrades`),
+    symbolFinancialsReported:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/financials-reported`),
+    symbolFinnhubQuote:         (sym) => request(`/symbols/${encodeURIComponent(sym)}/finnhub-quote`),
+    symbolFinnhubNews:          (sym, days = 7) => request(`/symbols/${encodeURIComponent(sym)}/finnhub-news${qs({ days })}`),
+    finnhubEarningsCalendar:    (from, to, sym) => request(`/finnhub/calendar/earnings${qs({ from, to, symbol: sym })}`),
+    finnhubIpoCalendar:         (from, to) => request(`/finnhub/calendar/ipo${qs({ from, to })}`),
+    finnhubGeneralNews:         (category = 'general') => request(`/finnhub/news${qs({ category })}`),
+
+    // ── Comprehensive Finnhub coverage ──────────────────────────────
+    // Per-symbol (free + premium routes — premium will 500 on free key).
+    symbolProfileLegacy:        (sym) => request(`/symbols/${encodeURIComponent(sym)}/profile-legacy`),
+    symbolExecutives:           (sym) => request(`/symbols/${encodeURIComponent(sym)}/executives`),
+    symbolFinancials:           (sym, statement = 'ic', freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/financials${qs({ statement, freq })}`),
+    symbolMetric:               (sym) => request(`/symbols/${encodeURIComponent(sym)}/metric`),
+    symbolNewsSentiment:        (sym) => request(`/symbols/${encodeURIComponent(sym)}/news-sentiment`),
+    symbolPressReleases:        (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/press-releases${qs({ from, to })}`),
+    symbolEpsSurprise:          (sym) => request(`/symbols/${encodeURIComponent(sym)}/eps-surprise`),
+    symbolRevenueEstimate:      (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/revenue-estimate${qs({ freq })}`),
+    symbolEbitdaEstimate:       (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/ebitda-estimate${qs({ freq })}`),
+    symbolEbitEstimate:         (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/ebit-estimate${qs({ freq })}`),
+    symbolEpsEstimate:          (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/eps-estimate${qs({ freq })}`),
+    symbolNetIncomeEstimate:    (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/net-income-estimate${qs({ freq })}`),
+    symbolPretaxIncomeEstimate: (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/pretax-income-estimate${qs({ freq })}`),
+    symbolGrossIncomeEstimate:  (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/gross-income-estimate${qs({ freq })}`),
+    symbolDpsEstimate:          (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/dps-estimate${qs({ freq })}`),
+    symbolPriceTarget:          (sym) => request(`/symbols/${encodeURIComponent(sym)}/price-target`),
+    symbolOptionChain:          (sym) => request(`/symbols/${encodeURIComponent(sym)}/option-chain`),
+    symbolFundOwnership:        (sym, limit = 20) => request(`/symbols/${encodeURIComponent(sym)}/fund-ownership${qs({ limit })}`),
+    symbolOwnership:            (sym, limit = 20) => request(`/symbols/${encodeURIComponent(sym)}/ownership${qs({ limit })}`),
+    symbolCompanyEarnings:      (sym, limit = 20) => request(`/symbols/${encodeURIComponent(sym)}/company-earnings${qs({ limit })}`),
+    symbolFinnhubDividends:     (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/finnhub-dividends${qs({ from, to })}`),
+    symbolDividendsBasic:       (sym) => request(`/symbols/${encodeURIComponent(sym)}/dividends-basic`),
+    symbolSplits:               (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/splits${qs({ from, to })}`),
+    symbolFinnhubCandles:       (sym, resolution = 'D', from, to) => request(`/symbols/${encodeURIComponent(sym)}/finnhub-candles${qs({ resolution, from, to })}`),
+    symbolTick:                 (sym, date, limit = 500, skip = 0) => request(`/symbols/${encodeURIComponent(sym)}/tick${qs({ date, limit, skip })}`),
+    symbolNbbo:                 (sym, date, limit = 500, skip = 0) => request(`/symbols/${encodeURIComponent(sym)}/nbbo${qs({ date, limit, skip })}`),
+    symbolBidAsk:               (sym) => request(`/symbols/${encodeURIComponent(sym)}/bidask`),
+    symbolFilings:              (sym, from, to, form) => request(`/symbols/${encodeURIComponent(sym)}/filings${qs({ from, to, form })}`),
+    symbolTranscriptsList:      (sym) => request(`/symbols/${encodeURIComponent(sym)}/transcripts-list`),
+    symbolSimilarityIndex:      (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/similarity-index${qs({ freq })}`),
+    symbolFinnhubInsiders:      (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/finnhub-insiders${qs({ from, to })}`),
+    symbolInsiderSentiment:     (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/insider-sentiment${qs({ from, to })}`),
+    symbolLobbying:             (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/lobbying${qs({ from, to })}`),
+    symbolUsaSpending:          (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/usa-spending${qs({ from, to })}`),
+    symbolVisaApplication:      (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/visa-application${qs({ from, to })}`),
+    symbolUsptoPatent:          (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/uspto-patent${qs({ from, to })}`),
+    symbolSupplyChain:          (sym) => request(`/symbols/${encodeURIComponent(sym)}/supply-chain`),
+    symbolSocialSentiment:      (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/social-sentiment${qs({ from, to })}`),
+    symbolEsg:                  (sym) => request(`/symbols/${encodeURIComponent(sym)}/esg`),
+    symbolEsgHistorical:        (sym) => request(`/symbols/${encodeURIComponent(sym)}/esg-historical`),
+    symbolHistoricalMarketCap:  (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/historical-market-cap${qs({ from, to })}`),
+    symbolHistoricalEmployeeCount: (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/historical-employee-count${qs({ from, to })}`),
+    symbolEarningsQualityScore: (sym, freq = 'annual') => request(`/symbols/${encodeURIComponent(sym)}/earnings-quality-score${qs({ freq })}`),
+    symbolRevenueBreakdown:     (sym) => request(`/symbols/${encodeURIComponent(sym)}/revenue-breakdown`),
+    symbolRevenueBreakdown2:    (sym) => request(`/symbols/${encodeURIComponent(sym)}/revenue-breakdown2`),
+    symbolPresentation:         (sym) => request(`/symbols/${encodeURIComponent(sym)}/presentation`),
+    symbolNewsroom:             (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/newsroom${qs({ from, to })}`),
+    symbolCongressionalTrading: (sym, from, to) => request(`/symbols/${encodeURIComponent(sym)}/congressional-trading${qs({ from, to })}`),
+    symbolPriceMetric:          (sym, date) => request(`/symbols/${encodeURIComponent(sym)}/price-metric${qs({ date })}`),
+    symbolBankBranch:           (sym) => request(`/symbols/${encodeURIComponent(sym)}/bank-branch`),
+    symbolScanPattern:          (sym, resolution = 'D') => request(`/symbols/${encodeURIComponent(sym)}/scan/pattern${qs({ resolution })}`),
+    symbolScanSr:               (sym, resolution = 'D') => request(`/symbols/${encodeURIComponent(sym)}/scan/sr${qs({ resolution })}`),
+    symbolScanAggregate:        (sym, resolution = 'D') => request(`/symbols/${encodeURIComponent(sym)}/scan/aggregate${qs({ resolution })}`),
+    symbolIndicator:            (sym, resolution = 'D', from, to, indicator = 'sma') => request(`/symbols/${encodeURIComponent(sym)}/indicator${qs({ resolution, from, to, indicator })}`),
+
+    // Calendars
+    finnhubEconomicCalendar:    (from, to) => request(`/finnhub/calendar/economic${qs({ from, to })}`),
+    finnhubFdaCalendar:         () => request(`/finnhub/calendar/fda`),
+    finnhubEarningsCallLive:    (from, to, symbol) => request(`/finnhub/calendar/earnings-call-live${qs({ from, to, symbol })}`),
+
+    // Forex
+    finnhubForexExchanges:      () => request(`/finnhub/forex/exchanges`),
+    finnhubForexSymbols:        (exchange = 'oanda') => request(`/finnhub/forex/symbols${qs({ exchange })}`),
+    finnhubForexRates:          (base = 'USD') => request(`/finnhub/forex/rates${qs({ base })}`),
+    finnhubForexCandle:         (symbol, resolution = 'D', from, to) => request(`/finnhub/forex/candle${qs({ symbol, resolution, from, to })}`),
+
+    // Crypto
+    finnhubCryptoExchanges:     () => request(`/finnhub/crypto/exchanges`),
+    finnhubCryptoSymbols:       (exchange = 'binance') => request(`/finnhub/crypto/symbols${qs({ exchange })}`),
+    finnhubCryptoCandle:        (symbol, resolution = 'D', from, to) => request(`/finnhub/crypto/candle${qs({ symbol, resolution, from, to })}`),
+    finnhubCryptoProfile:       (symbol) => request(`/finnhub/crypto/profile${qs({ symbol })}`),
+
+    // Indices / ETF / Mutual fund / Bond
+    finnhubIndexConstituents:   (symbol) => request(`/finnhub/index/${encodeURIComponent(symbol)}/constituents`),
+    finnhubIndexHistorical:     (symbol) => request(`/finnhub/index/${encodeURIComponent(symbol)}/historical-constituents`),
+    finnhubEtfProfile:          (symbol) => request(`/finnhub/etf/${encodeURIComponent(symbol)}/profile`),
+    finnhubEtfHoldings:         (symbol, skip = 0) => request(`/finnhub/etf/${encodeURIComponent(symbol)}/holdings${qs({ skip })}`),
+    finnhubEtfSector:           (symbol) => request(`/finnhub/etf/${encodeURIComponent(symbol)}/sector`),
+    finnhubEtfCountry:          (symbol) => request(`/finnhub/etf/${encodeURIComponent(symbol)}/country`),
+    finnhubEtfAllocation:       (symbol) => request(`/finnhub/etf/${encodeURIComponent(symbol)}/allocation`),
+    finnhubMfProfile:           (symbol) => request(`/finnhub/mutual-fund/${encodeURIComponent(symbol)}/profile`),
+    finnhubMfHoldings:          (symbol, skip = 0) => request(`/finnhub/mutual-fund/${encodeURIComponent(symbol)}/holdings${qs({ skip })}`),
+    finnhubMfSector:            (symbol) => request(`/finnhub/mutual-fund/${encodeURIComponent(symbol)}/sector`),
+    finnhubMfCountry:           (symbol) => request(`/finnhub/mutual-fund/${encodeURIComponent(symbol)}/country`),
+    finnhubMfEet:               (isin) => request(`/finnhub/mutual-fund/eet/${encodeURIComponent(isin)}`),
+    finnhubBondProfile:         (isin) => request(`/finnhub/bond/${encodeURIComponent(isin)}/profile`),
+    finnhubBondPrice:           (isin, from, to) => request(`/finnhub/bond/${encodeURIComponent(isin)}/price${qs({ from, to })}`),
+    finnhubBondYieldCurve:      (code) => request(`/finnhub/bond/yield-curve${qs({ code })}`),
+
+    // Economic / market / institutional
+    finnhubEconomicCodes:       () => request(`/finnhub/economic/codes`),
+    finnhubEconomicData:        (code) => request(`/finnhub/economic/data${qs({ code })}`),
+    finnhubCountryList:         () => request(`/finnhub/country-list`),
+    finnhubMarketStatus:        (exchange = 'US') => request(`/finnhub/market/status${qs({ exchange })}`),
+    finnhubMarketHoliday:       (exchange = 'US') => request(`/finnhub/market/holiday${qs({ exchange })}`),
+    finnhubStockExchanges:      () => request(`/finnhub/stock-exchanges`),
+    finnhubSectorMetrics:       (region = 'NA') => request(`/finnhub/sector-metrics${qs({ category: region })}`),
+    finnhubInstProfile:         (cik) => request(`/finnhub/institutional/${encodeURIComponent(cik)}/profile`),
+    finnhubInstPortfolio:       (cik, from, to) => request(`/finnhub/institutional/${encodeURIComponent(cik)}/portfolio${qs({ from, to })}`),
+    finnhubInstOwnership:       (symbol, from, to) => request(`/finnhub/institutional/${encodeURIComponent(symbol)}/ownership${qs({ from, to })}`),
+
+    // Discovery / specialty
+    finnhubSymbolLookup:        (q) => request(`/finnhub/search${qs({ q })}`),
+    finnhubStockSymbols:        (exchange = 'US') => request(`/finnhub/stock-symbols${qs({ exchange })}`),
+    finnhubSymbolChange:        (from, to) => request(`/finnhub/symbol-change${qs({ from, to })}`),
+    finnhubIsinChange:          (from, to) => request(`/finnhub/isin-change${qs({ from, to })}`),
+    finnhubCovid19:             () => request(`/finnhub/covid19`),
+    finnhubInvestmentTheme:     (theme) => request(`/finnhub/investment-theme${qs({ theme })}`),
+    finnhubAirlinePriceIndex:   (airline, from, to) => request(`/finnhub/airline-price-index${qs({ airline, from, to })}`),
     listFilters: () => request('/filter-sets'),
     saveFilter: (name, payload, is_default = false) =>
         request('/filter-sets', { method: 'POST', body: JSON.stringify({ name, payload, is_default }) }),
@@ -728,6 +866,8 @@ export const api = {
     // ============================================================
     indSma:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/sma${qs(q)}`),
     indEma:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ema${qs(q)}`),
+    indWma:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/wma${qs(q)}`),
+    indHull:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/hull-ma${qs(q)}`),
     indRsi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/rsi${qs(q)}`),
     indMacd:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/macd${qs(q)}`),
     indBollinger:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/bollinger${qs(q)}`),

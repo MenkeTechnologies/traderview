@@ -128,6 +128,14 @@ impl LiveTickStore {
         self.api_key.read().await.is_some()
     }
 
+    /// Read the current in-memory Finnhub key. The data-sources settings
+    /// route updates this on save so REST callers (`finnhub_rest`) and
+    /// the WS pump share the same credential without re-querying the DB
+    /// on every request.
+    pub async fn api_key(&self) -> Option<String> {
+        self.api_key.read().await.clone()
+    }
+
     pub fn subscribe(&self) -> broadcast::Receiver<SymbolState> {
         self.tx.subscribe()
     }

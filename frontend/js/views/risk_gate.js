@@ -68,7 +68,7 @@ export async function renderRiskGate(mount, state) {
                 <thead><tr>
                     <th data-i18n="view.risk_gate.th.type">Type</th><th data-i18n="view.risk_gate.th.config">Config</th><th data-i18n="view.risk_gate.th.account">Account</th><th data-i18n="view.risk_gate.th.enabled">Enabled</th><th></th>
                 </tr></thead>
-                <tbody><tr><td colspan="5" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="5" class="muted"><span data-i18n="common.loading">loading…</span></td></tr></tbody>
             </table>
         </div>
 
@@ -100,7 +100,7 @@ export async function renderRiskGate(mount, state) {
             <p data-i18n="view.risk_gate.hint.which_rules_trigger_most_high_fire_rules_are_worki" class="muted small">Which rules trigger most. High-fire rules are working hard; zero-fire rules might be too lenient.</p>
             <table class="trades" id="rg-by-rule">
                 <thead><tr><th data-i18n="view.risk_gate.th.rule">Rule</th><th data-i18n="view.risk_gate.th.total_fires">Total fires</th><th data-i18n="view.risk_gate.th.blocks">Blocks</th><th data-i18n="view.risk_gate.th.warnings">Warnings</th></tr></thead>
-                <tbody><tr><td colspan="4" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="4" class="muted"><span data-i18n="common.loading">loading…</span></td></tr></tbody>
             </table>
             <h3 data-i18n="view.risk_gate.h3.fires_chart">Blocks vs warnings per rule</h3>
             <div id="rg-chart" style="width:100%;height:240px"></div>
@@ -115,7 +115,7 @@ export async function renderRiskGate(mount, state) {
                 <thead><tr>
                     <th data-i18n="view.risk_gate.th.time">Time</th><th data-i18n="view.risk_gate.th.symbol">Symbol</th><th data-i18n="view.risk_gate.th.outcome">Outcome</th><th data-i18n="view.risk_gate.th.rules_that_fired">Rules that fired</th>
                 </tr></thead>
-                <tbody><tr><td colspan="4" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="4" class="muted"><span data-i18n="common.loading">loading…</span></td></tr></tbody>
             </table>
         </div>
 

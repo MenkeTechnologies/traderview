@@ -15,13 +15,28 @@ export function installHotkeyEngine() {
     reloadHotkeys();
 }
 
-function handler(e) {
-    // Ignore when typing in inputs.
+// Whether a keydown event should be allowed to trigger a custom hotkey even
+// though it may target a text field. Plain keys / Shift-only combos inside an
+// editable element are normal text entry and must NOT fire hotkeys; chords
+// using a command modifier (Ctrl/Alt/Cmd) always may. Exported for tests.
+export function hotkeyAllowedForTarget(e) {
     const tag = (e.target?.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    const inEditable = tag === 'input' || tag === 'textarea' || tag === 'select'
+        || !!(e.target && e.target.isContentEditable);
+    if (!inEditable) return true;
+    return !!(e.ctrlKey || e.altKey || e.metaKey);
+}
 
+function handler(e) {
     const combo = buildCombo(e);
     if (!combo) return;
+    // While the user is typing in a text field, only fire chords that use a
+    // command modifier (Ctrl/Alt/Cmd). Plain keys and Shift-only combos are
+    // normal text entry and must reach the input. This lets custom hotkeys
+    // like Cmd+E work even when a search box is focused (e.g. the Home tab,
+    // which auto-focuses its filter input).
+    if (!hotkeyAllowedForTarget(e)) return;
+
     const hit = bindings.find(b => b.combo === combo);
     if (hit) {
         e.preventDefault();

@@ -22,7 +22,7 @@ export async function renderEconomy(mount) {
             </label>
             <button data-i18n="view.economy.btn.load" data-tip="view.economy.tip.load" data-shortcut="economy_load" class="primary" type="submit">Load</button>
         </form>
-        <div id="ec" data-i18n="common.loading">loading…</div>
+        <div id="ec"><span data-i18n="common.loading">loading…</span></div>
     `;
     const load = async () => {
         const form = mount.querySelector('#ec-form');

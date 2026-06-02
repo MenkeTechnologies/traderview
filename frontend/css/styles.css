@@ -512,8 +512,9 @@ label {
 
 .world-map-wrap {
     position: relative; width: 100%;
+    max-width: 1040px;
     aspect-ratio: 2 / 1;
-    max-height: 520px;
+    margin: 0 auto;
     overflow: hidden;
 }
 .world-map { width: 100%; height: 100%; display: block; }
@@ -1912,3 +1913,92 @@ kbd {
 .tv-dialog-danger .tv-dialog-confirm:hover { background: #ff336633; }
 .tv-dialog-warning .tv-dialog-confirm   { background: #ffd84a22; border-color: #ffd84a; color: #ffd84a; }
 .tv-dialog-warning .tv-dialog-confirm:hover { background: #ffd84a33; }
+
+/* ── Reusable trading chart component (js/components/trading_chart.js) ── */
+.tv-chart { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.tv-chart-toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 4px 2px;
+}
+.tv-chart-symbol {
+    font-weight: 700; letter-spacing: 0.05em; color: var(--accent);
+    text-transform: uppercase; min-width: 48px;
+}
+.tv-chart-tfs { display: inline-flex; gap: 2px; }
+.tv-tf-btn {
+    background: var(--bg-secondary); color: var(--text-muted, #aab4c2);
+    border: 1px solid var(--border); padding: 3px 9px; border-radius: 2px;
+    cursor: pointer; font-size: 12px; font-family: inherit;
+}
+.tv-tf-btn:hover { color: var(--accent); border-color: var(--accent); }
+.tv-tf-btn.active {
+    background: color-mix(in srgb, var(--cyan) 18%, transparent);
+    color: var(--cyan); border-color: var(--cyan);
+}
+.tv-chart-actions { display: inline-flex; gap: 4px; margin-left: auto; }
+.tv-chart-icon {
+    width: 26px; height: 26px; line-height: 1; text-align: center;
+    background: var(--bg-secondary); color: var(--text-muted, #aab4c2);
+    border: 1px solid var(--border); border-radius: 2px; cursor: pointer; font-size: 14px;
+}
+.tv-chart-icon:hover { color: var(--accent); border-color: var(--accent); }
+.tv-chart-ind {
+    background: var(--bg-secondary); color: var(--text-muted, #aab4c2);
+    border: 1px solid var(--border); border-radius: 2px; cursor: pointer;
+    padding: 3px 10px; font-size: 12px; font-family: inherit;
+}
+.tv-chart-ind:hover { color: var(--accent); border-color: var(--accent); }
+.tv-chart-canvas { position: relative; width: 100%; }
+.tv-chart-status { min-height: 16px; font-size: 12px; color: var(--text-muted, #889); }
+
+.tv-chart-menu {
+    position: fixed; z-index: 1000; min-width: 190px;
+    background: var(--bg-card); border: 1px solid var(--accent);
+    border-radius: 3px; box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    padding: 4px; font-size: 13px;
+}
+.tv-menu-head {
+    padding: 4px 8px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;
+}
+.tv-menu-group {
+    padding: 5px 8px 2px; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-muted, #889);
+}
+.tv-menu-item {
+    display: flex; align-items: center; gap: 6px; width: 100%;
+    background: none; border: none; color: var(--text, #cdd6e0);
+    padding: 5px 8px; cursor: pointer; text-align: left; font-family: inherit; font-size: 13px;
+}
+.tv-menu-item:hover { background: var(--bg-hover, #1a1a33); color: var(--accent); }
+.tv-menu-item.on { color: var(--cyan); }
+.tv-menu-check { width: 12px; display: inline-block; color: var(--cyan); }
+.tv-menu-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.tv-menu-clear { color: #ff6b6b; margin-top: 2px; }
+.tv-menu-clear:hover { background: #ff336622; color: #ff3860; }
+
+/* ── Multi-chart grid (js/components/chart_grid.js) ── */
+.chart-grid-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.chart-grid-sym { display: inline-flex; align-items: center; gap: 6px; }
+.chart-grid-spacer { flex: 1 1 auto; }
+.chart-grid-layouts { display: inline-flex; gap: 2px; }
+.cg-layout-btn {
+    background: var(--bg-secondary); color: var(--text-muted, #aab4c2);
+    border: 1px solid var(--border); padding: 3px 9px; border-radius: 2px;
+    cursor: pointer; font-size: 12px; font-family: inherit;
+}
+.cg-layout-btn:hover { color: var(--accent); border-color: var(--accent); }
+.cg-layout-btn.active {
+    background: color-mix(in srgb, var(--cyan) 18%, transparent);
+    color: var(--cyan); border-color: var(--cyan);
+}
+.chart-grid { display: grid; gap: 12px; }
+.chart-grid-cell {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-left: 2px solid var(--cyan); border-radius: 3px; padding: 8px; min-width: 0;
+}
+@media (max-width: 900px) {
+    .chart-grid { grid-template-columns: 1fr !important; }
+}

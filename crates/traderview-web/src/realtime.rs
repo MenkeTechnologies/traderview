@@ -31,6 +31,15 @@ pub enum Event {
         symbol: String,
         message: String,
     },
+    /// A squeeze detector trigger — emitted by the candidate-driven
+    /// scanner when a symbol crosses configured %change + volume-burst
+    /// thresholds. See `traderview_db::squeeze_detector::SqueezeEvent`.
+    SqueezeFired {
+        symbol: String,
+        price: f64,
+        pct_change: f64,
+        burst_ratio: f64,
+    },
     /// Heartbeat — server emits one every 30s so clients can detect deadness.
     Ping { ts: i64 },
 }

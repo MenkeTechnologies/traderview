@@ -237,6 +237,23 @@ async fn bring_up_backend(
     );
     let app_router = router(state);
 
+    // Warm Finnhub API key from DB into the LiveTickStore's in-memory
+    // slot — mirrors the same boot step in `traderview-web/bin/server.rs`.
+    // Without this, REST callers (finnhub_rest, market_data fundamentals/
+    // earnings/recommendations, IPO/news/calendar routes) fail with "key
+    // not configured" after every restart even when the user has saved
+    // the key in Settings → Data Sources.
+    match traderview_db::data_source_keys::any_finnhub_key(&embedded.pool).await {
+        Ok(Some(k)) => {
+            traderview_db::live_ticks::global().set_api_key(k).await;
+            tracing::info!("loaded finnhub key from DB into live_ticks store");
+        }
+        Ok(None) => {
+            tracing::info!("no finnhub key configured; set one in Settings → Data Sources");
+        }
+        Err(e) => tracing::warn!(error = %e, "failed to load finnhub key from DB"),
+    }
+
     // Background pollers — best-effort, return value ignored.
     {
         let pool = embedded.pool.clone();

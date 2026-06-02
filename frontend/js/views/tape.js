@@ -15,15 +15,15 @@ export async function renderTape(mount) {
         <div class="panel-grid">
             <div class="chart-panel" style="grid-column: 1 / -1">
                 <h2 data-i18n="view.tape.h2.news_feed">News feed</h2>
-                <div id="tape-news" data-i18n="common.loading">loading…</div>
+                <div id="tape-news"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.tape.h2.sectors_right_now">Sectors right now</h2>
-                <div id="tape-sectors" data-i18n="common.loading">loading…</div>
+                <div id="tape-sectors"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.tape.h2.watchlist_quotes">Watchlist quotes</h2>
-                <div id="tape-quotes" data-i18n="common.loading">loading…</div>
+                <div id="tape-quotes"><span data-i18n="common.loading">loading…</span></div>
             </div>
             <div class="chart-panel" style="grid-column: 1 / -1">
                 <h2 data-i18n="view.tape.h2.change_chart">Watchlist change % snapshot</h2>
@@ -51,11 +51,16 @@ export async function renderTape(mount) {
 }
 
 async function refresh(mount, tok) {
-    const lists = await api.watchlists();
+    let lists = [];
+    try {
+        lists = await api.watchlists();
+    } catch (_) { lists = []; }
     if (!viewIsCurrent(tok)) return;
     const symbols = new Set();
     for (const w of lists) {
-        for (const s of await api.watchlistSymbols(w.id)) symbols.add(s);
+        try {
+            for (const s of await api.watchlistSymbols(w.id)) symbols.add(s);
+        } catch (_) { /* skip a watchlist that fails to enumerate */ }
         if (!viewIsCurrent(tok)) return;
     }
     const syms = Array.from(symbols).slice(0, 12);
@@ -88,14 +93,17 @@ async function refresh(mount, tok) {
         const sectors = await api.sectors();
         if (!viewIsCurrent(tok)) return;
         const secEl = mount.querySelector('#tape-sectors');
-        if (secEl) secEl.innerHTML = `<table class="trades">
+        if (secEl) secEl.innerHTML = sectors.length ? `<table class="trades">
             ${sectors.map(s => `<tr>
                 <td>${esc(s.label)}</td>
                 <td><a href="#research/${encodeURIComponent(s.sector)}">${esc(s.sector)}</a></td>
                 <td class="${Number(s.change_pct) >= 0 ? 'pos' : 'neg'}">${Number(s.change_pct) >= 0 ? '+' : ''}${Number(s.change_pct).toFixed(2)}%</td>
             </tr>`).join('')}
-        </table>`;
-    } catch (_) {}
+        </table>` : `<p class="muted">${esc(t('view.tape.sectors_unavailable'))}</p>`;
+    } catch (_) {
+        const secEl = mount.querySelector('#tape-sectors');
+        if (secEl) secEl.innerHTML = `<p class="muted">${esc(t('view.tape.sectors_unavailable'))}</p>`;
+    }
 
     // Quotes
     const quotes = [];

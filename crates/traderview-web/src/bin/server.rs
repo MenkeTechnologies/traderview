@@ -57,6 +57,24 @@ async fn main() -> anyhow::Result<()> {
         args.data_dir.clone(),
     );
 
+    // Warm the LiveTickStore's in-memory Finnhub key from DB on boot so
+    // REST callers (finnhub_rest, market_data fundamentals/earnings/...)
+    // resolve the saved Settings → Data Sources key without the user
+    // having to re-save after every restart. Env-var fallback applies if
+    // no row has one stored. Failure is non-fatal — the key just stays
+    // unset and Finnhub-backed endpoints will return 500 with the
+    // existing "not configured" error.
+    match traderview_db::data_source_keys::any_finnhub_key(&pool).await {
+        Ok(Some(k)) => {
+            traderview_db::live_ticks::global().set_api_key(k).await;
+            tracing::info!("loaded finnhub key from DB into live_ticks store");
+        }
+        Ok(None) => {
+            tracing::info!("no finnhub key configured; set one in Settings → Data Sources");
+        }
+        Err(e) => tracing::warn!(error = %e, "failed to load finnhub key from DB"),
+    }
+
     // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
     {
         let pool = pool.clone();
@@ -189,6 +207,39 @@ async fn main() -> anyhow::Result<()> {
                     });
                 }
                 tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            }
+        });
+    }
+
+    // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
+    // window squeeze detector. The aggregator subscribes to catalysts +
+    // halts firehoses, scores symbols, and pushes the top-N to
+    // LiveTickStore (Finnhub WS) every 30s. The detector consumes the
+    // tick broadcast and emits SqueezeEvent when thresholds cross.
+    // Both pumps are idempotent; one call here is enough.
+    {
+        let hub = state.hub.clone();
+        traderview_db::candidates::spawn_aggregator(traderview_db::candidates::global());
+        traderview_db::squeeze_detector::spawn_pump(
+            traderview_db::squeeze_detector::global(),
+        );
+        // Bridge SqueezeEvent → realtime hub so the global WS event stream
+        // surfaces squeeze fires alongside disclosures / news / sentiment.
+        tokio::spawn(async move {
+            let mut rx = traderview_db::squeeze_detector::global().subscribe();
+            loop {
+                match rx.recv().await {
+                    Ok(ev) => {
+                        hub.publish(traderview_web::realtime::Event::SqueezeFired {
+                            symbol: ev.symbol,
+                            price: ev.price,
+                            pct_change: ev.pct_change,
+                            burst_ratio: ev.burst_ratio,
+                        });
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                }
             }
         });
     }

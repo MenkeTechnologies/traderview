@@ -165,7 +165,7 @@ async function renderSymbol(mount, sym, tok) {
         <h1 class="view-title">// SHORT INTEREST · ${esc(sym)}
             <a class="link small" href="#short-interest">← back</a>
         </h1>
-        <div id="ss-cards" class="cards" data-i18n="common.loading">loading…</div>
+        <div id="ss-cards" class="cards"><span data-i18n="common.loading">loading…</span></div>
         <div class="chart-panel">
             <h2 data-i18n="view.short_interest.h2.finra_reg_sho_daily_short_volume_last_30_sessions">FINRA Reg SHO daily short volume (last 30 sessions)</h2>
             <div id="finra-vol"></div>

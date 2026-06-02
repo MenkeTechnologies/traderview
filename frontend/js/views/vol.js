@@ -11,7 +11,7 @@ export async function renderVol(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.vol.h1.vix_term_structure_yields_dxy" class="view-title">// VIX TERM STRUCTURE · YIELDS · DXY</h1>
-        <div id="vix" class="cards" data-i18n="common.loading">loading…</div>
+        <div id="vix" class="cards"><span data-i18n="common.loading">loading…</span></div>
         <div class="chart-panel">
             <h2 data-i18n="view.vol.h2.vix_term_curve_tenor_vol">VIX term curve (tenor → vol)</h2>
             <div id="vix-curve"></div>
@@ -25,7 +25,7 @@ export async function renderVol(mount) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.vol.h2.u_s_dollar_major_fx">U.S. Dollar / major FX</h2>
-            <div id="dxy" class="cards" data-i18n="common.loading">loading…</div>
+            <div id="dxy" class="cards"><span data-i18n="common.loading">loading…</span></div>
         </div>
 
         <div class="chart-panel">

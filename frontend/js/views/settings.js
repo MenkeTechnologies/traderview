@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 function renderInventoryChart(templates, filters) {
     const el = document.getElementById('set-chart');
@@ -85,10 +86,11 @@ function renderTemplateAgeChart(templates) {
 
 export async function renderSettings(mount, state) {
     const tok = currentViewToken();
-    const [s, filters, templates] = await Promise.all([
+    const [s, filters, templates, ds] = await Promise.all([
         api.settings(),
         api.listFilters(),
         api.noteTemplates(),
+        api.dataSources(),
     ]);
     if (!viewIsCurrent(tok)) return;
     const accountOptions = state.accounts.map(a =>
@@ -143,6 +145,42 @@ export async function renderSettings(mount, state) {
                 Commission rates fill in only when the broker file omits fees (fee = 0).
                 Mirrors TraderVue's "manual rate" behavior — won't double-count.
             </p>
+        </div>
+
+        <div class="chart-panel">
+            <h2 data-i18n="view.settings.h2.data_sources">Data Sources</h2>
+            <p data-i18n="view.settings.hint.data_sources" class="muted small">
+                API keys for market-data providers. Saved per-user in the database;
+                masked as <code>***</code> after save so the secret is never re-displayed.
+                Leave a field as <code>***</code> to keep the existing value when saving.
+                Empty a field to clear it.
+            </p>
+            <form id="data-sources-form" class="inline-form">
+                <label><span data-i18n="view.settings.label.finnhub_api_key">Finnhub API key</span>
+                    <input type="password" name="finnhub_api_key" autocomplete="off"
+                           value="${esc(ds.finnhub_api_key || '')}"
+                           placeholder="finnhub.io key — used by REST + WS live ticks"
+                           data-i18n-placeholder="view.settings.placeholder.finnhub_api_key"
+                           style="min-width:280px">
+                </label>
+                <label><span data-i18n="view.settings.label.alpaca_key_id">Alpaca key ID</span>
+                    <input type="text" name="alpaca_key_id" autocomplete="off"
+                           value="${esc(ds.alpaca_key_id || '')}"
+                           placeholder="APCA-API-KEY-ID"
+                           data-i18n-placeholder="view.settings.placeholder.alpaca_key_id">
+                </label>
+                <label><span data-i18n="view.settings.label.alpaca_secret_key">Alpaca secret</span>
+                    <input type="password" name="alpaca_secret_key" autocomplete="off"
+                           value="${esc(ds.alpaca_secret_key || '')}"
+                           placeholder="APCA-API-SECRET-KEY"
+                           data-i18n-placeholder="view.settings.placeholder.alpaca_secret_key">
+                </label>
+                <label style="flex-direction:row;align-items:center;gap:6px">
+                    <input type="checkbox" name="alpaca_paper" ${ds.alpaca_paper ? 'checked' : ''}>
+                    <span data-i18n="view.settings.label.alpaca_paper">Alpaca paper-trading mode</span>
+                </label>
+                <button data-i18n="view.settings.btn.save_data_sources" class="primary" type="submit">Save data sources</button>
+            </form>
         </div>
 
         <div class="chart-panel">
@@ -229,6 +267,24 @@ export async function renderSettings(mount, state) {
         await api.updateSettings(body);
         if (!viewIsCurrent(tok)) return;
         renderSettings(mount, state);
+    });
+
+    mount.querySelector('#data-sources-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+            await api.updateDataSources({
+                finnhub_api_key:   fd.get('finnhub_api_key')   ?? null,
+                alpaca_key_id:     fd.get('alpaca_key_id')     ?? null,
+                alpaca_secret_key: fd.get('alpaca_secret_key') ?? null,
+                alpaca_paper:      !!fd.get('alpaca_paper'),
+            });
+            showToast(t('view.settings.toast.data_sources_saved'), { level: 'success' });
+            if (!viewIsCurrent(tok)) return;
+            renderSettings(mount, state);
+        } catch (err) {
+            showToast(t('view.settings.toast.data_sources_save_failed', { msg: err.message || err }), { level: 'error' });
+        }
     });
 
     mount.querySelector('#tpl-form').addEventListener('submit', async (e) => {

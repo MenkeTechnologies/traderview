@@ -247,3 +247,14 @@ test('firesInEditableContext: Escape + Cmd+K-style true, plain letters false', (
     expect(firesInEditableContext(sc('cp', k({ key: 'k', meta: true, ctrl: true })))).toBe(true);
     expect(firesInEditableContext(sc('plain', k({ key: 'a' })))).toBe(false);
 });
+
+test('firesInEditableContext: any single command modifier (meta/ctrl/alt) fires, shift alone does not', () => {
+    // Custom-bound chords with a single command modifier must fire even when
+    // a text input (e.g. the auto-focused Home tab filter) is focused.
+    expect(firesInEditableContext(sc('meta-only', k({ key: 't', meta: true })))).toBe(true);
+    expect(firesInEditableContext(sc('ctrl-only', k({ key: 'g', ctrl: true })))).toBe(true);
+    expect(firesInEditableContext(sc('alt-only',  k({ key: 'j', alt: true })))).toBe(true);
+    expect(firesInEditableContext(sc('ctrl-shift', k({ key: 'g', ctrl: true, shift: true })))).toBe(true);
+    // Shift alone is normal capital-letter typing — must stay suppressed.
+    expect(firesInEditableContext(sc('shift-only', k({ key: 'g', shift: true })))).toBe(false);
+});

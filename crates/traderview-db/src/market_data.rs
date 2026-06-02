@@ -228,7 +228,33 @@ pub async fn quote_summary(symbol: &str, modules: &[&str]) -> anyhow::Result<ser
         .unwrap_or(serde_json::Value::Null))
 }
 
+/// Fundamentals lookup.
+///
+/// **Backend:** Finnhub `/stock/profile2` + `/stock/metric?metric=all`
+/// (free tier). The previous Yahoo `quoteSummary[summaryDetail,
+/// defaultKeyStatistics, financialData, assetProfile, ...]` backend
+/// returned 401 "Invalid Crumb" since late 2023.
+///
+/// Adapter [`finnhub_rest::fundamentals_yahoo_shape`] composes a JSON
+/// envelope that matches Yahoo's nested `{raw, fmt}` shape so the
+/// existing frontend extractor in `research.js::renderFund` works
+/// unchanged. Falls back to Yahoo `quoteSummary` if no Finnhub key is
+/// configured (will still 401 for now — set the key in Settings).
 pub async fn fundamentals(symbol: &str) -> anyhow::Result<serde_json::Value> {
+    match crate::finnhub_rest::fundamentals_yahoo_shape(symbol).await {
+        Ok(v) => return Ok(v),
+        Err(e) => {
+            tracing::warn!(
+                symbol,
+                error = %e,
+                "finnhub fundamentals failed; falling back to Yahoo quoteSummary"
+            );
+        }
+    }
+    fundamentals_yahoo_legacy(symbol).await
+}
+
+async fn fundamentals_yahoo_legacy(symbol: &str) -> anyhow::Result<serde_json::Value> {
     quote_summary(
         symbol,
         &[
@@ -244,7 +270,26 @@ pub async fn fundamentals(symbol: &str) -> anyhow::Result<serde_json::Value> {
     .await
 }
 
+/// Earnings lookup.
+///
+/// **Backend:** Finnhub `/stock/eps-surprise` (history) + `/calendar/earnings`
+/// (next-quarter date + estimates). Adapter
+/// [`finnhub_rest::earnings_yahoo_shape`] returns Yahoo's
+/// `{earningsHistory.history[], calendarEvents.earnings.{earningsDate,
+/// earningsAverage, revenueAverage}}` shape so the existing extractor in
+/// `research.js::renderEarnings` works unchanged. Falls back to broken
+/// Yahoo `quoteSummary` only when no Finnhub key is configured.
 pub async fn earnings(symbol: &str) -> anyhow::Result<serde_json::Value> {
+    match crate::finnhub_rest::earnings_yahoo_shape(symbol).await {
+        Ok(v) => return Ok(v),
+        Err(e) => {
+            tracing::warn!(
+                symbol,
+                error = %e,
+                "finnhub earnings failed; falling back to Yahoo quoteSummary"
+            );
+        }
+    }
     quote_summary(
         symbol,
         &[
@@ -257,7 +302,23 @@ pub async fn earnings(symbol: &str) -> anyhow::Result<serde_json::Value> {
     .await
 }
 
+/// Analyst recommendations.
+///
+/// **Backend:** Finnhub `/stock/recommendation` (free tier). Adapter
+/// [`finnhub_rest::recommendations_yahoo_shape`] returns Yahoo's
+/// `{recommendationTrend.trend[]}` envelope. Falls back to broken Yahoo
+/// `quoteSummary` only when no Finnhub key is configured.
 pub async fn recommendations(symbol: &str) -> anyhow::Result<serde_json::Value> {
+    match crate::finnhub_rest::recommendations_yahoo_shape(symbol).await {
+        Ok(v) => return Ok(v),
+        Err(e) => {
+            tracing::warn!(
+                symbol,
+                error = %e,
+                "finnhub recommendations failed; falling back to Yahoo quoteSummary"
+            );
+        }
+    }
     quote_summary(symbol, &["recommendationTrend", "upgradeDowngradeHistory"]).await
 }
 
@@ -273,8 +334,100 @@ pub async fn insiders(symbol: &str) -> anyhow::Result<serde_json::Value> {
     .await
 }
 
+/// Dividend lookup.
+///
+/// **Backend:** Yahoo `v8/finance/chart` with `events=div,split`. This is
+/// the only Yahoo endpoint that still works without the crumb+cookie
+/// dance — `v10/finance/quoteSummary` (the previous backend) has required
+/// a crumb since late 2023 and returns 401 / 429 otherwise.
+///
+/// **Output shape:** synthesized to look like the old quoteSummary payload
+/// (`{summaryDetail: {...}, calendarEvents: {...}}`) so the existing
+/// `frontend/js/_dividend_calendar_inputs.js::extractDividend` keeps
+/// working without any frontend change.
+///
+/// **Approximations:**
+/// - `dividendRate` = sum of the trailing four dividend amounts (≈ annual)
+/// - `dividendYield` = `dividendRate / regularMarketPrice` (decimal, e.g. `0.025`)
+/// - `exDividendDate` = last known ex-date; the prior backend already only
+///   surfaced "last known" since `calendarEvents` was unreliable for
+///   forward dates. Frontend filters past dates out, so the upcoming-only
+///   filter still works once we cross over a quarterly boundary.
+/// - `dividendDate` (pay date) = not available from v8 chart → omitted.
+/// - `payoutRatio` = not available from v8 chart → null.
+///
+/// Non-payers return an empty `summaryDetail` so `extractDividend()`
+/// returns `null` (same as before for ETFs / non-paying stocks).
 pub async fn dividends(symbol: &str) -> anyhow::Result<serde_json::Value> {
-    quote_summary(symbol, &["summaryDetail", "calendarEvents", "fundProfile"]).await
+    let url = format!(
+        "https://query1.finance.yahoo.com/v8/finance/chart/{sym}\
+         ?interval=1d&range=2y&events=div,split",
+        sym = enc(symbol),
+    );
+    let resp = client().get(&url).send().await?;
+    if !resp.status().is_success() {
+        anyhow::bail!("dividends chart HTTP {}", resp.status());
+    }
+    let v: serde_json::Value = resp.json().await?;
+    let result = &v["chart"]["result"][0];
+    let last_price = result["meta"]["regularMarketPrice"].as_f64();
+
+    // events.dividends is an object keyed by unix-ts strings; values are
+    // `{amount: f64, date: i64}`. Sort by date so we can take "trailing 4".
+    let mut events: Vec<(i64, f64)> = result["events"]["dividends"]
+        .as_object()
+        .map(|m| {
+            m.values()
+                .filter_map(|ev| {
+                    let date = ev["date"].as_i64()?;
+                    let amount = ev["amount"].as_f64()?;
+                    Some((date, amount))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    events.sort_by_key(|(d, _)| *d);
+
+    // Non-payer / ETF: emit an empty envelope so extractDividend returns null.
+    if events.is_empty() {
+        return Ok(serde_json::json!({
+            "summaryDetail": {},
+            "calendarEvents": {},
+        }));
+    }
+
+    let last = events.last().copied().unwrap();
+    let trailing_4: f64 = events.iter().rev().take(4).map(|(_, a)| *a).sum();
+    let dividend_yield = match (trailing_4, last_price) {
+        (rate, Some(px)) if px > 0.0 => Some(rate / px),
+        _ => None,
+    };
+
+    // Mimic Yahoo's `{raw: <num>}` envelopes; the frontend's `rawNum()`
+    // helper reads `.raw` first.
+    fn raw_f64(x: f64) -> serde_json::Value {
+        serde_json::json!({ "raw": x })
+    }
+    fn raw_i64(x: i64) -> serde_json::Value {
+        serde_json::json!({ "raw": x })
+    }
+
+    let mut summary = serde_json::Map::new();
+    summary.insert("dividendRate".into(), raw_f64(trailing_4));
+    if let Some(y) = dividend_yield {
+        summary.insert("dividendYield".into(), raw_f64(y));
+    }
+    summary.insert("lastDividendValue".into(), raw_f64(last.1));
+    summary.insert("lastDividendDate".into(), raw_i64(last.0));
+    summary.insert("exDividendDate".into(), raw_i64(last.0));
+
+    let mut calendar = serde_json::Map::new();
+    calendar.insert("exDividendDate".into(), raw_i64(last.0));
+
+    Ok(serde_json::json!({
+        "summaryDetail": serde_json::Value::Object(summary),
+        "calendarEvents": serde_json::Value::Object(calendar),
+    }))
 }
 
 pub async fn holders(symbol: &str) -> anyhow::Result<serde_json::Value> {
