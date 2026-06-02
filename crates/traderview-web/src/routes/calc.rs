@@ -101,6 +101,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-7521",          post(section_7521_route))
+        .route("/calc/section-7525",          post(section_7525_route))
         .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6501",          post(section_6501_route))
         .route("/calc/section-6502",          post(section_6502_route))
@@ -2812,6 +2813,28 @@ async fn section_7521_route(
     Json(b): Json<traderview_expense::section_7521::Section7521Input>,
 ) -> Result<Json<traderview_expense::section_7521::Section7521Result>, ApiError> {
     Ok(Json(traderview_expense::section_7521::compute(&b)))
+}
+
+// ── §7525 federally authorized tax practitioner privilege ───────────
+// Mounted at /api/calc/section-7525. § 7525(a)(1) extends attorney-
+// client common-law privilege to CPA / EA / attorney / enrolled actuary
+// / enrolled retirement plan agent (FATP under 31 USC § 330 / Circular
+// 230). § 7525(a)(3)(A) noncriminal-only — categorically EXCLUDED from
+// criminal tax matters (grand jury, indictment, IRS-CI referral) and
+// state / local tax matters. § 7525(b) written tax-shelter-promotion
+// communications categorically excluded (§ 6662(d)(2)(C)(ii) shelter
+// definition). United States v. Frederick, 182 F.3d 496 (7th Cir.
+// 1999) — return-preparation work NOT covered. Trader-relevant for
+// protecting CPA / EA communications on M2M (§ 475(f)), straddle
+// (§ 1092), § 1256 60/40, § 1091 wash sale, qualified trader status,
+// § 988 / § 1297 / § 6038D international advice. Paired with § 7521
+// (interview procedure) and § 7811 (TAOs).
+
+async fn section_7525_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7525::Section7525Input>,
+) -> Result<Json<traderview_expense::section_7525::Section7525Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7525::check(&b)))
 }
 
 // ── §7201 attempt to evade or defeat tax (apex criminal felony) ─────
