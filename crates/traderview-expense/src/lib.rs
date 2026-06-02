@@ -436,6 +436,7 @@ pub mod section_6695;
 pub mod section_6695a;
 pub mod section_6700;
 pub mod section_6701;
+pub mod section_6707;
 pub mod section_6707a;
 pub mod section_6713;
 pub mod section_6851;

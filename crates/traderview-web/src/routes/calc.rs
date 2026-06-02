@@ -177,6 +177,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6695a",         post(section_6695a_route))
         .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-6701",          post(section_6701_route))
+        .route("/calc/section-6707",          post(section_6707_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
         .route("/calc/section-6713",          post(section_6713_route))
         .route("/calc/section-6851",          post(section_6851_route))
@@ -5399,6 +5400,39 @@ async fn section_6701_route(
 // accuracy-related penalty. CIC Services v. IRS, 593 U.S. 209 (2021)
 // — pre-enforcement challenge to § 6707A reporting requirements NOT
 // barred by § 7421(a) Anti-Injunction Act.
+
+// ── §6707 material advisor failure to furnish reportable transaction info ─
+// Mounted at /api/calc/section-6707. § 6707(a) — material advisor
+// required to file Form 8918 under § 6111 with respect to ANY
+// reportable transaction must do so on or before deadline OR file
+// return with complete/accurate information; failure = penalty.
+// § 6707(b)(1) OTHER REPORTABLE TRANSACTIONS: flat $50,000 base
+// penalty. § 6707(b)(2) LISTED TRANSACTIONS: GREATER of $200,000 OR
+// 50% of gross income from aid/assistance/advice; 50% rate
+// SUBSTITUTED with 75% when failure or act is INTENTIONAL.
+// § 6707(c)(1) Commissioner may rescind penalty for non-listed
+// transactions if rescission promotes tax compliance and effective
+// tax administration. § 6707(c)(2) LISTED TRANSACTIONS NOT
+// ELIGIBLE FOR RESCISSION — strict liability. § 6707(c)(3) NO
+// JUDICIAL REVIEW of denial of rescission. § 6664(d) reasonable
+// cause defense AVAILABLE for non-listed but NOT for listed
+// transactions. Enacted by American Jobs Creation Act of 2004 § 815
+// (Pub. L. 108-357, October 22, 2004). Trader-critical for material
+// advisors on basket option contracts (Notice 2015-73), conservation
+// easement syndications (Notice 2017-10), micro-captive insurance
+// (Notice 2016-66), § 643 distribution-tier-out trusts, STARS
+// foreign-tax-credit shelters. Sibling cluster: § 6011 (Form 8886
+// taxpayer disclosure) + § 6111 (Form 8918 material advisor) +
+// § 6112 (advisor list maintenance) + § 6707A (taxpayer return
+// disclosure penalty) + § 6662A (reportable-transaction
+// understatement accuracy penalty) + IRM 20.1.13.
+
+async fn section_6707_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6707::Section6707Input>,
+) -> Result<Json<traderview_expense::section_6707::Section6707Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6707::check(&b)))
+}
 
 async fn section_6707a_route(
     _u: AuthUser,

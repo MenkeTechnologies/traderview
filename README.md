@@ -9623,6 +9623,43 @@ Pinned by `all_three_elements_engages_non_corporate_1000`, `all_three_elements_e
 
 Mounted at `POST /api/calc/section-6701`. Twenty-four tests pin: **no aid no engagement**; **aid without material matter knowledge no engagement**; **aid without understatement knowledge no engagement**; **all three elements engages non-corporate $1,000**; **all three elements engages corporate $10,000**; **ten documents same taxpayer one period one penalty** (one-per-taxpayer rule); **ten documents ten taxpayers ten penalties** (1:1 ratio); **ten documents ten taxpayers corporate $100K**; **five documents three taxpayers three penalties** (min math); **multi-period documents each count** (bypasses one-per-taxpayer cap); **supersedes § 6694 when engaged** (§ 6701(f)); **does not supersede when not engaged**; **corporate rate 10× non-corporate invariant**; **three-element truth table** (8-cell sweep — only all-three-true engages); **penalty constants invariant** ($1K / $10K); **citation pins all subsections** (§ 6701 + (a)(1)/(a)(2)/(a)(3) + (b)(1)(A)/(b)(1)(B) + (b)(2) + (f) + § 6700 + § 7408 + IRM 20.1.6 + CCM 201531015); **sibling cluster note present** (UX-text regression for § 6694 + § 6695 + § 6700 + § 6701 + § 6011 + § 6662 + § 6662A + § 6707A + § 7408 + BROADEST member note); **defensive negative documents clamped**; **defensive negative taxpayers clamped to floor at one**; **extreme documents no overflow** (100K × $10K = $1B via saturating math); **no engagement no supersession**; **missing element specific notes** (three-element-specific note coverage).
 
+`traderview-expense::section_6707` is the **IRC § 6707 material advisor failure to furnish information regarding reportable transactions module** — material-advisor SIDE civil penalty companion to `section_6111` (Form 8918 material-advisor disclosure obligation already shipped), `section_6112` (material-advisor list maintenance), `section_6707a` (TAXPAYER-side disclosure penalty), `section_6011` (Form 8886 taxpayer disclosure), `section_6662a` (reportable-transaction understatement accuracy penalty). Enacted by **American Jobs Creation Act of 2004 § 815** (Pub. L. 108-357, October 22, 2004) as part of broader anti-shelter penalty regime created in reaction to KPMG / E&Y / BDO Seidman shelter promotion scandals of early 2000s. Trader-critical for material advisors on basket option contracts (Notice 2015-73), conservation easement syndications (Notice 2017-10), micro-captive insurance (Notice 2016-66), § 643 distribution-tier-out trusts, STARS foreign-tax-credit shelters.
+
+**§ 6707(b) Two-tier penalty framework**:
+
+| Transaction Category | Source | Penalty |
+|----------------------|--------|---------|
+| OTHER reportable transactions | § 6707(b)(1) | **FLAT $50,000** base penalty |
+| LISTED transactions (unintentional) | § 6707(b)(2) | **GREATER of $200,000 OR 50% of gross income** from aid/assistance/advice |
+| LISTED transactions (INTENTIONAL) | § 6707(b)(2) flush | **GREATER of $200,000 OR 75% of gross income** — 50% rate SUBSTITUTED with 75% |
+
+Pinned by `other_reportable_flat_50k_penalty` ($50,000 = 5,000,000 cents), `listed_transaction_unintentional_greater_of_200k_or_50_percent` ($500M gross income × 50% = $250M), `listed_transaction_low_gross_income_floor_200k` ($100K gross income → $200K floor engages), `listed_transaction_intentional_75_percent_rate` ($1B gross income × 75% = $750M), `intentional_listed_75_percent_uniquely_engages_invariant`, `listed_penalty_uniquely_uses_percentage_invariant`.
+
+**§ 6707(c) Rescission framework — listed-vs-other split**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 6707(c)(1) | Commissioner MAY rescind penalty for OTHER reportable transactions if rescission promotes tax compliance + effective tax administration |
+| § 6707(c)(2) | **LISTED TRANSACTIONS NOT ELIGIBLE FOR RESCISSION** — strict liability, no exception, no waiver, no abatement absent statutory amendment |
+| § 6707(c)(3) | **NO JUDICIAL REVIEW** of denial of rescission request; Commissioner's denial is final |
+
+Pinned by `other_reportable_commissioner_rescission_zeros_penalty`, `listed_transaction_no_rescission_available`, `no_judicial_review_of_rescission_denial`.
+
+**§ 6664(d) Reasonable cause defense — two-tier availability**:
+
+| Transaction Category | Reasonable Cause + Good Faith Defense |
+|----------------------|----------------------------------------|
+| OTHER reportable transactions | **AVAILABLE** under § 6664(d) (substantial authority + good faith belief + reasonable cause) |
+| LISTED transactions | **NOT AVAILABLE** — strict liability for listed-transaction material advisors |
+
+Pinned by `other_reportable_reasonable_cause_zeros_penalty`, `listed_transaction_no_reasonable_cause_defense`, `listed_uniquely_disables_reasonable_cause_defense_invariant`.
+
+**Material advisor threshold under § 6111(b)(1) + Treas. Reg. § 301.6111-3(b)(3)**: $50,000 gross income on natural-person taxpayer transactions OR $250,000 gross income on entity/business taxpayer transactions. Form 8918 filed with IRS Office of Tax Shelter Analysis (OTSA) by last day of month following calendar quarter in which advisor first becomes material advisor.
+
+**Listed transaction examples**: Notice 2015-73 (basket option contracts) + Notice 2017-10 (conservation easement syndications) + Notice 2016-66 (micro-captive insurance) + § 643 distribution-tier-out trusts + STARS foreign-tax-credit shelters.
+
+Mounted at `POST /api/calc/section-6707`. Thirty tests pin: **other reportable flat $50K penalty**; **other reportable reasonable cause zeros penalty**; **other reportable Commissioner rescission zeros penalty**; **other reportable false information triggers penalty**; **listed transaction unintentional GREATER of $200K or 50%**; **listed transaction low gross income floor $200K**; **listed transaction intentional 75% rate**; **listed transaction NO rescission available**; **listed transaction NO reasonable cause defense**; **not reportable no penalty**; **NO judicial review of rescission denial**; **intentional listed 75% uniquely engages invariant**; **listed uniquely disables reasonable cause defense invariant**; **citation pins all authorities** (§ 6707(a)-(d) + 2004 AJCA § 815 + Pub. L. 108-357 + 26 CFR § 301.6707-1 + § 6111 + § 6112 + § 6707A + § 6664(d) + IRM 20.1.13 + Form 8918 + Notice 2015-73 + Notice 2017-10 + Notice 2016-66); **note pins subsection (a) filing requirement**; **note pins subsection (b)(1) flat $50K**; **note pins subsection (b)(2) GREATER of $200K or 50%/75%**; **note pins subsection (c)(1) rescission for OTHER only**; **note pins subsection (c)(2) listed NOT eligible for rescission**; **note pins subsection (c)(3) NO judicial review**; **note pins § 6664(d) two-tier reasonable cause**; **note pins 2004 AJCA origin** (KPMG/E&Y/BDO Seidman scandals); **note pins material advisor threshold $50K/$250K**; **note pins Form 8918 quarterly filing**; **note pins listed transaction examples** (Notice 2015-73/2017-10/2016-66); **note pins 26 CFR § 301.6707-1 implementing regulations** (T.D. 9683); **note pins IRM 20.1.13**; **transaction category truth table three cells**; **defensive overflow clamped with saturating mul**; **listed penalty uniquely uses percentage invariant** (50% vs 10% disparity).
+
 `traderview-expense::section_6707a` is the **IRC § 6707A reportable transaction penalty module** — fifth member of the abusive-tax-transaction penalty cluster after § 6694 (preparer substantive position), § 6695 (preparer procedural failures), § 6700 (promoter penalties), § 6701 (aiding-and-abetting). § 6707A targets the TAXPAYER directly for failure to disclose reportable / listed transactions on their own return — distinct from § 6700 (penalizes the promoter selling the shelter) and § 6701 (penalizes the aider preparing the document). Trader-relevant for traders caught in partnership-distributed listed transactions: syndicated conservation easements + § 831(b) micro-captive insurance + monetized installment sales + abusive § 6011 reportable transactions. Stacks on top of § 6662A accuracy-related penalty.
 
 **§ 6707A(b)(1) base computation** — penalty = **75%** of the decrease in tax shown on the return as a result of the transaction (or which would have resulted if the transaction were respected). Pinned by `np_listed_75_percent_mid_range` ($40K decrease → $30K base = 75%), `base_75_percent_precision_at_decrease_133` (133¢ → 99¢), and `base_75_percent_precision_at_decrease_400` (400¢ → 300¢).
