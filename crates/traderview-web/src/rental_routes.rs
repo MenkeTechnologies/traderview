@@ -486,6 +486,10 @@ use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
 };
+use traderview_expense::rental_gas_appliance_ban::{
+    check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
+    RentalGasApplianceBanResult,
+};
 use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
@@ -829,6 +833,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
+        .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
@@ -5846,6 +5851,40 @@ async fn rental_broadband_mte_rules_route(
     Json(b): Json<RentalBroadbandMteRulesInput>,
 ) -> Result<Json<RentalBroadbandMteRulesResult>, ApiError> {
     Ok(Json(check_rental_broadband_mte_rules(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_gas_appliance_ban: Rental property gas appliance ban /
+// electrification mandate compliance — when a trader-landlord building
+// new construction OR substantially renovating an existing rental
+// property must comply with statutory bans on natural gas / propane
+// hookups + fossil-fuel-burning appliances. Mounted at POST /api/
+// rental/rental-gas-appliance-ban. Three regimes: NY All-Electric
+// Buildings Act S4006C/A3006C Part RR (2023) eff. Jan 1 2026 (bans
+// fossil-fuel hookups in MOST new homes — covers natural gas mains +
+// propane tanks + boilers + furnaces + water heaters + gas ranges +
+// gas dryers + gas fireplaces + supply piping; enforcement STAYED
+// pending Second Circuit resolution expected fall 2026); CA 2025
+// Energy Code Title 24 Part 6 eff. Jan 1 2026 (new construction
+// permits require heat pumps for most space + water heating; does NOT
+// require existing landlords to replace existing gas appliances; SF
+// considering 2027 major-renovation electrification ordinance; Cal.
+// Restaurant Ass'n v. City of Berkeley 89 F.4th 1094 (9th Cir. 2023)
+// enjoined Berkeley's 2019 gas-hookup ban as EPCA-preempted under 42
+// USC § 6297); Default (federal law silent; 42 USC § 6297 EPCA limits
+// direct-ban approach; locality-controlled). Trader-landlord critical
+// for new construction / substantial renovation projects in NY (post-
+// Jan 1 2026 pending Second Circuit ruling) + CA. Distinct from
+// siblings cooling_requirements, heat_requirements, detector_
+// requirements, landlord_repair_response_timeframe.
+// ---------------------------------------------------------------------------
+
+async fn rental_gas_appliance_ban_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalGasApplianceBanInput>,
+) -> Result<Json<RentalGasApplianceBanResult>, ApiError> {
+    Ok(Json(check_rental_gas_appliance_ban(&b)))
 }
 
 // ---------------------------------------------------------------------------

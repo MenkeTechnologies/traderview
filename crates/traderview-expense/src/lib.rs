@@ -154,6 +154,7 @@ pub mod repair_and_deduct;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
 pub mod rental_broadband_mte_rules;
+pub mod rental_gas_appliance_ban;
 pub mod rental_junk_fee_transparency;
 pub mod rental_property_registration;
 pub mod right_to_dry;
