@@ -164,6 +164,7 @@ pub mod rental_gas_appliance_ban;
 pub mod rental_hot_water_temperature;
 pub mod rental_junk_fee_transparency;
 pub mod rental_property_registration;
+pub mod rental_unpermitted_unit_disclosure;
 pub mod rental_water_submetering_disclosure;
 pub mod right_to_dry;
 pub mod reps_qualification;

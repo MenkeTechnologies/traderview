@@ -535,6 +535,10 @@ use traderview_expense::rental_water_submetering_disclosure::{
     check as check_rental_water_submetering_disclosure,
     RentalWaterSubmeteringDisclosureInput, RentalWaterSubmeteringDisclosureResult,
 };
+use traderview_expense::rental_unpermitted_unit_disclosure::{
+    check as check_rental_unpermitted_unit_disclosure,
+    RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
+};
 use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
@@ -890,6 +894,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
+        .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
@@ -6303,6 +6308,41 @@ async fn rental_water_submetering_disclosure_route(
     Json(b): Json<RentalWaterSubmeteringDisclosureInput>,
 ) -> Result<Json<RentalWaterSubmeteringDisclosureResult>, ApiError> {
     Ok(Json(check_rental_water_submetering_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_unpermitted_unit_disclosure: Rental property unpermitted /
+// illegal dwelling unit disclosure compliance — when a trader-
+// landlord rents a unit lacking a Certificate of Occupancy (in-law
+// apartment, garage conversion, basement apartment, attic unit, ADU
+// without permits), what statutory disclosure and rent-collection
+// rules apply? Mounted at POST /api/rental/rental-unpermitted-unit-
+// disclosure. Four regimes: California common law + Cal. Civ. Code
+// § 1942.4 + § 1102 et seq. TDS + Espinoza v. Calva 169 Cal.App.4th
+// 1393 (2008) asymmetric enforceability doctrine (landlord may NOT
+// collect rent for unit lacking Certificate of Occupancy; tenant
+// CAN enforce lease and sue for damages; TDS Transfer Disclosure
+// Statement required at sale); Oakland Municipal Code § 8.22 (TPO
+// + Just Cause for Eviction Ordinance + § 8.22.450 relocation
+// payments — base $7,931 + $5,287 per senior/disabled/minor, 2024
+// amounts; substantial-rehab eviction carve-out); New York City NYC
+// Multiple Dwelling Law § 325 + NYC Admin Code § 27-2107 (3+ unit
+// buildings MUST have Certificate of Occupancy; landlord cannot
+// collect rent for illegal cellar/basement unit; $1,000 + $50/day
+// civil penalty under § 27-2115; Loft Law Article 7-C legalization
+// pathway); Default common-law warranty of habitability + state
+// building code + HUD Section 8 housing quality standards. Distinct
+// from siblings rental_bedroom_egress_window, rental_carbon_
+// monoxide_detector, rental_hot_water_temperature, rental_property_
+// registration.
+// ---------------------------------------------------------------------------
+
+async fn rental_unpermitted_unit_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalUnpermittedUnitDisclosureInput>,
+) -> Result<Json<RentalUnpermittedUnitDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_unpermitted_unit_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
