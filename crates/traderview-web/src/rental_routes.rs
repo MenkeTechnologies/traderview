@@ -67,6 +67,10 @@ use traderview_expense::rent_overcharge_recovery::{
     check as check_rent_overcharge_recovery, RentOverchargeRecoveryInput,
     RentOverchargeRecoveryResult,
 };
+use traderview_expense::rubs_utility_billing_disclosure::{
+    check as check_rubs_utility_billing_disclosure, RubsUtilityBillingInput,
+    RubsUtilityBillingResult,
+};
 use traderview_expense::entry_notice::{
     compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
 };
@@ -797,6 +801,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-increase-check", axum::routing::post(rent_increase_check_route))
         .route("/rent-control-lease-disclosure", axum::routing::post(rent_control_lease_disclosure_route))
         .route("/rent-overcharge-recovery", axum::routing::post(rent_overcharge_recovery_route))
+        .route("/rubs-utility-billing-disclosure", axum::routing::post(rubs_utility_billing_disclosure_route))
         // State habitability remedies available to tenants
         .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
         // State security deposit cap compliance check
@@ -6533,6 +6538,35 @@ async fn rent_overcharge_recovery_route(
     Json(b): Json<RentOverchargeRecoveryInput>,
 ) -> Result<Json<RentOverchargeRecoveryResult>, ApiError> {
     Ok(Json(check_rent_overcharge_recovery(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rubs_utility_billing_disclosure: Mandatory landlord-paid disclosure of
+// RUBS (Ratio Utility Billing System) allocation methodology when
+// allocating utility costs in master-metered buildings WITHOUT individual
+// sub-meters. Mounted at POST /api/rental/rubs-utility-billing-disclosure.
+// Three regimes: (1) Texas Tex. Water Code §§ 13.502 + 13.2502 + 13.503
+// + 16 TAC § 24.281 — lease MUST state RUBS allocation + specify exact
+// calculation method (occupant count OR square footage) + landlord may
+// NOT add service / administrative fees + aggregate tenant charges cannot
+// exceed utility provider's bill + § 13.503 private right of action with
+// civil damages + Public Utility Commission of Texas enforcement. (2)
+// District of Columbia D.C. Code § 42-3502.06A + DC AG Schwalb guidance
+// — clearly identify allocation method in lease + provide ANNUAL
+// RECONCILIATION STATEMENT showing actual utility costs vs amounts
+// collected + no surcharges + DC Consumer Protection Procedures Act. (3)
+// Default — no specific RUBS statute; lease + state PUC tariff + common-
+// law unconscionability + state UDAP. Distinct from `submetering_rules`
+// (sub-meter setup), `tenant_utility_account_designation` (direct utility
+// account), and `utility_shutoff`.
+// ---------------------------------------------------------------------------
+
+async fn rubs_utility_billing_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RubsUtilityBillingInput>,
+) -> Result<Json<RubsUtilityBillingResult>, ApiError> {
+    Ok(Json(check_rubs_utility_billing_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
