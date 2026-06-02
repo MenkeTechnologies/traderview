@@ -235,6 +235,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-4978",          post(section_4978_route))
+        .route("/calc/section-6166",          post(section_6166_route))
         .route("/calc/section-4980",          post(section_4980_route))
         .route("/calc/section-4980h",         post(section_4980h_route))
         .route("/calc/section-453",           post(section_453_route))
@@ -1241,6 +1242,38 @@ async fn section_4978_route(
     Json(b): Json<traderview_expense::section_4978::Section4978Input>,
 ) -> Result<Json<traderview_expense::section_4978::Section4978Result>, ApiError> {
     Ok(Json(traderview_expense::section_4978::check(&b)))
+}
+
+// ── § 6166 estate tax installment for closely held business ──────────
+// Mounted at /api/calc/section-6166. Pure compute; § 6166(a)(1)
+// general rule allowing executor of estate where interest in closely
+// held business exceeds 35% of adjusted gross estate to elect 14-year
+// deferral (5 years interest-only + 10 years principal+interest);
+// § 6166(a)(2) cross-references § 6166(b)(1) qualifying interests
+// (sole proprietorship + partnership with 20%+ capital OR ≤45 partners
+// + corporation with 20%+ voting stock OR ≤45 shareholders);
+// § 6166(a)(3) election filing on timely Form 706 or amended return
+// within 6 months of non-extended due date; § 6166(b)(6) adjusted
+// gross estate = gross estate less § 2053 (debts/expenses/mortgages)
+// and § 2054 (casualty losses) deductions; § 6166(f) 14-year deferral
+// period; § 6601(j) subsidized 2% interest rate on first 2-percent
+// portion ($1,830,000 multiplied by value of $1M ÷ applicable
+// exclusion, 2024 indexed); § 6621 underpayment rate × 45% on excess;
+// § 6166(g) acceleration events: § 6166(g)(1)(A) disposition of 50%+
+// of decedent's interest + § 6166(g)(1)(B) withdrawal exceeding 50% +
+// § 6166(g)(3) missed installment payment beyond 6-month grace +
+// § 6166(g)(4) undistributed income must be applied to installments;
+// § 303 stock redemption does NOT trigger acceleration. PV savings on
+// $10M+ estate tax routinely exceed $2M-$3M. Distinct from § 6161
+// general 12-month extension. Original enactment Tax Reform Act of
+// 1976; amended Economic Growth and Tax Relief Reconciliation Act of
+// 2001 Pub. L. 107-16.
+
+async fn section_6166_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6166::Section6166Input>,
+) -> Result<Json<traderview_expense::section_6166::Section6166Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6166::check(&b)))
 }
 
 // ── § 4980 Tax on Reversion of Qualified Plan Assets to Employer ─────
