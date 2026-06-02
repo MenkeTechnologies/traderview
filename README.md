@@ -10932,6 +10932,63 @@ The 2-year window is computed via `checked_add_months(24)` for leap-year correct
 
 Mounted at `POST /api/calc/section-1031-f`. Seventeen tests pin: unrelated parties — §1031(f) doesn't apply; family disposition within 2-year window triggers full retroactive recognition with disposition-year tax; disposition after window preserves deferral; **disposition exactly at window end preserves**; one day before window end triggers; each §1031(f)(2) exception blocks recognition (death / involuntary conversion / lack of tax avoidance); no-disposition open-window reports `window_still_open: true` + positive days remaining; no-disposition past-window reports "matured cleanly"; zero deferred gain no-op; all 10 §267(b) categories trigger when disposition within window; character preserved (LTCG stays LTCG, §1250 stays §1250); 2-year window uses calendar months not days (Feb 29 2024 exchange → Feb 28 2026 window-end); exception logged in note text; unrelated disposition within window no trigger (control); recognized year matches disposition year not exchange year (§1031(f)(1)(C) retroactive-in-disposition-year rule).
 
+`traderview-expense::section_408a` is the **IRC § 408A Roth IRA module** — trader-critical for retirement planning + after-tax growth. Roth IRA contributions are made with AFTER-TAX dollars but qualified distributions of EARNINGS AND PRINCIPAL are entirely TAX-FREE; no required minimum distributions during owner's lifetime; FREE-FROM § 1411 NIIT on distributions (Roth withdrawals are not investment income). Companion to `section_408` (traditional IRA), `section_72t` (10% early-withdrawal penalty), `section_67g` (TCJA misc deduction suspension), `section_1411` (NIIT 3.8% — Roth distributions exempt), `section_475` (trader mark-to-market — Roth account trader can qualify).
+
+**2026 contribution limits + phase-outs (IRS Notice 2025-77)**:
+
+| Filing Status | Phase-Out Low | Phase-Out High |
+|---------------|----------------|-----------------|
+| Single / Head of Household | **$153,000** | **$168,000** |
+| Married Filing Jointly | **$242,000** | **$252,000** |
+| Married Filing Separately | $0 | $10,000 (NOT cost-of-living adjusted) |
+
+| Age | Annual Limit |
+|-----|--------------|
+| Under 50 | **$7,500** base |
+| 50 or older | **$8,600** ($7,500 + $1,100 catch-up) |
+
+Pinned by `under_50_2026_base_limit_7500`, `age_50_catch_up_8600`, `single_phase_out_thresholds_2026`, `mfj_phase_out_thresholds_2026`, `mfs_phase_out_thresholds_zero_to_10k`, `below_phase_out_full_contribution_allowed`, `above_phase_out_zero_contribution_backdoor_required`, `in_phase_out_partial_contribution_allowed`, `mfj_uniquely_highest_phase_out_invariant`, `mfs_uniquely_zero_low_threshold_invariant`.
+
+**§ 408A(d)(2) Qualified distribution two-prong test**:
+
+| # | Requirement |
+|---|-------------|
+| 1 | 5-YEAR HOLDING PERIOD starting January 1 of first Roth contribution year |
+| 2 | ONE of: (a) age 59½+; (b) disability per § 72(m)(7); (c) death of owner; (d) first-time home purchase up to $10,000 lifetime per § 72(t)(2)(F) |
+
+Pinned by `qualified_distribution_5_year_age_60`, `non_qualified_earnings_under_5_year_taxable_plus_penalty`, `earnings_pre_59_5_taxable_plus_10_percent_penalty`, `disability_qualifies_distribution_under_age`, `post_death_beneficiary_qualifies_distribution`, `first_home_purchase_qualifies_under_10k_cap`, `first_home_cumulative_10k_exhausts_lifetime_cap`.
+
+**§ 408A(d)(3) Non-qualified distribution ordering rules**:
+
+| # | Source | Taxation |
+|---|--------|----------|
+| 1 | Contributions | Always tax-free + penalty-free |
+| 2 | Conversions | 5-year per-conversion holding for penalty-free principal |
+| 3 | Earnings | Taxable + 10% penalty under § 72(t) unless exception |
+
+Pinned by `contribution_principal_always_tax_free_penalty_free`, `conversion_principal_within_5_year_10_percent_penalty`, `conversion_principal_after_5_year_no_penalty`.
+
+**§ 408A(d)(3)(A) Conversion 5-year-per-conversion rule** — separate 5-year holding period applies to EACH conversion for purposes of avoiding 10% penalty on conversion principal withdrawn before age 59½; multiple conversions create stacked 5-year clocks.
+
+**§ 408A(e) Backdoor Roth conversion** — taxpayer exceeding income phase-out may make NON-DEDUCTIBLE TRADITIONAL IRA contribution then CONVERT to Roth IRA; conversion taxable to extent of pre-tax IRA balance (pro-rata rule under § 408(d)(2)); BACKDOOR ROTH OPTIMAL when taxpayer has NO pre-tax traditional IRA balance.
+
+**§ 408A(c)(5) No RMD during owner's lifetime** — unlike traditional IRA, Roth IRA owner NOT subject to § 401(a)(9) RMD; beneficiaries subject to post-death RMD per SECURE Act § 401(a)(9)(H).
+
+**§ 408A(c)(3)(B) Modified AGI carveout** — MAGI calculation DISREGARDS Roth conversion income; large conversion does not push taxpayer into higher phase-out tier for same year's contribution.
+
+**§ 1411 NIIT exemption** — Roth distributions are NOT investment income; exempt from 3.8% surtax.
+
+**§ 4973 Excess contribution excise tax** — 6% on excess contributions to IRAs (including Roth) until withdrawn or absorbed.
+
+**Trader-critical fact patterns**:
+
+- High-income trader subject to phase-out — backdoor Roth conversion.
+- Active trader using self-directed Roth IRA — intra-account trading gains/losses no current-year tax; § 1411 NIIT exempt.
+- Mega backdoor Roth — after-tax 401(k) → Roth conversion (plan design + § 415 limits + non-discrimination).
+- § 72(t) substantially-equal-periodic-payments — pre-59½ without 10% penalty.
+
+Mounted at `POST /api/calc/section-408a`. Thirty-six tests pin: **under 50 2026 base limit $7,500**; **age 50 catch-up $8,600**; **single phase-out thresholds 2026** ($153K-$168K); **MFJ phase-out thresholds 2026** ($242K-$252K); **MFS phase-out thresholds $0 to $10K**; **below phase-out full contribution allowed**; **above phase-out zero contribution backdoor required**; **in phase-out partial contribution allowed**; **excess contribution violation** (§ 4973 6% excise tax); **qualified distribution 5-year + age 60**; **non-qualified earnings under 5-year taxable + penalty**; **earnings pre-59½ taxable + 10% penalty**; **disability qualifies distribution under age**; **post-death beneficiary qualifies distribution**; **first home purchase qualifies under $10K cap**; **first home cumulative $10K exhausts lifetime cap**; **conversion principal within 5-year 10% penalty**; **conversion principal after 5-year no penalty**; **contribution principal always tax-free penalty-free**; **citation pins all authorities** (§ 408A(a)-(f) + § 408 + § 219 + § 72(t) + § 401(a)(9) + § 1411 + § 415 + § 4973 + Taxpayer Relief Act of 1997 § 302 + Pub. L. 105-34 + August 5, 1997 + SECURE Act of 2019 § 401 + SECURE Act 2.0 of 2022 + IRS Notice 2025-77 + Treas. Reg. § 1.408A-1 to -10 + Form 5498); **note pins 2026 limits**; **note pins 2026 phase-out thresholds**; **note pins MAGI disregards conversion income**; **note pins qualified distribution two-prong**; **note pins § 408A(d)(3) ordering rules**; **note pins § 408A(d)(3)(A) conversion 5-year per-conversion**; **note pins § 408A(e) backdoor Roth pro-rata**; **note pins § 408A(c)(5) no RMD during lifetime**; **note pins § 1411 NIIT exempt**; **note pins trader-critical fact patterns four**; **note pins Taxpayer Relief Act 1997 origin**; **note pins § 4973 excess contribution excise tax**; **filing status truth table four cells**; **MFJ uniquely highest phase-out invariant**; **MFS uniquely zero low threshold invariant**; **defensive overflow saturating**.
+
 `traderview-expense::section_453` is the **IRC §453 installment sale gain deferral module** — landlord-relevant for seller-financed rental property sales. A $500k rental sold with 20% down + 80% seller-financed note recognizes the gain over the life of the note rather than all in year 1. Companion to iter 7's `disposition` (which handles the all-cash sale path) and iter 27's `section_1031_f` (which handles the §1031 exchange path) — together they cover the three exit strategies for rental property.
 
 **Gross profit ratio method** per §453(c):

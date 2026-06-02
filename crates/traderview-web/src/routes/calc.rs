@@ -212,6 +212,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
+        .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
         .route("/calc/section-461l",          post(section_461l_route))
@@ -668,6 +669,34 @@ async fn section_165g_route(
         ));
     }
     Ok(Json(traderview_expense::section_165g::compute(&b)))
+}
+
+// ── §408A Roth IRA contribution + phase-out + qualified distribution ─
+// Mounted at /api/calc/section-408a. § 408A(c)(1) 2026 contribution
+// limit aggregate with § 408 traditional IRA — $7,500 base + $1,100
+// catch-up (age 50+); § 408A(c)(3) income-based phase-out (Single/HOH
+// $153K-$168K; MFJ $242K-$252K; MFS $0-$10K NOT cost-of-living
+// adjusted); § 408A(c)(3)(B) modified AGI DISREGARDS Roth conversion
+// income; § 408A(d)(2) qualified distribution two-prong test (5-year
+// holding + age 59½ OR disability OR death OR first-time home up to
+// $10K lifetime); § 408A(d)(3) ordering rules (contributions then
+// conversions then earnings); § 408A(d)(3)(A) separate 5-year per-
+// conversion holding period; § 408A(e) backdoor Roth (non-deductible
+// traditional + conversion; pro-rata rule under § 408(d)(2));
+// § 408A(c)(5) NO RMD during owner's lifetime; Roth distributions
+// EXEMPT from § 1411 NIIT 3.8% surtax. Created by Taxpayer Relief Act
+// of 1997 § 302 (Pub. L. 105-34, August 5, 1997); modified by SECURE
+// Act of 2019 + SECURE Act 2.0 of 2022. Trader-critical fact patterns:
+// high-income trader backdoor Roth; active trader self-directed Roth
+// IRA escaping § 1411 NIIT; mega backdoor Roth (after-tax 401(k));
+// § 72(t) substantially-equal-periodic-payments. § 4973 6% excise tax
+// on excess contributions.
+
+async fn section_408a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_408a::Section408aInput>,
+) -> Result<Json<traderview_expense::section_408a::Section408aResult>, ApiError> {
+    Ok(Json(traderview_expense::section_408a::check(&b)))
 }
 
 // ── §453 installment sale gain deferral ──────────────────────────────
