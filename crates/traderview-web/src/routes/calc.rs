@@ -168,6 +168,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
+        .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-6863",          post(section_6863_route))
         .route("/calc/section-336",           post(section_336_route))
@@ -5055,6 +5056,32 @@ async fn section_6707a_route(
     Json(b): Json<traderview_expense::section_6707a::Section6707AInput>,
 ) -> Result<Json<traderview_expense::section_6707a::Section6707AResult>, ApiError> {
     Ok(Json(traderview_expense::section_6707a::check(&b)))
+}
+
+// ── §6851 termination assessment of income tax ──────────────────────
+// Mounted at /api/calc/section-6851. Emergency procedure by which IRS
+// may TERMINATE a taxpayer's taxable year mid-year when Secretary
+// finds taxpayer designing to depart from US, conceal property, or
+// jeopardize collection. § 6851(a)(1) — three triggers: (A)
+// departing/removing property; (B) concealing self/property; (C)
+// other jeopardizing act including corporate liquidation. § 6851(a)
+// (2) — tax computed as if terminated period were taxable year AND
+// by placing entire tax base on annual basis (annualization). §
+// 6851(b) — SNOD within 60 days after LATER of full-year return due
+// date or taxpayer's filing date. § 6851(c) — amounts collected
+// treated as collected on date of entire-year assessment. § 6851(d)
+// cross-references § 7429 review + § 6863 stay + § 6213(a) Tax
+// Court petition right. § 6851 vs § 6861 distinction: § 6851
+// terminates CURRENT/preceding taxable year BEFORE return due date;
+// § 6861 jeopardy-assesses EXISTING DEFICIENCY AFTER return filing.
+// § 6851 + § 6863 interaction: 10-day payment requirement unless
+// bond filed. Companion to § 6852 + § 6861 + § 6863 + § 7429
+// jeopardy/termination constellation.
+async fn section_6851_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6851::Section6851Input>,
+) -> Result<Json<traderview_expense::section_6851::Section6851Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6851::check(&b)))
 }
 
 // ── §6861 jeopardy assessment of income, estate, gift, and certain ──
