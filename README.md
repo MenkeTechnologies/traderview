@@ -11090,6 +11090,45 @@ Mounted at `POST /api/calc/section-263a`. Sixteen tests pin: dealer above thresh
 
 Mounted at `POST /api/calc/section-267`. Fourteen tests pin: unrelated full loss recognized; family member full loss disallowed; no-loss no-op; §267(d) buyer gain reduced by disallowed loss ($20k gain → $10k taxable after $10k reduction); §267(d) reduction capped at buyer gain ($3k gain → $7k permanently lost); buyer loss loses entire disallowance; buyer not yet sold preserves disallowance for future; all ten §267(b) categories treated as related; buyer initial basis is cash price (not seller basis); §267(d) zero gain leaves loss lost; unrelated with subsequent gain ignores §267(d); corp+partnership common owner is related (trader LLC ↔ S-corp); is-related helper returns false only for Unrelated; note text describes the partial-reduction split.
 
+`traderview-expense::section_274` is the **IRC § 274 disallowance of entertainment, meals, gift, travel, luxury water travel deduction limitations module** — direct trader companion to `section_162f` (fines/penalties non-deductibility), `section_280e` (cannabis trafficking disallowance), `section_162m` ($1M public-company exec comp deduction — iter 446), `section_409a` (NQDC). Trader-critical because individual traders, LLC traders, and § 475(f) mark-to-market traders incur substantial business meal, travel, gift, and education expenses related to trade activities; § 274 limits aggressively reduce deductible amounts.
+
+§ 274 imposes layered DEDUCTION LIMITATIONS on ordinary business expenses that would otherwise be deductible under § 162(a):
+
+| Subsection | Limitation |
+|------------|-----------|
+| **§ 274(a)** | ENTERTAINMENT — fully disallowed post-TCJA (Pub. L. 115-97 § 13304) |
+| **§ 274(b)** | GIFTS — $25 per recipient per year (unchanged since 1962) |
+| **§ 274(d)** | SUBSTANTIATION — amount + time/place + business purpose + business relationship; complete denial on failure |
+| **§ 274(h)** | FOREIGN CONVENTIONS — 4-part reasonableness test |
+| **§ 274(k)** | BUSINESS MEALS — 50% subject to (1) not lavish; (2) taxpayer/employee present |
+| **§ 274(m)** | LUXURY WATER TRAVEL — daily cap = 2× highest federal per diem (~$1,140/day 2026) |
+| **§ 274(n)** | GENERAL 50% LIMIT — most food/beverage expenses |
+| **§ 274(o)** | PER SE ENTERTAINMENT FACILITIES — country clubs, sporting events, golf, yachts |
+
+**§ 274(a) entertainment — fully disallowed post-TCJA** (TCJA 2017 § 13304, Pub. L. 115-97): eliminated deduction for any expense for entertainment, amusement, or recreation activities. Pre-TCJA "directly related to business" and "associated with business" rules REPEALED. Exceptions preserved for § 274(e)(4) recreational facilities primarily for rank-and-file employees; § 274(e)(5) events for employees where employer present; § 274(a)(3) club dues for trade associations.
+
+**§ 274(k) business meals — 50% subject to two conditions**:
+1. NOT LAVISH OR EXTRAVAGANT under the circumstances
+2. TAXPAYER (or employee of taxpayer) PRESENT when food or beverages furnished
+
+**Temporary 100% restaurant meal exception (2021-2022)** — Consolidated Appropriations Act 2021 (Pub. L. 116-260 § 210) temporarily increased § 274(n) limit to 100% for food/beverages from RESTAURANTS during 2021-2022; **EXPIRED January 1, 2023**; reverted to 50%.
+
+**§ 274(o) per se entertainment facilities (NO deduction regardless of business purpose, 8 categories)**: country clubs; sporting events (tickets/suites/boxes); golf clubs; yachts; tennis clubs; health and athletic clubs; hunting/fishing lodges; vacation resorts. Exception only for facilities primarily for benefit of rank-and-file employees under § 274(e)(4).
+
+**§ 274(d) substantiation requirements (4 elements)**: AMOUNT of expense; TIME and PLACE; BUSINESS PURPOSE; BUSINESS RELATIONSHIP to taxpayer of person(s) entertained/fed. Failure equals COMPLETE DENIAL with NO substantial compliance escape (Sanford v. Commissioner, 50 T.C. 823 (1968); COHAN RULE rejected for § 274(d) categories per Cohan v. Commissioner, 39 F.2d 540 (2d Cir. 1930)).
+
+**§ 274(b) gift limitation** — $25 per recipient per year (unchanged since 1962); exceptions: items costing $4 or less with permanent name imprint (promotional items); signs/display racks on business premises of recipient; spousal recipient counted with original; partnership/closely-held corporation gift rules at § 274(b)(2).
+
+**§ 274(h) foreign conventions — 4-part reasonableness test**: (1) purpose of meeting + activities at meeting; (2) purposes and activities of sponsoring organization or group; (3) residences of active members of organization and where meetings have been held; OR (4) other relevant factors.
+
+**§ 274(m) luxury water travel** — daily deduction cap = 2× highest federal per diem rate for non-federal employees during travel period; 2026 cap approximately $1,140/day (CPI-adjusted from original $200 daily 1986 amount).
+
+**OBBBA 2026 § 274(o) updates** — One Big Beautiful Bill (Pub. L. 119-21 § 70202) effective January 1, 2026 modified employer-convenience meal deduction under § 274(o)(1); eliminated 100% deduction for employer-provided meals to employees on premises for employer's convenience; now subject to general § 274(n) 50% limit.
+
+**Trader-critical fact patterns**: (1) trader holds client dinner $400 at upscale restaurant — § 274(n) 50% limit $200 deductible plus § 274(d) substantiation required; (2) trader takes prospect to NBA game $1,200 — § 274(a) FULLY DISALLOWED post-TCJA but separately-invoiced restaurant meal portion may qualify; (3) country club dues $1,000 — § 274(o) PER SE no deduction; (4) $50 holiday gift basket — $25 per recipient cap = $25 deductible only; (5) § 475(f) trader Schedule C deducts $5,000 meals (50%) + $1,200 travel + $0 entertainment (TCJA) + $25 gift, requires § 274(d) contemporaneous records.
+
+Mounted at `POST /api/calc/section-274`. Thirty-three tests pin: **business meal 50% deductible**; **business meal lavish disallowed**; **business meal taxpayer absent disallowed**; **entertainment fully disallowed post-TCJA**; **per se entertainment facility disallowed**; **substantiation missing complete denial** (Sanford + COHAN); **travel fully deductible with substantiation**; **travel without substantiation disallowed**; **foreign convention unreasonable disallowed**; **foreign convention reasonable deductible**; **gift under $25 per recipient fully deductible**; **gift over $25 per recipient capped**; **gift multiple recipients aggregate cap**; **gift promotional item exception**; **luxury water travel capped at daily rate**; **temporary 100% restaurant meal 2021-2022** (CAA 2021 § 210); **substantiation required for meals/travel/gifts** (7-category sweep); **category truth table eight cells**; **entertainment uniquely fully disallowed invariant**; **gift limit pinned at $25**; **citation pins all authorities** (§ 274(a) + § 274(b) + § 274(d) + § 274(e) + § 274(h) + § 274(k) + § 274(m) + § 274(n) + § 274(o) + § 162(a) + § 162(e) + Pub. L. 115-97 § 13304 + Pub. L. 116-260 § 210 + Pub. L. 119-21 § 70202 + Treas. Reg. § 1.274-1 + IRS Notice 2018-76 + IRS Pub. 463 + Sanford v. Commissioner + Cohan v. Commissioner); **note pins § 274 overlay on § 162(a)**; **note pins § 274(a) entertainment TCJA repeal**; **note pins § 274(k) two conditions**; **note pins § 274(n) 50% with 2021-2022 exception**; **note pins § 274(o) 8 per se facilities**; **note pins § 274(d) substantiation 4 elements**; **note pins § 274(b) gift $25 limit since 1962**; **note pins § 274(h) foreign convention 4-factor**; **note pins § 274(m) luxury water travel**; **note pins OBBBA 2026 update**; **note pins trader fact patterns five**; **note pins companion modules**.
+
 `traderview-expense::section_164` is the **IRC §164 State and Local Tax (SALT) deduction cap module** — hits every high-income itemizing trader and landlord in high-tax states. TCJA capped SALT at **$10K ($5K MFS)** for 2018-2024; OBBBA § 70413 **temporarily expanded the cap to $40K ($20K MFS)** effective 2025-01-01 with a high-income phaseout, automatic 1% annual growth through 2029, and a hard sunset back to the TCJA cap in 2030.
 
 **Mechanics (2025-2029)**:

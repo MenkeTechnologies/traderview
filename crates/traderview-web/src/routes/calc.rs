@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-165d",          post(section_165d_route))
         .route("/calc/section-165g",          post(section_165g_route))
         .route("/calc/section-267",           post(section_267_route))
+        .route("/calc/section-274",           post(section_274_route))
         .route("/calc/section-988",           post(section_988_route))
         .route("/calc/section-1296",          post(section_1296_route))
         .route("/calc/section-1341",          post(section_1341_route))
@@ -6466,6 +6467,31 @@ async fn section_267_route(
         ));
     }
     Ok(Json(traderview_expense::section_267::compute(&b)))
+}
+
+// ── § 274 Meals, Entertainment, Gift, Travel deduction limits ────────
+// Mounted at /api/calc/section-274. Pure compute; § 274(a)
+// ENTERTAINMENT fully disallowed post-TCJA 2017 § 13304 (Pub. L.
+// 115-97); § 274(k) BUSINESS MEALS 50% subject to (1) not lavish/
+// extravagant; (2) taxpayer or employee present; § 274(n) general
+// 50% limit; § 274(o) PER SE entertainment facilities (country
+// clubs, sporting events, golf, yachts, etc.) no deduction;
+// § 274(b) GIFT limit $25 per recipient per year with $4
+// promotional-item exception; § 274(d) substantiation (amount +
+// time/place + business purpose + business relationship) with
+// complete-denial on failure (Sanford v. Commissioner, 50 T.C.
+// 823 (1968); COHAN RULE rejected); § 274(h) FOREIGN CONVENTION
+// 4-part reasonableness test; § 274(m) LUXURY WATER TRAVEL 2×
+// federal per diem daily cap (~$1,140/day 2026); temporary 100%
+// restaurant meal exception 2021-2022 expired (Pub. L. 116-260
+// § 210); OBBBA 2026 § 274(o) updates (Pub. L. 119-21 § 70202)
+// modified employer-convenience meal deduction.
+
+async fn section_274_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_274::Section274Input>,
+) -> Result<Json<traderview_expense::section_274::Section274Result>, ApiError> {
+    Ok(Json(traderview_expense::section_274::check(&b)))
 }
 
 // ── §469(c)(7) Real Estate Professional Status qualification ─────────
