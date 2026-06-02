@@ -776,6 +776,11 @@ use traderview_expense::rental_marijuana_cultivation_restriction::{
     RentalMarijuanaCultivationRestrictionInput,
     RentalMarijuanaCultivationRestrictionResult,
 };
+use traderview_expense::rental_attached_garage_carbon_monoxide_disclosure::{
+    check as check_rental_attached_garage_carbon_monoxide_disclosure,
+    RentalAttachedGarageCarbonMonoxideDisclosureInput,
+    RentalAttachedGarageCarbonMonoxideDisclosureResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1248,6 +1253,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-radiator-steam-heat-safety", axum::routing::post(rental_radiator_steam_heat_safety_route))
         .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
+        .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10780,4 +10786,43 @@ async fn rental_marijuana_cultivation_restriction_route(
     Json(b): Json<RentalMarijuanaCultivationRestrictionInput>,
 ) -> Result<Json<RentalMarijuanaCultivationRestrictionResult>, ApiError> {
     Ok(Json(check_rental_marijuana_cultivation_restriction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_attached_garage_carbon_monoxide_disclosure (iter 523): Trader-
+// landlord attached-garage CO detector disclosure framework. Six
+// jurisdictions: California (SB 183 Carbon Monoxide Poisoning Prevention
+// Act of 2010 + Cal. Health and Safety Code 17926-17926.2 + Cal. Civ.
+// Code 1947.13 — CO alarm required in all dwelling units with fossil-
+// fuel-burning appliances + fireplaces + attached garages), New York
+// (NY Public Health Law 1399-bbb-1 Amanda's Law named after Amanda
+// Hansen who died age 16 from CO poisoning + NYC Admin Code 27-2046.2
+// + HPD Local Law 7 of 2004 + 1 RCNY 12-12 + $25 per detector per day
+// HPD penalty), Washington (RCW 19.27.530 effective January 1 2011 new
+// construction / January 1 2013 all residential occupancies + WA DOH),
+// Connecticut (C.G.S. 29-292(b) + 47a-7 + CT State Fire Marshal
+// Office), Massachusetts (M.G.L. ch. 148 26F Nicole's Law named after
+// Nicole Garofalo who died age 7 from CO poisoning effective March 31
+// 2006 + 527 CMR 1.00), Default (CDC public-health surveillance + UL
+// 2034 federal standard + 30+ state mandates). Four CO exposure risks:
+// AttachedGarageSharedBoundary, DetachedGarageWithSharedHvacReturn,
+// InUnitFossilFuelAppliance, MinimalNoFossilFuelOrGarage. Four detector
+// statuses: UL2034InstalledAndCurrent, InstalledButPastEndOfLifeWindow
+// (7-year UL 2034 manufacturer-listed end-of-life), InstalledButNotUL2034
+// Listed, NotInstalledViolation. Seven-mode severity ladder including
+// CoExposureInjuryHabitabilityBreach (100pct rent + $1M-$5M settlement +
+// 400 ppm lethal within 5 minutes vehicle idling per CDC), Detector-
+// NotInstalledStatutoryViolation (100pct rent), DetectorPastEndOfLife-
+// ReplacementRequired (50pct rent), DetectorNotUL2034ListedNonCompliant
+// (50pct rent), DisclosureRequiredAtLeaseSigning (50pct rent). CDC
+// reports 450 US annual non-fire CO deaths + 20K nonfatal injuries —
+// CO is leading cause of poison-related death in US.
+// ---------------------------------------------------------------------------
+
+async fn rental_attached_garage_carbon_monoxide_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalAttachedGarageCarbonMonoxideDisclosureInput>,
+) -> Result<Json<RentalAttachedGarageCarbonMonoxideDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_attached_garage_carbon_monoxide_disclosure(&b)))
 }
