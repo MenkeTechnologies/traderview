@@ -514,6 +514,10 @@ use traderview_expense::commercial_lease_personal_guaranty_enforceability::{
     CommercialLeasePersonalGuarantyEnforceabilityInput,
     CommercialLeasePersonalGuarantyEnforceabilityResult,
 };
+use traderview_expense::commercial_lease_cam_charge_disclosure::{
+    check as check_commercial_lease_cam_charge_disclosure,
+    CommercialLeaseCamChargeDisclosureInput, CommercialLeaseCamChargeDisclosureResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1022,6 +1026,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
+        .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6358,6 +6363,44 @@ async fn commercial_lease_personal_guaranty_enforceability_route(
     Json(b): Json<CommercialLeasePersonalGuarantyEnforceabilityInput>,
 ) -> Result<Json<CommercialLeasePersonalGuarantyEnforceabilityResult>, ApiError> {
     Ok(Json(check_commercial_lease_personal_guaranty_enforceability(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Commercial lease CAM charge disclosure and tenant audit rights.
+//
+// Mounted at POST /api/rental/commercial-lease-cam-charge-disclosure.
+// Three-jurisdiction framework + BOMA Operating Expense Guide
+// industry standard: (1) California — Cal. Civ. Code § 1938 CASp
+// accessibility disclosure; Garrett v. Coast and Southern, 9 Cal.
+// 4th 1 (1995) good-faith reconciliation duty; industry-standard
+// annual budget + year-end reconciliation within 90-180 days;
+// (2) New York — no specific commercial CAM statute; BOMA
+// Operating Expense Guide governs; (3) Default — BOMA 2024
+// Operating Expense Guide industry standard; Restatement (Second)
+// of Contracts § 200 ambiguity-favoring-tenant; UCC Article 2A
+// INAPPLICABLE to real property leases. BOMA 13 CAM categories;
+// 12 standard EXCLUSIONS (capital improvements + marketing/
+// leasing + landlord debt service + depreciation + income taxes
+// + ground rent + reserves + tenant-dispute legal fees +
+// landlord penalties + insurance proceeds + above-market
+// affiliated-party); GROSS-UP PROVISION (variable expenses
+// grossed to 95-100% occupancy floor; fixed expenses NOT grossed
+// up); BASE-YEAR ESCALATION formula; TENANT AUDIT RIGHTS 7
+// standard provisions (90-180 day notice + most-recent-fiscal-
+// year scope + confidentiality + 3-5% discrepancy cost-shift +
+// refund obligation + invoice inspection right); BOMA survey
+// shows 1 in 4 (25%) tenants experience billing discrepancies.
+// Sibling cluster: commercial_lease_personal_guaranty_
+// enforceability, tenant_estoppel_certificate, lease_
+// disclosures, rental_property_registration.
+// ---------------------------------------------------------------------------
+
+async fn commercial_lease_cam_charge_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CommercialLeaseCamChargeDisclosureInput>,
+) -> Result<Json<CommercialLeaseCamChargeDisclosureResult>, ApiError> {
+    Ok(Json(check_commercial_lease_cam_charge_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------

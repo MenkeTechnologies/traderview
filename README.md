@@ -4534,6 +4534,55 @@ Mounted at `POST /api/rental/balcony-inspection`. Thirty-four tests pin: **SB 72
 
 Mounted at `POST /api/rental/bedbug-disclosure-check`. Twenty-five tests pin: 51-row coverage; CA pre-lease history violation; AZ pamphlet required + **single-family exemption** (load-bearing carve-out); CA SFH not exempted (distinguishes from AZ); **NY 72h boundary** (complies at 72h, fails at 73h, no violation pre-learn, complies if notified); ME 5-day boundary (complies at 5d, fails at 6d, complies if completed); KS 5-day mirror; IA 7-day boundary; NJ pre-lease required; no-statute 24-state sweep always complies; unknown state errors; case-insensitive; sorted all_states; non-empty citations; pre-lease history states (CA/NJ) pinned; **NY-only adjacent-notice sweep** (every other state has None); inspection-duty 4-state sweep (ME/KS = 5d, IA/NH = 7d); multiple violations stack.
 
+`traderview-expense::commercial_lease_cam_charge_disclosure` is the **commercial lease CAM (Common Area Maintenance) charge disclosure and tenant audit rights framework module** — trader-landlord critical because commercial leases routinely pass through CAM/operating-expense escalations that can total 20-40% of base rent over time; ill-disclosed or improperly calculated CAM exposes landlord to TENANT AUDIT CLAIMS and POTENTIAL REFUNDS averaging 5-15% of contested charges per industry-standard BOMA practice. Companion to `commercial_lease_personal_guaranty_enforceability`, `tenant_estoppel_certificate`, `lease_disclosures`, `rental_property_registration`.
+
+**Three-jurisdiction framework**:
+
+| Jurisdiction | Source | Key Rules |
+|--------------|--------|-----------|
+| **California** | Cal. Civ. Code § 1938 (CASp accessibility disclosure); Garrett v. Coast and Southern, 9 Cal. 4th 1 (1995) | Good-faith reconciliation; annual budget + year-end reconciliation industry standard |
+| **New York** | Common-law contract interpretation; N.Y. CPLR § 4519 Dead Man's Statute | No specific commercial CAM statute; BOMA Operating Expense Guide governs |
+| **Default** | BOMA Operating Expense Guide 2024; Restatement (Second) of Contracts § 200 | Ambiguity-favoring-tenant; UCC Article 2A INAPPLICABLE to real property |
+
+**BOMA Operating Expense Guide categories of CAM (13 categories)**:
+1. Utilities (electric/gas/water/sewer)
+2. Janitorial and cleaning services
+3. Property management fees
+4. Security and access control
+5. Landscaping and grounds maintenance
+6. Snow removal (seasonal)
+7. Trash removal
+8. HVAC maintenance contracts
+9. Elevator maintenance contracts
+10. Common-area repairs
+11. Insurance premiums
+12. Real estate taxes (separately or within CAM)
+13. Capital expenditures AMORTIZED over useful life (typically 10-15 years)
+
+**Standard EXCLUSIONS from CAM (12 categories)**: capital improvements (vs. amortized capital repairs); marketing and leasing costs (broker commissions); tenant-specific build-outs; landlord's debt service / mortgage interest; depreciation; income taxes; ground rent paid by landlord; reserves for future contingencies; legal fees for tenant disputes; penalties for landlord's own legal violations; insurance proceeds offsetting expenses; above-market affiliated-party vendor services.
+
+**GROSS-UP PROVISION** — when building less than fully occupied, landlord may "gross-up" VARIABLE expenses (utilities, janitorial, trash) to what they would have been at 95-100% occupancy; tenant pays pro-rata share of grossed-up amount; gross-up FLOORS occupancy at 95% or 100% per lease terms; FIXED expenses (real estate taxes, insurance) are NOT grossed up.
+
+**BASE-YEAR ESCALATION** — tenant pays only INCREASE over base-year amount:
+```
+Tenant CAM = (Current Year Total - Base Year Total) × Tenant Pro-Rata Share
+```
+
+**TENANT AUDIT RIGHTS standard provisions (7 elements)**:
+1. Annual right to audit landlord's books
+2. Notice period 90-180 days after reconciliation statement
+3. Scope limitation to most recent fiscal year
+4. Confidentiality obligations
+5. Cost-shifting clause (tenant pays unless discrepancy exceeds 3-5% threshold)
+6. Refund obligation for overcharges
+7. Right to inspect underlying invoices and contracts
+
+**BOMA-survey CAM dispute statistics**: 1 in 4 (25%) tenants experience billing discrepancies in CAM reconciliations; average overcharge recovery 5-15% of contested amount; most common errors: incorrect gross-up calculation + capital-expenditure misclassification + management-fee duplication.
+
+**Trader-landlord critical fact patterns**: (1) office tower 65% occupied with 95% gross-up floor — variable expenses inflated 1.46×; (2) HVAC system replacement ($500K) passed as operating — should be amortized over 15-year useful life ($33K annual); (3) affiliated management company 5% gross rent (market 3-4%) — above-market affiliated-party excludable; (4) reconciliation late beyond 90 days fiscal year-end — tenant claims WAIVER of true-up; (5) artificially deflated base year — tenant audit may rectify.
+
+Mounted at `POST /api/rental/commercial-lease-cam-charge-disclosure`. Twenty-eight tests pin: **fully compliant passes**; **full pass-through tenant owes 10%** (10% pro-rata of $1M = $100K); **base-year escalation only excess** (10% of $200K = $20K); **fixed stop full amount**; **no annual budget violation** (Garrett v. Coast and Southern); **no year-end reconciliation violation** (WAIVER); **reconciliation past 180 days late** (200 days exceeds window); **gross-up above 95% improper**; **gross-up at 95% boundary proper**; **gross-up under 95% proper**; **capital improvement passed violation** (AMORTIZED 10-15 years); **affiliated party above-market violation** (ARMS-LENGTH market rate); **leasing costs in CAM violation** (BOMA exclusion); **no audit right violation** (BOMA standard); **cap exceeded without explanation violation** (5% cap); **escalation structure truth table three cells**; **citation pins all authorities** (Cal. Civ. Code § 1938 + Garrett v. Coast and Southern + BOMA International Operating Expense Guide (2024) + ANSI/BOMA Z65.1-2017 + Restatement (Second) of Contracts § 200 + N.Y. CPLR § 4519 + UCC Article 2A inapplicable); **note pins three-jurisdiction framework**; **note pins 13 CAM categories**; **note pins 12 exclusions**; **note pins gross-up provision**; **note pins base-year escalation formula**; **note pins audit seven elements**; **note pins BOMA survey statistics** (1 in 4, 5-15%); **note pins CA § 1938 CASp**; **note pins trader fact patterns five**; **note pins companion modules**; **multiple failures stack**.
+
 `traderview-expense::commercial_lease_personal_guaranty_enforceability` is the **multi-jurisdictional commercial lease personal guaranty enforceability framework module** — trader-landlord critical because commercial leases routinely require personal guaranty of corporate or LLC tenant obligations as condition of rental. Recent NYC COVID-era legislation plus Second Circuit constitutional rulings significantly altered the enforceability landscape; "Good Guy Guaranty" industry-standard limitations cap guarantor exposure to surrender-date arrears; common-law Statute of Frauds and material-modification rules continue to constrain enforceability. Distinct from sibling `tenant_lease_guarantor_disclosure` (residential — NY HSTPA 2019 one-month-aggregate cap + FCRA + Restatement (Third) of Suretyship).
 
 **Four-jurisdiction framework**:
