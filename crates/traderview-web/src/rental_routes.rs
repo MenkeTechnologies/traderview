@@ -539,6 +539,10 @@ use traderview_expense::rental_unpermitted_unit_disclosure::{
     check as check_rental_unpermitted_unit_disclosure,
     RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
 };
+use traderview_expense::rental_sex_offender_registry_notice::{
+    check as check_rental_sex_offender_registry_notice,
+    RentalSexOffenderRegistryNoticeInput, RentalSexOffenderRegistryNoticeResult,
+};
 use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
@@ -904,6 +908,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
+        .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
@@ -6353,6 +6358,41 @@ async fn rental_unpermitted_unit_disclosure_route(
     Json(b): Json<RentalUnpermittedUnitDisclosureInput>,
 ) -> Result<Json<RentalUnpermittedUnitDisclosureResult>, ApiError> {
     Ok(Json(check_rental_unpermitted_unit_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_sex_offender_registry_notice: Rental property sex offender
+// registry notice disclosure compliance — when must a trader-landlord
+// include a statutory Megan's Law notice in residential rental
+// agreements, and what restrictions apply to the landlord's use of
+// registry information? Mounted at POST /api/rental/rental-sex-
+// offender-registry-notice. Three regimes: California Cal. Civ. Code
+// § 2079.10a + Cal. Pen. Code § 290.46 + Cal. Gov. Code § 12955
+// (every residential rental agreement must include exact statutory
+// Megan's Law notice directing tenant to www.meganslaw.ca.gov;
+// disclosure BEFORE tenant signs lease in at least 10-point type;
+// landlord CANNOT use registry information to deny tenancy or
+// evict; per-violation statutory damages + tenant rescission right);
+// New Jersey N.J.S.A. 2C:7-21 + 2C:7-2 + NJ Attorney General
+// Guidelines + NJ LAD (NJ does NOT require landlord lease
+// disclosure; three-tier community notification framework — Tier 1
+// law enforcement / Tier 2 schools-community / Tier 3 broad
+// public; landlords prohibited from using Tier 1 / Tier 2
+// information to deny tenancy; Tier 3 broad public notice
+// permitted); Default Adam Walsh Act SORNA (42 USC § 16901 et
+// seq.) + Fair Housing Act + HUD 2016 Guidance on Criminal History
+// (no federal mandate; disparate-impact analysis applies to blanket
+// registry-based denials). Distinct from siblings fair_chance_
+// housing, rental_application_denial_disclosure, tenant_data_
+// privacy.
+// ---------------------------------------------------------------------------
+
+async fn rental_sex_offender_registry_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSexOffenderRegistryNoticeInput>,
+) -> Result<Json<RentalSexOffenderRegistryNoticeResult>, ApiError> {
+    Ok(Json(check_rental_sex_offender_registry_notice(&b)))
 }
 
 // ---------------------------------------------------------------------------
