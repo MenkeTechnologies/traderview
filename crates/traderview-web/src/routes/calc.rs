@@ -101,6 +101,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7207",          post(section_7207_route))
         .route("/calc/section-7421",          post(section_7421_route))
         .route("/calc/section-7426",          post(section_7426_route))
+        .route("/calc/section-7429",          post(section_7429_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7433",          post(section_7433_route))
         .route("/calc/section-7434",          post(section_7434_route))
@@ -3332,6 +3333,35 @@ async fn section_7426_route(
     Json(b): Json<traderview_expense::section_7426::Section7426Input>,
 ) -> Result<Json<traderview_expense::section_7426::Section7426Result>, ApiError> {
     Ok(Json(traderview_expense::section_7426::check(&b)))
+}
+
+// ── §7429 review of jeopardy levy or assessment procedures ──────────
+// Mounted at /api/calc/section-7429. Trader-relevant when IRS believes
+// collection is in jeopardy (taxpayer planning to flee, conceal
+// assets, dispose of assets to evade collection) and invokes jeopardy
+// assessment under § 6861 (income/estate/gift tax) + § 6862 (other
+// taxes) + immediate collection. § 7429(a) administrative review
+// framework: (1) IRS provides written statement within 5 days of
+// jeopardy assessment/levy; (2) taxpayer requests administrative
+// review within 30 days; (3) IRS responds within 15 calendar days.
+// § 7429(b) judicial review: filed within 90 days from earlier of (a)
+// district director's notice of determination or (b) 16th day after
+// administrative review request; DISTRICT COURT has EXCLUSIVE
+// jurisdiction (no Tax Court alternative); court determines within
+// 20 calendar days whether (1) assessment is REASONABLE and (2)
+// amount is APPROPRIATE; extension up to 40 additional calendar
+// days available for reasonable grounds (combined 60-day maximum).
+// § 7421(a)(11) Anti-Injunction Act exception — § 7429(b) judicial
+// review is one of 11 statutory exceptions to AIA bar. Procedural-
+// companion to § 7421 + § 7426 + § 7433 + § 7430 + § 6321 + § 6323 +
+// § 6325 + § 6334. 26 CFR § 301.7429-3; IRM 5.1.4; IRM 5.17.15; IRM
+// 8.24.2.
+
+async fn section_7429_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7429::Section7429Input>,
+) -> Result<Json<traderview_expense::section_7429::Section7429Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7429::check(&b)))
 }
 
 // ── §7433 civil damages for unauthorized collection actions ─────────
