@@ -498,6 +498,10 @@ use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
     RentalGasApplianceBanResult,
 };
+use traderview_expense::rental_hot_water_temperature::{
+    check as check_rental_hot_water_temperature, RentalHotWaterTemperatureInput,
+    RentalHotWaterTemperatureResult,
+};
 use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
@@ -844,6 +848,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
+        .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
@@ -5955,6 +5960,30 @@ async fn rental_gas_appliance_ban_route(
     Json(b): Json<RentalGasApplianceBanInput>,
 ) -> Result<Json<RentalGasApplianceBanResult>, ApiError> {
     Ok(Json(check_rental_gas_appliance_ban(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_hot_water_temperature: Rental property minimum hot water
+// temperature compliance — when a trader-landlord must supply hot
+// water at a statutorily-specified minimum temperature. Mounted at
+// POST /api/rental/rental-hot-water-temperature. Three regimes:
+// California (Cal. Health & Safety Code § 114192 + Cal. Civ. Code §
+// 1941.1 + 22 CCR § 81088 — 120°F minimum at faucet; implied warranty
+// of habitability includes hot water; 105-120°F range for care
+// facilities); NYC HMC § 27-2031 Article 8 Heat and Hot Water (120°F
+// constant minimum 365 days/year; HPD § 27-2115 enforcement); Default
+// (IPC § 607.1.1 — 110°F minimum at outlet; state-specific
+// habitability standards). Distinct from siblings heat_requirements
+// (space heat), cooling_requirements, lead_in_drinking_water_
+// disclosure, water_heater_earthquake_strap.
+// ---------------------------------------------------------------------------
+
+async fn rental_hot_water_temperature_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHotWaterTemperatureInput>,
+) -> Result<Json<RentalHotWaterTemperatureResult>, ApiError> {
+    Ok(Json(check_rental_hot_water_temperature(&b)))
 }
 
 // ---------------------------------------------------------------------------
