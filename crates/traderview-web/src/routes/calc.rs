@@ -171,6 +171,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6707a",         post(section_6707a_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
+        .route("/calc/section-6862",          post(section_6862_route))
         .route("/calc/section-6863",          post(section_6863_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
@@ -5130,6 +5131,31 @@ async fn section_6861_route(
     Json(b): Json<traderview_expense::section_6861::Section6861Input>,
 ) -> Result<Json<traderview_expense::section_6861::Section6861Result>, ApiError> {
     Ok(Json(traderview_expense::section_6861::check(&b)))
+}
+
+// ── §6862 jeopardy assessment of taxes other than income, estate, ───
+// gift, and certain excise taxes. Mounted at /api/calc/section-6862.
+// § 6862(a) — if Secretary believes collection of any tax (OTHER than
+// income tax + estate tax + gift tax + chapter 41/42/43/44 excise
+// taxes) will be jeopardized by delay, Secretary shall immediately
+// assess tax; whether or not due date for return and payment has
+// expired; immediately due and payable. § 6862(b) — § 6331(a) levy
+// without regard to 10-day notice requirement. In-scope taxes:
+// employment (§ 3402 + § 3111 + § 3301 + § 3406) + excise non-
+// chapter-41-44 (alcohol § 5001 + tobacco § 5701 + fuel § 4081 +
+// manufacturer § 4221 + communications § 4251 + air transportation
+// § 4261) + foreign withholding (§§ 1441-1446 + FATCA chapter 4).
+// § 7429 procedural cluster — Chief Counsel personal approval + 5-
+// day SPECIFIC FACTS AND REASONS statement (not mere conclusions) +
+// 30-day administrative + 90-day judicial review + burden split. §
+// 6862 + § 6863(b)(3)(A) sale prohibition SPECIFICALLY applies to
+// § 6862(a) (not § 6861). Companion to § 6851 + § 6861 + § 6863 +
+// § 7429 jeopardy/termination cluster.
+async fn section_6862_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6862::Section6862Input>,
+) -> Result<Json<traderview_expense::section_6862::Section6862Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6862::check(&b)))
 }
 
 // ── §6863 stay of collection of jeopardy assessments ────────────────
