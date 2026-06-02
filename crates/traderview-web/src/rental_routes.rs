@@ -753,6 +753,11 @@ use traderview_expense::rental_balcony_inspection_seismic_safety::{
     check as check_rental_balcony_inspection_seismic_safety,
     RentalBalconyInspectionSeismicSafetyInput, RentalBalconyInspectionSeismicSafetyResult,
 };
+use traderview_expense::rental_short_term_subletting_airbnb_restriction::{
+    check as check_rental_short_term_subletting_airbnb_restriction,
+    RentalShortTermSublettingAirbnbRestrictionInput,
+    RentalShortTermSublettingAirbnbRestrictionResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1220,6 +1225,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-solar-panel-disclosure", axum::routing::post(rental_solar_panel_disclosure_route))
         .route("/rental-storage-unit-lease-disclosure", axum::routing::post(rental_storage_unit_lease_disclosure_route))
         .route("/rental-balcony-inspection-seismic-safety", axum::routing::post(rental_balcony_inspection_seismic_safety_route))
+        .route("/rental-short-term-subletting-airbnb-restriction", axum::routing::post(rental_short_term_subletting_airbnb_restriction_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10552,4 +10558,39 @@ async fn rental_balcony_inspection_seismic_safety_route(
     Json(b): Json<RentalBalconyInspectionSeismicSafetyInput>,
 ) -> Result<Json<RentalBalconyInspectionSeismicSafetyResult>, ApiError> {
     Ok(Json(check_rental_balcony_inspection_seismic_safety(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_short_term_subletting_airbnb_restriction (iter 513): Trader-landlord
+// tenant STR (Airbnb / VRBO / Booking.com) restriction framework. Five
+// jurisdictions: NYC (LL 18 of 2021 effective September 5 2023 + NY RPL
+// § 226-b + 6 RCNY § 1-04 + Mayor's Office of Special Enforcement + $145
+// registration fee + primary-residence host present + < 30 days rental
+// + listings plunged > 90pct post-effective), LA (LAMC § 12.22 A.32 Home-
+// Sharing Ordinance + 120-night annual cap + LA County Code § 4.72 TOT
+// + Department of City Planning registration), SF (SF Admin Code Ch. 41A
+// + Office of Short-Term Rentals + $925 [2025] registration + Treasurer-
+// Tax Collector dual registration + 90-night non-hosted cap + SF Rent
+// Ordinance § 37 + Costa-Hawkins), Boston (Boston Ord. § 9-14 + Mass.
+// Gen. Laws ch. 64G Room Occupancy Excise 5.7pct state + 6pct Boston
+// locally-set = 11.7pct effective + Cape Cod 2.75pct Wastewater + 3pct
+// Community Impact + three categories limited share/home share/owner-
+// adjacent), Default (common-law lease assignment + state TOT framework).
+// Three lease term types: ExplicitNoSublettingAirbnbClause, Subletting-
+// RequiresLandlordConsent, LeaseSilentDefaultStateRule. Four STR statuses:
+// OperatingWithoutLandlordConsent, OperatingWithWrittenLandlordConsent,
+// NotOperatingStr, PrimaryResidenceHostPresentLimitedShare. Eight-mode
+// severity ladder including LeaseBreachUnauthorizedSublet (100pct rent +
+// STR revenue disgorgement), MunicipalStrRegistrationMissing (50pct rent),
+// PrimaryResidenceRequirementViolated (50pct rent), AnnualNightCapExceeded
+// (50pct rent), RoomOccupancyExciseTaxNotCollected (50pct rent + Form
+// ST-7 monthly return).
+// ---------------------------------------------------------------------------
+
+async fn rental_short_term_subletting_airbnb_restriction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalShortTermSublettingAirbnbRestrictionInput>,
+) -> Result<Json<RentalShortTermSublettingAirbnbRestrictionResult>, ApiError> {
+    Ok(Json(check_rental_short_term_subletting_airbnb_restriction(&b)))
 }
