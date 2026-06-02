@@ -689,6 +689,10 @@ use traderview_expense::rental_septic_system_disclosure::{
     check as check_rental_septic_system_disclosure,
     RentalSepticSystemDisclosureInput, RentalSepticSystemDisclosureResult,
 };
+use traderview_expense::rental_sewer_lateral_responsibility::{
+    check as check_rental_sewer_lateral_responsibility,
+    RentalSewerLateralResponsibilityInput, RentalSewerLateralResponsibilityResult,
+};
 use traderview_expense::rental_pesticide_application_notification::{
     check as check_rental_pesticide_application_notification,
     RentalPesticideApplicationNotificationInput,
@@ -1123,6 +1127,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
         .route("/rental-septic-system-disclosure", axum::routing::post(rental_septic_system_disclosure_route))
+        .route("/rental-sewer-lateral-responsibility", axum::routing::post(rental_sewer_lateral_responsibility_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
@@ -7770,6 +7775,56 @@ async fn rental_septic_system_disclosure_route(
     Json(b): Json<RentalSepticSystemDisclosureInput>,
 ) -> Result<Json<RentalSepticSystemDisclosureResult>, ApiError> {
     Ok(Json(check_rental_septic_system_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_sewer_lateral_responsibility: Multi-jurisdictional rental
+// property PRIVATE SEWER LATERAL (PSL) inspection, compliance, and
+// landlord-responsibility framework. When a landlord rents a property
+// connected to municipal sewer service, what ownership/maintenance/
+// inspection obligations apply to the private sewer lateral (the pipe
+// connecting the building to the public sewer main), what point-of-
+// sale compliance certificate requirements apply, and what failure-
+// mode liabilities expose landlord after a sewage backup into the
+// dwelling unit? Mounted at POST /api/rental/rental-sewer-lateral-
+// responsibility. Four-jurisdiction framework: EBMUD Regional PSL
+// Program (MOST PRESCRIPTIVE — Alameda + Albany + Emeryville + Oakland
+// + Piedmont + El Cerrito + Kensington + Richmond Annex; three POS
+// triggers (property sale + $100K remodel + water meter change);
+// Compliance Certificate 20-year validity for complete replacement /
+// 7-year for repair; $4,500 Time Extension Certificate deposit for
+// 6-month grace period; property owner responsible for ENTIRE
+// lateral from home to public main except Alameda + Albany where
+// responsibility ends at property line/curbside cleanout); Berkeley
+// Municipal Code Chapter 17.16 PSL Program (effective November 3,
+// 2014, separate program from EBMUD); Massachusetts (M.G.L. c. 83
+// § 7 owner-maintenance duty + M.G.L. c. 21 § 26-53 Clean Waters Act
+// + 314 C.M.R. 12.00 sewer use regulations); Default (common-law
+// implied warranty of habitability per Hilder v. St. Peter, 478 A.2d
+// 202 (Vt. 1984) + Green v. Superior Court, 10 Cal. 3d 616 (1974) +
+// Cal. Civ. Code § 1941.1 + Clean Water Act 33 U.S.C. § 1342 NPDES).
+// Five universal failure-mode liabilities: tree-root intrusion
+// (leading cause); aged clay (1900-1965) or Orangeburg (1945-1972)
+// or cast-iron (1900-1980) pipe collapse ($5K-$15K trenchless CIPP
+// or $15K-$40K open-cut); stormwater inflow and infiltration (I&I)
+// Clean Water Act violation; cross-connection with storm drain
+// illicit discharge; failure to obtain POS Compliance Certificate
+// at EBMUD-region sale. Inspection methodology: video camera scope
+// + hydro-jet cleaning + air-pressure test + dye/smoke test ($400-
+// $1,000 per inspection); 5-year general best-practice interval.
+// Distinct from siblings rental_septic_system_disclosure (iter 465
+// — OSTDS for non-municipal sewer), rental_basement_water_intrusion_
+// disclosure, rental_water_submetering_disclosure, rent_abatement_
+// construction_nuisance, mid_tenancy_temporary_relocation, tenant_
+// emotional_distress_damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_sewer_lateral_responsibility_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSewerLateralResponsibilityInput>,
+) -> Result<Json<RentalSewerLateralResponsibilityResult>, ApiError> {
+    Ok(Json(check_rental_sewer_lateral_responsibility(&b)))
 }
 
 // ---------------------------------------------------------------------------
