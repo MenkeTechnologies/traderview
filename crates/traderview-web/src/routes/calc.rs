@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6303",          post(section_6303_route))
         .route("/calc/section-6304",          post(section_6304_route))
+        .route("/calc/section-6306",          post(section_6306_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6321",          post(section_6321_route))
         .route("/calc/section-6323",          post(section_6323_route))
@@ -2795,6 +2796,31 @@ async fn section_6304_route(
     Json(b): Json<traderview_expense::section_6304::Section6304Input>,
 ) -> Result<Json<traderview_expense::section_6304::Section6304Result>, ApiError> {
     Ok(Json(traderview_expense::section_6304::check(&b)))
+}
+
+// ── §6306 Qualified Tax Collection Contracts (PCAs) ─────────────────
+// Mounted at /api/calc/section-6306. American Jobs Creation Act of
+// 2004 § 881-added private collection agency program; made
+// MANDATORY by FAST Act of 2015 § 32102 for inactive tax
+// receivables. § 6306(c) inactive defined as (1) removed from
+// active inventory, (2) > 2 years post-assessment unassigned, or
+// (3) > 365 days no contact on assigned receivable. § 6306(d) 8+
+// exclusion categories (pending OIC/IA, innocent spouse, deceased,
+// under 18, combat zone, identity theft, examination/litigation/
+// criminal/levy, appeals, disability/SSI under § 223 or title XVI,
+// AGI ≤ 200% federal poverty level per Taxpayer First Act of 2019
+// § 1205). § 6306(b) 7-year installment agreement cap. § 6306(e)
+// PCA restrictions (no enforcement, no § 7521(b)(2) audio
+// recording). § 6306(f) § 6304 + § 7433 + FDCPA extend to PCA
+// contractor. § 6306(j) 25%/25%/50% revenue split. Trader-relevant
+// for old IRS receivables that become inactive and get assigned
+// to one of four authorized PCAs (CBE Group, Coast Professional,
+// ConServe, Pioneer Credit Recovery).
+async fn section_6306_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6306::Section6306Input>,
+) -> Result<Json<traderview_expense::section_6306::Section6306Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6306::check(&b)))
 }
 
 // ── §6320 Collection Due Process (CDP) for liens ────────────────────
