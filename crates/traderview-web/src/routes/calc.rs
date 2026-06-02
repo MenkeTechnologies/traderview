@@ -81,6 +81,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-221",           post(section_221_route))
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
+        .route("/calc/section-245a",          post(section_245a_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
@@ -3711,6 +3712,39 @@ async fn section_243_route(
         ));
     }
     Ok(Json(traderview_expense::section_243::compute(&b)))
+}
+
+// ── § 245A Deduction for Foreign-Source-Portion of Dividends (TCJA
+// participation exemption "territorial" system) ──────────────────────
+// Mounted at /api/calc/section-245a (iter 502). Pure compute. TCJA 2017
+// Pub. L. 115-97 § 14101 enacted § 245A effective for distributions made
+// after December 31, 2017. 100% dividends-received deduction for foreign-
+// source-portion of dividend received by domestic C corporation from
+// Specified 10-Percent Owned Foreign Corporation (SFC) per § 245A(b)
+// (any foreign corp other than PFIC-not-CFC with respect to which any
+// domestic corp is a § 951(b) 10%-or-more US shareholder). § 246(c)(1)
+// holding period requirement: domestic corp must hold SFC stock for more
+// than 365 days in 731-day window beginning 365 days before ex-dividend
+// date. § 245A(d) coordination: NO FTC or § 164(a) deduction allowed for
+// foreign tax (including withholding) on DRD-eligible dividend per
+// § 275(a)(4) — permanent book-tax difference. § 245A(e) hybrid dividend
+// rule: dividend where foreign corp received foreign tax deduction or
+// similar tax benefit is recharacterized as Subpart F inclusion, no DRD,
+// no FTC; hybrid deduction account reduced per Treas. Reg. § 1.245A(e)-
+// 1(d). Treas. Reg. § 1.245A-5 anti-abuse for extraordinary disposition
+// / extraordinary reduction. Form 1120 Schedule C; Form 8993 if § 250
+// also claimed. Coordinates with § 951A (GILTI / post-OBBBA NCTI residual),
+// § 250 (FDII / GILTI / NCTI deduction), § 1297 (PFIC mutually exclusive),
+// § 1248 (gain on CFC stock sale recharacterized as dividend eligible
+// for § 245A DRD), § 243 (domestic DRD parallel framework), § 59A (BEAT),
+// § 56A (CAMT — § 245A-deductible amount excluded from CAMT AFSI per
+// § 56A(c)(2)(C)).
+
+async fn section_245a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_245a::Section245aInput>,
+) -> Result<Json<traderview_expense::section_245a::Section245aResult>, ApiError> {
+    Ok(Json(traderview_expense::section_245a::check(&b)))
 }
 
 // ── §250 GILTI/FDII (NCTI/FDDEI post-OBBBA 2025) deduction ──────────
