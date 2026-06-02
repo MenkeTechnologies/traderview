@@ -597,6 +597,10 @@ use traderview_expense::rental_elevator_safety_inspection::{
     check as check_rental_elevator_safety_inspection,
     RentalElevatorSafetyInspectionInput, RentalElevatorSafetyInspectionResult,
 };
+use traderview_expense::rental_fire_extinguisher_requirement::{
+    check as check_rental_fire_extinguisher_requirement,
+    RentalFireExtinguisherRequirementInput, RentalFireExtinguisherRequirementResult,
+};
 use traderview_expense::rental_flood_hazard_disclosure::{
     check as check_rental_flood_hazard_disclosure,
     FloodHazardDisclosureInput as RentalFloodHazardDisclosureInput,
@@ -1098,6 +1102,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
+        .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
@@ -7161,6 +7166,55 @@ async fn rental_elevator_safety_inspection_route(
 }
 
 // ---------------------------------------------------------------------------
+// rental_fire_extinguisher_requirement: Multi-jurisdictional rental
+// property FIRE EXTINGUISHER installation, inspection, and maintenance
+// compliance framework. When must a landlord provide portable fire
+// extinguishers to tenants, what travel-distance and visibility
+// standards apply, what inspection cycle is required, and what
+// failure-mode liabilities expose landlord after a fire event?
+// Mounted at POST /api/rental/rental-fire-extinguisher-requirement.
+// Four-jurisdiction framework: Texas (MOST SPECIFIC landlord duty —
+// Tex. Prop. Code § 92.252 + § 92.255 require inspection at occupancy
+// and within reasonable time after tenant written request; repair/
+// replace duty for non-functional + incorrect pressure + tenant-used
+// units of any landlord-provided 1A10BC residential extinguisher);
+// Massachusetts (527 C.M.R. 1.00 Comprehensive Fire Safety Code
+// adopting NFPA 10 by reference + M.G.L. c. 148 § 26G + § 28A;
+// multifamily 3+ unit common-area extinguishers per local fire-
+// marshal authority); New Jersey (N.J.A.C. 5:70-3 NJ Uniform Fire
+// Code adopting NFPA 10; landlords not legally required to provide
+// extinguishers absent lease contract or local ordinance but any
+// installed unit must be maintained per NFPA 10; N.J.S.A. 46:8-39
+// to -50 hotel/multiple-dwelling registration); Default (NFPA 10
+// voluntary national standard adopted by reference in most state
+// fire codes + common-law implied warranty of habitability per
+// Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) + Cal. Civ. Code
+// § 1941.1). NFPA 10 five-cycle inspection framework: monthly visual
+// inspection; annual maintenance by certified technician; six-year
+// internal examination for dry-chemical units; twelve-year hydrostatic
+// test for pressure-vessel integrity; recharge after every use
+// including partial discharge (Tex. Prop. Code § 92.255 explicit).
+// NFPA 10 placement: Class A max 75-ft travel distance; Class B 30
+// or 50 ft; mounting height max 5 ft (handle from floor) up to 40
+// lbs; max 3 ft 6 in over 40 lbs. Five universal failure-mode
+// liabilities: non-functional extinguisher during fire; no
+// extinguisher in required multifamily; tenant-used unit not
+// recharged (§ 92.255 violation); tenant complaint ignored; fire
+// injury event. Distinct from siblings rental_chimney_fireplace_
+// inspection_disclosure (iter 471), rental_carbon_monoxide_detector,
+// tenant_fire_safety_plan_disclosure, rental_bedroom_egress_window,
+// rental_window_blind_cord_safety (iter 469), rental_swimming_pool_
+// drain_safety, landlord_retaliation_damages, tenant_emotional_
+// distress_damages.
+
+async fn rental_fire_extinguisher_requirement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFireExtinguisherRequirementInput>,
+) -> Result<Json<RentalFireExtinguisherRequirementResult>, ApiError> {
+    Ok(Json(check_rental_fire_extinguisher_requirement(&b)))
+}
+
 // rental_flood_hazard_disclosure: multi-jurisdictional residential rental
 // flood hazard disclosure framework — climate-era statutory disclosure
 // regime added across multiple states between 2018 and 2024. Cal. Gov.
