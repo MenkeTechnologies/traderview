@@ -80,6 +80,7 @@ pub mod landlord_self_help_eviction_prohibition;
 pub mod landlord_tenant_recording_consent;
 pub mod landlord_lien_prohibition;
 pub mod landlord_mid_tenancy_rekeying;
+pub mod landlord_pest_extermination_timeline;
 pub mod holdover_tenant_damages;
 pub mod hoa_fee_tenant_enforcement;
 pub mod hoa_rental_restriction;

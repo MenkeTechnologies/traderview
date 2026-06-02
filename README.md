@@ -2900,6 +2900,53 @@ Mounted at `POST /api/rental/landlord-emergency-entry-notice`. Twenty-five tests
 
 Mounted at `POST /api/rental/landlord-mid-tenancy-rekeying`. Twenty-six tests pin: **TX compliant passes**; **TX tenant pays for key lost**; **TX landlord pays for master key change**; **TX landlord pays for security upgrade**; **TX past 7-day window violates**; **TX at 168 boundary compliant**; **TX 169 hours violates**; **TX no new keys violates**; **TX interior door excluded**; **TX remedies note describes one month rent and $500**; **TX citation pins Subchapter D sections**; **CA compliant within reasonable time**; **CA burglary landlord pays**; **CA past reasonable time violates**; **CA citation pins subsections**; **default compliant always**; **default tenant pays for key lost**; **default landlord pays for security upgrade**; **three regimes routed correctly**; **TX unique remedies invariant**; **rekey reason cost allocation truth table** (6-reason sweep); **no tenant request no engagement**; **TX clean no violations**; **CA clean no violations**; **default clean no violations**; **TX uniquely explicit 7-day window invariant** (3-regime sweep).
 
+`traderview-expense::landlord_pest_extermination_timeline` is the **multi-jurisdictional landlord pest extermination response timeline framework module** — general pest infestation response (rodents, cockroaches, ants, termites, beyond bed bugs). Distinct from sibling `bedbug_extermination_cost` (bed-bug specific cost allocation), `bedbug_disclosure` (bed-bug prior-occurrence disclosure within 1-3 years), `rental_pesticide_application_notification` (24-72 hour pre-application notice), `pesticide_application_notice` (general pesticide framework). Trader-landlord critical because pest infestations routinely give rise to tenant rent-withholding claims, NYC HPD violations + $250-$1,000 daily fines, civil penalties under state habitability warranties, and tort liability for disease transmission.
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Source | Standard |
+|--------------|--------|----------|
+| **New York City** | NYC HMC § 27-2018 + NYC Local Law 55 of 2018 (IPM) | Continuous eradication; 3+ unit buildings require annual inspection + least-toxic methods + 72-hour pesticide notification + 3-year recordkeeping |
+| **California** | Cal. Civ. Code § 1941.1(a)(8) + Cal. Civ. Code § 1942 | Rodent/vermin-free standard; tenant § 1942 repair-and-deduct up to $1,000 OR 1 month rent |
+| **Massachusetts** | 105 CMR 410.550 + Mass. Gen. Laws c. 111 § 127A | Owner extermination duty; Board of Health enforcement; criminal contempt for non-compliance |
+| **Default** | URLTA § 2.104(a)(2) + Restatement (Second) of Property § 5.1 | Implied warranty of habitability |
+
+**NYC HMC § 27-2018 pest definitions (broad coverage)**:
+1. Class Insecta: houseflies, lice, bees, cockroaches, moths, silverfish, beetles, bedbugs, ants, termites, hornets, mosquitoes, wasps
+2. Phylum Arthropoda: spiders, mites, ticks, centipedes, wood lice
+3. Order Rodentia: mice, Norway rats, other unwanted rodents
+4. Any other unwanted plant, animal or fungal life that is destructive, annoying or a nuisance
+
+**NYC HPD violation classes**:
+- **CLASS A** (non-hazardous) — 90-day correction; no daily civil penalty
+- **CLASS B** (hazardous) — 30-day correction; **$25-$250 daily civil penalty**
+- **CLASS C** (immediately hazardous) — 24-hour correction; **$250-$1,000 daily civil penalty**
+
+Pest infestations involving rodents in multi-family buildings typically Class B or Class C.
+
+**NYC Local Law 55 of 2018 (Integrated Pest Management) — 5 requirements for 3+ unit buildings**:
+1. ANNUAL inspection for pest infestations and conducive conditions
+2. CONTINUOUS eradication measures upon discovery
+3. LEAST-TOXIC pest control methods first
+4. Tenant 72-hour pre-pesticide notification under NYC HMC § 27-2017.3
+5. 3-year recordkeeping of all pest control activities
+
+**Severity-graded response timeline (industry-standard interpretation)**:
+- **EMERGENCY** (rodent infestation with health hazard, severe occupied-unit cockroach) — **24 HOURS** to commence
+- **STANDARD** (visible cockroach activity, mouse sightings) — **14 DAYS** NY/MA + **30 DAYS** CA/Default
+- **PREVENTIVE** (conducive conditions only, no active pests) — **30 DAYS** to remediate
+
+**Tenant remedies under habitability warranty**:
+1. **RENT WITHHOLDING** — Park West Mgmt. Corp. v. Mitchell, 47 N.Y.2d 316 (1979) in NY; Green v. Superior Court, 10 Cal. 3d 616 (1974) in CA; Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973) in MA
+2. **REPAIR AND DEDUCT** — CA Cal. Civ. Code § 1942 up to $1,000 OR 1 month rent; URLTA § 4.103 up to $300 per repair / $600 per year
+3. **RENT ABATEMENT** — 50-100% of rent during habitability breach period
+4. **CONSTRUCTIVE EVICTION** — vacate with full rent relief
+5. **PUBLIC ENFORCEMENT** — NYC HPD complaint with 7-10 day inspection / CA local building inspector or environmental health / MA Board of Health under Mass. Gen. Laws c. 111 § 127A with criminal contempt
+
+**Trader-landlord critical fact patterns**: (1) NYC 8-unit building rodent infestation 30-day delay — HPD CLASS C violation $1,000/day plus tenant rent withholding; (2) CA SFR cockroach infestation 60-day delay — § 1942 repair-and-deduct up to $1,000 OR 1 month rent; (3) MA triple-decker mouse infestation — 105 CMR 410.550 Board of Health enforcement with criminal contempt; (4) NYC LL 55 missed annual inspection — Class B violation $25-$250 daily; (5) URLTA-jurisdiction failure — § 2.104(a)(2) breach with § 4.105 termination remedy.
+
+Mounted at `POST /api/rental/landlord-pest-extermination-timeline`. Thirty tests pin: **NYC standard 14-day timely**; **NYC standard past 14 days breach**; **emergency 24-hour window**; **CA standard 30-day window**; **MA standard 14-day window**; **default URLTA 30-day window**; **preventive 30-day window**; **no eradication commenced breach**; **NYC LL 55 missing annual inspection**; **NYC LL 55 missing least-toxic**; **NYC LL 55 missing 72-hour notification**; **small building no LL 55 obligation**; **NYC Class C max civil penalty** ($1,000 daily); **NYC Class B max civil penalty** ($250 daily); **NYC Class A no civil penalty**; **habitability breach unlocks tenant remedies**; **NYC unlocks HPD complaint remedy**; **CA unlocks local code enforcement remedy**; **MA unlocks Board of Health remedy** (§ 127A + criminal contempt); **jurisdiction-severity truth table** (4 × 3 = 12 cells); **emergency uniquely 24-hour invariant**; **citation pins all authorities** (NYC HMC § 27-2018 + NYC HMC § 27-2017.1 + NYC HMC § 27-2017.3 + NYC LL 55 2018 + Cal. Civ. Code § 1941.1(a)(8) + Cal. Civ. Code § 1942 + 105 CMR 410.550 + Mass. Gen. Laws c. 111 § 127A + URLTA § 2.104(a)(2) + URLTA § 4.105 + Restatement (Second) Property + Park West v. Mitchell + Green v. Superior Court + Boston Housing Auth. v. Hemingway); **note pins four-jurisdiction framework**; **note pins NYC § 27-2018 pest definitions**; **note pins NYC HPD violation classes**; **note pins Local Law 55 five requirements**; **note pins response timeline**; **note pins habitability remedies with case law**; **note pins trader fact patterns five**; **note pins companion modules**.
+
 `traderview-expense::landlord_property_sale_notice` is the **multi-jurisdictional landlord property sale notice and security deposit transfer disclosure module** — trader-landlord critical because traders who exit rental property via sale must comply with state-by-state security deposit transfer plus new owner notice requirements within tight statutory windows. Failure triggers **JOINT AND SEVERAL LIABILITY** of seller and buyer for the deposit, exposes seller to **TREBLE DAMAGES** in Massachusetts, and stacks Federal PTFA 90-day notice obligations during foreclosure sales. Companion to `security_deposit_bank_disclosure`, `deposit_interest`, `deposit_return_windows`, `foreclosure_tenant_rights`, `landlord_identification_disclosure`, `tenant_estoppel_certificate`.
 
 **Four-jurisdiction framework**:

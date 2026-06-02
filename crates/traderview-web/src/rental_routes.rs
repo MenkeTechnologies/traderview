@@ -518,6 +518,10 @@ use traderview_expense::commercial_lease_cam_charge_disclosure::{
     check as check_commercial_lease_cam_charge_disclosure,
     CommercialLeaseCamChargeDisclosureInput, CommercialLeaseCamChargeDisclosureResult,
 };
+use traderview_expense::landlord_pest_extermination_timeline::{
+    check as check_landlord_pest_extermination_timeline,
+    LandlordPestExterminationTimelineInput, LandlordPestExterminationTimelineResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1027,6 +1031,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
+        .route("/landlord-pest-extermination-timeline", axum::routing::post(landlord_pest_extermination_timeline_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6401,6 +6406,45 @@ async fn commercial_lease_cam_charge_disclosure_route(
     Json(b): Json<CommercialLeaseCamChargeDisclosureInput>,
 ) -> Result<Json<CommercialLeaseCamChargeDisclosureResult>, ApiError> {
     Ok(Json(check_commercial_lease_cam_charge_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord pest extermination response timeline framework.
+//
+// Mounted at POST /api/rental/landlord-pest-extermination-timeline.
+// Four-jurisdiction framework + severity-graded timelines:
+// (1) New York City — NYC HMC § 27-2018 continuous eradication
+// duty + broad pest definition (Class Insecta + Phylum Arthropoda
+// + Order Rodentia); NYC Local Law 55 of 2018 Integrated Pest
+// Management for 3+ unit buildings (annual inspection + least-
+// toxic methods + 72-hour pesticide notification + 3-year
+// recordkeeping); NYC HPD Class A/B/C violation classes ($25-
+// $1,000 daily civil penalties); (2) California — Cal. Civ.
+// Code § 1941.1(a)(8) rodent/vermin-free standard + Cal. Civ.
+// Code § 1942 repair-and-deduct up to $1,000 or 1 month rent;
+// (3) Massachusetts — 105 CMR 410.550 owner extermination duty
+// + Mass. Gen. Laws c. 111 § 127A Board of Health enforcement +
+// criminal contempt for non-compliance; (4) Default — URLTA
+// § 2.104(a)(2) + Restatement (Second) of Property § 5.1
+// implied warranty of habitability. Severity-graded response:
+// EMERGENCY (rodent health hazard) 24 hours; STANDARD 14 days
+// NY/MA or 30 days CA/Default; PREVENTIVE 30 days. Habitability
+// remedies: rent withholding (Park West v. Mitchell + Green v.
+// Superior Court + Boston Housing Auth. v. Hemingway), repair
+// and deduct, rent abatement 50-100%, constructive eviction,
+// public enforcement. Distinct from bedbug_extermination_cost
+// (bed-bug specific) + bedbug_disclosure (prior-occurrence) +
+// rental_pesticide_application_notification (pre-application
+// notice). Sibling cluster: habitability_remedies, landlord_
+// repair_response_timeframe.
+// ---------------------------------------------------------------------------
+
+async fn landlord_pest_extermination_timeline_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordPestExterminationTimelineInput>,
+) -> Result<Json<LandlordPestExterminationTimelineResult>, ApiError> {
+    Ok(Json(check_landlord_pest_extermination_timeline(&b)))
 }
 
 // ---------------------------------------------------------------------------
