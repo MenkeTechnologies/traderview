@@ -126,6 +126,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162a",          post(section_162a_route))
         .route("/calc/section-162f",          post(section_162f_route))
+        .route("/calc/section-162l",          post(section_162l_route))
         .route("/calc/section-162m",          post(section_162m_route))
         .route("/calc/section-7502",          post(section_7502_route))
         .route("/calc/section-7503",          post(section_7503_route))
@@ -5162,6 +5163,41 @@ async fn section_162f_route(
         ));
     }
     Ok(Json(traderview_expense::section_162f::compute(&b)))
+}
+
+// ── § 162(l) Self-Employed Health Insurance Above-The-Line Deduction ─
+// Mounted at /api/calc/section-162l (iter 508). Pure compute. § 162(l)
+// allows sole proprietors, partners, S corp >2% shareholders, and
+// single-member LLC owners to deduct medical/dental/long-term care
+// premiums above the line on Schedule 1 line 17 — bypasses § 213 7.5%
+// AGI floor. Six business structures: SoleProprietorOrSingleMemberLlc
+// (Sch C net profit minus 1/2 SE tax minus SE retirement = earned
+// income limit), PartnershipPartner (K-1 box 14 code A minus 1/2 SE
+// tax minus SE retirement), SCorporationShareholderOver2Pct (W-2 box 1
+// wages = limit; premiums must be in W-2 box 1 per Notice 2008-1 +
+// excluded from FICA under § 3121(a)(2)(B)), SCorporationShareholder-
+// TwoPctOrLess (ordinary § 106 employer exclusion not § 162(l)),
+// CCorporationShareholder (not eligible), W2EmployeeOnly (not eligible).
+// Three premium types: MedicalDentalHealth, QualifiedLongTermCare (subject
+// to § 213(d)(10) age-based dollar caps via § 7702B(b)), MedicarePart-
+// ABCD (deductible per CCA 201228037 July 13 2012). § 162(l)(2)(B)
+// double-coverage prohibition disallows deduction month-by-month when
+// taxpayer or spouse eligible for subsidized employer-sponsored plan.
+// § 162(l)(2)(B) plan-establishment requirement: plan must be in name
+// of business or owner per Notice 2008-1 + Rev. Proc. 79-46. Form 7206
+// dedicated computation form effective tax years beginning after Dec
+// 31 2022. Six-mode severity ladder including DeductionLimitedByEarned-
+// Income + DoubleCoverageDisallowedForMonth + PlanNotEstablishedThrough-
+// Business + DeductionAllowedFullPremium. Coordinates with § 213
+// (itemized medical), § 106 (employer health exclusion), § 7702B (LTC),
+// § 401(c)(2) (earned income), § 1372 (S corp fringe), § 4980H (ACA
+// employer mandate), § 36B (Marketplace premium tax credit).
+
+async fn section_162l_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_162l::Section162lInput>,
+) -> Result<Json<traderview_expense::section_162l::Section162lResult>, ApiError> {
+    Ok(Json(traderview_expense::section_162l::check(&b)))
 }
 
 // ── § 162(m) $1M public-company executive comp deduction limit ───────
