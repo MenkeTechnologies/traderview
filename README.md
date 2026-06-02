@@ -6527,6 +6527,43 @@ Mounted at `POST /api/calc/section-530`. Twenty-two tests pin: **single under $9
 
 Mounted at `POST /api/calc/section-59a`. Twenty-nine tests pin: **2018 phase-in 5% standard + 6% banks**; 2019/2025 standard 10%; **2025 banks 11%**; **2026 post-OBBBA permanent 10.5%** (NOT TCJA's scheduled 12.5%); **2026 banks 11.5%**; year boundary 2025 pre-OBBBA / 2026 post-OBBBA; **gross receipts below $500M fails gate**; 3-yr average computed correctly across uneven years (1B + 500M + 300M = 600M); **gross receipts exactly $500M meets test** (boundary); **BEP exactly 3% meets standard threshold** ($30M / $1B); **BEP 2% fails standard** but **meets bank threshold**; S corp / REIT / RIC each categorically excluded under §59A(e)(2); **basic 2025 computation** ($100M TI + $50M base erosion = $150M MTI × 10% = $15M tentative ≤ $21M regular → BEAT = 0); **positive BEAT when tentative exceeds regular** ($15M − $10M = $5M); **post-OBBBA 10.5% case** ($150M × 10.5% − $10M = $5.75M); **BEAT zero when not applicable regardless of arithmetic** (BEP-fail short-circuits); **NOL addback proportional to BEP** ($10M × 5% = $500k MTI bump); citation mentions TCJA + §14401 + OBBBA + 10.5%; note for 2025 says "pre-OBBBA TCJA regime"; note for 2026 says "post-OBBBA permanent regime"; **zero deductions yields zero BEP** (divide-by-zero defensive); **negative taxable income floors tentative at zero** (MTI.max(0) regression target).
 
+`traderview-expense::section_67g` is the **IRC § 67(g) TCJA misc itemized deduction suspension module** — single most important reason traders ELECT trader status under § 475(f). Added by Tax Cuts and Jobs Act of 2017 § 11045 (Pub. L. 115-97, December 22, 2017); originally scheduled to sunset after December 31, 2025; **One Big Beautiful Bill Act of 2025 (H.R. 1, signed July 4, 2025) made § 67(g) PERMANENT** — no further sunset. Companion to `section_475` (trader mark-to-market election), `section_162` (trade-or-business deductions), `section_212` (production-of-income expenses — now suspended), `section_67e` (estates/trusts carveout), `section_1411` (NIIT 3.8% — trader business income exempt).
+
+Trader-critical fact patterns:
+
+- **Investor WITHOUT § 475(f) trader status** — ALL investment-related expenses NON-DEDUCTIBLE under § 67(g) (investment advisory fees, custody fees, subscription fees, financial publications, travel to investment seminars, home office, trading platform fees).
+- **Trader WITH § 475(f) trader status** — SAME expenses fully deductible as § 162 trade-or-business on Schedule C; ESCAPES § 67(g) suspension; ALSO exempt from § 1411 NIIT.
+- **Hedge fund LP investor (non-trader fund)** — K-1 § 212 expenses passed through as misc itemized → NON-DEDUCTIBLE.
+- **Hedge fund LP investor (trader-status fund)** — K-1 § 162 expenses passed through as Schedule C ordinary deductions → fully deductible.
+- **Estates and trusts** — § 67(e) carveout preserves administration expense deductibility per Treas. Reg. § 1.67-4 + IRS Notice 2018-61.
+
+**§ 67(g) operative provision** — notwithstanding subsection (a), NO MISCELLANEOUS ITEMIZED DEDUCTION shall be allowed for any taxable year beginning AFTER DECEMBER 31, 2017. **PERMANENT after OBBBA 2025**.
+
+**§ 67(b) twelve exempt categories** (NOT subject to § 67(g) suspension):
+
+| # | Source | Item |
+|---|--------|------|
+| 1 | § 67(b)(1) | § 163 interest |
+| 2 | § 67(b)(2) | § 164 taxes |
+| 3 | § 67(b)(3) | § 165(a) casualty losses |
+| 4 | § 67(b)(4) | § 170 charitable contributions |
+| 5 | § 67(b)(5) | § 213 medical expenses |
+| 6 | § 67(b)(6) | § 691(c) IRD deductions |
+| 7 | § 67(b)(7) | § 215 alimony (pre-2019 divorces) |
+| 8 | § 67(b)(8) | § 217 moving (armed forces post-TCJA) |
+| 9 | § 67(b)(9) | § 1341 claim of right |
+| 10 | § 67(b)(10) | Gambling losses |
+| 11 | § 67(b)(11) | § 642(c) trust/estate charity |
+| 12 | § 67(b)(12) | § 7702B(a)(2) qualified long-term care insurance |
+
+**§ 67(e) Estates and trusts carveout** — preserves deductibility of (1) costs incurred in connection with administration of estate/trust which would not have been incurred but for trust/estate; (2) distributions to beneficiaries; (3) distributable net income computations. Treas. Reg. § 1.67-4 + IRS Notice 2018-61 govern.
+
+**§ 475(f) trader election — single most important escape valve** from § 67(g) suspension: converts § 212 investment expenses into § 162 trade-or-business deductions on Schedule C; ALSO converts trading gain/loss to ordinary mark-to-market; ALSO exempts trader business income from § 1411 NIIT 3.8% surtax.
+
+**Items SUSPENDED by § 67(g)** — unreimbursed employee business expenses (Form 2106), investment advisory fees, investment custody/safekeeping fees, financial publication subscriptions, investment-related professional fees (CPA, attorney), home office (employee or investor), trading platform subscriptions (non-trader status), travel to investment seminars, tax-return preparation fees (individual), hobby losses, safe deposit box fees, § 212(1) production-of-income, § 212(2) management/conservation/maintenance, § 212(3) tax determination/collection.
+
+Mounted at `POST /api/calc/section-67g`. Thirty-six tests pin: **investor § 212 expense suspended zero deduction**; **trader § 212 expense escapes via § 475(f)**; **§ 162 business expense not suspended**; **§ 67(b) exempt item not suspended**; **estate admin expense preserved by § 67(e) carveout**; **estate § 212 expense still suspended**; **pre-TCJA 2017 no suspension**; **TCJA 2018 boundary engages suspension**; **OBBBA 2026 permanent engages**; **OBBBA 2025 not yet permanent**; **unreimbursed employee expense suspended**; **tax prep fee suspended**; **hobby loss suspended**; **hedge fund LP investor fund § 212 suspended**; **hedge fund LP trader fund § 212 escapes**; **investor § 212 post-TCJA emits § 475(f) escape valve note**; **taxpayer status truth table five cells**; **expense category truth table seven cells**; **trader status uniquely escapes § 212 suspension invariant**; **citation pins all authorities** (§ 67(a)-(g) + TCJA 2017 § 11045 + Pub. L. 115-97 + OBBBA 2025 + H.R. 1 + July 4, 2025 + § 162 + § 212 + § 67(b)(1)-(12) + § 67(e) + § 475(f) + § 1411 + Treas. Reg. § 1.67-4 + IRS Notice 2018-61); **note pins subsection (g) no misc itemized**; **note pins TCJA 2017 origin**; **note pins OBBBA 2025 permanent**; **note pins subsection (b) twelve exempt categories**; **note pins subsection (e) estate/trust carveout**; **note pins § 475(f) trader election escape valve**; **note pins suspended items comprehensive list**; **note pins trader fact patterns five**; **note pins PFIC interaction** (§ 1295 QEF + § 1296 mark-to-market); **note pins § 1411 NIIT interaction** (3.8% surtax compound); **deduction pathway text** for investor § 212 suspension / trader § 475(f) / § 67(b) exempt / § 67(e) estate; **defensive zero expense no failure reason**; **multiple failures stack**.
+
 `traderview-expense::section_6045a` is the **IRC §6045A broker-to-broker transfer statement module** — trader-critical for anyone changing brokers (transferring stock, options, debt, or digital-asset positions). § 6045A requires the TRANSFERRING broker (or other "applicable person") to furnish a written information statement to the RECEIVING broker within 15 days of the transfer. The receiving broker uses this statement to populate Form 1099-B basis reporting under § 6045 on the eventual sale. Direct sibling to `section_6045` (downstream Form 1099-B) and `section_6045b` (upstream issuer Form 8937).
 
 **Four operative subsections**:

@@ -80,6 +80,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6042",          post(section_6042_route))
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6049",          post(section_6049_route))
@@ -2807,6 +2808,35 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §67(g) TCJA misc itemized deduction suspension ────────────────────
+// Mounted at /api/calc/section-67g. § 67(g) added by Tax Cuts and Jobs
+// Act of 2017 § 11045 (Pub. L. 115-97, December 22, 2017); originally
+// scheduled to sunset after December 31, 2025; One Big Beautiful Bill
+// Act of 2025 (H.R. 1, signed July 4, 2025) made § 67(g) PERMANENT.
+// Trader-critical because § 67(g) is the single most important reason
+// traders ELECT trader status under § 475(f) — without trader status,
+// investment expenses (advisory fees, custody fees, subscription fees,
+// home office, trading platform fees, education, travel) become NON-
+// DEDUCTIBLE under § 67(g) because they are § 212 expenses subject to
+// the suspended 2%-of-AGI floor. With § 475(f) trader status, expenses
+// qualify as § 162 trade-or-business deductions on Schedule C and
+// ESCAPE § 67(g) suspension entirely. § 67(b) exempts 12 categories
+// (§ 163 interest + § 164 taxes + § 165(a) casualty + § 170 charity +
+// § 213 medical + § 691(c) IRD + § 215 alimony + § 217 moving (armed
+// forces) + § 1341 claim of right + gambling losses + § 642(c)
+// trust/estate charity + § 7702B(a)(2) qualified long-term care).
+// § 67(e) preserves estate/trust administration expense deductibility
+// per Treas. Reg. § 1.67-4 + IRS Notice 2018-61. Companion to § 475(f)
+// (trader election) + § 162 (Schedule C) + § 212 (production-of-income)
+// + § 1411 (NIIT 3.8% surtax — also exempts trader business income).
+
+async fn section_67g_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_67g::Section67gInput>,
+) -> Result<Json<traderview_expense::section_67g::Section67gResult>, ApiError> {
+    Ok(Json(traderview_expense::section_67g::check(&b)))
 }
 
 // ── §6045 broker information reporting (Form 1099-B / 1099-DA) ───────
