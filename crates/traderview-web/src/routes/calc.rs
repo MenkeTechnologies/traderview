@@ -110,6 +110,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
+        .route("/calc/section-7508",          post(section_7508_route))
         .route("/calc/section-7508a",         post(section_7508a_route))
         .route("/calc/section-7521",          post(section_7521_route))
         .route("/calc/section-7525",          post(section_7525_route))
@@ -2975,6 +2976,30 @@ async fn section_7508a_route(
     Json(b): Json<traderview_expense::section_7508a::Section7508AInput>,
 ) -> Result<Json<traderview_expense::section_7508a::Section7508AResult>, ApiError> {
     Ok(Json(traderview_expense::section_7508a::check(&b)))
+}
+
+// ── §7508 combat zone / contingency operation postponement ──────────
+// Mounted at /api/calc/section-7508. Trader-relevant for active-duty
+// military traders + military spouses serving in combat zones,
+// contingency operations, or qualified hazardous duty areas. § 7508(a)
+// IRS DISREGARDS time during (1) combat zone service (Executive Order
+// designated), (2) Secretary of Defense designated contingency
+// operation outside US, or (3) qualified hazardous duty area, PLUS
+// 180 days after last day in such area / operation / qualified
+// hospitalization. Hospitalization INSIDE the United States capped at
+// 5 years (1825 days); hospitalization OUTSIDE not capped. § 7508(b)
+// military spouse extension. § 7508(c) qualified hazardous duty area
+// includes Sinai Peninsula. Postponed acts include filing returns +
+// paying tax + § 6511 refund claims + § 6212 SNOD + § 6213
+// deficiency. Distinct from § 7508A presidentially-declared disaster
+// postponement (different qualifying event). 26 CFR § 301.7508-1; IRS
+// Notice 2003-21; IRS Form 15109; IRS Pub. 3 Armed Forces' Tax Guide.
+
+async fn section_7508_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7508::Section7508Input>,
+) -> Result<Json<traderview_expense::section_7508::Section7508Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7508::check(&b)))
 }
 
 // ── §7811 Taxpayer Assistance Orders (TAOs) ─────────────────────────

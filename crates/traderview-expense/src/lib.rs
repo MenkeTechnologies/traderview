@@ -340,6 +340,7 @@ pub mod section_7207;
 pub mod section_7434;
 pub mod section_7491;
 pub mod section_7502;
+pub mod section_7508;
 pub mod section_7508a;
 pub mod section_7521;
 pub mod section_7525;
