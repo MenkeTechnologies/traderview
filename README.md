@@ -8770,6 +8770,50 @@ Remaining gain capital gain (short-term or long-term from exercise). Employer ge
 
 Mounted at `POST /api/calc/section-422`. Thirty-one tests pin: **qualifying disposition LTCG only**; **qualifying disposition AMT preference on exercise**; **disqualifying disposition ordinary income**; **disqualifying lesser-of rule when sale below FMV exercise**; **same-year disqualifying reverses AMT**; **$100K limit no excess**; **$100K limit excess treated as NQSO**; **no shareholder plan ISO fails**; **price below FMV ISO fails**; **left company > 3 months ISO fails**; **exercise period > 10 years fails**; **holding period boundaries 2+1**; **no disposition AMT preference only**; **ISO fails statutory no AMT preference**; **disposition truth table four cells**; **same-year uniquely reverses AMT invariant**; **citation pins all authorities** (§ 422(a)-(d) + § 421(a)-(b) + § 56(b)(3) + § 56(b)(3)(B) + § 53 + § 1411 + § 162 + Treas. Reg. § 1.422-1 through § 1.422-5 + Treas. Reg. § 1.421-1 through § 1.421-2 + Form 3921 + IRS Pub. 525 + Rev. Rul. 71-52 + FTB Pub. 1004); **note pins § 422(b) six requirements**; **note pins § 422(d) $100K limit**; **note pins § 422(a) holding periods**; **note pins § 421(b) disqualifying lesser rule**; **note pins § 56(b)(3) AMT adjustment**; **note pins § 53 AMT credit**; **note pins § 422(c)(2) same-year reversal**; **note pins § 1411 NIIT 3.8%**; **note pins trader fact patterns five**; **note pins Form 3921**; **note pins California conformity**; **note pins companion modules**; **ISO uniquely generates AMT preference invariant**; **defensive overflow saturating**.
 
+`traderview-expense::section_423` is the **IRC § 423 Employee Stock Purchase Plan (ESPP) module** — direct companion to `section_422` (ISO — iter 438), `section_475c2` (trader mark-to-market), `section_1411` (NIIT 3.8% on net investment income), `section_421` (statutory option framework), `section_424` (constructive ownership rules). Trader-critical because traders working at public companies routinely participate in qualified ESPPs that grant up to 15% discount with optional LOOK-BACK provision (effective discount can substantially exceed 15% due to intra-period appreciation).
+
+**§ 423(b) ESPP statutory requirements (9 conditions)**:
+
+| Subsection | Requirement |
+|------------|-------------|
+| § 423(b)(1) | Options to EMPLOYEES of granting corp/parent/sub |
+| § 423(b)(2) | SHAREHOLDER-APPROVED within 12 months of board adoption |
+| § 423(b)(3) | NO 5%+ SHAREHOLDER (under § 424(d) constructive ownership) |
+| § 423(b)(4) | ALL EMPLOYEES eligible (permitted < 2-year / < 20-hour / seasonal exclusions) |
+| § 423(b)(5) | SAME RIGHTS AND PRIVILEGES (permitted compensation differentials) |
+| § 423(b)(6) | Price ≥ 85% of LESSER of offering or exercise FMV |
+| § 423(b)(7) | Outer limit **5 YEARS** (or **27 MONTHS** with look-back) |
+| § 423(b)(8) | **$25,000 ANNUAL ACCRUAL CAP** (FMV at GRANT) |
+| § 423(b)(9) | NOT TRANSFERABLE except by will/inheritance |
+
+**§ 423(b)(6) LOOK-BACK PROVISION** — plan may set purchase price at 85% of LOWER of FMV at offering (grant) date OR FMV at purchase (exercise) date. Combined with intra-period appreciation, effective discount can substantially exceed 15%.
+
+**§ 421(a) qualifying-disposition holding periods**:
+- **2 YEARS** from OFFERING (grant) date
+- **1 YEAR** from PURCHASE (exercise) date
+- BOTH must be satisfied
+
+**§ 423(c) qualifying-disposition treatment** — ordinary income equals **LESSER of**:
+1. Discount at offering date (15% × FMV at offering)
+2. Actual gain on sale (sale price − purchase price)
+
+Remaining gain LTCG at 0%/15%/20% + § 1411 NIIT 3.8%. **NO FICA** on qualifying disposition ordinary income (Notice 2002-47 + Rev. Rul. 71-52). Employer gets **NO § 162 deduction** on qualifying disposition.
+
+**§ 421(b) disqualifying-disposition treatment** — ordinary income equals **FULL SPREAD AT PURCHASE** (FMV at purchase − actual price); NOT capped at discount. Remaining gain ST or LT capital gain depending on holding from purchase. Employer **GETS § 162 compensation deduction**.
+
+**§ 423(b)(8) $25,000 annual accrual cap** — right to purchase under all § 423 plans of employer cannot accrue at rate exceeding $25,000 of FMV at GRANT DATE (not discount price) per calendar year for any single offering period. Unused capacity NOT carried over.
+
+**Trader-critical fact patterns**:
+1. Trader contributes $25K with 15% look-back; stock $100 → $130 over 6 months → purchases at $85 = 250 shares at effective 34.6% discount; qualifying disposition at $150 = $15/share ordinary income (capped at discount) + $50/share LTCG = $3,750 ordinary + $12,500 LTCG;
+2. Same trader sells immediately at $130 (disqualifying) — $45/share FULL SPREAD as ordinary income = $11,250 ordinary; no LTCG;
+3. § 423(b)(8) $25K cap on FMV at GRANT (not contribution);
+4. § 423(b)(3) — 5%+ shareholder under § 424(d) constructive ownership CANNOT participate;
+5. § 423(b)(7) — 27-month outer limit WITH look-back; 5-year WITHOUT look-back.
+
+**Form 3922** — ESPP Transfer Information Statement; employer must furnish to employee by January 31 of year after FIRST TRANSFER of legal title. Trader must keep for life of stock to track qualifying-vs-disqualifying basis split.
+
+Mounted at `POST /api/calc/section-423`. Thirty-two tests pin: **qualifying disposition lesser-of rule**; **qualifying disposition LTCG remainder**; **qualifying disposition FICA exempt**; **look-back effective price**; **no look-back uses purchase FMV**; **disqualifying disposition full-spread ordinary**; **disqualifying no FICA exempt**; **no shareholder approval fails**; **5% shareholder disqualified**; **offering period over outer limit fails**; **unequal rights/privileges fails**; **discount over 15% fails**; **annual accrual over $25K exceeded**; **annual accrual at $25K boundary**; **holding period truth table**; **no disposition no income recognition**; **disposition truth table three cells**; **qualifying uniquely FICA exempt invariant**; **citation pins all authorities** (§ 423(a)-(c) + § 421(a)-(b) + § 424(d) + § 1411 + § 162 + Treas. Reg. § 1.423-1 through § 1.423-2 + Treas. Reg. § 1.421-1 through § 1.421-2 + IRS Notice 2002-47 + Rev. Rul. 71-52 + Form 3922 + IRS Pub. 525); **note pins § 423(b) nine requirements**; **note pins § 423(b)(6) look-back**; **note pins § 423(b)(8) $25K cap**; **note pins § 421(a) holding periods**; **note pins § 423(c) qualifying treatment**; **note pins § 421(b) disqualifying treatment**; **note pins Notice 2002-47 FICA exemption**; **note pins § 424(d) constructive ownership**; **note pins § 1411 NIIT**; **note pins trader fact patterns**; **note pins Form 3922**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_444` is the **IRC §444 fiscal year election module** — clean rule letting partnerships, S corporations, and personal service corporations (PSCs) elect a non-calendar fiscal year, subject to a strict 3-month deferral cap and a §7519 "required payment" mechanism that approximates the tax benefit of the deferral. Useful for businesses with strongly seasonal income patterns (agricultural partnerships, retail S-corps with December peak) that benefit from matching tax year to natural business cycle ([Cornell LII 26 U.S.C. § 444](https://www.law.cornell.edu/uscode/text/26/444), [Cornell LII 26 CFR § 1.444-1T](https://www.law.cornell.edu/cfr/text/26/1.444-1T)).
 
 **§444(b)(2) 3-month deferral cap** — the deferral period is the months between the elected fiscal year end and the required tax year end. For entities whose required year is the calendar year (Dec 31), only 3 fiscal year ends qualify:

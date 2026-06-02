@@ -215,6 +215,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408",           post(section_408_route))
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
+        .route("/calc/section-423",           post(section_423_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-453",           post(section_453_route))
@@ -750,6 +751,30 @@ async fn section_422_route(
     Json(b): Json<traderview_expense::section_422::Section422Input>,
 ) -> Result<Json<traderview_expense::section_422::Section422Result>, ApiError> {
     Ok(Json(traderview_expense::section_422::check(&b)))
+}
+
+// ── § 423 Employee Stock Purchase Plans (ESPPs) ──────────────────────
+// Mounted at /api/calc/section-423. Pure compute; § 423(b) 9-element
+// statutory test (employees only + shareholder-approved + no 5%+
+// owner + all employees eligible + same rights/privileges + price
+// ≥ 85% of lower of offering/purchase FMV + 27-month/5-year outer
+// limit + $25K annual accrual cap + non-transferable); § 423(b)(6)
+// look-back provision (85% of LOWER of offering or purchase FMV);
+// § 421(a) 2-year-from-offering + 1-year-from-purchase qualifying-
+// disposition holding periods; § 423(c) qualifying-disposition
+// ordinary-income lesser-of rule (discount-at-offering OR actual
+// gain); § 421(b) disqualifying-disposition full-spread-at-purchase
+// rule; § 162 employer deduction only on disqualifying; Notice
+// 2002-47 + Rev. Rul. 71-52 FICA exemption on qualifying ordinary
+// income; § 1411 NIIT 3.8% on qualifying LTCG; § 424(d)
+// constructive-ownership rules; Form 3922 ESPP Transfer
+// Information Statement.
+
+async fn section_423_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_423::Section423Input>,
+) -> Result<Json<traderview_expense::section_423::Section423Result>, ApiError> {
+    Ok(Json(traderview_expense::section_423::check(&b)))
 }
 
 // ── § 4974 excise tax on RMD failures (post-SECURE 2.0) ──────────────
