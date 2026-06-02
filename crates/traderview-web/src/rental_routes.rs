@@ -502,6 +502,10 @@ use traderview_expense::rental_bedroom_egress_window::{
     check as check_rental_bedroom_egress_window, RentalBedroomEgressWindowInput,
     RentalBedroomEgressWindowResult,
 };
+use traderview_expense::rental_carbon_monoxide_detector::{
+    check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
+    RentalCarbonMonoxideDetectorResult,
+};
 use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
@@ -869,6 +873,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
+        .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
@@ -5952,6 +5957,40 @@ async fn rental_junk_fee_transparency_route(
     Json(b): Json<RentalJunkFeeTransparencyInput>,
 ) -> Result<Json<RentalJunkFeeTransparencyResult>, ApiError> {
     Ok(Json(check_rental_junk_fee_transparency(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_carbon_monoxide_detector: Rental property carbon monoxide
+// (CO) detector compliance — when a trader-landlord must install,
+// maintain, and certify CO alarms in dwelling units with fossil-
+// fuel-burning appliances or attached garages. Mounted at POST
+// /api/rental/rental-carbon-monoxide-detector. Four regimes:
+// California SB 183 of 2010 (Cal. Health & Safety Code §§ 13260-
+// 13263; State Fire Marshal-certified device required; CO alarm
+// outside each sleeping area AND on every level including
+// basements; single-family fossil-fuel/garage by July 1, 2011;
+// multifamily by January 1, 2013; $100 statutory damages per
+// violation); New York Amanda's Law (NY Exec. Law § 378(5-a),
+// eff. February 22, 2010; CO alarm within 15 feet of each
+// sleeping area; UL 2034 listed); Illinois Carbon Monoxide Alarm
+// Detector Act (430 ILCS 135/1 et seq., eff. January 1, 2007; CO
+// detector within 15 feet of every sleeping room; failure is
+// Class B misdemeanor); Massachusetts Nicole's Law (M.G.L. c. 148
+// § 26F½, eff. March 31, 2006; strictest — interconnected
+// hardwired or wireless CO alarms on every level + within 10 feet
+// of each bedroom door + certificate of compliance from local
+// fire department BEFORE selling or renting + UL 2034). Distinct
+// from siblings rental_bed_bug_disclosure, rental_hot_water_
+// temperature, tenant_fire_safety_plan_disclosure, rental_
+// bedroom_egress_window, rental_gas_appliance_ban.
+// ---------------------------------------------------------------------------
+
+async fn rental_carbon_monoxide_detector_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalCarbonMonoxideDetectorInput>,
+) -> Result<Json<RentalCarbonMonoxideDetectorResult>, ApiError> {
+    Ok(Json(check_rental_carbon_monoxide_detector(&b)))
 }
 
 // ---------------------------------------------------------------------------
