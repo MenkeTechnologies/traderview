@@ -5021,6 +5021,50 @@ Pinned by `foreign_partnership_under_100k_no_ownership_no_reporting`, `foreign_p
 
 Mounted at `POST /api/calc/section-6038b`. Thirty-five tests pin: **foreign corp filed no penalty**; **foreign corp failed to file 10% penalty capped** ($50K of $500K FMV); **foreign corp failed to file above $100K cap clamped** ($500M FMV → $100K); **foreign corp intentional disregard uncapped** ($500M FMV + intentional disregard → $50M); **foreign corp reasonable cause zeros penalty**; **foreign corp gain recognition forced on failure** ($400K = $500K FMV - $100K basis); **foreign corp intangible engages § 367(d)**; **foreign corp cash-only under $100K no obligation** (safe harbor); **foreign corp cash-only above $100K reporting required**; **foreign corp cryptocurrency engages reporting**; **foreign partnership above $100K aggregate reporting required**; **foreign partnership under $100K + < 10% no reporting**; **foreign partnership 10% ownership triggers reporting**; **foreign partnership exactly $100K boundary** ($100K = no; $100,001 = yes); **not-reportable transfer no obligation**; **§ 6501(c)(8) SOL tolled on non-filing**; **§ 6501(c)(8) SOL not tolled when filed**; **citation pins all authorities** (§ 6038B(a)-(c) + § 6501(c)(8) + § 367(a)/(d) + § 721/§ 721(c) + Treas. Reg. § 1.6038B-1/-2 + § 1.721(c)-3 + Form 926 + Form 8865 + Notice 2014-21 + IRM 8.11.5 + IRM 20.1.9); **note pins subsection (a)(1)(A) foreign corp Form 926**; **note pins subsection (a)(1)(B) foreign partnership Form 8865**; **note pins subsection (b)(1) 10% FMV penalty**; **note pins subsection (b)(1)(A) $100K cap**; **note pins subsection (b)(1)(B) intentional disregard uncapped**; **note pins subsection (b)(2) gain recognition forced**; **note pins subsection (c) reasonable cause**; **note pins § 367(d) intangible deemed sale**; **note pins Form 8865 $100K or 10% threshold**; **note pins § 721(c) gain-deferral method**; **note pins § 6501(c)(8) SOL tolling**; **note pins Notice 2014-21 cryptocurrency**; **property category truth table five cells** (Tangible + CashOnly + Intangible + Securities + Cryptocurrency); **intangible uniquely engages § 367(d) deemed-sale invariant**; **intentional disregard uniquely uncaps penalty invariant** (10x differential); **defensive zero basis full gain recognition**; **defensive basis exceeds FMV no negative gain**.
 
+`traderview-expense::section_6038c` is the **IRC § 6038C information return for foreign corporations engaged in U.S. trade or business** module — the anti-avoidance backstop closing the foreign-corp reporting cluster with `section_6038a` (25%-foreign-owned DOMESTIC corp / DRE) and `section_6038b` (transfers TO foreign entities). Where § 6038A reaches DOMESTIC corporations with foreign ownership, § 6038C reaches FOREIGN corporations with U.S. trade-or-business presence — without § 6038C, a foreign corp with U.S. T/B could avoid Form 5472 by structuring around § 6038A's domestic-corp requirement. Statutory origin: Omnibus Budget Reconciliation Act of 1990 § 11315 (Pub. L. 101-508, enacted November 5, 1990). Companion to `section_6501` (assessment SOL — § 6038C non-filing TOLLS § 6501(c)(8) indefinitely), `section_864b2` (trading safe harbor — qualifying foreign traders escape § 6038C), `section_882` (foreign corp ECI taxation backbone).
+
+Trader-critical international trading structures:
+
+- **Foreign hedge fund LP with US branch or US office** — US effectively connected income under § 882.
+- **Foreign proprietary trading firm with US-based traders** — creates US trade or business under § 864(b) absent qualifying for § 864(b)(2) trading safe harbor.
+- **Foreign trader-managed family office with US effectively connected income**.
+- **Foreign brokerage with US permanent establishment**.
+- **§ 864(b)(2) trading safe harbor** — foreign person NOT a dealer in stocks or securities who trades for own account through resident broker/agent does NOT have US T/B; losing safe harbor (becoming a dealer, hedge-fund-of-funds activity) triggers § 6038C exposure.
+
+**§ 6038C operative subsections**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 6038C(a) | Foreign corp engaged in US trade or business at ANY TIME during taxable year SHALL furnish § 6038A(b) information AND maintain records |
+| § 6038C(b) | Penalties of § 6038A apply via cross-reference: $25,000 base + $25,000/30-day continuation (UNCAPPED after 90-day notification) + reasonable cause defense |
+| § 6038C(c) | LIMITED AGENT authorization rule for foreign-person related-party transactions: § 7602 + § 7603 + § 7604 summons enforcement |
+| § 6038C(d) | "Related party", "foreign person", "records" definitions cross-referenced to § 6038A(c) |
+
+Pinned by `engaged_compliant_no_penalty`, `safe_harbor_no_us_tb_no_obligation` (§ 864(b)(2) safe harbor → no obligation), `no_us_tb_no_obligation`, `engaged_no_reportable_transactions_no_filing_required`, `us_tb_status_truth_table_three_cells`, `safe_harbor_uniquely_engages_864b2_flag_invariant`.
+
+**§ 6038C(b) Penalty framework via cross-reference to § 6038A**:
+
+| Subsection | Trigger | Penalty |
+|-------------|---------|---------|
+| § 6038A(d)(1) | Failure to file Form 5472 OR maintain records | **$25,000 base per taxable year per reporting corporation** |
+| § 6038A(d)(2) | Failure continues > 90 days after IRS notification | **$25,000 per 30-day period (or fraction) — UNCAPPED** |
+| § 6038A(d)(3) | Reasonable cause (NOT willful neglect) | Penalty abatement via Treas. Reg. § 1.6038A-4(b) |
+
+Pinned by `failure_to_file_25k_base_penalty`, `failure_to_maintain_records_25k_base_penalty`, `continuation_penalty_1_period_at_120_days` (day 120 = 1 period = $25K), `continuation_penalty_3_periods_at_180_days` (day 180 = 3 periods = $75K), `continuation_fraction_counts_as_full_period` (day 91 = $25K — 1-day fraction counts as full period), `no_continuation_at_90_day_boundary` (day 90 = $0 continuation — boundary precision), `reasonable_cause_zeros_penalty`.
+
+**§ 6038C(c) Limited agent authorization rule** — rules apply to any transaction between reporting corp and any related party who is a foreign person UNLESS the related party AGREES to authorize the reporting corp as LIMITED AGENT solely for purposes of:
+- **§ 7602** examination of records
+- **§ 7603** service of summons
+- **§ 7604** enforcement of summons
+
+Without limited agent authorization, IRS cannot enforce summons against foreign related party directly → § 6038C imposes the reporting burden on the foreign corp itself. Pinned by `limited_agent_authorization_required_when_filing_required` and `limited_agent_authorization_not_required_when_no_filing`.
+
+**§ 864(b)(2) Trading safe harbor** — pinned by `safe_harbor_uniquely_engages_864b2_flag_invariant` (only the safe-harbor status engages `section_864b2_safe_harbor_engaged: true`).
+
+**§ 6501(c)(8) SOL tolling — same as § 6038A and § 6038B** — § 6501 ASED OPEN INDEFINITELY on non-filing. Pinned by `section_6501_c8_sol_tolled_on_non_filing` and `section_6501_c8_sol_not_tolled_when_filed`.
+
+Mounted at `POST /api/calc/section-6038c`. Thirty tests pin: **engaged compliant no penalty**; **safe harbor § 864(b)(2) no US T/B no obligation**; **no US T/B no obligation**; **engaged no reportable transactions no filing required**; **failure to file $25K base penalty**; **failure to maintain records $25K base penalty**; **continuation penalty 1 period at 120 days ($25K)**; **continuation penalty 3 periods at 180 days ($75K)**; **continuation fraction counts as full period (day 91 = $25K)**; **no continuation at 90-day boundary** ($0 continuation precision); **reasonable cause zeros penalty**; **limited agent authorization required when filing required**; **limited agent authorization not required when no filing**; **§ 6501(c)(8) SOL tolled on non-filing**; **§ 6501(c)(8) SOL not tolled when filed**; **citation pins all authorities** (§ 6038C(a)-(d) + 1990 OBRA § 11315 + Pub. L. 101-508 + § 6038A(b)-(e) + § 6501(c)(8) + § 864(b)/(b)(2) + § 882 + § 7602/7603/7604 + Treas. Reg. § 1.6038A-1 to -7 + Form 5472 + IRM 8.11.5 + IRM 20.1.9); **note pins subsection (a) engaged at any time**; **note pins subsection (b) cross-reference to § 6038A penalties**; **note pins subsection (c) limited agent authorization**; **note pins subsection (d) cross-reference definitions**; **note pins § 864(b)(2) trading safe harbor**; **note pins § 882 ECI taxation**; **note pins 1990 OBRA origin** (Pub. L. 101-508 + November 5, 1990 + March 20, 1990 records); **note pins § 6501(c)(8) indefinite SOL**; **note pins anti-avoidance backstop role**; **note pins Form 5472 shared with § 6038A**; **US T/B status truth table three cells** (Engaged + SafeHarbor + None); **safe harbor uniquely engages § 864(b)(2) flag invariant**; **defensive overflow clamped with saturating mul**; **multiple failure reasons stack**.
+
 `traderview-expense::section_6038d` is the **IRC §6038D Form 8938 foreign-financial-asset reporting module** — trader-critical for anyone with offshore brokerage accounts, foreign mutual fund holdings (PFICs covered by `section_1297` + `section_1298`), foreign retirement accounts, foreign-issued bonds, or interests in foreign entities. § 6038D requires individuals to attach Form 8938 disclosing such assets when aggregate value crosses the applicable filing threshold. Distinct from FinCEN Form 114 (FBAR) — both regimes often apply to the same taxpayer but have separate thresholds, content requirements, and penalty regimes.
 
 **§ 6038D operative provisions**:

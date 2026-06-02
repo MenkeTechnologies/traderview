@@ -163,6 +163,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6020",          post(section_6020_route))
         .route("/calc/section-6038a",         post(section_6038a_route))
         .route("/calc/section-6038b",         post(section_6038b_route))
+        .route("/calc/section-6038c",         post(section_6038c_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
@@ -4963,6 +4964,46 @@ async fn section_6038b_route(
         ));
     }
     Ok(Json(traderview_expense::section_6038b::check(&b)))
+}
+
+// ── §6038C foreign corp engaged in US trade or business — Form 5472 ─
+// Mounted at /api/calc/section-6038c. § 6038C(a) — foreign corp
+// engaged in US T/B at any time during taxable year SHALL furnish
+// information described in § 6038A(b) (related party + reportable
+// transactions) AND maintain records prescribed by regulations.
+// § 6038C(b) — penalties of § 6038A apply (cross-reference):
+// $25,000 base + $25,000/30-day continuation (UNCAPPED after 90-day
+// notification) + reasonable cause defense. § 6038C(c) — LIMITED
+// AGENT authorization rule: rules apply to any transaction with
+// foreign-person related party UNLESS related party AGREES to
+// authorize reporting corp as limited agent for § 7602 (examination)
+// + § 7603 (service of summons) + § 7604 (enforcement of summons)
+// purposes. § 6038C(d) — terms 'related party' + 'foreign person' +
+// 'records' have same meaning as § 6038A(c) (cross-reference).
+// § 864(b)(2) trading safe harbor — foreign person NOT a dealer who
+// trades for own account through resident broker/agent does NOT
+// have US T/B; if safe harbor qualifies, NO § 6038C exposure.
+// § 882 — foreign corp engaged in US T/B taxed on ECI; § 6038C
+// provides reporting backbone. § 6501(c)(8) — § 6501 ASED OPEN
+// INDEFINITELY on non-filing. Anti-avoidance backstop closing
+// foreign-corp reporting cluster with § 6038A + § 6038B. Trader-
+// critical for foreign hedge fund LPs with US branch, foreign
+// proprietary trading firms with US-based traders (potential loss
+// of § 864(b)(2) safe harbor), foreign brokerages with US
+// permanent establishment, foreign trader-managed family offices
+// with US ECI. Statutory origin: Omnibus Budget Reconciliation Act
+// of 1990 § 11315 (Pub. L. 101-508, November 5, 1990).
+
+async fn section_6038c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6038c::Section6038cInput>,
+) -> Result<Json<traderview_expense::section_6038c::Section6038cResult>, ApiError> {
+    if b.days_since_irs_notification > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_irs_notification out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6038c::check(&b)))
 }
 
 async fn section_6038d_route(
