@@ -547,6 +547,10 @@ use traderview_expense::rental_swimming_pool_drain_safety::{
     check as check_rental_swimming_pool_drain_safety,
     RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
 };
+use traderview_expense::rental_satellite_dish_installation_right::{
+    check as check_rental_satellite_dish_installation_right,
+    RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
+};
 use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
@@ -912,6 +916,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
+        .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -6432,6 +6437,43 @@ async fn rental_swimming_pool_drain_safety_route(
     Json(b): Json<RentalSwimmingPoolDrainSafetyInput>,
 ) -> Result<Json<RentalSwimmingPoolDrainSafetyResult>, ApiError> {
     Ok(Json(check_rental_swimming_pool_drain_safety(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_satellite_dish_installation_right: Tenant satellite dish /
+// OTARD antenna installation right compliance — when may a trader-
+// landlord restrict tenant installation of a satellite dish or
+// over-the-air antenna? Mounted at POST /api/rental/rental-satellite-
+// dish-installation-right. Federal FCC OTARD Rule (47 CFR § 1.4000,
+// eff. October 1996) PREEMPTS state law, local ordinances, building
+// codes, HOA covenants, AND lease provisions that impair installation
+// on areas under tenant EXCLUSIVE USE OR CONTROL. § 1.4000(a)(1)
+// covered antennas: (i) DBS dish 1 meter or less (any size in
+// Alaska); (ii) BRS antenna 1 meter or less; (iii) TV broadcast
+// antenna no size limit. § 1.4000(a)(2) preemption ONLY applies to
+// installation on EXCLUSIVE USE OR CONTROL areas (balcony + patio +
+// exclusive-use yard); landlord MAY prohibit installation on common
+// areas (exterior walls + roof + shared corridors). § 1.4000(a)(3)
+// permissible restrictions narrowly tailored ONLY if necessary to
+// (1) accomplish clearly defined legitimate safety objective OR (2)
+// preserve historic district designated under federal/state/local
+// law. § 1.4000(d) federal preemption applies retroactively. §
+// 1.4000(f) cost-impairment doctrine — restriction impairs
+// installation if (1) unreasonably delays/prevents; (2) unreasonably
+// increases cost; OR (3) precludes acceptable quality reception.
+// Tenant enforcement via FCC Petition for Declaratory Ruling or
+// private federal/state court action. Statutory authority:
+// Telecommunications Act of 1996 § 207 + 47 USC § 303. Distinct from
+// siblings rental_broadband_mte_rules (cable/broadband building
+// access), rental_carbon_monoxide_detector, tenant_data_privacy.
+// ---------------------------------------------------------------------------
+
+async fn rental_satellite_dish_installation_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSatelliteDishInstallationRightInput>,
+) -> Result<Json<RentalSatelliteDishInstallationRightResult>, ApiError> {
+    Ok(Json(check_rental_satellite_dish_installation_right(&b)))
 }
 
 // ---------------------------------------------------------------------------
