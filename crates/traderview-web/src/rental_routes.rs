@@ -630,6 +630,10 @@ use traderview_expense::rental_water_submetering_disclosure::{
     check as check_rental_water_submetering_disclosure,
     RentalWaterSubmeteringDisclosureInput, RentalWaterSubmeteringDisclosureResult,
 };
+use traderview_expense::rental_well_water_disclosure::{
+    check as check_rental_well_water_disclosure,
+    RentalWellWaterDisclosureInput, RentalWellWaterDisclosureResult,
+};
 use traderview_expense::rental_window_guard_installation::{
     check as check_rental_window_guard_installation,
     RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
@@ -1106,6 +1110,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
+        .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
         .route("/rental-window-guard-installation", axum::routing::post(rental_window_guard_installation_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
@@ -7417,6 +7422,56 @@ async fn rental_property_registration_route(
 // temperature, rental_bed_bug_disclosure, rental_gas_appliance_ban,
 // rental_property_registration.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_well_water_disclosure: Multi-jurisdictional rental property
+// PRIVATE WELL WATER testing + disclosure compliance framework. When a
+// landlord rents a property served by a private water well rather than a
+// municipal/community water supply, what testing schedule applies, what
+// contaminants must be tested for, what disclosure must be given to
+// tenant, and what failure-mode liabilities expose landlord? Mounted at
+// POST /api/rental/rental-well-water-disclosure. Four-jurisdiction
+// framework: New Jersey (MOST STRINGENT — first-in-nation Private Well
+// Testing Act N.J.S.A. 58:12A-26 et seq., signed March 2001, effective
+// September 2002; N.J.S.A. 58:12A-32 lessor must obtain + pay for full
+// PWTA test every 60 months/5 years AND provide written results to each
+// rental unit within 30 days of receipt AND to new lessee at lease
+// execution; N.J.A.C. 7:9E contaminant panel = total coliform + iron +
+// manganese + pH + all VOCs + nitrate + lead + gross alpha + arsenic
+// statewide since 2021 + county-specific radon + PFAS; $5,000 statutory
+// penalty per N.J.S.A. 58:12A-31); Connecticut (Conn. Gen. Stat. § 19a-37
+// + Public Act 16-66 (2016) + Public Health Code § 19-13-B51d testing at
+// construction + title transfer + Conn. Gen. Stat. § 47a-7 common-law
+// habitability); Pennsylvania (NO state-level rental disclosure statute;
+// PA DEP voluntary recommendations under 25 Pa. Code Ch. 109 cover public
+// water systems only; common-law habitability + Pa. Const. art. I § 27
+// Environmental Rights Amendment); Default (federal Safe Drinking Water
+// Act 42 U.S.C. § 300f explicitly exempts private wells serving fewer
+// than 25 individuals or 15 service connections; common-law habitability
+// per Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984); Cal. Civ. Code
+// § 1941.1 implied warranty of sanitary facilities). Nine-contaminant
+// universal baseline: total coliform + nitrate + lead + arsenic + VOCs
+// + pH + iron/manganese + gross alpha + PFAS (per EPA April 10, 2024
+// National Primary Drinking Water Regulation 89 Fed. Reg. 32532 with
+// MCLs for PFOA 4 ppt + PFOS 4 ppt + GenX/HFPO-DA + PFNA + PFHxS 10
+// ppt). CERCLA 42 U.S.C. § 9607(a) owner/operator strict liability
+// exposure for PFAS contamination after EPA April 2024 PFOA/PFOS
+// hazardous-substance designation. Five failure-mode liabilities:
+// failure to test/disclose; MCL exceedance; lead + child residents;
+// PFAS exceedance + CERCLA; well casing/pressure tank failure. Distinct
+// from siblings rental_septic_system_disclosure (iter 465 — OSTDS),
+// rental_lead_pipe_disclosure, rental_basement_water_intrusion_
+// disclosure, rental_water_submetering_disclosure, rent_abatement_
+// construction_nuisance, mid_tenancy_temporary_relocation.
+// ---------------------------------------------------------------------------
+
+async fn rental_well_water_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWellWaterDisclosureInput>,
+) -> Result<Json<RentalWellWaterDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_well_water_disclosure(&b)))
+}
 
 // ---------------------------------------------------------------------------
 // rental_window_guard_installation: multi-jurisdictional residential

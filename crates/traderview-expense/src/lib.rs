@@ -195,6 +195,7 @@ pub mod rental_underground_storage_tank_disclosure;
 pub mod rental_unpermitted_unit_disclosure;
 pub mod rental_video_surveillance_retention;
 pub mod rental_water_submetering_disclosure;
+pub mod rental_well_water_disclosure;
 pub mod rental_window_guard_installation;
 pub mod right_to_dry;
 pub mod reps_qualification;
