@@ -81,6 +81,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-6045",          post(section_6045_route))
+        .route("/calc/section-6049",          post(section_6049_route))
         .route("/calc/section-6050i",         post(section_6050i_route))
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6212",          post(section_6212_route))
@@ -2656,6 +2657,31 @@ async fn section_6045_route(
         ));
     }
     Ok(Json(traderview_expense::section_6045::compute(&b)))
+}
+
+// ── §6049 returns regarding payments of interest (1099-INT/OID) ─────
+// Mounted at /api/calc/section-6049. § 6049(a) — every person who
+// makes interest payments aggregating $10 or more (or who receives
+// as nominee) shall make a return. § 6049(b) — interest defined:
+// registered-form obligations + bank deposits + savings institution
+// interest + insurance company-held + OID per § 1272 + broker-dealer
+// custodial + Treasury obligations + municipal bond tax-exempt (§
+// 103(a)). § 6049(c) — written statement to recipient by January 31.
+// § 6049(d) — nominee/middleman pass-through; broker (§ 6045(c)) is
+// middleman. § 6049(e) — backup withholding under § 3406 triggers
+// reporting IRRESPECTIVE of $10 threshold. Form 1099-INT + Form 1099-
+// OID. Trader-relevant sources: Treasury (T-bills + TIPS + Series I
+// — federal tax/state-exempt); municipal bonds (federal tax-exempt
+// § 103(a)); corporate bonds (taxable); zero-coupon (OID); money
+// market funds; bank deposit; brokerage cash-balance; § 988 foreign
+// currency. Companion to § 6041 + § 6042 + § 6045 + § 6045A + § 6045B
+// + § 6050W + § 3406 backup withholding + § 103(a) tax-exempt muni +
+// § 1272 OID + § 988 foreign currency.
+async fn section_6049_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6049::Section6049Input>,
+) -> Result<Json<traderview_expense::section_6049::Section6049Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6049::check(&b)))
 }
 
 // ── §6050I cash transaction reporting (Form 8300) ────────────────────
