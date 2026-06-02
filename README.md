@@ -6242,6 +6242,56 @@ Pinned by `superpriority_truth_table` (10-superpriority sweep), `superpriority_s
 
 Mounted at `POST /api/calc/section-6323`. Thirty tests pin: **NFTL filed first grants lien priority**; **NFTL not filed competing claimant wins**; **NFTL filed after competing interest loses priority** (first-in-time); **purchaser class protected**; **mechanic's lienor class protected**; **judgment lien creditor class protected**; **unprotected creditor loses to lien even without NFTL** (only protected classes need NFTL); **superpriority securities overrides lien** (§ 6323(b)(1)); **superpriority motor vehicle overrides lien** (§ 6323(b)(2)); **superpriority attorney's lien overrides** (§ 6323(b)(8)); **superpriority blocked by actual notice** (gating clause); **superpriority real property tax overrides** (§ 6323(b)(6)); **superpriority residential mechanics lien overrides** (§ 6323(b)(7)); **superpriority truth table** (10-superpriority sweep); **competing claimant protection truth table** (5-cell sweep); **NFTL filing 2x2 truth table** (4-cell sweep); **citation pins all subsections** (a)(1)-(4) + (b)(1)-(10) + (c) + (d) + (f) + (g) + (h) + § 6321 + § 6322 + Rev. Rul. 2003-108 + IRM 5.12.1/2/7/8; **note pins four protected classes**; **note pins ten superpriorities**; **note pins 45-day commercial window**; **note pins 10-year refiling** (§ 6502); **NFTL filed field preserved**; **superpriority overrides NFTL filing** (NFTL filed + first-in-time still loses); **superpriority with actual notice loses**; **purchaser no NFTL loses to purchaser**; **judgment lien creditor NFTL first wins**; **unprotected creditor with NFTL filed lien wins**; **unprotected creditor no NFTL lien still wins**; **NFTL filed priority against purchaser invariant**; **ten superpriorities all distinct** (pairwise distinctness).
 
+`traderview-expense::section_6325` is the **IRC § 6325 release of lien or discharge of property** module — completes the foundational federal tax lien constellation (`section_6321` attachment + `section_6322` period of lien + `section_6323` priority + `section_6325` release/discharge/subordination). Trader-relevant when trader-landlord seeks to (a) extinguish a federal tax lien upon full payment, (b) discharge individual property from lien for sale or refinance, or (c) subordinate IRS lien to allow junior financing (mortgage refinance to extract equity for IRS payment).
+
+**Four certificate types under § 6325**:
+
+| Certificate | Source | Effect |
+|-------------|--------|--------|
+| **Release** | § 6325(a) | Extinguishes lien entirely; must issue within 30 days |
+| **Discharge** | § 6325(b) | Removes specific property from lien; other property still subject |
+| **Subordination** | § 6325(d) | Allows junior creditor priority over federal tax lien |
+| **Non-attachment** | § 6325(e) | Confusion-of-names cases |
+
+Pinned by `certificate_type_truth_table` (3-cell sweep) and `non_attachment_certificate_issuable`.
+
+**§ 6325(a) RELEASE — 3 statutory bases + 30-day deadline**:
+
+| Basis | Source | Trigger |
+|-------|--------|---------|
+| Full satisfaction | § 6325(a)(1) | Liability + interest fully paid |
+| Legally unenforceable | § 6325(a)(1) | Paired with § 6502 CSED expiration |
+| Bond accepted | § 6325(a)(2) | Bond conditioned upon payment furnished and accepted |
+
+Secretary SHALL issue certificate within 30 days. Pinned by `release_basis_truth_table` (4-cell sweep: 3 valid + NotApplicable invalid), `release_full_satisfaction_within_30_days_issuable`, `release_legally_unenforceable_basis_valid`, `release_bond_accepted_basis_valid`, `release_no_basis_violates`, `release_at_30_day_boundary_issuable` (exactly 30 days), `release_31_days_violates`, and `release_uniquely_engages_30_day_clock_invariant` (release engages 30-day clock; discharge does not).
+
+**§ 6325(b) DISCHARGE — 5 statutory bases**:
+
+| Basis | Source | Trigger |
+|-------|--------|---------|
+| Double-value rule | § 6325(b)(1) | Property value ≥ 2× (federal tax lien + senior liens) |
+| Partial payment | § 6325(b)(2)(A) | Payment equal to US net interest |
+| No-value determination | § 6325(b)(2)(B) | US interest in property has no value |
+| Proceeds substituted | § 6325(b)(3) | Sale proceeds held as fund subject to lien |
+| Purchaser deposit | § 6325(b)(4) | Purchaser deposits with IRS |
+
+Pinned by `discharge_basis_truth_table` (6-cell sweep: 5 valid + NotApplicable invalid), `discharge_double_value_2x_satisfied`, `discharge_double_value_at_boundary_satisfied` (property value = exactly 2× sum), `discharge_double_value_just_under_violates` (1 cent below 2× threshold), `discharge_partial_payment_basis_valid`, `discharge_no_value_basis_valid`, `discharge_proceeds_substituted_basis_valid`, `discharge_purchaser_deposit_basis_valid`, `discharge_no_basis_violates`, and `double_value_rule_only_engages_for_b1_discharge_invariant` (low-value property OK under (b)(3) proceeds-substituted but fails under (b)(1) double-value).
+
+**§ 6325(d) SUBORDINATION — 2 statutory bases**:
+
+| Basis | Source | Trigger |
+|-------|--------|---------|
+| Payment for subordinated amount | § 6325(d)(1) | Payment to Secretary equal to subordinated amount |
+| Ultimate collection facilitated | § 6325(d)(2) | IRS believes ultimate collection will be facilitated (typical trader-landlord mortgage refinance to extract equity for IRS payment) |
+
+Pinned by `subordination_basis_truth_table` (3-cell sweep), `subordination_facilitates_collection_basis_valid`, `subordination_payment_basis_valid`, and `subordination_no_basis_violates`.
+
+**§ 6325(f) certificates are CONCLUSIVE** — certificate of release conclusively extinguishes lien; certificate of discharge conclusively releases property; certificate of subordination conclusively establishes superior priority of subordinated interest. Pinned by `certificate_conclusive_when_issuable`, `certificate_not_conclusive_when_not_issuable`, and `note_pins_6325f_conclusiveness`.
+
+**Defensive arithmetic** — negative property value clamped via `.max(0)`; double-value calculation uses `.saturating_mul()` + `.saturating_add()` to prevent overflow. Pinned by `defensive_negative_property_value_clamped` and `defensive_overflow_double_value_saturating`.
+
+Mounted at `POST /api/calc/section-6325`. Thirty-three tests pin: **release full satisfaction within 30 days issuable**; **release at 30-day boundary issuable**; **release 31 days violates**; **release legally unenforceable basis valid**; **release bond accepted basis valid**; **release no basis violates**; **discharge double-value 2x satisfied**; **discharge double-value at boundary satisfied**; **discharge double-value just under violates** (1¢ precision); **discharge partial payment basis valid**; **discharge no-value basis valid**; **discharge proceeds substituted basis valid**; **discharge purchaser deposit basis valid**; **discharge no basis violates**; **subordination facilitates collection basis valid**; **subordination payment basis valid**; **subordination no basis violates**; **non-attachment certificate issuable**; **certificate type truth table** (3-cell sweep); **release basis truth table** (4-cell sweep); **discharge basis truth table** (6-cell sweep); **subordination basis truth table** (3-cell sweep); **certificate conclusive when issuable**; **certificate not conclusive when not issuable**; **defensive negative property value clamped**; **defensive overflow double-value saturating** (i64::MAX); **citation pins all subsections** (a)(1)-(2) + (b)(1)-(4) + (c) + (d)(1)-(2) + (e) + (f) + § 301.6325-1 + IRM 5.12.10 + Pub. 783 + Pub. 784; **note pins 30-day release**; **note pins discharge five bases**; **note pins subordination two bases** (trader refinance); **note pins § 6325(f) conclusiveness**; **release uniquely engages 30-day clock invariant**; **double-value rule only engages for (b)(1) discharge invariant**.
+
 `traderview-expense::section_6511` is the **IRC § 6511 limitations period on credit or refund** — controls WHEN a taxpayer may file a claim for refund of an overpayment. Trader-critical for every amended return (Form 1040-X) seeking money back from the IRS — beyond § 6511's deadline a claim is forever barred regardless of merits.
 
 **Four claim-type regimes**:

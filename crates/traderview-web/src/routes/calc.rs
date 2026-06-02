@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6321",          post(section_6321_route))
         .route("/calc/section-6323",          post(section_6323_route))
+        .route("/calc/section-6325",          post(section_6325_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
@@ -2758,6 +2759,33 @@ async fn section_6323_route(
     Json(b): Json<traderview_expense::section_6323::Section6323Input>,
 ) -> Result<Json<traderview_expense::section_6323::Section6323Result>, ApiError> {
     Ok(Json(traderview_expense::section_6323::check(&b)))
+}
+
+// ── §6325 release of lien or discharge of property ──────────────────
+// Mounted at /api/calc/section-6325. § 6325(a) RELEASE — Secretary
+// SHALL issue certificate of release within 30 days upon (1) full
+// satisfaction OR legally unenforceable OR (2) bond accepted;
+// extinguishes lien entirely. § 6325(b) DISCHARGE of specific
+// property: (b)(1) double-value rule (property ≥ 2× (lien + senior
+// liens)); (b)(2)(A) partial payment for US net interest; (b)(2)(B)
+// no-value determination; (b)(3) proceeds substituted; (b)(4)
+// purchaser deposit. § 6325(d) SUBORDINATION: (d)(1) payment for
+// subordinated amount OR (d)(2) ultimate collection facilitated
+// (typical trader-landlord mortgage refinance to extract equity for
+// IRS payment). § 6325(e) NON-ATTACHMENT certificate (confusion-of-
+// names cases). § 6325(f) — certificates are CONCLUSIVE. Trader-
+// relevant for trader-landlords seeking to (a) extinguish lien upon
+// full payment, (b) discharge individual rental property for sale
+// or refinance, or (c) subordinate IRS lien to allow junior
+// financing. Completes lien constellation: § 6321 + § 6322 + § 6323
+// + § 6325 + § 6334 + § 7426. 26 CFR § 301.6325-1; IRM 5.12.10; IRS
+// Pub. 783 (Discharge); IRS Pub. 784 (Subordination).
+
+async fn section_6325_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6325::Section6325Input>,
+) -> Result<Json<traderview_expense::section_6325::Section6325Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6325::check(&b)))
 }
 
 // ── §6330 Collection Due Process (CDP) for levies ───────────────────
