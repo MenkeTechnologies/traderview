@@ -526,6 +526,10 @@ use traderview_expense::landlord_water_heat_emergency_response::{
     check as check_landlord_water_heat_emergency_response,
     LandlordWaterHeatEmergencyResponseInput, LandlordWaterHeatEmergencyResponseResult,
 };
+use traderview_expense::tenant_emotional_distress_damages::{
+    check as check_tenant_emotional_distress_damages,
+    TenantEmotionalDistressDamagesInput, TenantEmotionalDistressDamagesResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1037,6 +1041,7 @@ pub fn router() -> Router<AppState> {
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
         .route("/landlord-pest-extermination-timeline", axum::routing::post(landlord_pest_extermination_timeline_route))
         .route("/landlord-water-heat-emergency-response", axum::routing::post(landlord_water_heat_emergency_response_route))
+        .route("/tenant-emotional-distress-damages", axum::routing::post(tenant_emotional_distress_damages_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6490,6 +6495,46 @@ async fn landlord_water_heat_emergency_response_route(
     Json(b): Json<LandlordWaterHeatEmergencyResponseInput>,
 ) -> Result<Json<LandlordWaterHeatEmergencyResponseResult>, ApiError> {
     Ok(Json(check_landlord_water_heat_emergency_response(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant emotional distress damages framework.
+//
+// Mounted at POST /api/rental/tenant-emotional-distress-damages.
+// Four-jurisdiction framework + Restatement (Second) Torts § 46
+// IIED four-element test: (1) extreme and outrageous conduct
+// beyond all bounds of decency; (2) intent or recklessness;
+// (3) actual and proximate causation; (4) severe emotional
+// distress. NIED jurisdictional split: TEXAS IMPACT RULE
+// (Boyles v. Kerr, 855 SW 2d 593 (Tex. 1993)) requires physical
+// injury; ZONE OF DANGER (IL/PA/NJ) requires plaintiff in zone
+// of physical danger; BYSTANDER/Dillon v. Legg majority (CA/NY
+// most states) recoverable for observing physical injury to
+// close relative. Punitive damages: CA § 3294 clear-and-
+// convincing malice + no statutory cap + Campbell ratio 1-9×;
+// NY common-law preponderance + no cap; TX § 41.008 greater of
+// 2× economic + non-economic up to $750K OR $200K; default
+// Restatement § 908. Landlord conduct categories: systematic
+// harassment campaign, deliberate utility shutoff, threats of
+// violence, frivolous eviction lawsuits, unauthorized entry,
+// extortionate demands, deliberate habitability destruction,
+// discriminatory animus. Distinct from sibling landlord_
+// harassment (civil penalties), landlord_retaliation_damages,
+// lockout_penalties, retaliation_windows, habitability_remedies.
+// Citations: Hughes v. Pair (CA), Howell v. NYP Holdings (NY),
+// Twyman v. Twyman + Boyles v. Kerr (TX), Dillon v. Legg + State
+// Farm v. Campbell, Cal. Civ. Code § 1940.2 + § 789.3 + § 3294,
+// SF Rent Ordinance § 37.10B, NY RPL § 235-d + § 234, NYC HMC
+// § 27-2005(d) + Tenant Anti-Harassment Act 2018, Tex. Prop.
+// Code § 92.0081 + Tex. Civ. Prac. & Rem. Code § 41.008.
+// ---------------------------------------------------------------------------
+
+async fn tenant_emotional_distress_damages_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantEmotionalDistressDamagesInput>,
+) -> Result<Json<TenantEmotionalDistressDamagesResult>, ApiError> {
+    Ok(Json(check_tenant_emotional_distress_damages(&b)))
 }
 
 // ---------------------------------------------------------------------------
