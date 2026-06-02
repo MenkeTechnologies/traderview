@@ -156,6 +156,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6045a",         post(section_6045a_route))
         .route("/calc/section-1297",          post(section_1297_route))
         .route("/calc/section-1298",          post(section_1298_route))
+        .route("/calc/section-6020",          post(section_6020_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
@@ -4708,6 +4709,31 @@ async fn section_1298_route(
 // exception. Distinct from FinCEN Form 114 (FBAR) Bank Secrecy Act
 // filing under 31 U.S.C. § 5314 with separate threshold and
 // penalty regime.
+
+// ── §6020 returns prepared for or executed by Secretary ─────────────
+// Mounted at /api/calc/section-6020. § 6020(a) voluntary preparation
+// (taxpayer consents + discloses + signs); SFR signed by taxpayer
+// counts as filed return and starts § 6501 ASED. § 6020(b)(1)
+// involuntary preparation when taxpayer fails to make return or
+// makes false/fraudulent return; Secretary makes return from own
+// knowledge and testimony. § 6020(b)(2) — Secretary-prepared return
+// is PRIMA FACIE GOOD AND SUFFICIENT for all legal purposes. § 6020
+// (b) SFR does NOT satisfy Beard test (Beard v. Commissioner, 82
+// T.C. 766 (1984), aff'd 793 F.2d 139 (6th Cir. 1986)) prong 4
+// (executed under penalties of perjury BY TAXPAYER); § 6501 ASED
+// NEVER STARTS on § 6020(b) SFR — IRS may assess at any time
+// forever. Late-filed valid return AFTER SFR starts § 6501 ASED
+// clock. 26 CFR § 301.6020-1 + Form 13496 — § 6020(b) return must
+// identify taxpayer + contain sufficient info + purport to be a
+// return. Trader-relevant because non-filing trader receives § 6020
+// (b) SFR with worst-case computations (no Schedule C deductions +
+// no § 475(f) M2M + no § 1091 wash sale + no cost basis on 1099-B).
+async fn section_6020_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6020::Section6020Input>,
+) -> Result<Json<traderview_expense::section_6020::Section6020Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6020::check(&b)))
+}
 
 async fn section_6038d_route(
     _u: AuthUser,
