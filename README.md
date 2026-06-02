@@ -5296,6 +5296,49 @@ Pinned by `basis_increased_by_inclusion` ($200M + $1.5M = $201.5M), `pti_distrib
 
 Mounted at `POST /api/calc/section-1293`. Thirty tests pin: **pro rata share 1% ordinary and LTCG split** ($1M + $500K); **character preserved when statement provided**; **missing information statement violation** (§ 1.1295-1(g)); **basis increased by inclusion**; **PTI distribution reduces basis**; **PTI distribution capped at inclusion**; **zero ordinary earnings no ordinary inclusion**; **zero net capital gain no LTCG inclusion**; **pro rata 5% = 5x baseline**; **subpart F overlap note engages**; **§ 1294 deferral election note engages**; **citation pins all authorities** (§ 1293(a)(1)(A)-(B) + § 1293(b)(1)-(2) + § 1293(c) + § 1293(d)(1)-(2) + § 1293(e) + § 1293(f) + § 1222(11) + § 1294 + § 1295 + § 1296 + § 1297(d) + § 951 + § 1(h)(11) + § 1298(f) + Treas. Reg. § 1.1293-1 to -3 + § 1.1295-1(g) + Form 8621 + 1986 Tax Reform + HIRE Act 2010); **note pins subsection (a)(1)(A) ordinary income**; **note pins subsection (a)(1)(B) LTCG character preserved**; **note pins subsection (b)(1) ordinary earnings definition**; **note pins subsection (b)(2) net capital gain § 1222(11)**; **note pins subsection (c) pro rata share daily ratable**; **note pins subsection (d)(1) basis increase**; **note pins subsection (d)(2) basis decrease PTI**; **note pins subsection (e) subpart F coordination**; **note pins subsection (f) § 1294 deferral**; **note pins § 1.1295-1(g) information statement**; **note pins qualified dividend treatment § 1(h)(11)**; **note pins Form 8621 annual reporting**; **note pins PFIC framework cluster**; **note pins 1986 Tax Reform origin**; **character preservation unique to information statement invariant**; **basis tracking invariant increase then decrease**; **defensive overflow saturating**; **LTCG character preserved regardless of holding period**.
 
+`traderview-expense::section_1294` is the **IRC § 1294 election to extend time for payment of tax on undistributed QEF earnings** module — natural sibling to `section_1293` (QEF current-taxation mechanic). Where § 1293 imposes immediate current-year inclusion of a shareholder's pro rata share of QEF ordinary earnings and net capital gain (regardless of whether the fund has actually distributed the cash), § 1294 provides a SAFETY VALVE — the shareholder MAY ELECT to extend time for payment of the tax attributable to UNDISTRIBUTED EARNINGS, posting § 6601 interest on the deferred amount until the election terminates. Completes the PFIC framework cluster: `section_1291` (default excess distribution + interest charge); `section_1293` (QEF current-taxation mechanic); `section_1294` (QEF undistributed-earnings tax deferral — this module); `section_1295` (QEF election mechanism); `section_1296` (mark-to-market alternative); `section_1297` (PFIC definition); `section_1298` (special rules).
+
+Trader-critical because § 1294 deferral is the only escape valve for cash-poor QEF shareholders — when a QEF generates substantial paper income but distributes minimal cash, § 1293 inclusion creates a tax-payment shortfall. § 1294 lets the shareholder defer payment until the QEF actually distributes the cash or the shareholder disposes of the QEF stock, at the cost of § 6601 interest accrual.
+
+**§ 1294(b) Undistributed earnings formula**:
+
+| Component | Direction |
+|-----------|-----------|
+| § 1293(a) includible amount (the "includible amount") | + |
+| Distribution received during QEF's taxable year | - |
+| Portion of includible amount attributable to QEF stock TRANSFERRED OR DISPOSED OF before end of QEF's year | - |
+| = **UNDISTRIBUTED EARNINGS** | (deferrable under § 1294) |
+
+Pinned by `baseline_election_undistributed_earnings_80m` ($100M - $20M - $0 = $80M), `distribution_reduces_undistributed_earnings` ($100M - $50M = $50M), `disposed_stock_portion_reduces_undistributed` ($100M - $20M - $30M = $50M), `distribution_exceeds_includible_no_undistributed` (saturating subtraction = $0).
+
+**§ 1294(c) § 6601 interest charge** — interest accrues at § 6621 quarterly underpayment rate, compounded DAILY per § 6622, paid on termination of election. Pinned by `interest_accrues_at_6601_rate`, `deferred_tax_at_37_percent` ($80M × 37% = $29.6M deferred tax).
+
+**§ 1294(d) Election unavailable carveouts**:
+
+| Subsection | Carveout |
+|------------|----------|
+| § 1294(d)(1) | § 551 foreign personal holding company rules engaged |
+| § 1294(d)(2) | § 951 controlled foreign corporation subpart F rules engaged (§ 1297(d) PFIC-CFC overlap resolves) |
+
+Pinned by `section_551_engaged_election_unavailable`, `section_951_engaged_election_unavailable`, `election_uniquely_engages_with_no_carveouts_invariant`.
+
+**§ 1294(e) Six termination events** — election terminates upon EARLIEST of:
+
+1. Distribution by QEF reducing undistributed earnings
+2. Disposition of QEF stock (transfer, sale, exchange, redemption)
+3. Affirmative termination by shareholder
+4. Death of individual shareholder
+5. QEF ceases to be a QEF
+6. Shareholder ceases to be a U.S. person
+
+Upon termination: deferred tax plus accrued § 6601 interest becomes DUE AND PAYABLE. Pinned by `termination_event_truth_table_seven_cells` (6 termination events + NoTermination = 7-cell sweep), `termination_distribution_engages`, `termination_disposition_engages`, `termination_affirmative_engages`, `termination_death_engages`, `termination_qef_ceased_engages`, `termination_us_person_ceased_engages`, `no_termination_no_due_amount`.
+
+**Form 8621 annual election + Treas. Reg. § 1.1294-1T** — election filed with Form 8621 (Information Return by Shareholder of PFIC or QEF); election made annually (must be re-elected each year for new undistributed earnings); deferred-tax-and-interest balance reported on each year's Form 8621.
+
+**§ 1294 deferral RARELY USED in practice** — interest charge accrual at § 6601 rate (quarterly underpayment rate, often 7-8% during 2023-2025) erodes deferral benefit; termination upon disposition or distribution creates lump-sum tax + interest liability; annual election + complex reporting increase compliance burden; most QEFs distribute cash sufficient to cover the tax liability.
+
+Mounted at `POST /api/calc/section-1294`. Thirty-four tests pin: **baseline election undistributed earnings $80M** ($100M - $20M); **election available when no FPHC no CFC**; **deferred tax at 37%** ($80M × 37% = $29.6M); **distribution reduces undistributed earnings** ($100M - $50M = $50M); **disposed stock portion reduces undistributed** ($100M - $20M - $30M = $50M); **distribution exceeds includible no undistributed** (saturating to zero); **§ 551 FPHC engaged election unavailable**; **§ 951 CFC engaged election unavailable**; **election not made no deferral**; **interest accrues at § 6601 rate**; **termination distribution engages**; **termination disposition engages**; **termination affirmative engages**; **termination death engages**; **termination QEF ceased engages**; **termination US person ceased engages**; **no termination no due amount**; **termination event truth table seven cells** (6 events + NoTermination); **election uniquely engages with no carveouts invariant**; **citation pins all authorities** (§ 1294(a)(1) + § 1294(b) + § 1294(c) + § 1294(d)(1)-(2) + § 1294(e) + § 1293(a) + § 1295 + § 1296 + § 1297 + § 551 + § 951 + § 6601 + § 6621 + § 6622 + Treas. Reg. § 1.1294-1T + Form 8621 + 1986 Tax Reform Act § 1235); **note pins subsection (a)(1) election available**; **note pins subsection (b) undistributed definition**; **note pins subsection (c) § 6601 interest**; **note pins subsection (d)(1) FPHC carveout**; **note pins subsection (d)(2) CFC carveout**; **note pins subsection (e) six termination events**; **note pins termination due and payable**; **note pins Form 8621 annual election**; **note pins Treas. Reg. § 1.1294-1T temporary**; **note pins practical relevance rarely used**; **note pins PFIC framework cluster**; **note pins 1986 Tax Reform origin**; **defensive zero includible no undistributed**; **defensive overflow saturating**.
+
 `traderview-expense::section_1295` is the **IRC §1295 Qualified Electing Fund (QEF) election module** — the natural companion to `section_1296`. Both let a U.S. shareholder escape the punitive §1291 excess-distribution regime, but with different tradeoffs:
 
 - **§1296 MTM** (iter 22) — annual mark-to-market reported as ordinary income/loss. Loss limited to "unreversed inclusions" (cumulative prior gain). Only available for marketable PFIC stock. Simpler; doesn't require the PFIC to cooperate.

@@ -207,6 +207,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1291",          post(section_1291_route))
         .route("/calc/section-1293",          post(section_1293_route))
+        .route("/calc/section-1294",          post(section_1294_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
@@ -2150,6 +2151,41 @@ async fn section_1293_route(
         ));
     }
     Ok(Json(traderview_expense::section_1293::check(&b)))
+}
+
+// ── §1294 QEF election to extend time for payment of tax ─────────────
+// Mounted at /api/calc/section-1294. § 1294(a)(1) U.S. shareholder of
+// QEF MAY ELECT to extend time for payment of tax attributable to
+// share of UNDISTRIBUTED EARNINGS. § 1294(b) undistributed earnings
+// = § 1293(a) includible amount - distributions - disposed-stock
+// portion. § 1294(c) § 6601 interest accrues at § 6621 quarterly
+// underpayment rate, compounded DAILY per § 6622, must be paid on
+// termination. § 1294(d)(1) election UNAVAILABLE if § 551 foreign
+// personal holding company rules engaged; § 1294(d)(2) election
+// UNAVAILABLE if § 951 subpart F CFC rules engaged (§ 1297(d)
+// PFIC-CFC overlap rule resolves). § 1294(e) termination upon
+// EARLIEST of (1) distribution reducing undistributed earnings;
+// (2) QEF stock disposition; (3) affirmative termination; (4) death
+// of individual shareholder; (5) QEF ceases to be QEF; (6)
+// shareholder ceases to be U.S. person. Treas. Reg. § 1.1294-1T
+// temporary regulations. Form 8621 annual election + reporting.
+// RARELY USED in practice due to interest charge accrual + complex
+// reporting. Completes PFIC framework cluster: § 1291 + § 1293 +
+// § 1294 + § 1295 + § 1296 + § 1297 + § 1298. Sibling cluster:
+// § 6601 + § 6621 + § 6622 + Form 8621 + § 551 + § 951 + § 1297(d).
+
+async fn section_1294_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1294::Section1294Input>,
+) -> Result<Json<traderview_expense::section_1294::Section1294Result>, ApiError> {
+    if b.tax_rate_on_undistributed_bps > 10_000
+        || b.section_6601_interest_rate_bps > 10_000
+    {
+        return Err(ApiError::BadRequest(
+            "rate bps must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1294::check(&b)))
 }
 
 // ── §1295 PFIC Qualified Electing Fund election ──────────────────────
