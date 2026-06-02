@@ -481,6 +481,11 @@ use traderview_expense::tenant_in_foreclosure_protection::{
     check as check_tenant_foreclosure_protection,
     CheckResult as TenantForeclosureResult, Input as TenantForeclosureInput,
 };
+use traderview_expense::tenant_in_unit_appliance_repair_responsibility::{
+    check as check_tenant_in_unit_appliance_repair_responsibility,
+    TenantInUnitApplianceRepairResponsibilityInput,
+    TenantInUnitApplianceRepairResponsibilityResult,
+};
 use traderview_expense::tenant_late_fee_cap::{
     check as check_tenant_late_fee_cap,
     TenantLateFeeCapInput, TenantLateFeeCapResult,
@@ -1101,6 +1106,7 @@ pub fn router() -> Router<AppState> {
         .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
         .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
         .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
+        .route("/tenant-in-unit-appliance-repair-responsibility", axum::routing::post(tenant_in_unit_appliance_repair_responsibility_route))
         .route("/tenant-late-fee-cap", axum::routing::post(tenant_late_fee_cap_route))
         .route("/tenant-lease-guarantor-disclosure", axum::routing::post(tenant_lease_guarantor_disclosure_route))
         .route("/tenant-estoppel-certificate", axum::routing::post(tenant_estoppel_certificate_route))
@@ -6207,6 +6213,60 @@ async fn tenant_in_foreclosure_protection_route(
         ));
     }
     Ok(Json(check_tenant_foreclosure_protection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_in_unit_appliance_repair_responsibility: Multi-jurisdictional
+// tenant in-unit appliance repair and replacement responsibility
+// compliance framework. When a landlord provides appliances
+// (refrigerator, stove/range, dishwasher, washer/dryer, microwave,
+// HVAC) as part of a rental tenancy, what repair and replacement
+// obligations attach under the implied warranty of habitability and
+// state-specific mandatory-provision statutes, what tenant remedies
+// apply, and what failure-mode liabilities expose landlord when an
+// appliance fails? Mounted at POST /api/rental/tenant-in-unit-
+// appliance-repair-responsibility. Four-jurisdiction framework: New
+// York (MOST PRESCRIPTIVE for refrigerator provision — NYC Admin.
+// Code § 27-2014 + § 27-2008 + N.Y. Multiple Dwelling Law § 78 require
+// refrigerator and stove in NYC multi-unit dwellings + N.Y. Real
+// Property Law § 235-b implied warranty + 28 RCNY § 32-04 HPD
+// enforcement); Texas (Tex. Prop. Code § 92.052 landlord duty to
+// repair conditions materially affecting health/safety + § 92.053
+// notice + § 92.056 tenant remedies including repair-and-deduct up
+// to one month's rent + lease termination + judicial order);
+// California (Cal. Civ. Code § 1941 + § 1941.1 implied warranty +
+// § 1941.1(a)(8) STOVE/RANGE requirement + § 1942(a) repair-and-
+// deduct max twice in 12-month period + § 1942.1 no-waiver + Green
+// v. Superior Court, 10 Cal. 3d 616 (1974) + Hinson v. Delis, 26
+// Cal. App. 3d 62 (1972) appliance-specific habitability); Default
+// (common-law implied warranty per Hilder v. St. Peter, 478 A.2d
+// 202 (Vt. 1984) + Lemle v. Breeden, 51 Haw. 426 (1969)). Six
+// categories of in-unit appliances: stove/range (CA + NYC mandatory),
+// refrigerator (NYC mandatory in multi-unit), dishwasher, washer/
+// dryer, microwave, HVAC (heat universal + cooling NYC post-2022
+// LL18). Five universal failure-mode liabilities: refusal to repair
+// → habitability breach + repair-and-deduct; constructive eviction
+// from extended non-repair → tenant termination; replacement
+// materially lower quality → habitability dispute; tenant-caused
+// damage allocation dispute → lease terms vs § 1942.1 no-waiver;
+// used appliance failure due to end-of-useful-life → IRS § 168 5-7
+// year + tort if injury. Reasonable repair window typically 7 days
+// for non-emergency + 24-72 hours for major appliance. Distinct
+// from siblings rental_hot_water_temperature, rental_gas_appliance_
+// ban, rental_carbon_monoxide_detector, rental_chimney_fireplace_
+// inspection_disclosure (iter 471), rental_fire_extinguisher_
+// requirement (iter 473), rental_hardwired_smoke_alarm_responsibility
+// (iter 481), rental_garage_door_safety_compliance (iter 483),
+// rental_natural_gas_leak_response (iter 485), landlord_repair_
+// response_timeframe.
+// ---------------------------------------------------------------------------
+
+async fn tenant_in_unit_appliance_repair_responsibility_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantInUnitApplianceRepairResponsibilityInput>,
+) -> Result<Json<TenantInUnitApplianceRepairResponsibilityResult>, ApiError> {
+    Ok(Json(check_tenant_in_unit_appliance_repair_responsibility(&b)))
 }
 
 // ---------------------------------------------------------------------------
