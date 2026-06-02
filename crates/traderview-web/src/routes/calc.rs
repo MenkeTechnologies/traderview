@@ -95,6 +95,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7216",          post(section_7216_route))
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7207",          post(section_7207_route))
+        .route("/calc/section-7421",          post(section_7421_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7434",          post(section_7434_route))
         .route("/calc/section-7491",          post(section_7491_route))
@@ -3130,6 +3131,31 @@ async fn section_7430_route(
         ));
     }
     Ok(Json(traderview_expense::section_7430::compute(&b)))
+}
+
+// ── §7421 Anti-Injunction Act (AIA) ─────────────────────────────────
+// Mounted at /api/calc/section-7421. § 7421(a) general bar — "no suit
+// for the purpose of restraining the assessment or collection of any
+// tax shall be maintained in any court by any person." Eleven
+// statutory exceptions: §§ 6015(e) + 6212(a)+(c) + 6213(a) + 6232(c)
+// + 6330(e)(1) + 6331(i) + 6672(c) + 6694(c) + 7426(a)+(b)(1) +
+// 7429(b) + 7436. Enochs v. Williams Packing, 370 U.S. 1 (1962)
+// judicial 2-prong exception: (1) government cannot ultimately
+// prevail AND (2) equity jurisdiction exists; BOTH required
+// conjunctively. CIC Services v. IRS, 593 U.S. 209 (2021) — pre-
+// enforcement challenge to IRS reporting requirement / regulation is
+// NOT a suit to restrain assessment or collection within § 7421(a).
+// Trader-procedural-critical: default answer for TRO/preliminary
+// injunction against IRS levy/lien/assessment = NEVER. Default
+// pathway: pay tax + file refund claim under § 6402/§ 7422 + refund
+// suit. Paired with § 7521 (interview procedure) + § 7525 (FATP
+// privilege) + § 7811 (TAOs) + § 7430 (litigation costs).
+
+async fn section_7421_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7421::Section7421Input>,
+) -> Result<Json<traderview_expense::section_7421::Section7421Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7421::check(&b)))
 }
 
 // ── §162(f) fines and penalties nondeductibility ────────────────────
