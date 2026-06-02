@@ -148,6 +148,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6695",          post(section_6695_route))
         .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-6701",          post(section_6701_route))
+        .route("/calc/section-6707a",         post(section_6707a_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -4477,6 +4478,29 @@ async fn section_6701_route(
         ));
     }
     Ok(Json(traderview_expense::section_6701::compute(&b)))
+}
+
+// ── §6707A reportable transaction penalty ───────────────────────────
+// Mounted at /api/calc/section-6707a. § 6707A(b)(1) base = 75% of
+// decrease in tax shown on return as result of transaction. §
+// 6707A(b)(2) maximum: listed transaction = $200,000 entity /
+// $100,000 natural person; other reportable = $50,000 entity /
+// $10,000 natural person. § 6707A(b)(3) minimum: $10,000 entity /
+// $5,000 natural person. § 6707A(c)(2) listed transaction =
+// substantially similar to transaction specifically identified by
+// Secretary as tax avoidance under § 6011. Trader-relevant for
+// partnerships caught in syndicated conservation easements + micro-
+// captive § 831(b) insurance + monetized installment sales +
+// abusive § 6011 reportable transactions. Stacks on top of § 6662A
+// accuracy-related penalty. CIC Services v. IRS, 593 U.S. 209 (2021)
+// — pre-enforcement challenge to § 6707A reporting requirements NOT
+// barred by § 7421(a) Anti-Injunction Act.
+
+async fn section_6707a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6707a::Section6707AInput>,
+) -> Result<Json<traderview_expense::section_6707a::Section6707AResult>, ApiError> {
+    Ok(Json(traderview_expense::section_6707a::check(&b)))
 }
 
 // ── §336 gain/loss on property distributed in complete liquidation ─

@@ -366,6 +366,7 @@ pub mod section_6694;
 pub mod section_6695;
 pub mod section_6700;
 pub mod section_6701;
+pub mod section_6707a;
 pub mod seed_rules;
 pub mod self_employment_tax;
 pub mod sheet;
