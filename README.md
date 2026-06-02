@@ -2705,6 +2705,58 @@ Mounted at `POST /api/rental/rental-carbon-monoxide-detector`. Thirty-five tests
 
 Mounted at `POST /api/rental/rental-elevator-safety-inspection`. Thirty-eight tests pin: **CA clean compliant**; **CA annual 366 days violation** (§ 7320); **CA uncertified inspector violation** (§ 7317 4 years); **CA Form 80 not posted violation**; **CA $200/day penalty exact compliant**; **CA wrong penalty amount violation**; **NYC clean compliant**; **NYC annual Category 1 366 days violation** (§ 28-304 PCT); **NYC hydraulic Category 3 3-year boundary compliant**; **NYC hydraulic Category 3 over 3-year violation**; **NYC non-hydraulic no Category 3 check**; **NYC Category 5 5-year boundary compliant**; **NYC Category 5 over 5-year violation**; **NYC unapproved agency violation** (§ 28-304.6.1); **NYC PVT-A not filed violation** (60 days); **NYC penalty at $3,000 minimum in range**; **NYC penalty at $10,000 maximum in range**; **NYC penalty below minimum violation**; **NYC penalty above maximum violation**; **default clean compliant**; **default QEI certified inspector accepted**; **default no certification violation**; **citation pins CA / NYC / default authorities** (all three); **note pins CA $200/day penalty**; **note pins CA 4 years inspector experience**; **note pins NYC three test categories** (Category 1 PCT + Category 3 hydraulic + Category 5 full); **note pins NYC PVT-A 60-day filing**; **note pins NYC $3,000-$10,000 penalty range**; **note pins default ASME A17.1-2025**; **note pins default three category schedule**; **Category 3 only engages for hydraulic invariant**; **CA uniquely requires Form 80 invariant**; **NYC uniquely requires PVT-A 60-day filing invariant**; **NYC Category 5 5-year invariant**; **inspector certification truth table for default** (4-cell sweep — 3 certified types + None); **multiple NYC violations stack** (3 violations).
 
+`traderview-expense::rental_flood_hazard_disclosure` is the **multi-jurisdictional residential rental flood hazard disclosure framework module** — climate-era statutory disclosure regime added across multiple states between 2018 and 2024. Trader-landlord critical because waterfront / coastal / floodplain-zone investment properties (common in trader real-estate portfolios) trigger mandatory written pre-lease disclosure under state law, and failure routes directly to tenant LEASE TERMINATION right plus statutory damages exposure. Distinct from siblings `rental_basement_water_intrusion_disclosure` (subsurface water), `rental_sinkhole_disclosure` (FL specific), `rental_property_registration` (registration regimes), `tenant_in_foreclosure_protection`.
+
+**Four-jurisdiction statutory framework**:
+
+| Jurisdiction | Source | Effective Date | Trigger | Tenant Remedy |
+|--------------|--------|----------------|---------|---------------|
+| **California** | Cal. Gov. Code § 8589.45 (AB 646 of 2017) | **July 1, 2018** | ACTUAL KNOWLEDGE + FEMA Special Flood Hazard Area OR Cal OES area of potential flooding | Civil penalties + lease damages |
+| **Texas** | Tex. Prop. Code § 92.0135 (HB 531 of 2021) | **January 1, 2022** | 100-year floodplain (unless elevation above per federal regulations) OR 5-year prior flooding damage | **TERMINATE LEASE within 30 days of SUBSTANTIAL LOSS** (50%+ of personal property value) |
+| **New Jersey** | N.J.S.A. 46:8-50 et seq. (Flood Risk Notification Law 2024) | **March 20, 2024** | Commercial OR 3+ residential units (4+ if owner-occupied) + FEMA 100-year OR 500-year floodplain | **TERMINATE LEASE + statutory damages + attorney fees** |
+| **Default** | Common-law fraudulent concealment + implied warranty of habitability | N/A | Actual/constructive knowledge + concealment | Common-law damages |
+
+Pinned by `ca_special_flood_hazard_compliant`, `ca_no_landlord_knowledge_no_obligation`, `ca_pre_july_2018_no_obligation` (boundary precision — June 2018 = no obligation, July 2018 = obligation), `texas_floodplain_100_year_triggers_obligation`, `texas_elevation_above_floodplain_exception_lifts_obligation`, `texas_pre_2022_no_obligation` (boundary), `nj_3_unit_floodplain_triggers_obligation`, `nj_2_unit_no_obligation`, `nj_pre_march_2024_no_obligation` (boundary — Feb 2024 = no, March 2024 = obligation).
+
+**California content requirements — Cal. Gov. Code § 8589.45**:
+
+| Content element | Source |
+|------------------|--------|
+| Special Flood Hazard Area / area of potential flooding statement | § 8589.45(a)(1) |
+| Cal OES MyHazards website URL | § 8589.45(a)(2) |
+| Renter's insurance + flood insurance recommendation | § 8589.45(a)(3) |
+| Owner not required to provide additional info statement | § 8589.45(a)(4) |
+| 8-point minimum type size | § 8589.45(c) |
+
+Pinned by `ca_missing_myhazards_url_violation`, `ca_missing_insurance_recommendation_violation`, `ca_under_8_point_type_violation`, `ca_missing_disclosure_violation`.
+
+**Texas two-prong trigger — Tex. Prop. Code § 92.0135**:
+
+| Prong | Source | Trigger | Exception |
+|-------|--------|---------|-----------|
+| 1 (geographic) | § 92.0135(a)(1) | Dwelling in 100-year floodplain | Elevation above per federal regulations |
+| 2 (historical) | § 92.0135(a)(2) | Landlord knowledge of flooding damage within preceding 5 years | None |
+
+Pinned by `texas_5_year_prior_flooding_triggers_obligation`. The TX 30-day tenant termination right requires: (1) failed disclosure; (2) tenant suffered SUBSTANTIAL LOSS (50%+ of personal property repair/replacement value); (3) termination filed within 30 days of loss. Pinned by `texas_substantial_loss_within_30_days_engages_termination_right` (day 15 = engaged; day 31 = no longer engaged).
+
+**New Jersey unit-threshold matrix — N.J.S.A. 46:8-50**:
+
+| Owner-occupied? | Unit count | Disclosure obligation |
+|------------------|------------|------------------------|
+| No (investor-owned) | 1-2 | NOT required |
+| No (investor-owned) | 3+ | REQUIRED |
+| Yes | 1-3 | NOT required |
+| Yes | 4+ | REQUIRED |
+| Any | Commercial | REQUIRED regardless of unit count |
+
+Pinned by `nj_3_unit_floodplain_triggers_obligation`, `nj_2_unit_no_obligation`, `nj_owner_occupied_4_unit_triggers_obligation`, `nj_owner_occupied_3_unit_no_obligation`, `nj_commercial_property_triggers_regardless_of_units`. NJ uniquely engages the **500-year Moderate Risk Flood Hazard Area** trigger — pinned by `nj_uniquely_engages_500_year_moderate_risk_invariant` (CA + TX only engage 100-year).
+
+**New Jersey format requirements — N.J.S.A. 46:8-50(c)**: separate rider + 12-point minimum typeface + signed/acknowledged by tenant. Pinned by `nj_missing_rider_with_signature_violation`.
+
+**Lease termination right uniquely engages in TX (substantial-loss-conditioned) and NJ (categorical)** — pinned by `nj_failure_to_disclose_engages_lease_termination_right`. CA does not provide statutory lease termination right (general civil + lease damages instead).
+
+Mounted at `POST /api/rental/rental-flood-hazard-disclosure`. Thirty-five tests pin: **CA special flood hazard compliant**; **CA no landlord knowledge no obligation**; **CA pre-July 2018 no obligation** (boundary precision); **CA missing disclosure violation**; **CA missing MyHazards URL violation**; **CA missing insurance recommendation violation**; **CA under-8-point type violation**; **Texas floodplain 100-year triggers obligation**; **Texas elevation above floodplain exception lifts obligation**; **Texas 5-year prior flooding triggers obligation**; **Texas substantial loss within 30 days engages termination right** (day 15 engaged; day 31 no longer engaged); **Texas pre-2022 no obligation**; **NJ 3-unit floodplain triggers obligation**; **NJ 2-unit no obligation**; **NJ owner-occupied 4-unit triggers obligation**; **NJ owner-occupied 3-unit no obligation**; **NJ commercial property triggers regardless of units**; **NJ pre-March 2024 no obligation** (boundary); **NJ moderate risk 500-year floodplain triggers obligation**; **NJ missing rider with signature violation**; **NJ failure to disclose engages lease termination right**; **default no obligation**; **citation pins all four jurisdictions**; **note pins CA July 2018 effective date**; **note pins CA MyHazards website**; **note pins CA renter's flood insurance recommendation**; **note pins CA 8-point type requirement**; **note pins Texas January 2022 two-prong framework**; **note pins Texas 30-day substantial loss remedy**; **note pins NJ March 2024 effective date unit threshold**; **note pins NJ 12-point rider signature requirement**; **note pins NJ lease termination remedy**; **note pins FEMA NFIP separate from state disclosure**; **jurisdiction truth table four cells**; **NJ uniquely engages 500-year moderate risk invariant**.
+
 `traderview-expense::rental_energy_benchmarking` is the **rental property energy benchmarking + GHG emissions disclosure compliance module** — when must a trader-landlord owning a large multifamily building annually report energy/water consumption AND comply with carbon emissions caps? Trader-landlord critical for any large multifamily owner in NYC + Boston + other jurisdictions with building-emissions ordinances: failure triggers ongoing per-ton penalties ($268/ton NYC LL97; $300/ton Boston BERDO 2.0) plus annual benchmarking penalties ($2,000/year max NYC LL84). Distinct from siblings `rental_property_registration` (general landlord registration), `rental_gas_appliance_ban` (new construction electrification mandate), and `landlord_annual_rent_statement` (rent disclosure).
 
 **Three regimes** — NYC most aggressive vs Boston BERDO 2.0 vs Default:

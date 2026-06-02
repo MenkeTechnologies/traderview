@@ -516,6 +516,11 @@ use traderview_expense::rental_elevator_safety_inspection::{
     check as check_rental_elevator_safety_inspection,
     RentalElevatorSafetyInspectionInput, RentalElevatorSafetyInspectionResult,
 };
+use traderview_expense::rental_flood_hazard_disclosure::{
+    check as check_rental_flood_hazard_disclosure,
+    FloodHazardDisclosureInput as RentalFloodHazardDisclosureInput,
+    FloodHazardDisclosureResult as RentalFloodHazardDisclosureResult,
+};
 use traderview_expense::rental_carbon_monoxide_detector::{
     check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
     RentalCarbonMonoxideDetectorResult,
@@ -946,6 +951,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
+        .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
@@ -6145,6 +6151,43 @@ async fn rental_elevator_safety_inspection_route(
     Json(b): Json<RentalElevatorSafetyInspectionInput>,
 ) -> Result<Json<RentalElevatorSafetyInspectionResult>, ApiError> {
     Ok(Json(check_rental_elevator_safety_inspection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_flood_hazard_disclosure: multi-jurisdictional residential rental
+// flood hazard disclosure framework — climate-era statutory disclosure
+// regime added across multiple states between 2018 and 2024. Cal. Gov.
+// Code § 8589.45 (AB 646 of 2017, effective July 1, 2018) — actual-
+// knowledge disclosure of FEMA Special Flood Hazard Area OR Cal OES area
+// of potential flooding + MyHazards URL + renter's/flood insurance
+// recommendation + 8-point minimum type. Tex. Prop. Code § 92.0135 (HB
+// 531 of 2021, effective January 1, 2022) — 100-year floodplain notice
+// (unless elevation above per federal regulations) + 5-year prior
+// flooding damage knowledge; tenant remedy: TERMINATE LEASE within 30
+// days of substantial loss (50%+ personal property value). N.J.S.A.
+// 46:8-50 et seq. (NJ Flood Risk Notification Law, effective March 20,
+// 2024) — landlords of commercial OR 3+ residential units (or 4+ where
+// owner-occupied) must disclose FEMA 100-year OR 500-year floodplain;
+// SEPARATE RIDER + 12-point minimum + signed/acknowledged by tenant;
+// tenant remedy: lease termination + statutory damages + attorney fees.
+// Default — no statewide regime; common-law fraudulent concealment +
+// implied warranty of habitability available. Mounted at POST /api/
+// rental/rental-flood-hazard-disclosure. Trader-landlord critical
+// because waterfront / coastal / floodplain-zone investment properties
+// (common in trader real-estate portfolios) trigger mandatory written
+// pre-lease disclosure; failure routes directly to tenant LEASE
+// TERMINATION right plus statutory damages exposure. Sibling cluster:
+// rental_basement_water_intrusion_disclosure (subsurface water),
+// rental_sinkhole_disclosure (FL specific), rental_property_registration,
+// tenant_in_foreclosure_protection.
+// ---------------------------------------------------------------------------
+
+async fn rental_flood_hazard_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFloodHazardDisclosureInput>,
+) -> Result<Json<RentalFloodHazardDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_flood_hazard_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
