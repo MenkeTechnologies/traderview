@@ -224,6 +224,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-423",           post(section_423_route))
         .route("/calc/section-4940",          post(section_4940_route))
         .route("/calc/section-4941",          post(section_4941_route))
+        .route("/calc/section-4942",          post(section_4942_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
@@ -951,6 +952,39 @@ async fn section_4941_route(
     Json(b): Json<traderview_expense::section_4941::Section4941Input>,
 ) -> Result<Json<traderview_expense::section_4941::Section4941Result>, ApiError> {
     Ok(Json(traderview_expense::section_4941::check(&b)))
+}
+
+// ── § 4942 taxes on PF failure to distribute income ──────────────────
+// Mounted at /api/calc/section-4942. Pure compute; § 4942(a) 30%
+// Tier-1 excise tax on undistributed income for each year/partial
+// year deficiency remains uncorrected; § 4942(b) additional 100%
+// Tier-2 if PF fails to make up deficient distribution within 90
+// days of IRS notice. Distributable amount per § 4942(d) = minimum
+// investment return (5% of non-charitable-use FMV under § 4942(e),
+// reduced by acquisition indebtedness) reduced by § 4940 excise tax
+// and UBI tax; must be paid as qualifying distributions by end of
+// immediately following taxable year. Qualifying distributions per
+// § 4942(g)(1)(A) = amount paid for § 170(c)(2)(B) religious/
+// charitable/scientific/literary/educational/public purposes
+// including reasonable and necessary administrative expenses, or
+// § 4942(g)(1)(B) amount paid to acquire asset used directly in
+// exempt purpose. § 4942(g)(2) set-asides for specific project
+// payable within 60 months if suitability or cash distribution test
+// satisfied. § 4942(h) treatment first out of prior-year UI then
+// current year unless § 4942(h)(2) corpus election. § 4942(i) excess
+// distributions carry forward FIVE years. Exceptions: § 4942(a)(2)(A)
+// operating foundations § 4942(j)(3); § 4942(a)(2)(B) conduit
+// foundations § 170(b)(1)(F)(ii); § 4942(j)(5) grandfathered PFs
+// pre-May-27-1969. Distinct from § 4940 (iter 470) ANNUAL NII tax
+// and § 4941 (iter 468) per-act self-dealing punitive — § 4942 is
+// ANNUAL MINIMUM-DISTRIBUTION REQUIREMENT backed by 30% + 100%
+// penalty. Original enactment Tax Reform Act of 1969 Pub. L. 91-172.
+
+async fn section_4942_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4942::Section4942Input>,
+) -> Result<Json<traderview_expense::section_4942::Section4942Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4942::check(&b)))
 }
 
 // ── § 4958 intermediate sanctions on excess benefit transactions ─────
