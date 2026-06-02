@@ -222,6 +222,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
+        .route("/calc/section-4940",          post(section_4940_route))
         .route("/calc/section-4941",          post(section_4941_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
@@ -875,6 +876,40 @@ async fn section_4974_route(
     Json(b): Json<traderview_expense::section_4974::Section4974Input>,
 ) -> Result<Json<traderview_expense::section_4974::Section4974Result>, ApiError> {
     Ok(Json(traderview_expense::section_4974::check(&b)))
+}
+
+// ── § 4940 annual excise tax on private foundation NII ───────────────
+// Mounted at /api/calc/section-4940. Pure compute; § 4940(a) imposes
+// annual excise tax on net investment income of every domestic tax-
+// exempt private foundation (except § 4940(d) exempt operating
+// foundations). Post-Dec-20-2019 regime: single flat rate of 1.39%
+// per Further Consolidated Appropriations Act, 2020, Pub. L. 116-94
+// (signed December 20, 2019) which amended § 4940(a) and REPEALED
+// former § 4940(e). Pre-Dec-20-2019 regime: 2% standard with 1%
+// reduced under former § 4940(e) for foundations meeting
+// distribution-requirement tests (qualifying distributions ≥ average
+// 5-year payout + 1% of NII). Net investment income per § 4940(c):
+// gross investment income (§ 4940(c)(1) — interest + dividends +
+// rents + securities-loan payments + royalties) plus net capital
+// gain from sale of investment property (§ 4940(c)(4)(A)) minus
+// allowable deductions (§ 4940(c)(2) — ordinary and necessary
+// expenses paid or incurred for production/collection of gross
+// investment income). Exempt operating foundations per § 4940(d)
+// four-part test: (A) publicly supported for at least 10 prior
+// taxable years; (B) governing body broadly representative with not
+// more than 25% disqualified persons under § 4946; (C) operating-
+// foundation status under § 4942(j)(3); (D) no officer who is
+// disqualified individual appointed by disqualified persons.
+// Foreign private foundations under § 4948 separate regime at 4% on
+// US-source gross investment income. § 501(c)(3) public charities NOT
+// subject to § 4940. Quarterly estimated tax payments under § 6655.
+// Original enactment Tax Reform Act of 1969, Pub. L. 91-172.
+
+async fn section_4940_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4940::Section4940Input>,
+) -> Result<Json<traderview_expense::section_4940::Section4940Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4940::check(&b)))
 }
 
 // ── § 4941 taxes on self-dealing (private foundation regime) ─────────
