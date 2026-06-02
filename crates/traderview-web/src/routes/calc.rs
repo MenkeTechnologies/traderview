@@ -268,6 +268,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-951a",          post(section_951a_route))
         .route("/calc/section-956",           post(section_956_route))
         .route("/calc/section-959",           post(section_959_route))
+        .route("/calc/section-960",           post(section_960_route))
         .route("/calc/section-962",           post(section_962_route))
         .route("/calc/section-965",           post(section_965_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
@@ -3080,6 +3081,44 @@ async fn section_959_route(
 // § 245A (DRD pathway alternative — mutually exclusive with § 962
 // on actual distribution), § 250 (deduction), § 960 (FTC), § 59A
 // (BEAT separate regime), § 911 (FEIE individual regime).
+
+// ── § 960 Deemed-Paid Credit for Subpart F + GILTI/NCTI + PTEP ──────
+// Mounted at /api/calc/section-960 (iter 520). Pure compute. § 960
+// grants domestic corporate US shareholders deemed-paid FTC for foreign
+// taxes paid by CFC attributable to amounts US shareholder includes in
+// income. § 960(a) Subpart F deemed-paid (full creditability). § 960(b)
+// PTEP distribution credit. § 960(c) limits mechanism to domestic C
+// corp + § 962-electing individuals. § 960(d) GILTI/NCTI deemed-paid:
+// pre-OBBBA 80% × inclusion-pct × tested-foreign-income-taxes ("GILTI
+// haircut"); OBBBA Pub. L. 119-21 raises to 90% effective taxable years
+// beginning after December 31 2025. § 960(d)(4) PTEP DISTRIBUTION
+// HAIRCUT (OBBBA): disallows 10% of foreign taxes paid or accrued
+// (incl. § 960(b)(1) deemed-paid) with respect to § 959(a) PTEP
+// distribution where PTEP results from § 951A inclusion in US
+// shareholder taxable year ending after June 28 2025. Notice 2025-77
+// interim guidance pending proposed regulations; taxpayers may rely
+// on Section 3 of Notice 2025-77. Treas. Reg. § 1.960-1 + § 1.960-2 +
+// § 1.960-3 implement; Proposed Regs REG-105479-18 (Nov 29 2024 /
+// pub Dec 2 2024) modify under Notice 2019-01 sixteen-basket PTEP
+// framework. Seven-mode severity ladder: NotApplicable, NotEligible-
+// NoSection962Election (individual/S corp/partnership without § 962),
+// SubpartFFullDeemedPaidCredit, GiltiNcti80PctPreObbba, GiltiNcti90Pct-
+// PostObbba, PtepDistributionFullCredit, PtepDistributionWithGilti-
+// HaircutOpbba. Form 1118 Schedule C (corp) + Form 1116 (individual
+// with § 962 election). Coordinates with § 901 (FTC operative — iter
+// 518), § 904 (FTC limitation by basket — iter 516), § 951 (Subpart F),
+// § 951A (GILTI/NCTI — iter 500), § 956 (CFC US property — iter 504),
+// § 959 (PTEP — iter 512), § 962 (individual election — iter 510),
+// § 245A (DRD — iter 502 § 245A(d) FTC disallowance), § 965 (transition
+// tax — iter 514 § 965(g) FTC denial), § 902 (REPEALED by TCJA for
+// foreign corp years beginning after Dec 31 2017).
+
+async fn section_960_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_960::Section960Input>,
+) -> Result<Json<traderview_expense::section_960::Section960Result>, ApiError> {
+    Ok(Json(traderview_expense::section_960::check(&b)))
+}
 
 async fn section_962_route(
     _u: AuthUser,
