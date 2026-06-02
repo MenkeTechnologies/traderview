@@ -10331,6 +10331,48 @@ Each condition is individually pinned: `gift_366_days_before_death_does_not_appl
 
 Mounted at `POST /api/calc/section-1014e`. Seventeen tests pin: **baseline all 3 conditions met step-up denied** (180-day gift, appreciated, passes back → $100k carryover preserved + $500k step-up avoided); note describes APPLIES path with DENIED; **gift exactly 365 days before death applies** (boundary); **gift 366 days before death does NOT apply** (boundary); gift after death pathological clamps; **property at break-even no trigger** + property at loss no trigger; **property passes to unrelated party no trigger** with descriptive note; **credit shelter trust with other beneficiaries breaks pass-back** (workaround) + note mentions credit shelter trust; **normal step-up when §1014(e) inapplicable** ($600k FMV preserved); step-up avoided = FMV − carryover; **multiple disqualifications all listed in note**; citation mentions §1014(e), §1014(a), §1015, credit-shelter-trust; very large step-up avoided precision ($999M); **gift 180 days within window applies**; gift same-day-as-death applies (0-day boundary); note describes inapplicable path with reasons + Normal §1014(a).
 
+`traderview-expense::section_1042` is the **IRC § 1042 — Sales of stock to employee stock ownership plans (ESOPs) or certain cooperatives module** — direct trader-business-owner companion to `section_4940` (PF NII excise — iter 470), `section_4941` (PF self-dealing — iter 468), `section_4942` (PF minimum distribution — iter 472), `section_4943` (PF excess business holdings — iter 474), `section_4944` (PF jeopardizing investments — iter 476), `section_4945` (PF taxable expenditures — iter 478), `section_4958` (intermediate sanctions for public charities — iter 466), `section_4960` (ATEO executive comp 21% — iter 464), `section_422` (ISO), `section_423` (ESPP), `section_409a` (NQDC). § 1042 originally enacted by Tax Reform Act of 1984, Pub. L. 98-369.
+
+**§ 1042(a) General Rule**: long-term capital gain on sale of qualified securities of domestic C corporation to ESOP is **RECOGNIZED ONLY TO THE EXTENT** that the amount realized on the sale exceeds the cost of qualified replacement property (QRP) purchased during the replacement period.
+
+**Five eligibility requirements per § 1042(b)**:
+1. **§ 1042(b)(1) THREE-YEAR HOLDING PERIOD** — seller must have held the qualified securities for at least 3 years before sale
+2. **§ 1042(b)(2) 30% ESOP OWNERSHIP** — ESOP or eligible worker-owned cooperative must own at least 30% of each class of outstanding stock IMMEDIATELY AFTER THE SALE
+3. **§ 1042(b)(3) WRITTEN CONSENT** to § 4978 recapture (10% employer excise if ESOP disposes within 3 years)
+4. **§ 1042(b)(4) DOMESTIC C CORPORATION** — S corporations NOT eligible (must convert before sale)
+5. **§ 1042(c)(1)(B) QUALIFIED SECURITIES** — not received in § 83 compensation, § 422 ISO exercise, or § 423 ESPP exercise; not readily tradable on established securities market
+
+**§ 1042(c)(3) QRP permitted categories**:
+- Common stock with voting and dividend rights of domestic operating corporations
+- Preferred stock of domestic operating corporations
+- Bonds of domestic operating corporations
+- Convertible floating-rate notes
+- Convertible bonds of operating companies
+
+**§ 1042(c)(3) QRP EXCLUDED categories**:
+- US government securities
+- Non-US securities
+- Domestic subsidiaries of non-US parents
+- FDIC certificates of deposit
+- Mutual funds and money-market funds
+- Securities of the corporation that issued the stock sold to the ESOP
+
+**§ 1042(c)(6) replacement period**: 15-month window beginning **3 MONTHS BEFORE** the sale and extending **12 MONTHS AFTER**.
+
+**§ 1042(d) basis adjustment**: QRP basis = QRP cost REDUCED BY the non-recognized gain. Gain is **DEFERRED, not eliminated** — on eventual sale of QRP, the deferred gain is recognized. **HOWEVER, basis is STEPPED UP at seller's death per § 1014, permanently eliminating deferred gain.**
+
+**§ 1042(e) recapture**: seller's eventual disposition of QRP triggers recognition of deferred gain (with exceptions for § 1041 spouse transfer + § 351 corporate formation).
+
+**§ 4978 SEPARATE EXCISE TAX** on the **EMPLOYER** if the ESOP disposes of any qualified securities within 3-year period after acquisition: **10%** of amount realized.
+
+**Trader-business-owner critical fact patterns**: (1) $50M founder sale to ESOP with $40M gain + full reinvestment in QRP → **FULL deferral**; (2) basis step-up at death under § 1014 PERMANENTLY ELIMINATES deferred gain — making § 1042 + estate planning combination among the most powerful long-term wealth-transfer strategies; (3) S corporation must convert to C corporation BEFORE § 1042 sale — requires multi-year planning; (4) 30% post-sale ESOP ownership threshold drives transaction sizing; (5) partial reinvestment → PARTIAL deferral (deferred = min(gain, QRP cost), basis = QRP cost − deferred gain); (6) QRP must be operating company stock/bonds — investor cannot park proceeds in money-market funds or mutual funds; (7) ESOP loan can be coupled with § 162(k) employer-deductible interest + § 401(a)(22) ESOP requirements.
+
+**Distinction from § 1031** (like-kind exchange): § 1031 covers real property only post-TCJA 2017; § 1042 covers C-corp stock-to-ESOP only. Both defer via reinvestment.
+
+**Distinction from § 1045** (QSBS rollover — already shipped): § 1045 covers § 1202 QSBS rollover into other QSBS within 60 days; § 1042 covers ESOP sale rollover into QRP within 15-month window. Different statutory regimes.
+
+Mounted at `POST /api/calc/section-1042`. Thirty-seven tests pin: **S corporation not eligible** (§ 1042(b)(4) requires C corp); **partnership not eligible**; **LLC not eligible**; **non-US entity not eligible**; **holding period under 3 years not eligible** (§ 1042(b)(1)); **holding period exactly 3 years eligible**; **ESOP under 30% not eligible** (§ 1042(b)(2)); **ESOP exactly 30% eligible**; **written consent missing not eligible** (§ 4978 + § 1042(b)(3)); **securities received in ISO compensation not eligible** (§ 1042(c)(1)(B)); **securities readily tradable not eligible**; **QRP US government security invalid**; **QRP non-US security invalid**; **QRP domestic subsidiary of non-US parent invalid**; **QRP FDIC CD invalid**; **QRP mutual fund invalid**; **QRP securities of ESOP corporation invalid**; **QRP domestic operating common stock valid**; **QRP domestic operating preferred valid**; **QRP domestic operating bonds valid**; **QRP convertible floating-rate note valid**; **QRP purchased outside 15-month window no deferral** (§ 1042(c)(6)); **full reinvestment full deferral** ($8M gain + $10M QRP → $0 recognized + $2M basis); **partial reinvestment partial deferral** ($5M QRP → $3M recognized + $0 basis); **over-reinvestment full deferral with full basis** ($12M QRP → $4M basis); **citation pins all authorities** (§ 1042(a)/(b)(1)-(4)/(c)(1)(B)/(c)(3)/(c)(6)/(d)/(e) + § 4978 + § 1014 + § 1041 + § 351 + § 83 + § 422 + § 423 + § 1031 + § 1045 + § 1202); **note pins general rule + 15-month window**; **note pins five eligibility requirements**; **note pins QRP categories**; **note pins § 4978 employer recapture** (10% + 3-year); **note pins § 1014 basis step-up strategy** (permanently eliminates); **note pins § 1031/§ 1045 distinctions** (60 days vs 15 months); **note pins companion modules**; **9-cell severity truth table**; **saturating arithmetic overflow defense**; **boundary zero gain zero deferral**; **realistic $50M founder sale full deferral** ($40M gain → $10M basis).
+
 `traderview-expense::section_1091` is the **IRC §1091 wash sale loss-disallowance module** — the trader rule. Fills the long-standing `wash_sale.rs` TODO referenced by `schedule_d.rs` since the module was first written ("does NOT model §1091 wash sales — caller pre-processes those"). Every non-§475(f) trader needs this; §475(f) electors are exempt per §475(f)(1)(C).
 
 **Core rule (§1091(a)):** loss on the sale of stock or securities is disallowed if the taxpayer (or spouse, controlled corp, or IRA) acquires substantially identical stock within a **61-day window centered on the sale date** — 30 days before, the sale date itself, and 30 days after. The disallowed loss is added FIFO to the basis of the replacement shares under §1091(d); the holding period tacks under §1223(4).

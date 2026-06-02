@@ -270,6 +270,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1014e",         post(section_1014e_route))
         .route("/calc/section-1015",          post(section_1015_route))
         .route("/calc/section-1041",          post(section_1041_route))
+        .route("/calc/section-1042",          post(section_1042_route))
         .route("/calc/section-170e",          post(section_170e_route))
         .route("/calc/section-172",           post(section_172_route))
         .route("/calc/section-195",           post(section_195_route))
@@ -1980,6 +1981,41 @@ async fn section_1041_route(
         ));
     }
     Ok(Json(traderview_expense::section_1041::compute(&b)))
+}
+
+// ── § 1042 sales of stock to ESOPs or certain cooperatives ───────────
+// Mounted at /api/calc/section-1042. Pure compute; § 1042(a) long-term
+// capital gain on sale of qualified securities of domestic C
+// corporation to ESOP is RECOGNIZED ONLY TO THE EXTENT amount realized
+// exceeds cost of qualified replacement property (QRP) purchased
+// during 15-month replacement period (3 months before sale + 12 months
+// after, per § 1042(c)(6)). Five eligibility requirements per
+// § 1042(b): (1) § 1042(b)(1) 3-year seller holding period; (2)
+// § 1042(b)(2) ESOP must own 30%+ of each class of outstanding stock
+// immediately after sale; (3) § 1042(b)(3) written consent to § 4978
+// recapture (10% excise on employer if ESOP disposes within 3 years);
+// (4) § 1042(b)(4) corporation must be DOMESTIC C CORP (S corps NOT
+// eligible); (5) § 1042(c)(1)(B) qualified securities — not received
+// via § 83 compensation / § 422 ISO / § 423 ESPP exercise, not
+// readily tradable on established securities market. § 1042(c)(3)
+// QRP categories: common stock + preferred + bonds + convertible
+// floating-rate notes of domestic operating corporations; EXCLUDED
+// are US government securities, non-US securities, domestic
+// subsidiaries of non-US parents, FDIC CDs, mutual funds + money-
+// market funds, and securities of the ESOP corporation. § 1042(d)
+// basis = QRP cost reduced by non-recognized gain. § 1042(e)
+// disposition recapture. § 1014 basis step-up at death permanently
+// eliminates deferred gain — making § 1042 + estate planning among
+// the most powerful trader-founder wealth-transfer strategies.
+// Distinction from § 1031 like-kind exchange (real property only) and
+// § 1045 QSBS rollover (60-day window). Original enactment Tax Reform
+// Act of 1984 Pub. L. 98-369.
+
+async fn section_1042_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1042::Section1042Input>,
+) -> Result<Json<traderview_expense::section_1042::Section1042Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1042::check(&b)))
 }
 
 // ── §1015 carryover basis on gifts ───────────────────────────────────
