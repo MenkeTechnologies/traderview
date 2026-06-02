@@ -346,6 +346,7 @@ pub mod section_83b;
 pub mod section_83c;
 pub mod section_83i;
 pub mod section_401a9;
+pub mod section_401k;
 pub mod section_408_d3;
 pub mod section_408m;
 pub mod section_41;

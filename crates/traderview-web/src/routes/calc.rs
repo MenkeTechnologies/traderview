@@ -215,6 +215,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-408",           post(section_408_route))
+        .route("/calc/section-401k",          post(section_401k_route))
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
@@ -735,6 +736,27 @@ async fn section_408a_route(
     Json(b): Json<traderview_expense::section_408a::Section408aInput>,
 ) -> Result<Json<traderview_expense::section_408a::Section408aResult>, ApiError> {
     Ok(Json(traderview_expense::section_408a::check(&b)))
+}
+
+// ── § 401(k) Cash or Deferred Arrangements ──────────────────────────
+// Mounted at /api/calc/section-401k. Pure compute; 2026 limits per
+// IRS Notice 2025-67: § 402(g)(1) elective deferral $24,500;
+// § 414(v)(1) catch-up age 50+ $8,000; § 414(v)(2)(E) SECURE 2.0
+// enhanced catch-up ages 60-63 $11,250; § 415(c)(1)(A) annual
+// addition $72,000; § 401(a)(17) compensation limit $360,000;
+// HCE threshold $160,000; § 414(v)(7) mandatory Roth catch-up
+// threshold $150,000 (SECURE 2.0 § 603 effective 2026); § 401(k)(3)
+// ADP test (HCE ADP ≤ greater of non-HCE × 1.25 OR non-HCE + 2%);
+// § 401(k)(12) safe harbor (3% non-elective OR basic match);
+// § 402A designated Roth § 401(k); SECURE 2.0 § 325 (no lifetime
+// RMD on Roth § 401(k)); SECURE 2.0 § 604 (Roth employer match);
+// mega backdoor Roth via § 408A(d)(3) in-plan rollover.
+
+async fn section_401k_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_401k::Section401kInput>,
+) -> Result<Json<traderview_expense::section_401k::Section401kResult>, ApiError> {
+    Ok(Json(traderview_expense::section_401k::check(&b)))
 }
 
 // ── § 422 Incentive Stock Options (ISOs) ─────────────────────────────

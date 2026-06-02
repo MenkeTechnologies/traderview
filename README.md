@@ -11672,6 +11672,41 @@ Each Roth conversion starts its own SEPARATE 5-year clock under §408A(d)(3)(F).
 
 Mounted at `POST /api/calc/section-408a-d3`. Eighteen tests pin: withdrawal from contributions only no tax + no penalty (always-accessible basis); aged conversion no penalty at age 45; unaged conversion triggers 10% penalty at age 45 ($10k × 10% = $1k); unaged conversion no penalty at age 60+ (age 59½ bypass); ordering contributions before conversions ($5k+$5k → contributions taken first); FIFO ordering oldest conversion first (2019 aged taken before 2022 unaged); earnings taxable + penalized when not qualified; qualified distribution age 60 + 5 years full tax-free; not qualified when under 5 years from first funding; **conversion 5-year boundary exactly 5 years aged**; conversion 4y-11m-29d not aged (1 day under); multiple conversions some aged some not (independent clocks); withdrawal exceeds all buckets caps at earnings; zero withdrawal no-op; empty account no-op; note distinguishes qualified vs ordering paths; **classic FIRE conversion ladder 5-year wait pays off** (load-bearing scenario); age 59½ + unaged conversion no penalty.
 
+`traderview-expense::section_401k` is the **IRC § 401(k) Cash or Deferred Arrangements module** — direct trader companion to `section_408` (traditional IRA), `section_408a` (Roth IRA — iter 430), `section_4973` (excess contribution excise — iter 442), `section_4974` (RMD excise — iter 436), `section_4975` (prohibited transactions — iter 434), `section_72t` (10% early-withdrawal penalty), `section_162m` ($1M public-company executive comp deduction — iter 446). Trader-critical because traders at companies offering 401(k) plans encounter complex contribution + catch-up + Roth designation + § 415 annual addition + § 401(a)(17) compensation-limit interactions.
+
+**2026 contribution limits (IRS Notice 2025-67)**:
+
+| Limit | 2026 Amount |
+|-------|-------------|
+| Employee elective deferral § 402(g)(1) | $24,500 |
+| Catch-up age 50+ § 414(v)(1) | $8,000 |
+| Enhanced catch-up ages 60-63 § 414(v)(2)(E) | **$11,250** (SECURE 2.0 § 109) |
+| Annual addition § 415(c)(1)(A) | $72,000 |
+| Compensation limit § 401(a)(17) | $360,000 |
+| HCE (highly compensated employee) threshold | $160,000 |
+| Roth catch-up wage threshold § 414(v)(7) | $150,000 |
+
+**§ 414(v)(7) mandatory Roth catch-up for high earners (SECURE Act 2.0 § 603 effective 2026)** — employees with prior-year Social Security wages exceeding $150,000 MUST make catch-up contributions as ROTH (after-tax) rather than pretax.
+
+**§ 414(v)(2)(E) SECURE 2.0 § 109 enhanced catch-up for ages 60-63** — higher catch-up contribution limit applies for employees who turn 60, 61, 62, and 63 in calendar year; 2026 amount $11,250 (vs $8,000 standard); reverts to $8,000 at age 64+.
+
+**§ 401(k)(3) ADP TEST**: HCE ADP cannot exceed greater of (a) non-HCE ADP × 1.25; OR (b) non-HCE ADP + 2% (capped at non-HCE × 2). Failure requires corrective distributions to HCEs OR qualified non-elective contributions to non-HCEs.
+
+**§ 401(k)(12) SAFE HARBOR** (avoids ADP/ACP testing):
+1. NON-ELECTIVE 3% employer contribution to all NHCEs; OR
+2. MATCHING contribution (basic) — 100% match on first 3% of comp + 50% match on next 2%; OR
+3. ENHANCED matching equal to or greater than basic safe harbor for all eligible employees
+
+**§ 402A designated Roth § 401(k)**: post-tax employee contributions to designated Roth account within § 401(k) plan; same § 402(g)(1) elective deferral limit; qualified distributions tax-free with 5-year holding + age 59½/disability/death; **SECURE 2.0 § 325 — Roth § 401(k) NOT SUBJECT to § 401(a)(9) lifetime RMDs starting 2024**; **SECURE 2.0 § 604 — EMPLOYER MATCH may be designated as Roth at participant election** (W-2 inclusion as ordinary income).
+
+**MEGA BACKDOOR ROTH** — after-tax employee contributions up to § 415(c)(1)(A) $72,000 annual addition limit (less employee deferral and employer match) converted to Roth via in-plan rollover under § 408A(d)(3); requires plan design supporting after-tax contributions plus in-service distributions.
+
+**Multi-employer / multi-plan**: § 402(g)(1) combined elective deferral limit applies across all § 401(k) + § 403(b) plans; § 457(b) governmental plans have SEPARATE $24,500 limit (allows DOUBLE DEFERRAL strategy for government + nonprofit employees with eligible § 457(b)).
+
+**Trader-critical fact patterns**: (1) age 35 maxes 2026 — $24,500 elective + $7,500 employer match + $40,000 after-tax = $72,000 § 415(c); converts via mega backdoor Roth; (2) age 50-59 maxes — $24,500 + $8,000 catch-up; catch-up MUST BE ROTH if prior SS wages > $150K (§ 414(v)(7)); (3) age 60-63 maxes — $24,500 + $11,250 enhanced catch-up (SECURE 2.0 § 109); (4) small startup safe harbor (3% non-elective or basic match) avoids ADP/ACP testing; (5) multi-employer trader combined § 402(g) limit + separate § 457(b) $24,500 DOUBLE DEFERRAL.
+
+Mounted at `POST /api/calc/section-401k`. Thirty-two tests pin: **under-50 max all compliant**; **under-50 no catch-up limit**; **age 50-59 catch-up $8,000**; **age 60-63 enhanced catch-up $11,250**; **age 64+ reverts to standard catch-up**; **elective deferral over limit violation**; **catch-up over limit violation**; **annual addition over $72K violation**; **compensation over $360K capped**; **mandatory Roth catch-up high earner engaged** (§ 414(v)(7) + SECURE Act 2.0 § 603 + $150K); **mandatory Roth catch-up low earner not engaged**; **mandatory Roth catch-up when designated Roth compliant**; **ADP test passes within 125%**; **ADP test fails exceeds thresholds**; **safe harbor exempts ADP test**; **age bracket truth table four cells**; **ages 60-63 uniquely enhanced invariant**; **limit cents pinned 2026**; **citation pins all authorities** (§ 401(k)(1)-(13) + § 401(a)(17) + § 402(g)(1) + § 402A + § 414(v) + § 414(v)(2)(E) + § 414(v)(7) + § 415(c)(1)(A) + § 415(d) + § 408A(d)(3) + SECURE 2.0 § 109 + § 325 + § 603 + § 604 + Pub. L. 117-328 + IRS Notice 2025-67); **note pins § 401(k)(1) cash or deferred arrangement**; **note pins 2026 seven limits**; **note pins SECURE 2.0 § 109 enhanced catch-up**; **note pins SECURE 2.0 § 603 mandatory Roth**; **note pins § 401(k)(3) ADP test**; **note pins § 401(k)(12) safe harbor three alternatives**; **note pins § 401(k)(2) six requirements**; **note pins § 402A Roth § 401(k)** (SECURE 2.0 § 325 + § 604); **note pins mega backdoor Roth**; **note pins multi-employer § 457(b) double deferral**; **note pins trader fact patterns five**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_408_d3` is the **IRC §408(d)(3) IRA 60-day rollover module** — the timing trap that catches retail traders moving IRA money between brokerages. Companion to `form_8606` (which handles backdoor Roth basis + §408(d)(2) pro-rata) — that module is about *what's taxable on conversions*; this one is about *whether the rollover even qualified*.
 
 Three rules in §408(d)(3) all apply concurrently:
