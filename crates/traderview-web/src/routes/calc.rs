@@ -117,6 +117,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
+        .route("/calc/section-7503",          post(section_7503_route))
         .route("/calc/section-7508",          post(section_7508_route))
         .route("/calc/section-7508a",         post(section_7508a_route))
         .route("/calc/section-7521",          post(section_7521_route))
@@ -3144,6 +3145,27 @@ async fn section_7502_route(
     Json(b): Json<traderview_expense::section_7502::Section7502Input>,
 ) -> Result<Json<traderview_expense::section_7502::Section7502Result>, ApiError> {
     Ok(Json(traderview_expense::section_7502::compute(&b)))
+}
+
+// ── §7503 weekend/holiday extension rule ────────────────────────────
+// Mounted at /api/calc/section-7503. § 7503 — when last day for
+// performing any act falls on Saturday, Sunday, or legal holiday,
+// performance is timely if performed on next succeeding business
+// day. Legal holiday defined: (1) legal holiday in District of
+// Columbia (5 USC § 6103 — includes Juneteenth since 2021) AND (2)
+// statewide legal holiday in State where office located outside DC
+// but within internal revenue district. DC Emancipation Day (April
+// 16, Rev. Rul. 2015-13) regularly extends federal tax filing
+// deadline by 1 business day when April 15 falls on weekend. § 7503
+// stacks with § 7502 timely-mailing rule. Applies to taxpayer acts
+// (return filing + payment + § 6213 Tax Court petition + § 6511
+// refund claim + elections) AND Commissioner acts (§ 6212 SNOD +
+// § 6303 notice and demand + § 6851 termination notice).
+async fn section_7503_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7503::Section7503Input>,
+) -> Result<Json<traderview_expense::section_7503::Section7503Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7503::check(&b)))
 }
 
 // ── §7508A presidentially-declared disaster deadline postponement ───
