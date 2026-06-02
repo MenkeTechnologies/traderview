@@ -97,6 +97,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7207",          post(section_7207_route))
         .route("/calc/section-7421",          post(section_7421_route))
         .route("/calc/section-7430",          post(section_7430_route))
+        .route("/calc/section-7433",          post(section_7433_route))
         .route("/calc/section-7434",          post(section_7434_route))
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
@@ -3157,6 +3158,30 @@ async fn section_7421_route(
     Json(b): Json<traderview_expense::section_7421::Section7421Input>,
 ) -> Result<Json<traderview_expense::section_7421::Section7421Result>, ApiError> {
     Ok(Json(traderview_expense::section_7421::check(&b)))
+}
+
+// ── §7433 civil damages for unauthorized collection actions ─────────
+// Mounted at /api/calc/section-7433. § 7433(a) cause of action — IRS
+// officer or employee recklessly OR intentionally OR by reason of
+// negligence disregards any IRC provision or regulation in connection
+// with collection of federal tax. § 7433(b)(1) damages cap: lesser of
+// $1,000,000 (reckless or intentional) / $100,000 (negligence) OR sum
+// of actual direct economic damages + costs of action. § 7433(d)(1)
+// exhaustion of administrative remedies required. § 7433(d)(2)
+// mitigation reduction. § 7433(d)(3) 2-year SOL from accrual.
+// § 7433A parallel regime for qualified tax collection contractors.
+// Trader-relevant for wrongful levy beyond statutory limits + lien
+// without notice + collection during § 6330 CDP appeal + § 6331/
+// § 6332/§ 6334 violations. Companion to § 7421 (Anti-Injunction
+// Act + § 7426 wrongful levy exception) + § 7430 (litigation costs)
+// + § 7521 (interview procedure) + § 7525 (FATP privilege) + § 7811
+// (TAOs).
+
+async fn section_7433_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7433::Section7433Input>,
+) -> Result<Json<traderview_expense::section_7433::Section7433Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7433::check(&b)))
 }
 
 // ── §162(f) fines and penalties nondeductibility ────────────────────
