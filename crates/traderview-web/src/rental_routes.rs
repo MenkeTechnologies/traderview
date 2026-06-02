@@ -737,6 +737,10 @@ use traderview_expense::rental_natural_gas_leak_response::{
     check as check_rental_natural_gas_leak_response,
     RentalNaturalGasLeakResponseInput, RentalNaturalGasLeakResponseResult,
 };
+use traderview_expense::rental_oil_tank_replacement_disclosure::{
+    check as check_rental_oil_tank_replacement_disclosure,
+    RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1157,6 +1161,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
+        .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
@@ -10180,4 +10185,27 @@ async fn rent_roll(
         });
     }
     Ok(Json(rows))
+}
+
+// ---------------------------------------------------------------------------
+// rental_oil_tank_replacement_disclosure (iter 493): Northeast trader-landlords
+// inherit legacy 1940-1980s home-heating-oil tanks (UST/AST). NJDEP UHOT
+// Program governs residential tanks 2000 gal or less per N.J.A.C. 7:14B-
+// 1.6(a)(3); Massachusetts 527 CMR 9.00 + 310 CMR 80.00 (MassDEP eff.
+// 2015-01-02); Maine 38 M.R.S. 568-A requires age/location disclosure on
+// rental. CERCLA 42 U.S.C. 9607(a) strict joint-and-several liability for
+// petroleum-product UST leaks regardless of fault. Endpoint computes
+// disclosure-required vs replacement-required-age-failure vs replacement-
+// required-leak-detected vs rescission-risk-fraud-in-inducement severity.
+// Coordinates with rental_propane_tank_lease_disclosure (iter 475 LP-gas
+// sibling), rental_lead_pipe_disclosure (legacy infrastructure pattern),
+// rental_pesticide_application_notification (chemical-exposure pattern).
+// ---------------------------------------------------------------------------
+
+async fn rental_oil_tank_replacement_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalOilTankReplacementDisclosureInput>,
+) -> Result<Json<RentalOilTankReplacementDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_oil_tank_replacement_disclosure(&b)))
 }
