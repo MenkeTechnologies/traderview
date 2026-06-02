@@ -539,6 +539,10 @@ use traderview_expense::rental_unpermitted_unit_disclosure::{
     check as check_rental_unpermitted_unit_disclosure,
     RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
 };
+use traderview_expense::rental_pet_deposit_separate_security::{
+    check as check_rental_pet_deposit_separate_security,
+    RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
+};
 use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
@@ -893,6 +897,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
+        .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
@@ -6343,6 +6348,39 @@ async fn rental_unpermitted_unit_disclosure_route(
     Json(b): Json<RentalUnpermittedUnitDisclosureInput>,
 ) -> Result<Json<RentalUnpermittedUnitDisclosureResult>, ApiError> {
     Ok(Json(check_rental_unpermitted_unit_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_pet_deposit_separate_security: Rental property pet deposit
+// and separate security charge compliance — when a trader-landlord
+// wants to collect a pet deposit, pet rent, or pet fee separate
+// from the general security deposit, what statutory caps +
+// disclosure + refundability rules apply? Mounted at POST /api/
+// rental/rental-pet-deposit-separate-security. Four regimes:
+// California Cal. Civ. Code § 1950.5 + AB 12 of 2023 (eff. July 1,
+// 2024 — folds pet deposit into single security deposit cap; 1
+// month standard / 2 months small-landlord exception) + SB 611 of
+// 2023 (eff. July 1, 2025 — prohibits military surcharge; requires
+// itemized disclosure); Washington RCW 59.18.260 (refundable pet
+// damage deposit capped at $150) + RCW 59.18.285 (non-refundable
+// pet fee permitted if CLEARLY LABELED non-refundable and separate
+// from security deposit); New York GOL § 7-103 (HSTPA of 2019;
+// ONE security deposit max one month's rent, fully refundable; NO
+// separate pet deposit permitted) + NYC Admin Code § 27-2009.1
+// (NYC Pet Law) + NY rent stabilization (monthly pet rent
+// PROHIBITED in rent-stabilized apartments); Texas Tex. Prop. Code
+// §§ 92.101-92.110 (no statutory cap; most permissive regime —
+// simultaneous pet deposit + fee + rent permitted). Distinct from
+// siblings pet_fees, security_deposit_caps, rental_application_
+// denial_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn rental_pet_deposit_separate_security_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPetDepositSeparateSecurityInput>,
+) -> Result<Json<RentalPetDepositSeparateSecurityResult>, ApiError> {
+    Ok(Json(check_rental_pet_deposit_separate_security(&b)))
 }
 
 // ---------------------------------------------------------------------------
