@@ -130,6 +130,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6501",          post(section_6501_route))
         .route("/calc/section-6502",          post(section_6502_route))
         .route("/calc/section-6531",          post(section_6531_route))
+        .route("/calc/section-6532",          post(section_6532_route))
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
@@ -3943,6 +3944,38 @@ async fn section_6531_route(
     Json(b): Json<traderview_expense::section_6531::Section6531Input>,
 ) -> Result<Json<traderview_expense::section_6531::Section6531Result>, ApiError> {
     Ok(Json(traderview_expense::section_6531::check(&b)))
+}
+
+// ── §6532 periods of limitation on refund + wrongful-levy suits ─────
+// Mounted at /api/calc/section-6532. § 6532(a) taxpayer refund suit
+// under § 7422 — 6-month floor + 2-year ceiling from notice of
+// disallowance mailed certified/registered; § 6532(a)(2) written
+// extension; § 6532(a)(3) reconsideration does NOT extend;
+// § 6532(a)(4) waiver of certified-mail requirement runs from waiver
+// filing. § 6532(b) US erroneous refund suit under § 7405 — 2 years
+// standard; 5 years if refund induced by FRAUD OR MISREPRESENTATION
+// OF A MATERIAL FACT. § 6532(c)(1) third-party wrongful levy suit
+// under § 7426 — 2 YEARS from date of levy (TCJA 2017 § 11071
+// EXTENDED prior 9-month period to 2 years, effective for levies
+// made after December 22, 2017); § 6532(c)(2) § 6343(b)
+// administrative-claim extension to SOONER of (A) 12 months from
+// claim filing OR (B) 6 months from IRS disallowance. Trader-
+// critical for every refund-suit scenario (NOL § 172/§ 475(f)
+// carryback, § 1256 60/40 mark-to-market amended return, § 1091
+// wash-sale recomputation, § 988 currency loss restatement) and
+// every third-party broker-account wrongful-levy scenario. Sibling
+// cluster: § 7422 + § 7426 + § 7405 + § 6511 + § 6343(b).
+
+async fn section_6532_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6532::Section6532Input>,
+) -> Result<Json<traderview_expense::section_6532::Section6532Result>, ApiError> {
+    if b.written_extension_days_added > 36_500 {
+        return Err(ApiError::BadRequest(
+            "written_extension_days_added out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6532::check(&b)))
 }
 
 // ── §6501 limitations on assessment + collection (ASED) ─────────────

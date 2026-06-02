@@ -413,6 +413,7 @@ pub mod section_6404;
 pub mod section_6501;
 pub mod section_6502;
 pub mod section_6531;
+pub mod section_6532;
 pub mod section_6511;
 pub mod section_6601;
 pub mod section_6611;

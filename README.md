@@ -7292,6 +7292,40 @@ Pinned by `three_year_offenses_truth_table` (8-offense sweep).
 
 Mounted at `POST /api/calc/section-6531`. Thirty-six tests pin: **§ 7201 6-year SOL**; **§ 7202 6-year SOL**; **§ 7203 failure-to-file-or-pay 6-year SOL**; **§ 7203 failure-to-keep-records 3-year SOL** (subset distinction); **§ 7203 failure-to-supply-information 3-year SOL**; **§ 7205 3-year SOL**; **§ 7206(1) filing false return 6-year SOL**; **§ 7206(2) aiding 6-year SOL**; **§ 7206(3)/(4)/(5) 3-year SOL** (subsection-specific); **§ 7207 6-year SOL**; **§ 7212(a) general obstruction 3-year SOL** (distinct from § 7212(b)); **§ 7212(b) rescue property 6-year SOL**; **Klein conspiracy 6-year SOL**; **other offense 3-year SOL**; **§ 6531(4) carveout partnership return** (Form 1065 + Form 990 + Form 1120-S); **§ 6531(4) carveout only applies to § 7203** (not other 6-year offenses); **§ 6531(4) carveout truth table** (2-cell sweep); **SOL satisfied within 3 years for 3-year offense**; **SOL expired after 3 years for 3-year offense**; **SOL satisfied within 6 years for 6-year offense**; **SOL expired after 6 years for 6-year offense**; **outside-US tolling engages**; **returned within 6 months still tolled**; **returned past 6 months tolling ends**; **returned at 6-month boundary still tolled**; **general 3-year rule note present**; **6-year exception note lists enumerated offenses**; **Toussie continuing-offense note present** (397 U.S. 112 (1970) + LAST affirmative act); **DOJ Manual + IRM note present** (§ 7.00 + IRM 25.6.2.1 + JURISDICTIONAL); **citation pins authorities** (§ 6531 + § 6531(4) + Toussie + DOJ + IRM); **nine 6-year offenses truth table** (9-offense sweep); **three-year offenses truth table** (8-offense sweep); **SOL boundary at exactly 3 years expired**; **SOL boundary at exactly 6 years expired**; **final paragraph tolling note present when absent**; **tolling disengages when no absence**.
 
+`traderview-expense::section_6532` is the **IRC § 6532 periods of limitation on refund and wrongful-levy suits** module — three-prong procedural SOL statute covering taxpayer refund suits under § 7422, US erroneous refund recovery suits under § 7405, and third-party wrongful levy suits under § 7426. Trader-critical because every refund-suit scenario (NOL § 172/§ 475(f) MTM carryback claim, § 1256 60/40 amended return, § 1091 wash-sale recomputation, § 988 currency loss restatement) and every third-party broker-account wrongful-levy scenario pushes through these SOLs. Companion to `section_7422` (taxpayer refund suit), `section_7426` (third-party wrongful levy), `section_7405` (IRS erroneous refund recovery), `section_6511` (refund claim filing SOL), `section_6343` (release of levy + administrative wrongful levy claim).
+
+**§ 6532(a) Taxpayer refund suits — six-month floor + two-year ceiling**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 6532(a)(1) | No suit BEFORE 6 months from claim filing UNLESS Secretary renders decision within that time; NOR AFTER 2 years from date of certified/registered mail notice of disallowance |
+| § 6532(a)(2) | 2-year period may be EXTENDED by written agreement between taxpayer and Secretary |
+| § 6532(a)(3) | Reconsideration / further IRS action after disallowance does NOT extend SOL |
+| § 6532(a)(4) | If taxpayer files written waiver of certified-mail requirement, 2-year period runs from FILING OF WAIVER |
+
+Pinned by `taxpayer_refund_under_6_months_no_decision_floor_violated` (179 days unlifted), `taxpayer_refund_at_180_days_floor_lifted` (180 days exact lifts), `taxpayer_refund_irs_early_decision_lifts_floor`, `taxpayer_refund_at_730_days_post_disallowance_compliant` (2-year exact boundary compliant), `taxpayer_refund_at_731_days_post_disallowance_expired` (1-day-past boundary fail), `taxpayer_refund_section_a2_written_extension_adds_days` (365-day extension → 1095-day effective SOL), `taxpayer_refund_section_a4_waiver_runs_from_waiver_filing` (waiver overrides disallowance clock).
+
+**§ 6532(b) US erroneous refund suits under § 7405 — 2-year standard / 5-year fraud**:
+
+| Trigger | SOL |
+|---------|-----|
+| Standard | **2 years (730 days)** from making of refund |
+| Refund induced by FRAUD or MISREPRESENTATION of material fact | **5 years (1,825 days)** from making of refund |
+
+Pinned by `us_erroneous_refund_at_730_days_compliant`, `us_erroneous_refund_at_731_days_expired` (1-day boundary precision), `us_erroneous_refund_fraud_extends_to_1825` (1800-day fraud-engaged compliant), `us_erroneous_refund_fraud_at_1826_days_expired`, `effective_sol_truth_table_us_suits` (2-cell sweep).
+
+**§ 6532(c) Third-party wrongful levy suits under § 7426 — TCJA 2017 extension**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 6532(c)(1) pre-TCJA | 9 MONTHS (270 days) from date of levy |
+| § 6532(c)(1) post-TCJA | **2 YEARS (730 days)** from date of levy — TCJA 2017 § 11071 (Pub. L. 115-97, effective for levies made after December 22, 2017) |
+| § 6532(c)(2) | If § 6343(b) administrative request filed, period may be EXTENDED to SOONER of (A) 12 months from § 6343(b) filing OR (B) 6 months from IRS disallowance |
+
+**Tax Cuts and Jobs Act of 2017 § 11071 (Pub. L. 115-97, December 22, 2017)** extended § 6532(c)(1) and § 6343(b) wrongful-levy SOL from 9 months to 2 years — applies to levies made after December 22, 2017, AND levies on or before that date if 9-month period had NOT expired under § 6343(b). Pinned by `wrongful_levy_post_tcja_730_days_compliant`, `wrongful_levy_post_tcja_731_days_expired`, `wrongful_levy_pre_tcja_270_days_compliant` (9-month exact compliant), `wrongful_levy_pre_tcja_271_days_expired`, `wrongful_levy_tcja_extension_unique_invariant` (post-TCJA 730 > pre-TCJA 270).
+
+Mounted at `POST /api/calc/section-6532`. Thirty-one tests pin: **taxpayer refund baseline timely**; **taxpayer refund under 6 months no decision floor violated** (179 days); **taxpayer refund at 180 days floor lifted** (exact boundary); **taxpayer refund IRS early decision lifts floor**; **taxpayer refund at 730 days post-disallowance compliant**; **taxpayer refund at 731 days post-disallowance expired** (1-day precision); **taxpayer refund section (a)(2) written extension adds days** (365 → 1095 effective SOL); **taxpayer refund section (a)(4) waiver runs from waiver filing**; **US erroneous refund at 730 days compliant**; **US erroneous refund at 731 days expired**; **US erroneous refund fraud extends to 1825**; **US erroneous refund fraud at 1826 days expired**; **wrongful levy post-TCJA 730 days compliant**; **wrongful levy post-TCJA 731 days expired**; **wrongful levy pre-TCJA 270 days compliant**; **wrongful levy pre-TCJA 271 days expired**; **wrongful levy TCJA extension unique invariant** (730 > 270); **citation pins all subsections and TCJA**; **note pins subsection (a)(1) 6-month floor 2-year ceiling**; **note pins subsection (a)(2) written extension**; **note pins subsection (a)(3) reconsideration does not extend**; **note pins subsection (a)(4) waiver runs from waiver filing**; **note pins subsection (b) 2-year 5-year fraud**; **note pins subsection (c)(1) TCJA 2-year**; **note pins subsection (c)(2) § 6343(b) 12-month 6-month**; **note pins TCJA 2017 § 11071**; **note pins IRM and Pub. 4528**; **suit type truth table three cells** (3-prong sweep); **defensive zero days all suits timely**; **effective SOL truth table US suits** (2-cell sweep); **taxpayer floor lifted at exactly 180 days**.
+
 `traderview-expense::section_6601` is the **IRC § 6601 interest on underpayment / § 6621 rate determination / § 6622 daily compounding** module — when an amended return or audit produces additional tax due, § 6601 interest accrues from the ORIGINAL DUE DATE of the return (April 15 for most individuals) regardless of any extension to FILE, and continues to compound daily until full payment. Trader-relevant for amended returns, deficiency assessments, and any underpayment scenario.
 
 **Three statutory layers compose the interest computation**:
