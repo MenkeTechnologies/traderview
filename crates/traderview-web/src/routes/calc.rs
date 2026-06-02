@@ -214,6 +214,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-408",           post(section_408_route))
         .route("/calc/section-408a",          post(section_408a_route))
+        .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
         .route("/calc/section-461l",          post(section_461l_route))
@@ -728,6 +729,24 @@ async fn section_408a_route(
     Json(b): Json<traderview_expense::section_408a::Section408aInput>,
 ) -> Result<Json<traderview_expense::section_408a::Section408aResult>, ApiError> {
     Ok(Json(traderview_expense::section_408a::check(&b)))
+}
+
+// ── § 4975 prohibited transactions in IRA / qualified plans ──────────
+// Mounted at /api/calc/section-4975. Pure compute; 15% standard +
+// 100% non-correction excise tax on prohibited transactions between
+// plan and disqualified person under 6 § 4975(c)(1) categories;
+// § 4975(e)(2) 9-category disqualified person definition (including
+// family § 4975(e)(6) = spouse + ancestor + lineal descendant +
+// spouse of lineal descendant); § 408(e)(2) IRA disqualification
+// triggers deemed distribution at FMV + § 72(t) 10% penalty if under
+// 59½; § 4975(h) 90-day correction window for 100% tax abatement;
+// DOL PTE 80-26 + 75-1 + 84-24 statutory exemptions.
+
+async fn section_4975_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4975::Section4975Input>,
+) -> Result<Json<traderview_expense::section_4975::Section4975Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4975::check(&b)))
 }
 
 // ── §453 installment sale gain deferral ──────────────────────────────
