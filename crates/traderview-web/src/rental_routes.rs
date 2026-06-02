@@ -234,6 +234,10 @@ use traderview_expense::tenant_relocation_assistance::{
 use traderview_expense::fair_chance_housing::{
     check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
 };
+use traderview_expense::source_of_income_discrimination::{
+    check as check_source_of_income_discrimination, SourceOfIncomeInput,
+    SourceOfIncomeResult,
+};
 use traderview_expense::fha_design_construction::{
     check as check_fha_design_construction, FhaDesignConstructionInput,
     FhaDesignConstructionResult,
@@ -720,6 +724,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
+        .route("/source-of-income-discrimination", axum::routing::post(source_of_income_discrimination_route))
         .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
         .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
@@ -3619,6 +3624,34 @@ async fn fair_chance_housing_route(
         ));
     }
     Ok(Json(check_fair_chance_housing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// source_of_income_discrimination: SOI discrimination ban — when may
+// landlord lawfully refuse Housing Choice Voucher (Section 8), HUD-
+// VASH, SSI/SSDI, child support/alimony, TANF, or other lawful non-wage
+// income as basis for rejecting applicant? Mounted at POST /api/rental/
+// source-of-income-discrimination. Four regimes: California Cal. Gov.
+// Code §§ 12955 + 12987 + 12989.2 + SB 329 (Housing Opportunities Act
+// 2019, eff. 2020) — Section 8 explicitly added to FEHA source-of-
+// income definition; max civil penalty + actual + emotional distress +
+// attorney fees + injunctive; New Jersey N.J.S.A. 10:5-12.5 (NJ LAD) —
+// DCR penalty tiers $1K-$5K initial, up to $10K first / $25K
+// subsequent + private right of action; New York N.Y. Exec. Law §
+// 296(5)(a)(1) (state SOI eff. April 2019) + NYC Admin. Code § 8-
+// 107(5)(a)(5) — NYC Commission >$780K damages since 2014; Default
+// federal Fair Housing Act 42 USC § 3604 — NO per se SOI protection,
+// Section 8 refusal not federal FHA violation absent disparate
+// treatment/impact. Distinct from `fair_chance_housing` (criminal
+// background) and `tenant_in_foreclosure_protection`.
+// ---------------------------------------------------------------------------
+
+async fn source_of_income_discrimination_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SourceOfIncomeInput>,
+) -> Result<Json<SourceOfIncomeResult>, ApiError> {
+    Ok(Json(check_source_of_income_discrimination(&b)))
 }
 
 // ---------------------------------------------------------------------------

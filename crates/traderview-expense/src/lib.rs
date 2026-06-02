@@ -183,6 +183,7 @@ pub mod tenant_utility_account_designation;
 pub mod tenant_rent_judgment_wage_garnishment;
 pub mod tenant_topa;
 pub mod utility_shutoff;
+pub mod source_of_income_discrimination;
 pub mod vehicle_towing_from_rental_property;
 pub mod window_guard_requirements;
 pub mod winter_eviction_protections;
