@@ -120,6 +120,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7508",          post(section_7508_route))
         .route("/calc/section-7508a",         post(section_7508a_route))
         .route("/calc/section-7521",          post(section_7521_route))
+        .route("/calc/section-7522",          post(section_7522_route))
         .route("/calc/section-7525",          post(section_7525_route))
         .route("/calc/section-7811",          post(section_7811_route))
         .route("/calc/section-6501",          post(section_6501_route))
@@ -3235,6 +3236,29 @@ async fn section_7521_route(
     Json(b): Json<traderview_expense::section_7521::Section7521Input>,
 ) -> Result<Json<traderview_expense::section_7521::Section7521Result>, ApiError> {
     Ok(Json(traderview_expense::section_7521::compute(&b)))
+}
+
+// ── §7522 content of tax due, deficiency, and other notices ─────────
+// Mounted at /api/calc/section-7522. Added by Taxpayer Bill of
+// Rights of 1988 (TBOR 1, Pub. L. 100-647 § 6233). § 7522(a) any
+// covered notice shall describe the basis for, and identify the
+// amounts (if any) of, any tax due + interest + additional amounts
+// + additions to tax + assessable penalties; SAFE HARBOR —
+// inadequate description shall NOT INVALIDATE such notice.
+// § 7522(b)(1) applies to § 6155 + § 6212 + § 6303 notices (CP14,
+// Letter 1058, Letter 3171/5071C SNOD); § 7522(b)(2) applies to
+// CP2000 Automated Underreporter notices generated from 1099-B +
+// 1099-K + K-1 information return matching (30-day response / 60-
+// day outside US); § 7522(b)(3) applies to Letter 525 first
+// proposed-deficiency 30-day letter with IRS Independent Office of
+// Appeals review opportunity (Taxpayer First Act of 2019 § 1001
+// redesignation). Trader-procedural-critical content-disclosure
+// layer over § 6201 + § 6203 + § 6212 + § 6303.
+async fn section_7522_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7522::Section7522Input>,
+) -> Result<Json<traderview_expense::section_7522::Section7522Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7522::check(&b)))
 }
 
 // ── §7525 federally authorized tax practitioner privilege ───────────
