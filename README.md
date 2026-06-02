@@ -11303,6 +11303,42 @@ Pinned by `contribution_principal_always_tax_free_penalty_free`, `conversion_pri
 
 Mounted at `POST /api/calc/section-408a`. Thirty-six tests pin: **under 50 2026 base limit $7,500**; **age 50 catch-up $8,600**; **single phase-out thresholds 2026** ($153K-$168K); **MFJ phase-out thresholds 2026** ($242K-$252K); **MFS phase-out thresholds $0 to $10K**; **below phase-out full contribution allowed**; **above phase-out zero contribution backdoor required**; **in phase-out partial contribution allowed**; **excess contribution violation** (§ 4973 6% excise tax); **qualified distribution 5-year + age 60**; **non-qualified earnings under 5-year taxable + penalty**; **earnings pre-59½ taxable + 10% penalty**; **disability qualifies distribution under age**; **post-death beneficiary qualifies distribution**; **first home purchase qualifies under $10K cap**; **first home cumulative $10K exhausts lifetime cap**; **conversion principal within 5-year 10% penalty**; **conversion principal after 5-year no penalty**; **contribution principal always tax-free penalty-free**; **citation pins all authorities** (§ 408A(a)-(f) + § 408 + § 219 + § 72(t) + § 401(a)(9) + § 1411 + § 415 + § 4973 + Taxpayer Relief Act of 1997 § 302 + Pub. L. 105-34 + August 5, 1997 + SECURE Act of 2019 § 401 + SECURE Act 2.0 of 2022 + IRS Notice 2025-77 + Treas. Reg. § 1.408A-1 to -10 + Form 5498); **note pins 2026 limits**; **note pins 2026 phase-out thresholds**; **note pins MAGI disregards conversion income**; **note pins qualified distribution two-prong**; **note pins § 408A(d)(3) ordering rules**; **note pins § 408A(d)(3)(A) conversion 5-year per-conversion**; **note pins § 408A(e) backdoor Roth pro-rata**; **note pins § 408A(c)(5) no RMD during lifetime**; **note pins § 1411 NIIT exempt**; **note pins trader-critical fact patterns four**; **note pins Taxpayer Relief Act 1997 origin**; **note pins § 4973 excess contribution excise tax**; **filing status truth table four cells**; **MFJ uniquely highest phase-out invariant**; **MFS uniquely zero low threshold invariant**; **defensive overflow saturating**.
 
+`traderview-expense::section_4973` is the **IRC § 4973 excise tax on excess contributions module** — direct trader-critical companion to `section_408` (traditional IRA), `section_408a` (Roth IRA — iter 430), `section_4974` (RMD excise — iter 436), `section_4975` (prohibited transactions — iter 434), `section_72t` (10% early-withdrawal penalty), `section_219` (deduction limit). § 4973(a) imposes 6% ANNUAL NON-DEDUCTIBLE EXCISE TAX on excess contributions that COMPOUNDS each year uncorrected.
+
+**Seven account types subject to § 4973**:
+
+| Account | Code Section | 2026 Limit |
+|---------|--------------|------------|
+| Traditional IRA | § 408(a) | $7,500 + $1,100 catch-up (50+) under § 219(b)(5) |
+| Roth IRA | § 408A | $7,500 + $1,100 catch-up subject to § 408A(c)(3) MAGI phase-out |
+| SIMPLE IRA | § 408(p) | $17,000 / $20,750 / **$22,750 (ages 60-63 SECURE 2.0 § 109)** |
+| SEP-IRA | § 408(k) | Lesser of 25% comp or $70,000 |
+| Archer MSA | § 220 | Generally closed to new contributions post-2007 |
+| HSA | § 223 | $4,400 self-only / $8,800 family + $1,000 catch-up at 55+ |
+| Coverdell ESA | § 530 | $2,000 per beneficiary (NOT inflation-adjusted) |
+
+**§ 4973(b) traditional IRA excess** = (contributions to traditional IRAs) − (deductible limit under § 219) − (allowable Roth contributions to extent shared limit accommodates).
+
+**§ 4973(f) Roth IRA excess** = contributions to Roth IRAs (other than § 408A(e) qualified rollover contributions) over the maximum allowable Roth contribution.
+
+**§ 4973(c) correction window** — excess REMOVED without 6% excise tax if WITHDRAWN PLUS NET INCOME ATTRIBUTABLE (NIA) before LATER of:
+1. Tax return DUE DATE (April 15 of year after contribution)
+2. Due date PLUS EXTENSIONS (October 15)
+
+NIA computed under Treas. Reg. § 1.408-11(b).
+
+**SECURE Act 2.0 reforms (Pub. L. 117-328, 2022)**:
+- **§ 333** — corrective distribution within window AVOIDS additional § 72(t) 10% early-withdrawal penalty on NIA earnings portion
+- **§ 313** — § 4973 6% excise tax now has **6-YEAR STATUTE OF LIMITATIONS** starting on deadline (excluding extensions) for account owner's income tax return for contribution year; previously NO statute of limitations because Form 5329 was treated as separate return
+
+**§ 4973(g) carryover absorption** — uncorrected excess treated as CONTRIBUTION IN SUBSEQUENT YEAR (counts against next year's limit) until absorbed; compounding 6% tax continues while excess remains.
+
+**Form 5329 reporting**: Part III (traditional/Roth IRAs); Part IV (Coverdell ESAs); Part V (Archer MSAs); Part VI (HSAs); Part VII (ABLE accounts under § 529A — added by SECURE Act 2.0 § 102).
+
+**Trader-critical fact patterns**: (1) $7,500 Roth contribution + MAGI exceeds $169K single phase-out → $7,500 excess → $450/year compounding excise; (2) corrective distribution plus NIA by October 15 — § 4973(c) avoids excise plus SECURE 2.0 § 333 eliminates § 72(t) 10%; (3) uncorrected compounds plus counts toward next year via § 4973(g); (4) miss correction deadline by one day — § 4973(c) not available; (5) SECURE 2.0 § 313 6-year statute limits IRS assessment.
+
+Mounted at `POST /api/calc/section-4973`. Twenty-nine tests pin: **Roth full phase-out excess at 6%** ($7,500 excess = $450/year); **cumulative compounds across years** ($450 × 5 = $2,250); **no excess zero tax**; **correction within window zeros excise**; **correction without NIA still subject to excise**; **statute of limitations bars assessment**; **account-type labels for traditional / SIMPLE (SECURE 2.0 § 109) / HSA / Coverdell / SEP / Archer**; **account-type truth table seven cells**; **carryover absorption § 4973(g) note**; **correction uniquely zeros excise invariant**; **statute uniquely bars invariant**; **citation pins all authorities** (§ 4973(a)-(g) + § 408A(c)(3) + § 408(p) + § 408(k) + § 530 + § 220 + § 223 + § 72(t) + § 6501 + SECURE Act 2.0 § 313 + SECURE Act 2.0 § 333 + Pub. L. 117-328 + Treas. Reg. § 1.408-11 + Treas. Reg. § 54.4973-1 + Form 5329); **note pins § 4973(a) 6% tax**; **note pins § 4973(b) traditional excess**; **note pins § 4973(f) Roth excess**; **note pins § 4973(c) correction window**; **note pins SECURE 2.0 § 333**; **note pins SECURE 2.0 § 313 6-year statute**; **note pins § 4973(g) carryover**; **note pins Form 5329 seven parts**; **note pins 2026 limits**; **note pins trader fact patterns**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_4974` is the **IRC § 4974 excise tax on RMD failures module** — natural companion to `section_408` (traditional IRA — iter 432), `section_408a` (Roth IRA — iter 430), `section_4975` (prohibited transactions — iter 434), `section_72t` (10% early-withdrawal penalty), `section_401a9` (RMD timing rules). § 4974(a) imposes excise tax on payee equal to percentage of shortfall between amount distributed during taxable year and the minimum required distribution under § 401(a)(9) or § 408(a)(6)/(b)(3).
 
 **SECURE Act 2.0 of 2022 (Pub. L. 117-328) reforms**:

@@ -216,6 +216,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
+        .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-453",           post(section_453_route))
@@ -775,6 +776,27 @@ async fn section_423_route(
     Json(b): Json<traderview_expense::section_423::Section423Input>,
 ) -> Result<Json<traderview_expense::section_423::Section423Result>, ApiError> {
     Ok(Json(traderview_expense::section_423::check(&b)))
+}
+
+// ── § 4973 excise tax on excess IRA / Roth / HSA / Coverdell contrib ─
+// Mounted at /api/calc/section-4973. Pure compute; 6% annual non-
+// deductible excise tax on excess contributions to § 408(a)
+// traditional IRA, § 408A Roth IRA, § 408(b) IRA annuity, § 408(p)
+// SIMPLE IRA, § 530 Coverdell ESA, § 220 Archer MSA, § 223 HSA;
+// § 4973(c) correction window (return due date plus extensions =
+// October 15) with NIA computed under Treas. Reg. § 1.408-11(b);
+// SECURE Act 2.0 § 333 eliminates additional § 72(t) 10% early-
+// withdrawal penalty on NIA when corrective distribution made
+// timely; SECURE Act 2.0 § 313 establishes 6-year statute of
+// limitations (previously no SoL); § 4973(g) uncorrected excess
+// carryover-absorbed into subsequent year limit; Form 5329 Parts
+// III-VII reporting.
+
+async fn section_4973_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4973::Section4973Input>,
+) -> Result<Json<traderview_expense::section_4973::Section4973Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4973::check(&b)))
 }
 
 // ── § 4974 excise tax on RMD failures (post-SECURE 2.0) ──────────────
