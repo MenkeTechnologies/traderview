@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6212",          post(section_6212_route))
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6303",          post(section_6303_route))
+        .route("/calc/section-6304",          post(section_6304_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6321",          post(section_6321_route))
         .route("/calc/section-6323",          post(section_6323_route))
@@ -2775,6 +2776,25 @@ async fn section_6303_route(
     Json(b): Json<traderview_expense::section_6303::Section6303Input>,
 ) -> Result<Json<traderview_expense::section_6303::Section6303Result>, ApiError> {
     Ok(Json(traderview_expense::section_6303::check(&b)))
+}
+
+// ── §6304 Fair Tax Collection Practices ─────────────────────────────
+// Mounted at /api/calc/section-6304. RRA 98 § 3466-imported FDCPA
+// (15 USC § 1692) protections: § 6304(a) communications (8 a.m.-9
+// p.m. local time default convenient window; represented-taxpayer
+// bypass prohibition under § 7521; workplace-contact restriction
+// when employer prohibits); § 6304(b) harassment and abuse
+// prohibitions (threats, obscene language, repeated phone ringing,
+// anonymous calls without identity disclosure); § 6304(c) civil
+// damages via § 7433 (capped $1M reckless/intentional, $100K
+// negligence). Trader-relevant when revenue officer or § 6306
+// private collection agency contractor uses abusive collection
+// tactics against trader-taxpayer.
+async fn section_6304_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6304::Section6304Input>,
+) -> Result<Json<traderview_expense::section_6304::Section6304Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6304::check(&b)))
 }
 
 // ── §6320 Collection Due Process (CDP) for liens ────────────────────
