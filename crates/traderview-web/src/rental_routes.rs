@@ -505,6 +505,10 @@ use traderview_expense::rent_concession_disclosure::{
     check as check_rent_concession_disclosure,
     RentConcessionDisclosureInput, RentConcessionDisclosureResult,
 };
+use traderview_expense::landlord_foreclosure_status_disclosure::{
+    check as check_landlord_foreclosure_status_disclosure,
+    LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1011,6 +1015,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-property-sale-notice", axum::routing::post(landlord_property_sale_notice_route))
         .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
         .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
+        .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6279,6 +6284,39 @@ async fn rent_concession_disclosure_route(
     Json(b): Json<RentConcessionDisclosureInput>,
 ) -> Result<Json<RentConcessionDisclosureResult>, ApiError> {
     Ok(Json(check_rent_concession_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord foreclosure status disclosure to tenant framework.
+//
+// Mounted at POST /api/rental/landlord-foreclosure-status-disclosure.
+// Four-jurisdiction framework for landlord obligations during
+// mortgage default and active foreclosure: (1) California — Cal.
+// Civ. Code § 2924.8 5-business-day post-and-mail notice on
+// trustee's sale; § 2924.8(d) punitive damages for knowing/
+// intentional violation; § 2924.85 REPEALED January 1, 2018
+// (historical pre-lease disclosure); (2) New York — NY RPAPL
+// § 1305 10-business-day successor notice after foreclosure
+// judgment; RPAPL § 1306 lender DFS filing within 3 business
+// days; (3) Federal — 12 USC § 5220 Protecting Tenants at
+// Foreclosure Act of 2009 (made permanent by Pub. L. 115-174
+// § 304 effective June 23, 2018) 90-day successor notice plus
+// remainder of lease for BONA FIDE TENANTS (§ 5220(b) three-
+// element test: not mortgagor's family + arm's-length + rent
+// not substantially less than FMV); (4) Default — Restatement
+// (Second) of Torts § 551 common-law disclosure duty for
+// material facts. Sibling cluster: foreclosure_tenant_rights,
+// landlord_property_sale_notice, security_deposit_bank_
+// disclosure, landlord_identification_disclosure,
+// tenant_estoppel_certificate.
+// ---------------------------------------------------------------------------
+
+async fn landlord_foreclosure_status_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordForeclosureStatusDisclosureInput>,
+) -> Result<Json<LandlordForeclosureStatusDisclosureResult>, ApiError> {
+    Ok(Json(check_landlord_foreclosure_status_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
