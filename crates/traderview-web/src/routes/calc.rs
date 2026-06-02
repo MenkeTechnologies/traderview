@@ -196,6 +196,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6863",          post(section_6863_route))
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
+        .route("/calc/section-354",           post(section_354_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
@@ -2712,6 +2713,45 @@ async fn section_409a_route(
 // of a mandatory interest haircut; §382(h) NUBIG recognition can
 // increase the limit during the 5-year recognition period. Pairs with
 // /api/calc/section-172 for the underlying NOL deduction.
+
+// ── § 354 Exchanges of Stock and Securities in Reorganizations ────
+// Mounted at /api/calc/section-354 (iter 526). Pure compute. § 354
+// provides general nonrecognition treatment for the EXCHANGE of stock
+// and securities pursuant to a § 368(a) reorganization. § 354(a)(1)
+// general rule: no gain/loss recognized if stock/securities of corp
+// party to reorganization exchanged SOLELY for stock/securities of
+// same or another party. § 354(a)(2)(A) securities principal-amount
+// boot: if principal of securities received exceeds principal
+// surrendered (or securities received with none surrendered), excess
+// FMV treated as money (boot) — taxable up to gain realized per
+// § 356(a). § 354(a)(2)(B) NQPS (nonqualified preferred stock per
+// § 351(g)(2)) treated as boot. § 354(b) additional requirements for
+// § 368(a)(1)(D) divisive D split: (1) acquiring corp must acquire
+// substantially all assets; (2) transferor must distribute everything
+// received plus retained assets. § 354(c) rights/warrants treated as
+// securities per Treas. Reg. § 1.354-1(e). Eight reorganization types:
+// AStatutoryMerger, BStockForStock, CAssetAcquisitionForVotingStock,
+// DDivisiveSplitWithSection354b, ERecapitalization, FMereChange-
+// IdentityForm, GBankruptcyReorg, NotASection368Reorganization. Six-
+// mode severity ladder: NotApplicable, FullNonrecognitionUnder-
+// Section354a1, PartialBootSection354a2aSecuritiesExcess, Nonqualified-
+// PreferredStockBootSection354a2b, Section354bAdditionalRequirements-
+// NotSatisfied, NotASection368ReorganizationFullRecognition. Basis
+// substituted per § 358; holding period tacked per § 1223(1).
+// Coordinates with § 368 (reorganization framework — § 354 requires
+// § 368(a) plan), § 356 (boot computation), § 358 (substituted basis),
+// § 355 (parallel divisive nonrecognition), § 361 (corporate transferor),
+// § 362 (acquirer basis), § 367 (foreign corp exchanges override —
+// iter 524), § 1223 (holding period tacking), § 351 (corp formation
+// parallel), § 332 (parent-subsidiary liquidation), § 1001 (general
+// realization).
+
+async fn section_354_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_354::Section354Input>,
+) -> Result<Json<traderview_expense::section_354::Section354Result>, ApiError> {
+    Ok(Json(traderview_expense::section_354::check(&b)))
+}
 
 // ── § 367 Foreign Corporations ────────────────────────────────────────
 // Mounted at /api/calc/section-367 (iter 524). Pure compute. § 367
