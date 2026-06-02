@@ -225,6 +225,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-421",           post(section_421_route))
         .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-423",           post(section_423_route))
+        .route("/calc/section-4501",          post(section_4501_route))
         .route("/calc/section-4940",          post(section_4940_route))
         .route("/calc/section-4941",          post(section_4941_route))
         .route("/calc/section-4942",          post(section_4942_route))
@@ -950,6 +951,35 @@ async fn section_4974_route(
     Json(b): Json<traderview_expense::section_4974::Section4974Input>,
 ) -> Result<Json<traderview_expense::section_4974::Section4974Result>, ApiError> {
     Ok(Json(traderview_expense::section_4974::check(&b)))
+}
+
+// ── § 4501 Repurchase of Corporate Stock Excise Tax ──────────────────
+// Mounted at /api/calc/section-4501 (iter 496). Pure compute. IRA 2022
+// Pub. L. 117-169 § 10201 1% excise tax on stock buybacks by covered
+// corporations effective for repurchases after December 31, 2022. § 4501(b)
+// covered-corporation definition: domestic corporation traded on
+// established securities market per § 7704(b)(1) — NYSE, NASDAQ, national
+// exchanges. SPAC sponsor / shareholder redemptions explicitly subject
+// per Final Regs TD 10002 (July 3, 2024); IRS rejected SPAC carve-out.
+// § 4501(c)(3) netting rule: FMV of repurchases reduced by FMV of statutory
+// § 4501(e) excepted repurchases plus FMV of stock issuances (including
+// compensatory RSU vest, ISO/NSO exercise, ESPP, equity grants) per
+// Treas. Reg. § 1.4501-2(c). § 4501(e) six exceptions: § 368
+// reorganization, ESOP/retirement-plan contribution, $1M de minimis,
+// dealer ordinary course, RIC/REIT, § 301 dividend treatment. § 4501(d)
+// specified-affiliate extension to foreign-parent anti-inversion. Excise
+// tax NOT deductible per § 275(a)(6) — permanent book-tax difference.
+// Form 7208 attached to Form 720 quarterly. Coordination with § 280G
+// (golden parachute), § 421 (statutory stock option issuance offset),
+// § 56A (corporate AMT 15% — separate IRA 2022 provision), § 4960
+// (ATEO executive comp 21%), § 1042 (ESOP rollover for retirement-plan
+// exception).
+
+async fn section_4501_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4501::Section4501Input>,
+) -> Result<Json<traderview_expense::section_4501::Section4501Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4501::check(&b)))
 }
 
 // ── § 4940 annual excise tax on private foundation NII ───────────────
