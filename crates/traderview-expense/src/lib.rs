@@ -78,6 +78,7 @@ pub mod landlord_retaliation_damages;
 pub mod landlord_security_device_obligations;
 pub mod landlord_self_help_eviction_prohibition;
 pub mod landlord_tenant_recording_consent;
+pub mod landlord_water_heat_emergency_response;
 pub mod landlord_lien_prohibition;
 pub mod landlord_mid_tenancy_rekeying;
 pub mod landlord_pest_extermination_timeline;

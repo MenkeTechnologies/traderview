@@ -522,6 +522,10 @@ use traderview_expense::landlord_pest_extermination_timeline::{
     check as check_landlord_pest_extermination_timeline,
     LandlordPestExterminationTimelineInput, LandlordPestExterminationTimelineResult,
 };
+use traderview_expense::landlord_water_heat_emergency_response::{
+    check as check_landlord_water_heat_emergency_response,
+    LandlordWaterHeatEmergencyResponseInput, LandlordWaterHeatEmergencyResponseResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1032,6 +1036,7 @@ pub fn router() -> Router<AppState> {
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
         .route("/landlord-pest-extermination-timeline", axum::routing::post(landlord_pest_extermination_timeline_route))
+        .route("/landlord-water-heat-emergency-response", axum::routing::post(landlord_water_heat_emergency_response_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6445,6 +6450,46 @@ async fn landlord_pest_extermination_timeline_route(
     Json(b): Json<LandlordPestExterminationTimelineInput>,
 ) -> Result<Json<LandlordPestExterminationTimelineResult>, ApiError> {
     Ok(Json(check_landlord_pest_extermination_timeline(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Landlord water/heat emergency response timeline framework.
+//
+// Mounted at POST /api/rental/landlord-water-heat-emergency-response.
+// Four-jurisdiction framework with severity-graded emergency
+// response: (1) New York City — NYC HMC § 27-2029 (heat min temp)
+// + § 27-2030 (hot water 120°F 365 days) + § 27-2115 ($250-$500
+// daily civil penalty per apartment) + § 27-2018 24/7 emergency
+// contact requirement for 2+ unit buildings; heat season October
+// 1 - May 31 with 68°F daytime / 62°F nighttime; (2) California —
+// Cal. Civ. Code § 1941.1(a)(1) waterproofing + (a)(2) hot/cold
+// water + § 1942 repair-and-deduct up to one month rent; (3) Texas
+// — Tex. Prop. Code § 92.052 landlord duty + § 92.056 tenant
+// remedies (termination + actual damages + one month rent + $500
+// civil penalty + attorney's fees); (4) Default — URLTA § 2.104
+// + § 4.103 emergency repair-and-deduct + Restatement (Second) of
+// Property § 5.4. Three-tier severity: TIER 1 IMMEDIATE (24-hour
+// response) for no heat in season + no hot water + sewage backup
+// + active flooding + gas leak + smoke/CO detector failure +
+// unsecured exterior door + electrical hazard + structural
+// collapse; TIER 2 URGENT (72-hour) for reduced hot water + partial
+// heat loss + slow leak + appliance failure; TIER 3 STANDARD (7-
+// day) for cosmetic water staining + slow plumbing + HVAC
+// inefficiency. Tenant remedies citing Park West v. Mitchell +
+// Green v. Superior Court + Boston Housing Auth. v. Hemingway.
+// Sibling cluster: habitability_remedies, landlord_repair_
+// response_timeframe, landlord_pest_extermination_timeline (iter
+// 449), detector_requirements, heat_requirements,
+// cooling_requirements, rental_basement_water_intrusion_
+// disclosure.
+// ---------------------------------------------------------------------------
+
+async fn landlord_water_heat_emergency_response_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LandlordWaterHeatEmergencyResponseInput>,
+) -> Result<Json<LandlordWaterHeatEmergencyResponseResult>, ApiError> {
+    Ok(Json(check_landlord_water_heat_emergency_response(&b)))
 }
 
 // ---------------------------------------------------------------------------

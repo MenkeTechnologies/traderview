@@ -3808,6 +3808,71 @@ Mounted at `POST /api/rental/landlord-repair-response-timeframe`. Twenty-nine te
 
 Mounted at `POST /api/rental/landlord-tenant-recording-consent`. Twenty-four tests pin: **one-party consent with at least one consent lawful**; **one-party consent with no consent unlawful** (criminal + $10K civil); **all-party consent with only one party unlawful state**; **all-party consent with all parties lawful**; **third-party device violates federal regardless of state** (2-regime sweep); **in-unit recording without all-party consent violates both**; **in-unit recording with all-party consent lawful**; **public space no privacy expectation always lawful** (2-regime sweep); **federal criminal exposure only when recording unlawful federally**; **federal criminal penalty note includes 5 years + $250K**; **federal civil damages note includes $10K minimum**; **all-party state note lists 11 states** (CA / DE / FL / IL / MD / MA / MT / NV / NH / PA / WA); **one-party state note describes federal floor** (39 states + DC); **citation pins federal § 2511(2)(d)/(4) + § 2520(c) + all 11 state statutes**; **third-party device dominates public space check** (public-space-no-privacy carve-out runs first); **federal one-party satisfied + state all-party violated split**; **federal one-party unsatisfied no civil damages when lawful**; **all-party consent no parties consented unlawful both sides**; **third-party device carveout persists with all parties consenting** (one-party consent does not protect a stranger to the conversation); **note describes civil damages only when federal violation**; **in-unit recording with one-party consent violates in one-party state** (in-unit overrides regime); **one-party consent state does not engage all-party note**; **Nevada inclusion in state list confirms 11-state count**; **third-party device carries both criminal and civil exposure**.
 
+`traderview-expense::landlord_water_heat_emergency_response` is the **multi-jurisdictional landlord water/heat emergency response timeline framework module** — distinct from sibling `habitability_remedies` (general repair-and-deduct), `landlord_repair_response_timeframe` (general written-response framework), `landlord_pest_extermination_timeline` (iter 449 pest emergencies), `heat_requirements` (winter heat compliance standards), `cooling_requirements` (summer maximum temperature), `rental_basement_water_intrusion_disclosure` (disclosure not repair), `detector_requirements` (smoke/CO emergencies). Trader-landlord critical because true habitability emergencies trigger SHORT statutory response windows (24-72 hours), high daily civil penalties ($250-$500/day per apartment in NYC), and tenant constructive-eviction or rent-abatement remedies.
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Source | Key Standard |
+|--------------|--------|--------------|
+| **New York City** | NYC HMC § 27-2028 to § 27-2033 (Article 8); § 27-2115 (civil penalties) | Heat 68°F day / 62°F night October 1 - May 31; hot water 120°F year-round; 24/7 emergency contact for 2+ unit buildings; $250-$500/day per apartment Class C |
+| **California** | Cal. Civ. Code § 1941.1(a)(1)-(2) + § 1942 | Waterproofing + hot/cold water + repair-and-deduct up to one month rent (max twice in 12 months) |
+| **Texas** | Tex. Prop. Code § 92.052 + § 92.056 | Landlord duty to repair + tenant remedies (termination + actual damages + one month rent + $500 civil penalty + attorney's fees) |
+| **Default** | URLTA § 2.104 + § 4.103 + Restatement (Second) of Property § 5.4 | Emergency repair-and-deduct + implied warranty of habitability + constructive eviction |
+
+**Three-tier severity framework**:
+
+**TIER 1 IMMEDIATE EMERGENCY (24-hour response)**:
+1. NO HEAT during heat season (NYC October 1 - May 31)
+2. NO HOT WATER (year-round)
+3. SEWAGE BACKUP into dwelling unit
+4. ACTIVE FLOODING (burst pipe, foundation failure)
+5. GAS LEAK
+6. SMOKE / CARBON MONOXIDE DETECTOR FAILURE
+7. UNSECURED EXTERIOR DOOR (post-burglary)
+8. ELECTRICAL HAZARD risking fire
+9. STRUCTURAL COLLAPSE risk
+10. > 95°F unit temperature with elderly/infant/medical-condition tenants
+
+**TIER 2 URGENT (72-hour response)**: reduced hot water flow/inconsistent temperature; partial heat loss (one room); slow water leak with minor damage; refrigerator/stove failure; non-functioning toilet (with backup available); window unable to close securely.
+
+**TIER 3 STANDARD (7-14 day response)**: cosmetic water staining; working but slow plumbing; HVAC inefficiency without complete failure.
+
+**NYC HMC § 27-2029 heat season requirements**:
+- October 1 - May 31
+- 68°F minimum DAYTIME (6 AM - 10 PM) when outside < 55°F
+- 62°F minimum NIGHTTIME (10 PM - 6 AM)
+- Hot water 120°F minimum 365 days per year (NYC HMC § 27-2030)
+
+**NYC HPD violation classes & civil penalties** (NYC HMC § 27-2115):
+- **CLASS A** non-hazardous — 90-day correction; no daily penalty
+- **CLASS B** hazardous — 30-day correction; $25-$250 daily per apartment
+- **CLASS C** immediately hazardous — 24-hour correction; **$250-$500 daily per apartment**
+
+**Cal. Civ. Code § 1942 repair-and-deduct (5 elements)**:
+1. Tenant gives reasonable notice to landlord
+2. Landlord fails to make repair within reasonable time (typically 30 days but 24-72 hours for true emergency)
+3. Tenant may repair and deduct from rent up to ONE MONTH'S RENT
+4. Limit twice in any 12-month period
+5. Tenant may NOT use repair-and-deduct if tenant caused condition
+
+**Tex. Prop. Code § 92.056 tenant remedies (5 elements)**:
+1. Written notice of need to repair specifying condition
+2. 7-day waiting period (less in true emergency under § 92.056(d))
+3. Tenant may TERMINATE LEASE
+4. OR obtain judicial order for repair
+5. OR sue for actual damages + ONE MONTH'S RENT + $500 CIVIL PENALTY + attorney's fees + court costs
+
+**Tenant remedies under habitability warranty**:
+1. **RENT WITHHOLDING** — Park West Mgmt. Corp. v. Mitchell, 47 N.Y.2d 316 (1979) in NY; Green v. Superior Court, 10 Cal. 3d 616 (1974) in CA; Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973) in MA
+2. **REPAIR AND DEDUCT** — CA Cal. Civ. Code § 1942 up to one month rent; URLTA § 4.103 up to greater of $300 or 1/2 month rent
+3. **RENT ABATEMENT** — 50-100% during habitability breach period
+4. **CONSTRUCTIVE EVICTION** — vacate with full rent relief under Restatement (Second) of Property § 5.4
+5. **TX § 92.056 statutory remedies** — termination + damages + one month rent + $500 + fees
+
+**Trader-landlord critical fact patterns**: (1) NYC 12-unit building loses heat November 15 (heat season); landlord 48-hour delay = HMC § 27-2029 Class C violation $250-$500/day × 12 apartments × 2 days = up to $12,000 maximum daily penalty; (2) CA SFR burst pipe — landlord 5-day delay → § 1942 repair-and-deduct hires emergency plumber up to one month rent; (3) TX duplex sewage backup — § 92.056 written notice + 14-day delay → tenant termination + damages + one month rent + $500 civil penalty + fees; (4) NYC missing 24/7 emergency contact — Class B violation $25-$250 daily + constructive eviction risk; (5) URLTA jurisdiction § 4.103 emergency repair-and-deduct up to greater of $300 or 1/2 month rent.
+
+Mounted at `POST /api/rental/landlord-water-heat-emergency-response`. Thirty tests pin: **NYC Tier 1 within 24 hours timely**; **NYC Tier 1 past 24 hours breach**; **Tier 2 72-hour window**; **Tier 3 7-day window**; **no repair dispatched breach**; **NYC multi-unit 24/7 contact required**; **NYC single-unit no 24/7 requirement**; **NYC missing 24/7 contact violation**; **NYC Class C civil penalty $500 per apartment** ($50,000 cents × 12 = $600K cents daily); **NYC Class B civil penalty $250 per apartment**; **NYC Class A no civil penalty**; **NYC heat season disclosure**; **CA repair-and-deduct breach invokes** ($1942 + one month rent + twice/12); **TX lease termination breach invokes** (§ 92.056 + $500 + fees); **constructive eviction invokes with case law** (Park West + Green + Hemingway); **habitability breach unlocks remedies**; **NYC unlocks HPD hotline remedy**; **jurisdiction-tier truth table** (4 × 3 = 12 cells); **Tier 1 uniquely 24-hour invariant**; **citation pins all authorities** (NYC HMC § 27-2028 / § 27-2029 / § 27-2030 / § 27-2115 + Cal. Civ. Code § 1941.1(a)(1)-(2) / § 1942 + Tex. Prop. Code § 92.052 / § 92.056 + URLTA § 2.104 / § 4.103 + Restatement (Second) Property § 5.4 + Park West + Green + Hemingway); **note pins four-jurisdiction framework**; **note pins three emergency tiers**; **note pins NYC heat season temperatures**; **note pins NYC HPD violation classes**; **note pins NYC 24/7 emergency contact**; **note pins CA § 1942 5 elements**; **note pins TX § 92.056 5 elements**; **note pins habitability remedies with case law**; **note pins trader fact patterns five**; **note pins companion modules**.
+
 `traderview-expense::last_month_rent_offset` is the **tenant security deposit-as-last-month's-rent offset right module** — when may a tenant unilaterally withhold last month's rent payment on grounds that the security deposit serves as security for unpaid rent? Distinct from sibling modules `security_deposit_caps` (statutory caps on deposit amount), `deposit_return_windows` (refund timelines), `damage_deduction_itemization` (deductions from deposit), and `security_deposit_bank_disclosure` (bank location disclosure including NY 6+ unit interest-bearing requirement). This module focuses on the TENANT-SIDE OFFSET RIGHT.
 
 **Four regimes**:
