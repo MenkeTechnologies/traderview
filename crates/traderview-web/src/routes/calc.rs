@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7207",          post(section_7207_route))
         .route("/calc/section-7421",          post(section_7421_route))
+        .route("/calc/section-7422",          post(section_7422_route))
         .route("/calc/section-7426",          post(section_7426_route))
         .route("/calc/section-7429",          post(section_7429_route))
         .route("/calc/section-7430",          post(section_7430_route))
@@ -3306,6 +3307,34 @@ async fn section_7421_route(
     Json(b): Json<traderview_expense::section_7421::Section7421Input>,
 ) -> Result<Json<traderview_expense::section_7421::Section7421Result>, ApiError> {
     Ok(Json(traderview_expense::section_7421::check(&b)))
+}
+
+// ── §7422 civil actions for refund ──────────────────────────────────
+// Mounted at /api/calc/section-7422. Completes refund-procedure
+// constellation. Four pre-suit requirements: (1) Flora full-payment
+// rule (Flora v. United States, 362 U.S. 145 (1960) — taxpayer must
+// FULLY PAY assessment before suing in district court / Court of
+// Federal Claims); (2) administrative claim filed under § 6511
+// (within later of 3 years after return filing or 2 years after
+// payment); (3) § 6532(a) 6-month wait period (180 days from admin
+// claim filing, unless IRS issues disallowance sooner); (4) §
+// 6532(a) 2-year filing window after IRS mails notice of
+// disallowance. § 7422(e) concurrent jurisdiction limitation: if
+// Secretary mails notice of deficiency BEFORE hearing, proceedings
+// stayed during Tax Court petition window + 60 days; if taxpayer
+// files Tax Court petition, district court / Court of Federal
+// Claims loses jurisdiction to extent acquired by Tax Court.
+// Jurisdiction: district court (28 USC § 1346(a)(1)) concurrent
+// with Court of Federal Claims (28 USC § 1491). Pair with § 7421
+// AIA exception (refund-after-payment is AIA-exception pathway) +
+// § 7508A disaster postponement of § 6511 deadlines + § 7430
+// litigation costs.
+
+async fn section_7422_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7422::Section7422Input>,
+) -> Result<Json<traderview_expense::section_7422::Section7422Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7422::check(&b)))
 }
 
 // ── §7426 third-party wrongful levy + surplus + substituted proceeds ─
