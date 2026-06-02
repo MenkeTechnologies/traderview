@@ -166,6 +166,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6672",          post(section_6672_route))
         .route("/calc/section-6694",          post(section_6694_route))
         .route("/calc/section-6695",          post(section_6695_route))
+        .route("/calc/section-6695a",         post(section_6695a_route))
         .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
@@ -4989,6 +4990,33 @@ async fn section_6695_route(
         ));
     }
     Ok(Json(traderview_expense::section_6695::compute(&b)))
+}
+
+// ── §6695A appraiser penalty for substantial/gross valuation ──
+// misstatements. Mounted at /api/calc/section-6695a. Added by
+// Pension Protection Act of 2006 § 1219 to penalize appraisers
+// whose appraisals support substantial or gross valuation
+// misstatements. § 6695A(a) — penalty imposed when appraiser knew
+// or reasonably should have known appraisal would be used on
+// return AND claimed value results in § 6662(e) substantial (≥
+// 150%) OR § 6662(g) estate/gift understatement (≤ 65%) OR §
+// 6662(h) gross (≥ 200%) valuation misstatement. § 6695A(b) —
+// penalty equals LESSER OF (1) greater of 10% of underpayment or
+// $1,000 AND (2) 125% of gross income received from appraisal.
+// § 6695A(c) good-faith exception — no penalty if appraiser
+// establishes value was MORE LIKELY THAN NOT (51% confidence) the
+// proper value. Effective dates: general rule after August 17,
+// 2006; facade easement special rule after July 25, 2006. Trader-
+// relevant for art donations + conservation easements (§ 170(h))
+// + facade easements + § 1031 real estate + partnership interest
+// valuations + syndicated conservation easement deductions
+// (§ 6707A listed transaction crossover) + estate/gift tax
+// valuations.
+async fn section_6695a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6695a::Section6695AInput>,
+) -> Result<Json<traderview_expense::section_6695a::Section6695AResult>, ApiError> {
+    Ok(Json(traderview_expense::section_6695a::check(&b)))
 }
 
 // ── § 6700 promoter penalties for abusive tax shelter promotion ────
