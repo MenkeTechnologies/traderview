@@ -5332,6 +5332,38 @@ Mounted at `POST /api/rental/security-deposit-interest-statement`. Thirty-one te
 
 Mounted at `POST /api/rental/habitability-remedies`. Nineteen tests pin: CA has 3 remedies modeled (repair-and-deduct + damages action + eviction defense); CA repair-and-deduct caps at one month's rent ($2,500 at $2,500 rent); TX repair-and-deduct one month rent with 7-day notice + 7-day cure; IL Chicago RLTO repair-and-deduct $500 fixed cap; **VA greater-of-$1,500-or-month-rent** math ($1,000 rent → $1,500 cap; $2,000 rent → $2,000 cap); MA treble damages multiplier for c.93A action; NY has withholding + eviction defense but NO state-wide repair-and-deduct; FL rent into court registry after 7-day notice; OR has repair-and-deduct + termination with attorney fees; unknown state not recognized; case-insensitive lookup; WA repair-and-deduct + withholding both modeled with different cure periods (10 vs 30 days); CA damages action $5,000 cap + attorney fees; states with attorney fees correctly flagged (TX/IL/OR/WA); CA eviction defense no notice required; report total count matches list length; `remedies_for_state` helper returns all matching rules; citation present for known states.
 
+`traderview-expense::rent_concession_disclosure` is the **multi-jurisdictional rent concession disclosure framework module** — trader-landlord critical because rent concessions ("first month free", "two months free") are widely used to attract tenants in soft markets but can become a MAJOR FRAUD-LIABILITY EXPOSURE in rent-regulated jurisdictions where concessions disguise the true legal regulated rent. Companion to `lease_disclosures`, `lease_copy_delivery`, `tenant_rights_statement_disclosure`, `lease_waiver_enforceability`, `lease_renewal_offer_timing`, `landlord_identification_disclosure`.
+
+**Three-jurisdiction framework**:
+
+| Jurisdiction | Source | Required Treatment |
+|--------------|--------|--------------------|
+| **NY Rent-Stabilized** | NY RSL § 26-511(c)(14) (HSTPA 2019) + DHCR Operational Bulletin 2016-1 + Fact Sheet #40 (May 2024) | Preferential rent CANNOT be revoked during tenancy; renewal increases calculated on PREFERENTIAL rent; concession must be amortized to NET EFFECTIVE rent and registered with DHCR |
+| **NY Non-Stabilized** | NY RPL § 235-a + NY GBL § 349 (UDAP) | Clear concession disclosure in lease; credit-reporting gross (not net effective) rent = UDAP § 349 deceptive practice |
+| **California** | Cal. Civ. Code § 1947.12 (AB 1482) + § 1947.15 | Annual increase capped at LOWER of CPI+5% or 10% of LOWEST gross rent in prior 12 months; concession disclosure to prevent gaming cap |
+
+**NY HSTPA 2019 reforms** (NY Laws 2019, ch. 36):
+1. **§ 26-511(c)(14)** — preferential rents CANNOT be revoked during tenancy (pre-HSTPA two-tier structure ELIMINATED)
+2. **§ 26-511(c)(14)** — renewal percentage increases calculated on PREFERENTIAL RENT (not legal regulated rent)
+3. **§ 26-516(a)** — overcharge damages extended from 4-YEAR to **6-YEAR LOOKBACK**
+4. **§ 26-516(a)(2)** — TREBLE DAMAGES on overcharge if landlord cannot prove no willful overcharge
+
+**DHCR Operational Bulletin 2016-1 + Fact Sheet #40 (May 2024) — concession amortization formula**:
+
+```
+Net Effective Monthly Rent = (Gross Monthly Rent × Lease Term Months
+                              − Total Concession Value) ÷ Lease Term Months
+```
+
+**Trader-landlord critical fact patterns**:
+1. NY rent-stabilized: 2 months free on 12-month $3,000/month lease — $36,000 gross minus $6,000 concession equals $30,000 effective annual; $2,500/month NET EFFECTIVE preferential rent must be registered with DHCR;
+2. NY rent-stabilized: registering gross $3,000 with side-letter "preferential $2,500" — FRAUD; treble damages on 6-year lookback under RSL § 26-516(a);
+3. Post-HSTPA: landlord cannot revoke preferential at renewal — increase calculated on preferential rent;
+4. CA TPA: $500/month concession — annual increase computed on LOWEST gross prior 12 months under AB 1482 cap;
+5. NY non-stabilized: credit-reports gross rent (not net effective) — UDAP § 349 deceptive-practice claim.
+
+Mounted at `POST /api/rental/rent-concession-disclosure`. Twenty-seven tests pin: **NY stabilized net effective correct** (2 months free on 12-month $3K = $2,500/month NET); **NY stabilized compliant passes**; **NY stabilized failure to register net effective is fraud**; **NY stabilized revoke preferential at renewal prohibited**; **NY stabilized renewal on legal not preferential violates HSTPA**; **NY stabilized treble damages 6-year lookback**; **NY non-stabilized credit-report gross UDAP claim**; **no disclosure in lease UDAP violation**; **CA AB 1482 cap calculation CPI 3%**; **CA AB 1482 cap CPI 10% floored at 10% cap**; **CA AB 1482 excess violation**; **3-month free 24-month lease eighth-off**; **no concession net equals gross**; **zero lease term uses gross**; **NY stabilized uniquely prohibits revocation invariant**; **jurisdiction truth table four cells**; **citation pins all authorities** (NY RSL § 26-511(c)(14) + § 26-516(a) + § 26-516(a)(2) + HSTPA 2019 + DHCR Operational Bulletin 2016-1 + DHCR Fact Sheet #40 + NY RPL § 235-a + NY GBL § 349 + Cal. Civ. Code § 1947.12 + AB 1482 + Cal. Civ. Code § 1947.15); **note pins three-jurisdiction framework**; **note pins HSTPA four reforms**; **note pins DHCR amortization formula**; **note pins trader fact patterns five**; **note pins CA AB 1482**; **note pins NY RPL § 235-a UDAP**; **note pins pre-HSTPA two-tier elimination**; **note pins companion modules**; **multiple failures stack**; **defensive overflow saturating**.
+
 `traderview-expense::rent_control` is the **state rent control / rent stabilization table** — the seventh state-data module after `deposit_interest`, `late_fee_caps`, `eviction_notices`, `contractor_1099`, `deposit_return_windows`, and `lease_disclosures`. Three classes of state law govern annual rent increases:
 
 - **Statewide rent cap** — CA (AB1482, 2019), OR (SB608, 2019, first-in-nation), WA (HB1217, effective 2025). Cap formula = fixed percentage + local CPI, **absolute max 10%**. CA = 5% + CPI; OR = 7% + CPI; WA = 7% + CPI. All three require **just cause termination after 12 months** of tenancy. Common exemptions: **new construction under 15 years old** (all three states), **single-family non-corporate-owned** (CA only — OR/WA don't exempt), **owner-occupied 2-4 unit buildings** (CA only).

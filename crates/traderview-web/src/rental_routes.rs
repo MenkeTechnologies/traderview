@@ -501,6 +501,10 @@ use traderview_expense::lease_renewal_offer_timing::{
     check as check_lease_renewal_offer_timing,
     LeaseRenewalOfferTimingInput, LeaseRenewalOfferTimingResult,
 };
+use traderview_expense::rent_concession_disclosure::{
+    check as check_rent_concession_disclosure,
+    RentConcessionDisclosureInput, RentConcessionDisclosureResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1006,6 +1010,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-estoppel-certificate", axum::routing::post(tenant_estoppel_certificate_route))
         .route("/landlord-property-sale-notice", axum::routing::post(landlord_property_sale_notice_route))
         .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
+        .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6244,6 +6249,36 @@ async fn lease_renewal_offer_timing_route(
     Json(b): Json<LeaseRenewalOfferTimingInput>,
 ) -> Result<Json<LeaseRenewalOfferTimingResult>, ApiError> {
     Ok(Json(check_lease_renewal_offer_timing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Rent concession disclosure framework.
+//
+// Mounted at POST /api/rental/rent-concession-disclosure.
+// Three-jurisdiction framework: (1) New York rent-stabilized —
+// NY RSL § 26-511(c)(14) (HSTPA 2019) locks in preferential rent
+// (cannot be revoked during tenancy); renewal increases calculated
+// on PREFERENTIAL rent; DHCR Operational Bulletin 2016-1 + Fact
+// Sheet #40 amortization formula; failure to register net effective
+// rent triggers RSL § 26-516(a) 6-year overcharge lookback + RSL
+// § 26-516(a)(2) treble damages; (2) New York non-rent-stabilized
+// — NY RPL § 235-a + NY GBL § 349 (UDAP) require clear concession
+// disclosure; misrepresentation in credit reporting = deceptive
+// practice; (3) California — Cal. Civ. Code § 1947.12 (AB 1482
+// Tenant Protection Act) caps annual increase at LOWER of CPI+5%
+// or 10% of LOWEST gross rent in prior 12 months; § 1947.15
+// governs concession interaction with cap. Sibling cluster:
+// lease_disclosures, lease_copy_delivery, tenant_rights_statement_
+// disclosure, lease_waiver_enforceability, lease_renewal_offer_
+// timing, landlord_identification_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn rent_concession_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentConcessionDisclosureInput>,
+) -> Result<Json<RentConcessionDisclosureResult>, ApiError> {
+    Ok(Json(check_rent_concession_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
