@@ -634,6 +634,10 @@ use traderview_expense::rental_well_water_disclosure::{
     check as check_rental_well_water_disclosure,
     RentalWellWaterDisclosureInput, RentalWellWaterDisclosureResult,
 };
+use traderview_expense::rental_window_blind_cord_safety::{
+    check as check_rental_window_blind_cord_safety,
+    RentalWindowBlindCordSafetyInput, RentalWindowBlindCordSafetyResult,
+};
 use traderview_expense::rental_window_guard_installation::{
     check as check_rental_window_guard_installation,
     RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
@@ -1111,6 +1115,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
+        .route("/rental-window-blind-cord-safety", axum::routing::post(rental_window_blind_cord_safety_route))
         .route("/rental-window-guard-installation", axum::routing::post(rental_window_guard_installation_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
@@ -7471,6 +7476,60 @@ async fn rental_well_water_disclosure_route(
     Json(b): Json<RentalWellWaterDisclosureInput>,
 ) -> Result<Json<RentalWellWaterDisclosureResult>, ApiError> {
     Ok(Json(check_rental_well_water_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_window_blind_cord_safety: Multi-jurisdictional rental property
+// WINDOW BLIND CORD STRANGULATION SAFETY compliance framework. When a
+// landlord rents a unit, what window-covering cord-safety standards
+// apply, what retrofit obligations attach when child residents under
+// age 8 occupy the unit, what product-recall enforcement risks expose
+// landlord, and what failure-mode liabilities apply after a
+// strangulation incident? Mounted at POST /api/rental/rental-window-
+// blind-cord-safety. Three-jurisdiction framework: Federal/CPSC (16
+// C.F.R. Part 1260 mandatory standard effective May 30, 2023 for
+// custom window coverings under 87 Fed. Reg. 73118 (Nov 28, 2022) and
+// Consumer Product Safety Act 15 U.S.C. § 2056 eliminates free-
+// hanging operating cords + free-hanging tilt cords + multiple cords
+// into cord connectors on all custom window coverings manufactured
+// after May 30, 2023; ANSI/WCMA A100.1-2018 voluntary standard
+// mandates CORDLESS or inaccessible-cord stock products since May
+// 2022; ANSI/WCMA A100.1-2022 effective June 2024 extends to custom
+// products); California/progressive states (Cal. Civ. Code § 1941.1
+// implied warranty of sanitary facilities + § 1942.4 untenantable
+// conditions + § 1942(a) repair-and-deduct + Title 24 CPSC-aligned
+// product safety); Default (common-law implied warranty of
+// habitability per Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) +
+// Green v. Superior Court, 10 Cal. 3d 616 (1974) + tort negligence
+// for child-resident properties + CPSC recall enforcement under
+// 16 C.F.R. § 1115 + Consumer Product Safety Act 15 U.S.C. § 2068
+// prohibited acts). CPSC reports approximately 120 child fatalities
+// from window-covering cord strangulation 2002-2017 to children age
+// 8 or younger. Federal mandatory standard does NOT retroactively
+// require landlord to replace pre-existing corded blinds installed
+// before May 30, 2023; however implied warranty of habitability cases
+// routinely treat corded blinds in child-occupied units as
+// actionable defects regardless of installation date. Six covering
+// types modeled: Cordless, InaccessibleCordOnlyWand,
+// AccessibleCordedStock, AccessibleCordedCustom,
+// PreEffectiveDateExisting, None. Five universal failure-mode
+// liabilities: corded blinds + child resident age 8 or younger;
+// ignored retrofit request; CPSC-recalled product in tenant unit;
+// custom blind installed after May 30, 2023 violating Part 1260;
+// strangulation injury. Distinct from siblings rental_window_guard_
+// installation (fall protection — child age 10 or younger),
+// rental_carbon_monoxide_detector, rental_bedroom_egress_window,
+// rental_swimming_pool_drain_safety, landlord_security_device_
+// obligations, tenant_emotional_distress_damages, landlord_
+// retaliation_damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_window_blind_cord_safety_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWindowBlindCordSafetyInput>,
+) -> Result<Json<RentalWindowBlindCordSafetyResult>, ApiError> {
+    Ok(Json(check_rental_window_blind_cord_safety(&b)))
 }
 
 // ---------------------------------------------------------------------------
