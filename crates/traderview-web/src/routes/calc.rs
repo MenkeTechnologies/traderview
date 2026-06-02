@@ -267,6 +267,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-956",           post(section_956_route))
         .route("/calc/section-959",           post(section_959_route))
         .route("/calc/section-962",           post(section_962_route))
+        .route("/calc/section-965",           post(section_965_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
@@ -3005,6 +3006,44 @@ async fn section_962_route(
     Json(b): Json<traderview_expense::section_962::Section962Input>,
 ) -> Result<Json<traderview_expense::section_962::Section962Result>, ApiError> {
     Ok(Json(traderview_expense::section_962::check(&b)))
+}
+
+// ── § 965 Transition Tax / Mandatory Repatriation Tax (MRT) ──────────
+// Mounted at /api/calc/section-965 (iter 514). Pure compute. TCJA 2017
+// Pub. L. 115-97 § 14103 ONE-TIME deemed-repatriation tax on accumulated
+// post-1986 deferred foreign earnings of CFCs and 10pct-or-greater
+// foreign corps (SFCs); applies in last taxable year of SFC beginning
+// before January 1, 2018. § 965(a)(2) measurement at greater of
+// November 2, 2017 (TCJA passage) or December 31, 2017 (end of pre-
+// TCJA tax year). § 965(c) rate differentiation via deduction: 15.5pct
+// effective on cash position + 8pct on non-cash. § 965(b) E&P deficits
+// of other SFCs reduce aggregate inclusion. § 965(h) 8-year installment
+// election: 8pct years 1-5, 15pct year 6, 20pct year 7, 25pct year 8 —
+// sums to 100pct. § 965(i) S corp shareholder deferral until triggering
+// event (S corp termination + asset sale + liquidation + stock transfer).
+// § 965(m) REIT ratable 8-year inclusion coordinating with § 857 90pct
+// distribution requirement. Moore v. United States 602 U.S. ___ (June
+// 20, 2024) 7-2 decision authored by Justice Kavanaugh UPHELD constitutionality
+// under Sixteenth Amendment; holding NARROW (does not decide whether
+// realization is constitutional requirement). Inclusion creates §
+// 959(c)(2) PTEP — distributions of § 965-included E&P qualify for §
+// 959(a)(1) exclusion (one of seven § 959(c)(2) groups in Notice
+// 2019-01 sixteen-basket framework). Form 5471 + Form 965 + Transition
+// Tax Statement. Six-mode severity ladder: NotApplicable, NotUs-
+// ShareholderNoInclusion, SingleYearPaymentFull, EightYearInstallment-
+// ScheduleAdopted, SCorpDeferralActive, ReitRatableSpreadActive.
+// Coordinates with § 951 (Subpart F), § 951A (GILTI/NCTI — iter 500),
+// § 956 (US property — iter 504), § 959 (PTEP — iter 512), § 962
+// (individual election — iter 510), § 245A (DRD pathway — iter 502;
+// note INAPPLICABLE to § 965 since pre-TCJA E&P), § 904 (FTC limitation
+// — § 965 separate basket), § 960 (deemed-paid FTC — only 55.7pct /
+// 77.1pct creditable via § 965(g) FTC denial).
+
+async fn section_965_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_965::Section965Input>,
+) -> Result<Json<traderview_expense::section_965::Section965Result>, ApiError> {
+    Ok(Json(traderview_expense::section_965::check(&b)))
 }
 
 // ── §1058 securities loan non-recognition ─────────────────────────────
