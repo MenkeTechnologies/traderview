@@ -90,6 +90,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6323",          post(section_6323_route))
         .route("/calc/section-6325",          post(section_6325_route))
         .route("/calc/section-6330",          post(section_6330_route))
+        .route("/calc/section-6331",          post(section_6331_route))
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
@@ -2894,6 +2895,33 @@ async fn section_6330_route(
         ));
     }
     Ok(Json(traderview_expense::section_6330::compute(&b)))
+}
+
+// ── §6331 levy and distraint authority ──────────────────────────────
+// Mounted at /api/calc/section-6331. § 6331(a) — Secretary may levy
+// upon property of taxpayer who has failed to pay tax within 10 days
+// after § 6303 notice and demand. § 6331(d) — 30-day pre-levy notice
+// required (in person, dwelling/place of business, or certified/
+// registered mail to last known address). § 6331(e) continuous wage
+// levy — attaches to (1) wages earned but not yet paid; (2) advances
+// subsequent to levy; (3) wages becoming payable subsequent to levy;
+// continues until released. § 6331(h) — continuous levy on up to 15%
+// of specified federal payments (Social Security + federal employee
+// retirement). § 6331(j) jeopardy levy exception — 30-day pre-levy
+// notice DOES NOT apply if Secretary finds collection in jeopardy
+// (paired with § 6861/§ 6862 jeopardy assessment + § 7429 judicial
+// review). § 6331(k) — no levy while (1) innocent spouse relief
+// request under § 6015 pending OR (2) CDP hearing under § 6330
+// pending. Foundational levy statute. Trader-relevant for any
+// taxpayer facing IRS levy threat. Pair with § 6321 (lien) + § 6323
+// (priority) + § 6325 (release) + § 6334 (exempt property). 26 CFR
+// § 301.6331-1; IRM 5.17.3.
+
+async fn section_6331_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6331::Section6331Input>,
+) -> Result<Json<traderview_expense::section_6331::Section6331Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6331::check(&b)))
 }
 
 // ── §6334 property exempt from levy ─────────────────────────────────
