@@ -749,6 +749,10 @@ use traderview_expense::rental_storage_unit_lease_disclosure::{
     check as check_rental_storage_unit_lease_disclosure,
     RentalStorageUnitLeaseDisclosureInput, RentalStorageUnitLeaseDisclosureResult,
 };
+use traderview_expense::rental_balcony_inspection_seismic_safety::{
+    check as check_rental_balcony_inspection_seismic_safety,
+    RentalBalconyInspectionSeismicSafetyInput, RentalBalconyInspectionSeismicSafetyResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1215,6 +1219,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
         .route("/rental-solar-panel-disclosure", axum::routing::post(rental_solar_panel_disclosure_route))
         .route("/rental-storage-unit-lease-disclosure", axum::routing::post(rental_storage_unit_lease_disclosure_route))
+        .route("/rental-balcony-inspection-seismic-safety", axum::routing::post(rental_balcony_inspection_seismic_safety_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10509,4 +10514,42 @@ async fn rental_storage_unit_lease_disclosure_route(
     Json(b): Json<RentalStorageUnitLeaseDisclosureInput>,
 ) -> Result<Json<RentalStorageUnitLeaseDisclosureResult>, ApiError> {
     Ok(Json(check_rental_storage_unit_lease_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_balcony_inspection_seismic_safety (iter 511): Trader-landlord
+// Exterior Elevated Element (EEE) inspection compliance framework enacted in
+// response to June 16 2015 Berkeley balcony collapse killing 6 students at
+// Library Gardens apartments. Three jurisdictions: California (Cal. Health
+// & Safety Code § 17973 SB 721 signed September 17 2018 effective January
+// 1 2019 + Cal. Civ. Code § 5551 SB 326 signed August 30 2019 + AB 2579
+// signed 2024 extending SB 721 first cycle deadline from January 1 2025 to
+// January 1 2026 + Cal. Civ. Code § 1942.4 tenantability claim), New York
+// City FISP (NYC Local Law 11 of 1998 + NYC AC § 28-302.1 + RCNY 1 §
+// 103-04 — 5-year cycle façade inspection for 6+ story buildings), Default
+// (common-law habitability + premises-liability tort + Florida + Hawaii
+// pending legislation post-2021 Champlain Towers collapse). Five building
+// types: Multifamily3PlusRentalSb721, HoaCondominiumSb326, SingleFamily-
+// OrDuplex, NoWoodFramedEees, NycSixPlusStoryFisp. Five inspector
+// qualifications: LicensedArchitect (SB 721), LicensedCivilOrStructural-
+// Engineer (SB 721 + SB 326), ContractorWithA_B_C5LicenseAndFiveYears
+// (SB 721 only), CertifiedBuildingInspector (SB 721 only), NotQualified.
+// Eight-mode severity ladder including FirstCycleInspectionPastDeadline-
+// Violation (100pct rent — $100-$500/day civil penalty), ImmediateThreat-
+// RepairOverdue120Day (100pct rent), HoaSb326UsedNonStructuralEngineer-
+// Invalid (100pct rent — § 5551 requires structural engineer specifically),
+// TenantOccupiedUnsafeEeeHabitabilityBreach (100pct rent — § 1942.4),
+// InspectionSampleBelow15Pct (50pct rent — § 17973(c) minimum 15pct
+// sample per EEE type). Six-year SB 721 subsequent cycle; nine-year SB
+// 326 cycle. Constants: 15pct minimum sample, 120-day immediate threat
+// repair window, 5-year contractor experience requirement, $100-$500/day
+// daily penalty range.
+// ---------------------------------------------------------------------------
+
+async fn rental_balcony_inspection_seismic_safety_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBalconyInspectionSeismicSafetyInput>,
+) -> Result<Json<RentalBalconyInspectionSeismicSafetyResult>, ApiError> {
+    Ok(Json(check_rental_balcony_inspection_seismic_safety(&b)))
 }

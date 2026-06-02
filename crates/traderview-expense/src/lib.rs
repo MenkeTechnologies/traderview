@@ -168,6 +168,7 @@ pub mod repair_and_deduct;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
 pub mod rental_application_denial_disclosure;
+pub mod rental_balcony_inspection_seismic_safety;
 pub mod rental_basement_water_intrusion_disclosure;
 pub mod rental_bed_bug_disclosure;
 pub mod rental_bedroom_egress_window;
