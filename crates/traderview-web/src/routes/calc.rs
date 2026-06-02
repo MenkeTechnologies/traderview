@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6212",          post(section_6212_route))
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6320",          post(section_6320_route))
+        .route("/calc/section-6321",          post(section_6321_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
@@ -2699,6 +2700,34 @@ async fn section_6320_route(
         ));
     }
     Ok(Json(traderview_expense::section_6320::compute(&b)))
+}
+
+// ── §6321 lien for taxes (foundational IRS general tax lien) ────────
+// Mounted at /api/calc/section-6321. § 6321 three-element test for
+// automatic federal tax lien arising by operation of law: (1)
+// assessment by IRS under § 6201 + (2) notice and demand for payment
+// under § 6303 + (3) taxpayer neglects or refuses to pay after demand.
+// When all three present, lien arises AUTOMATICALLY upon ALL property
+// and rights to property of taxpayer (real + personal + tangible +
+// intangible), relating back to assessment date. NFTL filing under §
+// 6323(f) is NOT required for lien to ATTACH (only for priority
+// against third parties under § 6323). § 6322 lien continues until
+// liability satisfied OR becomes unenforceable by lapse of time
+// (paired with § 6502 10-year CSED). Drye v. United States, 528 U.S.
+// 49 (1999) — lien attaches to whatever interest state law gives
+// taxpayer; United States v. Craft, 535 U.S. 274 (2002) — tenancy by
+// entirety property still subject to lien. Trader-relevant for trader-
+// landlords facing automatic lien exposure on rental property
+// holdings. Foundational lien-constellation companion to § 6322 +
+// § 6323 + § 6325 + § 6334 (exempt property) + § 7426 (third-party
+// wrongful levy) + § 7433 (unauthorized collection damages). IRM
+// 5.17.2.
+
+async fn section_6321_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6321::Section6321Input>,
+) -> Result<Json<traderview_expense::section_6321::Section6321Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6321::check(&b)))
 }
 
 // ── §6330 Collection Due Process (CDP) for levies ───────────────────
