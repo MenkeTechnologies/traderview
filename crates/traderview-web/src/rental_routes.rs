@@ -570,6 +570,9 @@ use traderview_expense::right_to_dry::{
 use traderview_expense::sublet_consent::{
     check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
 };
+use traderview_expense::swimming_pool_safety::{
+    check as check_swimming_pool_safety, SwimmingPoolSafetyInput, SwimmingPoolSafetyResult,
+};
 use traderview_expense::senior_disabled_protection::{
     check as check_senior_disabled, SeniorDisabledCheckInput, SeniorDisabledCheckResult,
 };
@@ -703,6 +706,7 @@ pub fn router() -> Router<AppState> {
         .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
         .route("/radon-disclosure-check", axum::routing::post(radon_disclosure_check_route))
         .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
+        .route("/swimming-pool-safety", axum::routing::post(swimming_pool_safety_route))
         .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
         .route("/squatter-unauthorized-occupant-removal", axum::routing::post(squatter_removal_route))
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
@@ -6261,6 +6265,39 @@ async fn sublet_consent_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_sublet_consent(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// swimming_pool_safety: California Swimming Pool Safety Act compliance
+// — when a building permit is issued for the construction of a new
+// swimming pool or spa OR the remodeling of an existing pool or spa at
+// a private single-family home, the pool or spa SHALL be equipped with
+// AT LEAST TWO of seven enumerated drowning prevention safety features
+// under Cal. Health & Safety Code § 115922(a). Mounted at POST /api/
+// rental/swimming-pool-safety. Two regimes: California (Cal. Health &
+// Safety Code §§ 115920-115929 + SB 442 Stats. 2017 ch. 670, eff. Jan
+// 1, 2018 — increased minimum from one to two features; seven features
+// include § 115923 enclosure, ASTM F2286 removable mesh, ASTM F1346-23
+// safety pool cover, exit alarms, self-closing self-latching device
+// with release ≥ 54in, ASTM F2208 pool alarm, other equivalent means
+// approved by local building official; statute applies to PRIVATE
+// SINGLE-FAMILY HOMES — multifamily pools regulated by California Code
+// of Regulations Title 22 + § 116025 et seq. CalCode); Default (no
+// statutory requirement at permit issuance; common-law premises
+// liability + IPC § 305 where adopted + local pool ordinances).
+// Trader-landlord critical for CA single-family rental properties with
+// pools — non-compliance breaches habitability + exposes landlord to
+// drowning-incident premises liability. Distinct from siblings
+// detector_requirements, fire_sprinkler_disclosure, water_heater_
+// earthquake_strap, lead_in_drinking_water_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn swimming_pool_safety_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SwimmingPoolSafetyInput>,
+) -> Result<Json<SwimmingPoolSafetyResult>, ApiError> {
+    Ok(Json(check_swimming_pool_safety(&b)))
 }
 
 // ---------------------------------------------------------------------------

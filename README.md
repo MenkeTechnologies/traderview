@@ -3163,6 +3163,34 @@ Mounted at `POST /api/rental/right-to-dry-check`. Eighteen tests pin: **CA tenan
 
 Mounted at `POST /api/rental/sublet-consent-check`. Twenty-six tests pin: 51-row coverage; NY sublet reasonable-standard at 4-units AND below 4-units (boundary); **NY 30-day deemed-consent window** (fires at day 31, not at day 30); NY unreasonable refusal tenant proceeds; NY reasonable refusal tenant blocked; **NY assignment unreasonable refusal gives lease-termination right** (not assignment-proceed right — load-bearing asymmetry); NY reasonable refusal no termination right; **NY § 235-f roommate-addition statutory protection**; CA case-law reasonable standard applies; CA no building threshold; **CA assignment uses reasonable not unconditional** (regression target distinguishing from NY); CA roommate no statute; TX contract governs; DC 30-day window mirror; VA reasonable standard no unit threshold; WA reasonable standard; unknown state; case-insensitive lookup; sorted all_states; non-empty citations; **5 reasonable-standard states pinned** (NY/DC/VA/WA + CA case-law); **NY-only unit threshold sweep** across 50 other states; **NY-only unconditional-with-termination assignment sweep**; **NY-only roommate-statute sweep**.
 
+`traderview-expense::swimming_pool_safety` is the **California Swimming Pool Safety Act compliance module** — when a building permit is issued for the construction of a new swimming pool or spa OR the remodeling of an existing pool or spa at a private single-family home, the pool or spa SHALL be equipped with AT LEAST TWO of seven enumerated drowning prevention safety features under Cal. Health & Safety Code § 115922(a). Trader-landlord critical for CA single-family rental properties with pools: non-compliance breaches the implied warranty of habitability AND exposes landlord to drowning-incident premises liability. Distinct from siblings `detector_requirements` (smoke + CO), `fire_sprinkler_disclosure` (fire suppression), `water_heater_earthquake_strap` (§ 19211 seismic), and `lead_in_drinking_water_disclosure`.
+
+**Two regimes** — California strict seven-feature menu vs Default no-statute:
+
+| Regime | Authority | Permit trigger | Property scope | Minimum features |
+|--------|-----------|----------------|----------------|------------------|
+| California | Cal. Health & Safety Code §§ 115920-115929 + SB 442 Stats. 2017 ch. 670 | New construction OR remodel | **Private single-family home** | **2 of 7** |
+| Default | Common-law premises liability + IPC § 305 + local pool ordinances | None statutory | N/A | N/A statutory |
+
+**§ 115922 seven drowning prevention features menu** — landlord must implement at least TWO:
+1. § 115923 enclosure isolating pool from home
+2. Removable mesh fencing per ASTM F2286 + self-closing/self-latching gate with key lock
+3. Safety pool cover per ASTM F1346-23
+4. Exit alarms on doors and windows providing direct pool access
+5. Self-closing/self-latching device on doors providing direct pool access; release mechanism ≥ 54 inches above floor
+6. Pool alarm per ASTM F2208 (surface motion + pressure + sonar + laser + infrared)
+7. Other equivalent means approved by local building official
+
+Pinned by `ca_two_features_compliant` (2-feature boundary satisfied), `ca_one_feature_violates` (below minimum), `ca_zero_features_violates`, `ca_all_seven_features_compliant`, `ca_three_features_compliant`, `ca_two_minimum_boundary_satisfied`, `ca_features_2_through_7_count_correctly`, `ca_exit_alarms_self_closing_pair_compliant` (features 4+5), `ca_pool_alarm_other_approved_pair_compliant` (features 6+7), and `ca_seven_feature_count_max_at_seven`.
+
+**SB 442 Stats. 2017 ch. 670 amendments (effective January 1, 2018)** — increased minimum from one to two features and added ASTM-based standards (F2286, F1346-23, F2208). Pinned by `ca_note_pins_sb_442_eff_2018` and `ca_citation_pins_authorities` (§§ 115920-115929 + SB 442 + Stats. 2017 ch. 670 + ASTM F2286 + F1346-23 + F2208).
+
+**§ 115922(a) statute-engagement gate** — applies only when building permit issued for new construction OR remodel AND property is private single-family home. No permit OR multifamily property → no engagement (multifamily pools governed by California Code of Regulations Title 22 + Cal. Health & Safety Code § 116025 et seq. CalCode framework). Pinned by `ca_no_permit_no_statute_engagement`, `ca_multifamily_no_statute_engagement`, `ca_remodel_triggers_statute`, `ca_remodel_with_one_feature_violates` (remodel + 1 feature still violates), `permit_trigger_truth_table` (3-cell sweep), `ca_minimum_features_required_only_when_statute_engages`, `ca_note_pins_multifamily_carve_out`, and `ca_uniquely_engages_statute_invariant`.
+
+**Default fallback** — no statutory pool-safety feature requirement at permit issuance; common-law premises liability + IPC § 305 (where adopted) + local pool ordinances may apply. Most states require some form of pool barrier (typically 48-inch fencing) but lack CA's seven-feature menu + two-minimum framework. Pinned by `default_compliant_no_statute`, `default_zero_features_still_compliant`, `default_citation_pins_premises_liability`, and `default_note_pins_48_inch_fencing_baseline`.
+
+Mounted at `POST /api/rental/swimming-pool-safety`. Twenty-seven tests pin: **CA two features compliant**; **CA one feature violates** (§ 115922(a)); **CA zero features violates**; **CA all seven features compliant**; **CA no permit no statute engagement**; **CA multifamily no statute engagement** (CalCode framework); **CA remodel triggers statute**; **CA remodel with one feature violates**; **CA citation pins authorities**; **CA note pins two minimum threshold**; **CA note pins seven features enumeration** (ASTM F2286 + F1346-23 + F2208 + 54 inches); **CA note pins SB 442 eff 2018**; **CA note pins multifamily carve-out** (CalCode + Title 22); **CA two minimum boundary satisfied**; **CA three features compliant**; **CA features 2 through 7 count correctly**; **CA exit alarms + self-closing pair compliant** (features 4+5); **CA pool alarm + other approved pair compliant** (features 6+7); **default compliant no statute**; **default zero features still compliant**; **default citation pins premises liability**; **default note pins 48-inch fencing baseline**; **two regimes routed correctly**; **CA uniquely engages statute invariant**; **permit trigger truth table** (3-cell sweep: NewConstruction/Remodel/None); **CA minimum features required only when statute engages**; **CA seven feature count max at seven**.
+
 `traderview-expense::radon_disclosure` is the **state radon disclosure + testing compliance table** — sibling to `mold_disclosure`, `bedbug_disclosure`, and `lead_disclosure`. EPA-recommended action level is **4.0 pCi/L** (picocuries per liter); levels at/above this are recommended for mitigation though EPA cannot mandate landlord action.
 
 **Five state regimes** across 51 jurisdictions:

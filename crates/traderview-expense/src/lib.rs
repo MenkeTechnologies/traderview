@@ -171,6 +171,7 @@ pub mod soi_protection;
 pub mod squatter_unauthorized_occupant_removal;
 pub mod str_regulation;
 pub mod sublet_consent;
+pub mod swimming_pool_safety;
 pub mod submetering_rules;
 pub mod tenant_abandonment;
 pub mod tenant_in_foreclosure_protection;
