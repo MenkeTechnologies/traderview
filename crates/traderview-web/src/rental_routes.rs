@@ -499,6 +499,11 @@ use traderview_expense::rental_application_denial_disclosure::{
     check as check_rental_application_denial_disclosure,
     RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
 };
+use traderview_expense::rental_basement_water_intrusion_disclosure::{
+    check as check_rental_basement_water_intrusion_disclosure,
+    RentalBasementWaterIntrusionDisclosureInput,
+    RentalBasementWaterIntrusionDisclosureResult,
+};
 use traderview_expense::rental_bed_bug_disclosure::{
     check as check_rental_bed_bug_disclosure, RentalBedBugDisclosureInput,
     RentalBedBugDisclosureResult,
@@ -909,6 +914,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
+        .route("/rental-basement-water-intrusion-disclosure", axum::routing::post(rental_basement_water_intrusion_disclosure_route))
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
@@ -6191,6 +6197,39 @@ async fn rental_application_denial_disclosure_route(
     Json(b): Json<RentalApplicationDenialDisclosureInput>,
 ) -> Result<Json<RentalApplicationDenialDisclosureResult>, ApiError> {
     Ok(Json(check_rental_application_denial_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_basement_water_intrusion_disclosure: Rental property
+// basement water intrusion / mold disclosure compliance — when a
+// trader-landlord must disclose water intrusion, flood history,
+// visible mold, and remediation history to prospective and existing
+// tenants. Mounted at POST /api/rental/rental-basement-water-
+// intrusion-disclosure. Four regimes: Maryland Tenant Mold
+// Protection Act (eff. July 1, 2025) + MD Real Property § 8-211 +
+// § 8-211.1 (pre-move-in written disclosure + mold information
+// pamphlet + 15-day mold assessment + 45-day remediation
+// completion); Virginia Va. Code § 55.1-1220 + § 8.01-226.12 +
+// § 55.1-1216 (5-day move-in inspection report with visible mold
+// disclosure + 5-day landlord remediation after tenant election to
+// stay); New York Property Condition Disclosure Act + NY GOL §
+// 5-905 (natural flood event history + PCDS mold disclosure) + NYC
+// Local Law 55 of 2018 + NYC Admin Code § 27-2017 (multi-unit
+// buildings annual inspection + indoor allergen hazard reduction
+// protocols); Default common-law warranty of habitability + EPA
+// Mold Remediation Guidance (EPA 402-K-01-001) + CDC Stachybotrys
+// Information for Clinicians + federal Fair Housing Act + ADA
+// disability protections. Distinct from siblings mold_disclosure,
+// flood_disclosure, rental_bedroom_egress_window, rental_hot_water_
+// temperature.
+// ---------------------------------------------------------------------------
+
+async fn rental_basement_water_intrusion_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBasementWaterIntrusionDisclosureInput>,
+) -> Result<Json<RentalBasementWaterIntrusionDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_basement_water_intrusion_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
