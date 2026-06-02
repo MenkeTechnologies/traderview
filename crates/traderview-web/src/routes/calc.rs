@@ -212,6 +212,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
+        .route("/calc/section-408",           post(section_408_route))
         .route("/calc/section-408a",          post(section_408a_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
@@ -669,6 +670,36 @@ async fn section_165g_route(
         ));
     }
     Ok(Json(traderview_expense::section_165g::compute(&b)))
+}
+
+// ── §408 traditional IRA + SEP + SIMPLE + collectibles + QCD ─────────
+// Mounted at /api/calc/section-408. § 408(a) IRA defined as trust for
+// exclusive benefit; six requirements (within § 219 limits + qualified
+// trustee + no life insurance + nonforfeitable + not commingled +
+// § 401(a)(9) RMD). § 408(b) individual retirement annuity. 2026
+// contribution limits aggregate with § 408A Roth: $7,500 base + $1,100
+// catch-up (50+) = $8,600. § 219(g) deduction phase-out for ACTIVE
+// PARTICIPANT in employer-sponsored plan (Single/HOH $81K-$91K; MFJ
+// covered $129K-$149K; MFJ spouse-covered $242K-$252K; MFS $0-$10K).
+// § 408(d)(1) distributions ordinary income; § 408(d)(2) PRO-RATA RULE
+// aggregate across ALL IRAs (CRITICAL for backdoor Roth); § 408(d)(3)
+// 60-day rollover + ONE-ROLLOVER-PER-YEAR per Bobrow v. Commissioner
+// T.C. Memo 2014-21 + IRS Announcement 2014-15; § 408(d)(6) RMD per
+// SECURE Act 2.0 (age 73 / 75 born 1960+); § 408(d)(8) QCD age 70½+
+// $111,000 (2026) + § 408(d)(8)(F) $50K split-interest entity.
+// § 408(k) SEP IRA 25%/$70K. § 408(m) COLLECTIBLES PROHIBITION
+// (artwork, antique, gem, stamp/coin, alcohol) + § 408(m)(3) EXCEPTION
+// for gold/silver coins/bullion. § 408(p) SIMPLE IRA (≤ 100 employees;
+// 2026 $17K + $4K catch-up). § 408(q) deemed IRA. Companion to § 408A
+// + § 72(t) + § 67(g) + § 1411 + § 475 + § 4975 + § 4973. Created by
+// ERISA 1974 (Pub. L. 93-406, September 2, 1974); modified by SECURE
+// Act 2019 + SECURE Act 2.0 of 2022.
+
+async fn section_408_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_408::Section408Input>,
+) -> Result<Json<traderview_expense::section_408::Section408Result>, ApiError> {
+    Ok(Json(traderview_expense::section_408::check(&b)))
 }
 
 // ── §408A Roth IRA contribution + phase-out + qualified distribution ─

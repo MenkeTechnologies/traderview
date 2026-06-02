@@ -10960,6 +10960,56 @@ The 2-year window is computed via `checked_add_months(24)` for leap-year correct
 
 Mounted at `POST /api/calc/section-1031-f`. Seventeen tests pin: unrelated parties — §1031(f) doesn't apply; family disposition within 2-year window triggers full retroactive recognition with disposition-year tax; disposition after window preserves deferral; **disposition exactly at window end preserves**; one day before window end triggers; each §1031(f)(2) exception blocks recognition (death / involuntary conversion / lack of tax avoidance); no-disposition open-window reports `window_still_open: true` + positive days remaining; no-disposition past-window reports "matured cleanly"; zero deferred gain no-op; all 10 §267(b) categories trigger when disposition within window; character preserved (LTCG stays LTCG, §1250 stays §1250); 2-year window uses calendar months not days (Feb 29 2024 exchange → Feb 28 2026 window-end); exception logged in note text; unrelated disposition within window no trigger (control); recognized year matches disposition year not exchange year (§1031(f)(1)(C) retroactive-in-disposition-year rule).
 
+`traderview-expense::section_408` is the **IRC § 408 Individual Retirement Accounts module** — natural companion to `section_408a` (Roth IRA shipped iter 430). Where § 408A houses POST-TAX Roth contributions with TAX-FREE qualified distributions, § 408 governs PRE-TAX traditional IRA contributions with DEDUCTIBLE contributions (within § 219 limits) + TAX-DEFERRED growth + ORDINARY-INCOME distributions taxed at marginal rates. Companion to `section_408a` (Roth IRA), `section_72t` (10% early-withdrawal penalty), `section_67g` (TCJA misc deduction suspension), `section_1411` (NIIT 3.8% — IRA distributions exempt), `section_475` (trader mark-to-market — self-directed IRA trader considerations), `section_4975` (prohibited transaction penalties).
+
+**§ 408 covers 5 account types** — § 408(a) traditional IRA + § 408(b) individual retirement annuity + § 408(k) SEP IRA + § 408(p) SIMPLE IRA + § 408(q) deemed IRA.
+
+**2026 contribution limits (IRS Notice 2025-77)**:
+
+| Account Type | Under 50 | Age 50+ |
+|--------------|----------|---------|
+| Traditional IRA / IRA Annuity / Deemed IRA | $7,500 | $8,600 ($1,100 catch-up) |
+| SEP IRA | 25% of compensation OR $70,000 § 415(c) limit | N/A |
+| SIMPLE IRA | $17,000 employee deferral | $21,000 ($4,000 catch-up) |
+
+**§ 219(g) Deduction phase-out — active plan participant 2026**:
+
+| Filing Status | Phase-Out Low | Phase-Out High |
+|---------------|----------------|-----------------|
+| Single / Head of Household | **$81,000** | **$91,000** |
+| MFJ (covered) | **$129,000** | **$149,000** |
+| MFJ (spouse covered, taxpayer NOT) | **$242,000** | **$252,000** |
+| MFS (covered) | $0 | $10,000 |
+
+Non-active participants have NO deduction phase-out regardless of MAGI.
+
+**§ 408(d) Operative provisions**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 408(d)(1) | Distributions = ORDINARY INCOME at marginal rates |
+| § 408(d)(2) | **PRO-RATA RULE** — distribution computed on AGGREGATE BASIS across ALL IRAs (Form 8606); CRITICAL for backdoor Roth analysis |
+| § 408(d)(3) | 60-day rollover; **ONE-ROLLOVER-PER-YEAR** per Bobrow v. Commissioner, T.C. Memo 2014-21 + IRS Announcement 2014-15 |
+| § 408(d)(6) | RMD per § 401(a)(9); SECURE Act 2.0 raised age to **73** (rising to **75** for those born 1960+) |
+| § 408(d)(8) | **Qualified Charitable Distribution (QCD)** — age 70½+ direct to charity excluded from gross income; 2026 limit $111,000 (up from $108K for 2025) |
+| § 408(d)(8)(F) | One-time **$50,000** distribution to charitable gift annuity OR charitable remainder trust (SECURE Act 2.0 split-interest entity) |
+
+**§ 408(m) Collectibles prohibition** — IRA investment in collectibles treated as DISTRIBUTION at cost basis (immediate ordinary-income taxation + § 72(t) 10% penalty if under 59½); § 408(m)(2) collectibles defined: artwork, rug, antique, metal/gem, stamp/coin, alcoholic beverage, other tangible personal property; § 408(m)(3) EXCEPTION for gold/silver coins + bullion meeting fineness standards (American Eagle, Canadian Maple Leaf, etc.).
+
+**§ 408(p) SIMPLE IRA** — Savings Incentive Match Plan for Employees of Small Employers; available to businesses with **≤ 100 EMPLOYEES**; 2026 employee deferral $17,000 + age 50+ catch-up $4,000 (total $21,000); employer match 1:1 up to 3% of compensation OR 2% non-elective.
+
+**Trader-critical fact patterns**:
+
+- Self-directed IRA trader — intra-account trading gains/losses no current-year tax; § 1411 NIIT exempt; § 4975 prohibited-transaction rules apply rigorously (no self-dealing).
+- Trader using § 408(d)(3) 60-day rollover — one-rollover-per-year applies aggregate across ALL IRAs per Bobrow; direct trustee-to-trustee transfers NOT subject to one-per-year limit.
+- Trader age 73+ subject to RMD per SECURE Act 2.0 (rising to 75 for those born 1960+).
+- Trader using § 408(d)(8) QCD strategy at 70½+ ($111,000 for 2026) to satisfy RMD with charity.
+- Trader using § 408(p) SIMPLE IRA as small-business owner (≤ 100 employees) with 1:1 3% employer match.
+
+Pinned by `under_50_traditional_ira_base_limit_7500`, `age_50_catch_up_8600`, `sep_ira_limit_70000`, `simple_ira_under_50_deferral_17000`, `simple_ira_age_50_catch_up_21000`, `active_participant_2026_phase_out_thresholds`, `non_active_participant_full_deduction`, `active_participant_above_phase_out_zero_deduction`, `collectibles_treated_as_distribution`, `life_insurance_contract_prohibited`, `precious_metal_bullion_408m3_exception_permitted`, `qcd_2026_limit_111000`, `qcd_2025_limit_108000`, `qcd_under_70_5_no_exclusion`, `qcd_distribution_capped_at_annual_limit`, `qcd_cumulative_prior_reduces_remaining`, `rmd_age_73_pre_2033`, `rmd_age_75_post_2033`, `one_rollover_per_year_violated_bobrow`, `one_rollover_first_no_violation`, `simple_ira_100_employee_threshold_compliant` (boundary), `simple_ira_101_employee_threshold_violation`, `excess_contribution_4973_excise_violation`, `account_type_truth_table_five_cells`, `investment_truth_table_four_cells`.
+
+Mounted at `POST /api/calc/section-408`. Forty tests pin: **under 50 traditional IRA base limit $7,500**; **age 50 catch-up $8,600**; **SEP IRA limit $70,000**; **SIMPLE IRA under 50 deferral $17,000**; **SIMPLE IRA age 50 catch-up $21,000**; **active participant 2026 phase-out thresholds** ($81K-$91K); **non-active participant full deduction**; **active participant above phase-out zero deduction**; **collectibles treated as distribution** (§ 408(m)(1)); **life insurance contract prohibited** (§ 408(a)(3)); **precious metal bullion § 408(m)(3) exception permitted**; **QCD 2026 limit $111,000**; **QCD 2025 limit $108,000**; **QCD under 70½ no exclusion**; **QCD distribution capped at annual limit**; **QCD cumulative prior reduces remaining**; **RMD age 73 pre-2033**; **RMD age 75 post-2033**; **one rollover per year violated Bobrow**; **one rollover first no violation**; **SIMPLE IRA 100 employee threshold compliant** (boundary); **SIMPLE IRA 101 employee threshold violation**; **excess contribution § 4973 6% excise violation**; **account type truth table five cells**; **investment truth table four cells**; **citation pins all authorities** (§ 408(a)-(q) + § 408A + § 219 + § 72(t) + § 401(a)(9) + § 415(c) + § 1411 + § 4975 + § 4973 + ERISA + SECURE Acts + IRS Notice 2025-77 + Bobrow + IRS Announcement 2014-15 + Treas. Reg. § 1.408-1 to -11 + Form 8606); **note pins subsection (a) six requirements**; **note pins 2026 contribution limits**; **note pins § 219(g) phase-out active participant**; **note pins § 408(d)(2) pro-rata rule backdoor critical**; **note pins § 408(d)(3) one rollover per year Bobrow**; **note pins § 408(d)(6) RMD SECURE 2.0 73/75**; **note pins § 408(d)(8) QCD $111K + split interest**; **note pins § 408(k) SEP IRA $70K**; **note pins § 408(m) collectibles + § 408(m)(3) exception**; **note pins § 408(p) SIMPLE IRA 100 employees $17K**; **note pins § 408(q) deemed IRA**; **note pins trader fact patterns five**; **note pins ERISA 1974 origin**; **defensive overflow saturating**.
+
 `traderview-expense::section_408a` is the **IRC § 408A Roth IRA module** — trader-critical for retirement planning + after-tax growth. Roth IRA contributions are made with AFTER-TAX dollars but qualified distributions of EARNINGS AND PRINCIPAL are entirely TAX-FREE; no required minimum distributions during owner's lifetime; FREE-FROM § 1411 NIIT on distributions (Roth withdrawals are not investment income). Companion to `section_408` (traditional IRA), `section_72t` (10% early-withdrawal penalty), `section_67g` (TCJA misc deduction suspension), `section_1411` (NIIT 3.8% — Roth distributions exempt), `section_475` (trader mark-to-market — Roth account trader can qualify).
 
 **2026 contribution limits + phase-outs (IRS Notice 2025-77)**:
