@@ -745,6 +745,10 @@ use traderview_expense::rental_solar_panel_disclosure::{
     check as check_rental_solar_panel_disclosure,
     RentalSolarPanelDisclosureInput, RentalSolarPanelDisclosureResult,
 };
+use traderview_expense::rental_pellet_stove_disclosure::{
+    check as check_rental_pellet_stove_disclosure,
+    RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1172,6 +1176,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
+        .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
@@ -10277,4 +10282,34 @@ async fn tenant_smart_thermostat_install_right_route(
     Json(b): Json<TenantSmartThermostatInstallRightInput>,
 ) -> Result<Json<TenantSmartThermostatInstallRightResult>, ApiError> {
     Ok(Json(check_tenant_smart_thermostat_install_right(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_pellet_stove_disclosure (iter 499): Trader-landlord pellet-stove
+// (solid-fuel-burning residential heater) disclosure plus EPA NSPS Step-2
+// certification framework. Federal: 40 C.F.R. Part 60 Subpart AAA (wood
+// stoves) + Subpart QQQQ (hydronic heaters + forced-air furnaces) +
+// Step-2 emissions limit 2.0 g/hr PM effective May 15, 2020. Six
+// jurisdictions: Vermont (10 V.S.A. § 583 + § 5-204.4 + 9 V.S.A. § 2882
+// CO detector), Maine (38 M.R.S. § 581 + 25 M.R.S. § 2468-A CO + NFPA
+// 211), New Hampshire (RSA 153:4-a + Saf-C 6000 fire chief permit + RSA
+// 153:10-a CO), Washington (WAC 173-433 + 173-433-130 strictest non-
+// attainment rules — Pierce / Spokane / Yakima / Klickitat), Colorado
+// (5 CCR 1001-10 Reg No. 4 + designated-area burn ban Aspen / Telluride /
+// Vail), Default (40 C.F.R. Part 60 federal NSPS + NFPA 211). Six failure
+// modes: non-certified stove in non-attainment area, missing CO detector,
+// chimney inspection overdue, owner's manual not provided, auger jam CO
+// release undisclosed, lease-signing disclosure incomplete. Coordinates
+// with sibling rental_chimney_fireplace_inspection_disclosure, rental_
+// natural_gas_leak_response (CO detector cross-ref), rental_oil_tank_
+// replacement_disclosure (legacy heating disclosure pattern), rental_
+// propane_tank_lease_disclosure (alternative heating fuel).
+// ---------------------------------------------------------------------------
+
+async fn rental_pellet_stove_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPelletStoveDisclosureInput>,
+) -> Result<Json<RentalPelletStoveDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_pellet_stove_disclosure(&b)))
 }
