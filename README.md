@@ -4853,6 +4853,42 @@ The basis + previously-taxed-income (PTI) machinery is the non-obvious part. Eac
 
 Mounted at `POST /api/calc/section-1295`. Eighteen tests pin: year-1 inclusion preserves character (ordinary stays ordinary, LTCG stays LTCG); basis steps up by total inclusion; PTI account year-end equals total inclusion when no distribution; distribution fully absorbed by PTI no taxable dividend; distribution exceeds PTI excess taxable as dividend ($5k PTI pool + $8k dist = $5k PTI absorbed + $3k taxable); prior PTI carries into current year ($10k prior + $5k current pool absorbs $8k dist with $7k remaining); basis decreases by PTI distribution only; **basis doesn't decrease for taxable dividend portion** (the $3k dividend doesn't touch basis); multi-year chain basis + PTI evolve correctly; zero inclusion + zero distribution no-op; negative PFIC earnings treated as zero (§1293 includes only positives); character preserved (key advantage over §1296 ordinary-only); PTI never negative; basis never negative; note text distinguishes distribution vs no-distribution paths; ordinary-only PFIC still includes ordinary; LTCG-only PFIC still includes LTCG.
 
+`traderview-expense::section_6038a` is the **IRC § 6038A Form 5472 information return for 25%-foreign-owned domestic corporations and foreign-owned U.S. disregarded entities** module. Companion to `section_6038d` (FATCA Form 8938 individual), `section_6038` (controlled foreign partnership / corporation), `section_6038b` (transfers to foreign entities), `section_6038c` (foreign corp engaged in US trade/business), `section_6501` (assessment SOL — § 6038A non-filing TOLLS § 6501 ASED indefinitely under § 6501(c)(8)).
+
+Trader-critical for the trading-LLC fact patterns:
+
+- **Delaware / Wyoming / Nevada single-member LLC owned by foreign individual** — treated as DOMESTIC CORPORATION for limited § 6038A purposes per Treas. Reg. § 1.6038A-1(c) (effective tax years beginning January 1, 2017 per T.D. 9796 of December 13, 2016). Form 5472 filed as attachment to pro-forma Form 1120.
+- **US LLC jointly owned with foreign family members, business partners, or trusts** — 25% direct or indirect threshold at ANY TIME during the taxable year triggers filing obligation.
+- **Foreign hedge fund / family office using US LLC as trading conduit** — every related-party transaction (loan, capital contribution, royalty, intangible use, etc.) is a reportable transaction.
+- **§ 475(f) MTM election** complicates related-party transaction tracking when intra-family-trust account transfers occur.
+
+**§ 6038A(c)(1) 25%-foreign-ownership threshold — disjunctive voting OR value**:
+
+| Test | Source | Threshold |
+|------|--------|-----------|
+| Voting power | § 6038A(c)(1)(A) | ≥ 25% direct + indirect at ANY TIME during taxable year |
+| Total value of all classes | § 6038A(c)(1)(B) | ≥ 25% direct + indirect at ANY TIME during taxable year |
+
+Pinned by `us_corp_30_percent_foreign_owned_subject_to_section`, `us_corp_24_99_percent_does_not_meet_threshold`, `us_corp_exactly_25_percent_meets_threshold` (2500 bps exact boundary engages), and `ownership_threshold_truth_table` (6-cell sweep from 0% to 100%).
+
+**§ 6038A(d) penalty framework — base + uncapped continuation**:
+
+| Subsection | Trigger | Penalty |
+|-------------|---------|---------|
+| § 6038A(d)(1) | Failure to file Form 5472 OR maintain records | **$25,000 base per taxable year per reporting corporation** |
+| § 6038A(d)(2) | Failure continues > 90 days after IRS notification | **$25,000 per 30-day period (or fraction) — NO MAXIMUM CAP** |
+| § 6038A(d)(3) | Reasonable cause (NOT willful neglect) | Penalty abatement available per Treas. Reg. § 1.6038A-4(b) |
+
+Pinned by `us_corp_failure_to_file_base_penalty_25k`, `us_corp_failure_to_maintain_records_triggers_penalty`, `us_corp_continuation_penalty_one_30_day_period_25k` (day 120 = 1 period = $25K continuation), `us_corp_continuation_penalty_three_30_day_periods_75k` (day 180 = 3 periods = $75K), `us_corp_continuation_penalty_fraction_counts_as_full_period` (day 91 = $25K — 1-day fraction counts as full period), `us_corp_no_continuation_at_90_day_boundary_exactly` (day 90 = $0 continuation — boundary precision), `reasonable_cause_zeros_base_and_continuation_penalty`.
+
+**Treas. Reg. § 1.6038A-1(c) Foreign-owned U.S. disregarded entity carveout — T.D. 9796 (December 13, 2016)** — for tax years beginning on or after **January 1, 2017** and ending on or after December 13, 2017, a foreign-owned U.S. single-member LLC classified as a disregarded entity is treated as an entity separate from its owner and classified as a DOMESTIC CORPORATION for limited purposes of § 6038A. Filing required EVEN WITHOUT reportable transactions. Pinned by `foreign_owned_single_member_llc_post_2017_subject`, `foreign_owned_single_member_llc_pre_2017_not_subject`, `foreign_owned_single_member_llc_2017_boundary_subject` (2017 exact boundary engages), `foreign_owned_dre_requires_filing_even_without_reportable_transactions`.
+
+**§ 6501(c)(8) SOL tolling — assessment statute open INDEFINITELY** — § 6501 ASED does NOT start running until the required § 6038A information return is filed; failure to file Form 5472 keeps the entire tax year's assessment open with no statute-of-limitations protection. Pinned by `section_6501_c8_sol_tolled_on_non_filing` and `section_6501_c8_sol_not_tolled_when_form_filed`.
+
+**Entity-type four-cell truth table** — US corp, foreign-owned DRE, foreign corp engaged in US trade/business, and not-subject — pinned by `entity_type_truth_table_four_cells`. All three filing-required types route through Form 5472; the fourth carves out non-qualifying entities.
+
+Mounted at `POST /api/calc/section-6038a`. Thirty-three tests pin: **US corp 30% foreign-owned subject to section**; **US corp 24.99% does not meet threshold**; **US corp exactly 25% meets threshold** (2500 bps exact boundary); **US corp failure to file base penalty $25K**; **US corp failure to maintain records triggers penalty**; **US corp continuation penalty 1 30-day period = $25K** (day 120); **US corp continuation penalty 3 30-day periods = $75K** (day 180); **US corp continuation penalty fraction counts as full period** (day 91 = $25K); **US corp no continuation at 90-day boundary exactly** ($0 continuation precision); **reasonable cause zeros base and continuation penalty**; **foreign-owned single-member LLC post-2017 subject**; **foreign-owned single-member LLC pre-2017 NOT subject**; **foreign-owned single-member LLC 2017 boundary subject**; **foreign-owned DRE requires filing even without reportable transactions**; **foreign corp engaged in US business subject to section**; **not-subject entity type no obligation**; **§ 6501(c)(8) SOL tolled on non-filing**; **§ 6501(c)(8) SOL not tolled when form filed**; **citation pins all authorities** (§ 6038A(a)-(e) + § 6501(c)(8) + Treas. Reg. § 1.6038A-1 to -7 + T.D. 9796 + Form 5472 + IRM 8.11.5 + IRM 20.1.9); **note pins subsection (a) filing requirement**; **note pins subsection (c)(1) 25% definition**; **note pins DRE carveout 2017 T.D. 9796**; **note pins subsection (c)(2) reportable transactions**; **note pins subsection (d)(1) $25K base penalty**; **note pins subsection (d)(2) continuation uncapped**; **note pins subsection (d)(3) reasonable cause**; **note pins records retention (b)(1)(C)**; **note pins § 6501(c)(8) SOL tolling**; **note pins Form 1120 pro-forma attachment**; **entity type truth table four cells**; **ownership threshold truth table** (6-cell sweep 0/2499/2500/2501/5000/10000 bps); **defensive overflow clamped with saturating mul**; **multiple failure reasons stack**.
+
 `traderview-expense::section_6038d` is the **IRC §6038D Form 8938 foreign-financial-asset reporting module** — trader-critical for anyone with offshore brokerage accounts, foreign mutual fund holdings (PFICs covered by `section_1297` + `section_1298`), foreign retirement accounts, foreign-issued bonds, or interests in foreign entities. § 6038D requires individuals to attach Form 8938 disclosing such assets when aggregate value crosses the applicable filing threshold. Distinct from FinCEN Form 114 (FBAR) — both regimes often apply to the same taxpayer but have separate thresholds, content requirements, and penalty regimes.
 
 **§ 6038D operative provisions**:

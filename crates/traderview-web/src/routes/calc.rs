@@ -161,6 +161,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1297",          post(section_1297_route))
         .route("/calc/section-1298",          post(section_1298_route))
         .route("/calc/section-6020",          post(section_6020_route))
+        .route("/calc/section-6038a",         post(section_6038a_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
@@ -4885,6 +4886,46 @@ async fn section_6020_route(
     Json(b): Json<traderview_expense::section_6020::Section6020Input>,
 ) -> Result<Json<traderview_expense::section_6020::Section6020Result>, ApiError> {
     Ok(Json(traderview_expense::section_6020::check(&b)))
+}
+
+// ── §6038A Form 5472 25%-foreign-owned domestic corp + DRE ─────────
+// Mounted at /api/calc/section-6038a. § 6038A(a) requires every
+// 25%-foreign-owned domestic corp + foreign corp engaged in US
+// trade/business to file Form 5472 reporting related-party
+// transactions. § 6038A(c)(1) 25% threshold = direct or indirect
+// foreign ownership of voting power OR total value at ANY TIME
+// during taxable year. Treas. Reg. § 1.6038A-1(c) per T.D. 9796
+// (December 13, 2016) effective tax years beginning 2017-01-01 —
+// foreign-owned US single-member LLC disregarded entities treated as
+// DOMESTIC CORPORATIONS for limited § 6038A purposes (Form 5472
+// filed as attachment to pro-forma Form 1120). § 6038A(d)(1) BASE
+// PENALTY $25,000 per taxable year per reporting corporation;
+// § 6038A(d)(2) CONTINUATION PENALTY $25,000 per 30-day period (or
+// fraction) after 90-day IRS notification — UNCAPPED; § 6038A(d)(3)
+// reasonable cause defense under Treas. Reg. § 1.6038A-4(b).
+// § 6501(c)(8) — § 6501 assessment SOL does NOT start running until
+// required § 6038A return is filed, keeping ASED OPEN INDEFINITELY.
+// Trader-critical for foreign-owned DE/WY/NV trading LLCs, foreign
+// hedge fund US-LLC conduits, jointly-owned US LLCs with foreign
+// family/business partners, and § 475(f) MTM-elected entities with
+// intra-family transfers. Sibling cluster: § 6038D + § 6038 +
+// § 6038B + § 6038C + § 6501(c)(8).
+
+async fn section_6038a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6038a::Section6038aInput>,
+) -> Result<Json<traderview_expense::section_6038a::Section6038aResult>, ApiError> {
+    if b.max_foreign_ownership_bps > 10_000 {
+        return Err(ApiError::BadRequest(
+            "max_foreign_ownership_bps must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    if b.days_since_irs_notification > 100_000 {
+        return Err(ApiError::BadRequest(
+            "days_since_irs_notification out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_6038a::check(&b)))
 }
 
 async fn section_6038d_route(
