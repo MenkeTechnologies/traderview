@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6050w",         post(section_6050w_route))
         .route("/calc/section-6212",          post(section_6212_route))
         .route("/calc/section-6213",          post(section_6213_route))
+        .route("/calc/section-6303",          post(section_6303_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6321",          post(section_6321_route))
         .route("/calc/section-6323",          post(section_6323_route))
@@ -2750,6 +2751,29 @@ async fn section_6213_route(
         ));
     }
     Ok(Json(traderview_expense::section_6213::compute(&b)))
+}
+
+// ── §6303 notice and demand for tax ─────────────────────────────────
+// Mounted at /api/calc/section-6303. § 6303(a) — Secretary shall,
+// within 60 days after assessment under § 6203, give notice to each
+// person liable for unpaid tax stating amount and demanding payment.
+// § 6303(a) manner of delivery — (1) left at dwelling; (2) left at
+// usual place of business; or (3) sent by mail to last known address.
+// Certified mail NOT required. § 6303(a) failure to give notice
+// within 60 days does NOT invalidate notice. § 6303(b) — if tax
+// assessed BEFORE last date prescribed for payment, demand shall not
+// be made until AFTER such date (except jeopardy finding under
+// § 6861/§ 6862 with § 7429 review). Foundational predicate for
+// § 6321 lien attachment + § 6331 levy authority (10-day neglect
+// rule begins after notice and demand). Trader-relevant because no
+// lawful IRS lien, levy, or seizure may proceed without proper
+// § 6303 notice and demand. 26 CFR § 301.6303-1.
+
+async fn section_6303_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6303::Section6303Input>,
+) -> Result<Json<traderview_expense::section_6303::Section6303Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6303::check(&b)))
 }
 
 // ── §6320 Collection Due Process (CDP) for liens ────────────────────
