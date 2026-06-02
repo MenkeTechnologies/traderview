@@ -758,6 +758,10 @@ use traderview_expense::rental_short_term_subletting_airbnb_restriction::{
     RentalShortTermSublettingAirbnbRestrictionInput,
     RentalShortTermSublettingAirbnbRestrictionResult,
 };
+use traderview_expense::rental_grill_propane_bbq_restriction::{
+    check as check_rental_grill_propane_bbq_restriction,
+    RentalGrillPropaneBbqRestrictionInput, RentalGrillPropaneBbqRestrictionResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1226,6 +1230,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-storage-unit-lease-disclosure", axum::routing::post(rental_storage_unit_lease_disclosure_route))
         .route("/rental-balcony-inspection-seismic-safety", axum::routing::post(rental_balcony_inspection_seismic_safety_route))
         .route("/rental-short-term-subletting-airbnb-restriction", axum::routing::post(rental_short_term_subletting_airbnb_restriction_route))
+        .route("/rental-grill-propane-bbq-restriction", axum::routing::post(rental_grill_propane_bbq_restriction_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10593,4 +10598,42 @@ async fn rental_short_term_subletting_airbnb_restriction_route(
     Json(b): Json<RentalShortTermSublettingAirbnbRestrictionInput>,
 ) -> Result<Json<RentalShortTermSublettingAirbnbRestrictionResult>, ApiError> {
     Ok(Json(check_rental_short_term_subletting_airbnb_restriction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_grill_propane_bbq_restriction (iter 515): Trader-landlord balcony
+// grill plus propane / LP-gas BBQ restriction framework. Five jurisdictions:
+// California (Cal. Fire Code § 308.1.4 mirrors NFPA 1 § 10.10.5 with state-
+// specific amendments + CFC § 308.1.6.2 LP-gas BBQ multifamily balcony +
+// Cal. Health & Safety Code § 18900 + CAL FIRE advisories), New York City
+// (FDNY 3 RCNY 102-01 + NYC Admin Code Title 29 NYC Fire Code + NYC FC
+// 307.5 LP-gas > 1-pound cylinders prohibited on multifamily balconies +
+// FDNY Bureau of Fire Investigation summons + $250-$1000 per violation),
+// Massachusetts (527 CMR 1.00 Comprehensive Fire Safety Code adopted IFC +
+// NFPA 1 + M.G.L. ch. 148 § 26G LP-gas storage + State Fire Marshal
+// Office), Texas (Texas Local Gov't Code Ch. 235 municipal fire code
+// authority + TX State Fire Marshal Office + Houston/Dallas/Austin/SA
+// adopt IFC + NFPA 1), Default (NFPA 1 2018 + 2021 editions standalone
+// § 10.10.5 + § 6.18). Three building types: Multifamily3PlusUnits,
+// SingleFamilyOrDuplex, DetachedCottage. Seven grill types: Propane-
+// TwentyPoundCylinder, PropaneOnePoundDisposable, Charcoal, Hibachi,
+// Electric, NaturalGasHardwired (NFPA 1 § 10.10.5 carve-out), NoGrill.
+// Six grill locations: BalconyAboveFirstFloor, GroundFloorPatioWithin-
+// 10Feet, GroundFloorPatioAtLeast10Feet, DesignatedCommonAreaGrillStation,
+// Indoor, NotApplicable. Nine-mode severity ladder including IndoorGrill-
+// CategoricallyProhibited (100pct rent + CO death risk), NfpaOpenFlame-
+// OnBalconyViolation (100pct rent + double violation when 20-pound LP-gas
+// also present), NfpaPropaneAbove1PoundStoredAboveFirstFloorViolation
+// (100pct rent), NfpaWithin10FeetOfStructureViolation (50pct rent),
+// LeaseEnforcementRequiredTenantViolation (50pct rent + 3-day Notice to
+// Cure). 17 US BBQ fire deaths + 8800 injuries annually per US Fire
+// Administration. NFPA 1 § 10.10.5 10-foot setback constant.
+// ---------------------------------------------------------------------------
+
+async fn rental_grill_propane_bbq_restriction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalGrillPropaneBbqRestrictionInput>,
+) -> Result<Json<RentalGrillPropaneBbqRestrictionResult>, ApiError> {
+    Ok(Json(check_rental_grill_propane_bbq_restriction(&b)))
 }
