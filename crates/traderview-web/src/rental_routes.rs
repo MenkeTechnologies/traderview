@@ -668,6 +668,10 @@ use traderview_expense::rental_security_deposit_interest::{
     SecurityDepositInterestInput as RentalSecurityDepositInterestInput,
     SecurityDepositInterestResult as RentalSecurityDepositInterestResult,
 };
+use traderview_expense::rental_septic_system_disclosure::{
+    check as check_rental_septic_system_disclosure,
+    RentalSepticSystemDisclosureInput, RentalSepticSystemDisclosureResult,
+};
 use traderview_expense::rental_pesticide_application_notification::{
     check as check_rental_pesticide_application_notification,
     RentalPesticideApplicationNotificationInput,
@@ -1094,6 +1098,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
+        .route("/rental-septic-system-disclosure", axum::routing::post(rental_septic_system_disclosure_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
@@ -7489,6 +7494,51 @@ async fn rental_unpermitted_unit_disclosure_route(
     Json(b): Json<RentalUnpermittedUnitDisclosureInput>,
 ) -> Result<Json<RentalUnpermittedUnitDisclosureResult>, ApiError> {
     Ok(Json(check_rental_unpermitted_unit_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_septic_system_disclosure: Multi-jurisdictional rental property
+// SEPTIC SYSTEM disclosure + inspection compliance framework. When a
+// landlord rents a property served by a private on-site sewage treatment
+// and disposal system (OSTDS / septic) rather than connection to municipal
+// sewer, what disclosure rules apply, what inspection certifications are
+// required, and what failure-mode liabilities expose landlord? Mounted at
+// POST /api/rental/rental-septic-system-disclosure. Four-jurisdiction
+// framework: Massachusetts (MOST STRINGENT — 310 C.M.R. 15.000 "Title 5"
+// State Environmental Code with pass-or-fail inspection at title transfer
+// or within 24 months prior, 36 months if pumped annually per
+// 310 C.M.R. 15.301; nitrogen-sensitive watersheds Cape Cod + Nantucket +
+// Buzzards Bay require innovative/alternative I/A nitrogen-reducing
+// technology under July 7, 2023 amendments); Florida (Fla. Stat.
+// § 381.0065 + § 381.00655 + Fla. Admin. Code Ch. 64E-6 + 2020 Clean
+// Waterways Act SB 712 signed June 30, 2020 — 5-year inspection cycle
+// for OSTDS in Basin Management Action Plan / BMAP basins;
+// § 381.0065(2)(a) installation permit + § 381.0065(4) operating permit
+// for performance-based + § 381.0065(4)(g) voluntary inspection
+// notification duty); Texas (Tex. Health & Safety Code § 366.011 et seq.
+// + § 366.051 installation permit + § 366.071 authorization to operate +
+// 30 Tex. Admin. Code Ch. 285 + TCEQ Authorized Agent registration + TCEQ
+// Form 20021); Default (California Water Boards OWTS Policy June 19, 2012
+// + Cal. Water Code § 13290 + Cal. Civ. Code § 1941.1 implied warranty of
+// sanitary facilities + Green v. Superior Court, 10 Cal. 3d 616 (1974)
+// common-law habitability + CERCLA 42 U.S.C. § 9607(a) owner/operator
+// strict liability for groundwater contamination). Five universal
+// failure-mode liabilities: sewage backup (Hilder v. St. Peter,
+// 478 A.2d 202 (Vt. 1984) constructive eviction); groundwater
+// contamination (CERCLA strict liability); pump-out frequency neglect
+// (Title 5 / § 381.0065(4) violation); drainfield failure ($15K-$45K
+// re-engineering); tenant misuse limited disclaimer. Distinct from
+// siblings rental_underground_storage_tank_disclosure (UST + LUST),
+// rental_basement_water_intrusion_disclosure, rental_sinkhole_disclosure,
+// rental_flood_hazard_disclosure, rent_abatement_construction_nuisance.
+// ---------------------------------------------------------------------------
+
+async fn rental_septic_system_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSepticSystemDisclosureInput>,
+) -> Result<Json<RentalSepticSystemDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_septic_system_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
