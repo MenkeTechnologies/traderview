@@ -757,6 +757,10 @@ use traderview_expense::rental_post_construction_lead_dust_clearance::{
     check as check_rental_post_construction_lead_dust_clearance,
     RentalPostConstructionLeadDustClearanceInput, RentalPostConstructionLeadDustClearanceResult,
 };
+use traderview_expense::tenant_voting_address_protection::{
+    check as check_tenant_voting_address_protection,
+    TenantVotingAddressProtectionInput, TenantVotingAddressProtectionResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1078,6 +1082,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
         .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
         .route("/tenant-smart-thermostat-install-right", axum::routing::post(tenant_smart_thermostat_install_right_route))
+        .route("/tenant-voting-address-protection", axum::routing::post(tenant_voting_address_protection_route))
         .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
         .route("/tenant-window-air-conditioner-install-right", axum::routing::post(tenant_window_air_conditioner_install_right_route))
         .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
@@ -10388,4 +10393,42 @@ async fn rental_post_construction_lead_dust_clearance_route(
     Json(b): Json<RentalPostConstructionLeadDustClearanceInput>,
 ) -> Result<Json<RentalPostConstructionLeadDustClearanceResult>, ApiError> {
     Ok(Json(check_rental_post_construction_lead_dust_clearance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_voting_address_protection (iter 505): Trader-landlord Address
+// Confidentiality Program (ACP) plus victim-status disclosure restriction
+// framework. Five jurisdictions: California (Cal. Gov. Code § 6206-6210
+// Safe at Home Program administered by Secretary of State + Cal. Civ. Code
+// § 1946.7 lease termination + § 1161.3 unlawful detainer protection +
+// Penal § 273.6), Massachusetts (M.G.L. ch. 9A ACP administered by
+// Secretary of the Commonwealth + ch. 209A Abuse Prevention + ch. 186 §§
+// 24-29 lease termination + ch. 151B § 4 fair housing — FELONY under
+// M.G.L. ch. 9A § 8 for breach causing harm), New York (N.Y. Executive
+// Law § 108 ACP administered by Department of State + RPL § 227-c lease
+// termination + Social Services Law § 459-a + post-Dobbs reproductive
+// health care services providers eligibility), Washington (RCW 40.24
+// — FIRST state to enact ACP in 1991 + RCW 59.18.575 lease termination
+// + 59.18.585 adverse action prohibition + expanded to CJ Affiliates +
+// Election Officials + Protected Health Care Workers), Default (federal
+// VAWA 42 U.S.C. § 14043e + 24 C.F.R. § 5.2003 + common-law privacy
+// torts). Three ACP statuses: EnrolledWithSubstituteAddress, Victim-
+// StatusDisclosedNotEnrolled, NoAcpAndNoVictimDisclosure. Eight
+// disclosure-request types: VoterRegistrationChallenger, LawEnforcement-
+// WithWarrantOrSubpoena, LawEnforcementWithoutWarrant, ProcessServerCivil-
+// Unrelated, DebtCollectorOrSkipTracer, FamilyMemberOrEstrangedSpouse,
+// RoutineLandlordBusiness, NoRequest. Ten-mode severity ladder including
+// ConfidentialityBreachAcpParticipantCriminalLiability (100pct rent at
+// risk + misdemeanor under all state ACP statutes + felony under MA/NY/
+// WA when causes actual harm to participant) and ConfidentialityBreach-
+// NonAcpVictimTortLiability (intrusion upon seclusion + public disclosure
+// of private facts + state-statutory confidentiality duty).
+// ---------------------------------------------------------------------------
+
+async fn tenant_voting_address_protection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantVotingAddressProtectionInput>,
+) -> Result<Json<TenantVotingAddressProtectionResult>, ApiError> {
+    Ok(Json(check_tenant_voting_address_protection(&b)))
 }
