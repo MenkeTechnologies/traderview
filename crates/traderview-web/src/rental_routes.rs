@@ -632,6 +632,11 @@ use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
     RentalGasApplianceBanResult,
 };
+use traderview_expense::rental_hardwired_smoke_alarm_responsibility::{
+    check as check_rental_hardwired_smoke_alarm_responsibility,
+    RentalHardwiredSmokeAlarmResponsibilityInput,
+    RentalHardwiredSmokeAlarmResponsibilityResult,
+};
 use traderview_expense::rental_hot_water_temperature::{
     check as check_rental_hot_water_temperature, RentalHotWaterTemperatureInput,
     RentalHotWaterTemperatureResult,
@@ -1121,6 +1126,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
+        .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
@@ -7527,6 +7533,58 @@ async fn rental_gas_appliance_ban_route(
     Json(b): Json<RentalGasApplianceBanInput>,
 ) -> Result<Json<RentalGasApplianceBanResult>, ApiError> {
     Ok(Json(check_rental_gas_appliance_ban(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_hardwired_smoke_alarm_responsibility: Multi-jurisdictional
+// rental property HARDWIRED SMOKE ALARM installation, maintenance, and
+// operability compliance framework. When a landlord rents a property,
+// what smoke alarm technology (hardwired with battery backup vs 10-year
+// sealed battery), installation locations (every bedroom + hallway
+// outside sleeping areas + each floor including basement), and post-
+// tenancy verification duties apply, and what failure-mode liabilities
+// expose landlord after a fire injury or fatality? Mounted at POST
+// /api/rental/rental-hardwired-smoke-alarm-responsibility. Three-
+// jurisdiction framework: California (MOST PRESCRIPTIVE — Cal. Health
+// & Safety Code § 13113.7 + § 13113.8 + Cal. Civ. Code § 1941.1(a)(7)
+// implied warranty + 2014 STATE FIRE MARSHAL 10-YEAR SEALED-BATTERY
+// mandate + JANUARY 1, 2016 HARDWIRED-WITH-BATTERY-BACKUP mandate for
+// newly installed alarms + landlord operability duty at new tenancy +
+// tenant notification and landlord correction duty); Massachusetts
+// (527 C.M.R. 1.00 Comprehensive Fire Safety Code + M.G.L. c. 148
+// § 26F — PHOTOELECTRIC mandate in bedrooms and adjacent sleeping
+// areas + 10-year sealed-battery for new + hardwired-with-backup in
+// new construction); Default (NFPA 72 National Fire Alarm and
+// Signaling Code referenced by most state/local fire codes + common-
+// law implied warranty of habitability per Hilder v. St. Peter, 478
+// A.2d 202 (Vt. 1984) + tort negligence + premises liability). NFPA
+// 72 placement requirements: inside every bedroom + outside each
+// separate sleeping area + on each additional story including
+// basement + interconnected so all alarms activate when any one
+// detects smoke + 4-inch wall/ceiling clearances + 36-inch HVAC
+// register clearance. Six smoke alarm types modeled: hardwired with
+// battery backup; 10-year sealed-battery; replaceable-battery (pre-
+// 2014 California legacy); photoelectric; ionization; dual-sensor.
+// Five universal failure-mode liabilities: alarm inoperable at start
+// of tenancy (§ 13113.7 violation); tenant reported inoperable not
+// corrected (retaliation exposure); no alarm in bedroom or hallway
+// (NFPA 72 placement violation + negligence per se); fire injury or
+// fatality ($1M-$5M routine settlement); battery-removal failure on
+// replaceable-battery design. Distinct from siblings rental_carbon_
+// monoxide_detector, rental_chimney_fireplace_inspection_disclosure
+// (iter 471), rental_fire_extinguisher_requirement (iter 473),
+// rental_window_blind_cord_safety (iter 469), rental_bedroom_egress_
+// window, rental_smoke_free_housing_disclosure (smoking policy NOT
+// alarms), tenant_fire_safety_plan_disclosure, landlord_retaliation_
+// damages, tenant_emotional_distress_damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_hardwired_smoke_alarm_responsibility_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHardwiredSmokeAlarmResponsibilityInput>,
+) -> Result<Json<RentalHardwiredSmokeAlarmResponsibilityResult>, ApiError> {
+    Ok(Json(check_rental_hardwired_smoke_alarm_responsibility(&b)))
 }
 
 // ---------------------------------------------------------------------------
