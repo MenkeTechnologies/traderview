@@ -753,6 +753,10 @@ use traderview_expense::rental_in_unit_laundry_appliance_provision::{
     check as check_rental_in_unit_laundry_appliance_provision,
     RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
 };
+use traderview_expense::rental_post_construction_lead_dust_clearance::{
+    check as check_rental_post_construction_lead_dust_clearance,
+    RentalPostConstructionLeadDustClearanceInput, RentalPostConstructionLeadDustClearanceResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1184,6 +1188,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
+        .route("/rental-post-construction-lead-dust-clearance", axum::routing::post(rental_post_construction_lead_dust_clearance_route))
         .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
@@ -10351,4 +10356,36 @@ async fn rental_in_unit_laundry_appliance_provision_route(
     Json(b): Json<RentalInUnitLaundryApplianceProvisionInput>,
 ) -> Result<Json<RentalInUnitLaundryApplianceProvisionResult>, ApiError> {
     Ok(Json(check_rental_in_unit_laundry_appliance_provision(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_post_construction_lead_dust_clearance (iter 503): Trader-landlord
+// post-renovation lead-dust clearance testing framework for pre-1978 target
+// housing. Federal: EPA RRP rule 40 C.F.R. Part 745 Subpart E (Lead-Safe
+// Certified Firm + Certified Renovator + Renovate Right pamphlet + cleaning
+// verification card) + HUD Lead Safe Housing Rule 24 C.F.R. Part 35 (mandates
+// dust-wipe clearance for federally-assisted housing) + TSCA § 402(c) dust-
+// lead hazard standards (pre-2020-01-06: floor 40 / sill 250 / trough 400
+// µg/sq ft; post-2020-01-06: floor 10 / sill 100 / trough 400 per Federal
+// Register June 21, 2019 final rule; effective 2026-01-12: ANY reportable
+// level = hazard per October 24, 2024 EPA final rule). Four jurisdictions:
+// MA (105 CMR 460 most stringent in US + M.G.L. ch. 111 §§ 190-199A + CLPPP
+// Letter of Compliance + triple-damages private right of action), CA (Cal.
+// Health & Safety Code § 17920.10 + Title 17 Div. 1 Ch. 8 CLPPB), NY (NYC
+// Local Law 1 of 2004 + NYC Admin Code § 27-2056 + DOH § 11-101 + LL 31
+// of 2020 XRF testing + NY PHL § 1373), Default (RRP + HUD LSHR + TSCA
+// §§ 402+403). Three housing scopes: Pre1978TargetHousing, Pre1960Housing
+// (NYC LL 1 trigger), Post1978NotApplicable. Eleven-mode severity ladder
+// including ChildPregnancyExposureMaximumLiability (100pct rent) +
+// UncertifiedFirmRrpViolation ($51,796/day EPA penalty per 40 C.F.R. § 19.4)
+// + clearance-fail-by-location (floor/sill/trough). RRP trigger thresholds:
+// 6 sq ft interior or 20 sq ft exterior disturbance per 40 C.F.R. § 745.83.
+// ---------------------------------------------------------------------------
+
+async fn rental_post_construction_lead_dust_clearance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPostConstructionLeadDustClearanceInput>,
+) -> Result<Json<RentalPostConstructionLeadDustClearanceResult>, ApiError> {
+    Ok(Json(check_rental_post_construction_lead_dust_clearance(&b)))
 }
