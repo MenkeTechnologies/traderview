@@ -222,6 +222,10 @@ use traderview_expense::tenant_domestic_violence_lease_termination::{
     TenantDomesticViolenceLeaseTerminationInput,
     TenantDomesticViolenceLeaseTerminationResult,
 };
+use traderview_expense::tenant_ev_charging_installation_right::{
+    check as check_tenant_ev_charging_installation_right,
+    TenantEvChargingInstallationRightInput, TenantEvChargingInstallationRightResult,
+};
 use traderview_expense::tenant_fire_safety_plan_disclosure::{
     check as check_tenant_fire_safety_plan_disclosure,
     TenantFireSafetyPlanDisclosureInput, TenantFireSafetyPlanDisclosureResult,
@@ -884,6 +888,7 @@ pub fn router() -> Router<AppState> {
         .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
         .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
         .route("/tenant-domestic-violence-lease-termination", axum::routing::post(tenant_domestic_violence_lease_termination_route))
+        .route("/tenant-ev-charging-installation-right", axum::routing::post(tenant_ev_charging_installation_right_route))
         .route("/tenant-fire-safety-plan-disclosure", axum::routing::post(tenant_fire_safety_plan_disclosure_route))
         .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
         .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
@@ -3581,6 +3586,42 @@ async fn tenant_domestic_violence_lease_termination_route(
     Json(b): Json<TenantDomesticViolenceLeaseTerminationInput>,
 ) -> Result<Json<TenantDomesticViolenceLeaseTerminationResult>, ApiError> {
     Ok(Json(check_tenant_domestic_violence_lease_termination(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_ev_charging_installation_right: multi-jurisdictional tenant
+// electric vehicle (EV) charging installation right framework. Cal. Civ.
+// Code § 1947.6 (AB 2565 of 2014, effective July 1, 2015) — landlord
+// SHALL APPROVE tenant request to install EVCS at allotted parking
+// space; § 1947.6(d) four exemptions (10%+ EVCS exist, no parking in
+// lease, < 5 parking spaces, rent control); § 1947.6(c) tenant
+// obligations include written agreement + payment for usage/damage/
+// maintenance + $1M liability insurance naming landlord as additional
+// insured. Cal. Civ. Code § 1952.7 commercial-lease companion. Colorado
+// HB 23-1233 (effective August 7, 2023) — tenant may install Level 1
+// or 2 EVCS at own expense; landlord may not charge fee for placement/
+// use beyond actual electricity cost or reasonable access fee; state
+// Electrical Board EVCS requirements effective March 1, 2024. Maryland
+// HB 830 (Chapter 582 of 2023) — newly constructed/renovated units
+// with separate garage/carport/driveway per unit must have EVSE-
+// installed OR EV-ready parking space. NY Gen. Bus. Law § 399-zzz +
+// NY MDL amendments — reasonable approval; may not unreasonably
+// withhold. States with right-to-charge laws: CA + CO + FL + HI + IL +
+// MD + NJ + NY + OR + VA. Mounted at POST /api/rental/
+// tenant-ev-charging-installation-right. Trader-landlord critical
+// because EV adoption shifted EVCS requests from novelty to routine.
+// Sibling cluster: tenant_solar_installation,
+// tenant_clothesline_drying_right,
+// rental_satellite_dish_installation_right,
+// rental_broadband_mte_rules.
+// ---------------------------------------------------------------------------
+
+async fn tenant_ev_charging_installation_right_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantEvChargingInstallationRightInput>,
+) -> Result<Json<TenantEvChargingInstallationRightResult>, ApiError> {
+    Ok(Json(check_tenant_ev_charging_installation_right(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -1523,6 +1523,51 @@ Mounted at `POST /api/rental/tenant-privacy-check`. Twenty-six tests pin: **IL b
 
 Mounted at `POST /api/rental/tenant-domestic-violence-lease-termination`. Thirty-six tests pin: **CA clean termination compliant**; **CA no written notice violation**; **CA 14-day notice boundary compliant**; **CA 13-day notice violation**; **CA 180-day documentation boundary compliant**; **CA 181-day documentation violation**; **CA police report acceptable**; **CA qualified third-party acceptable**; **CA no documentation violation**; **CA landlord disclosure without consent violation**; **CA landlord retaliation violation**; **IL clean termination compliant**; **IL no documentation violation** (765 ILCS 750/15); **IL police report NOT acceptable** (distinct from CA — IL accepts only protective order or qualified third party); **IL landlord retaliation violation** (§ 750/30); **WA clean termination compliant**; **WA within 90-day compliant** (boundary); **WA 91-day violation**; **VAWA clean termination compliant**; **VAWA lease void clauses violation** (police-call termination + VAWA-rights-waiver VOID); **VAWA landlord retaliation violation** (34 USC § 12491); **VAWA HUD Form 91066 accepted**; **VAWA not HUD-covered no federal engagement**; **citation pins CA / IL / WA / VAWA authorities** (all four); **note pins CA 180-day lookback**; **note pins IL Safe Homes Act**; **note pins WA 90-day lookback**; **note pins VAWA void clauses**; **CA strictest 180-day vs WA 90-day invariant** (150 days OK CA but violates WA); **VAWA uniquely accepts HUD-91066 invariant** (CA rejects HUD-91066 form); **VAWA uniquely engages void-clause doctrine invariant** (state regimes don't); **documentation type truth table for CA** (5-cell sweep); **multiple CA violations stack** (4 violations).
 
+`traderview-expense::tenant_ev_charging_installation_right` is the **multi-jurisdictional tenant electric vehicle (EV) charging installation right framework module** — trader-landlord critical because EV adoption in the U.S. residential market has shifted EVCS-installation requests from novelty to routine. State "right-to-charge" laws now exist in California + Colorado + Florida + Hawaii + Illinois + Maryland + New Jersey + New York + Oregon + Virginia. Failure to grant a qualifying request in a covered jurisdiction triggers breach-of-statute liability and tenant remedies. Distinct from siblings `tenant_solar_installation`, `tenant_clothesline_drying_right`, `rental_satellite_dish_installation_right`, `rental_broadband_mte_rules`.
+
+**Five-jurisdiction statutory framework**:
+
+| Jurisdiction | Source | Effective Date | Architecture |
+|--------------|--------|----------------|--------------|
+| **California** | Cal. Civ. Code § 1947.6 (AB 2565 of 2014) + § 1952.7 (Commercial) | **July 1, 2015** | APPROVAL MANDATE with 4 exemptions + tenant payment obligations + $1M insurance |
+| **Colorado** | Colorado HB 23-1233 | **August 7, 2023** | PROHIBITION OF FEE for placement/use + actual-electricity-cost pass-through |
+| **Maryland** | Maryland HB 830 (Chapter 582 of 2023) | **2023** | NEW-CONSTRUCTION INFRASTRUCTURE MANDATE for separate garages/carports/driveways |
+| **New York** | NY Gen. Bus. Law § 399-zzz + MDL amendments | — | REASONABLENESS REVIEW (may not unreasonably withhold) |
+| **Default** | Common-law lease modification | — | No right-to-charge; ADA reasonable accommodation may apply |
+
+Pinned by `ca_post_july_2015_full_compliance_engaged`, `colorado_post_august_2023_engages`, `maryland_new_construction_with_evse_compliant`, `ny_written_request_engages_obligation`, `default_no_obligation`, `jurisdiction_truth_table_five_cells`, `ca_uniquely_provides_four_exemptions_invariant`.
+
+**California § 1947.6 four-exemption framework** (any one defeats right-to-charge):
+
+| Exemption | Source | Trigger |
+|-----------|--------|---------|
+| 10%+ EVCS exist | § 1947.6(d)(1) | EVCS at ratio ≥ 10% of designated parking spaces |
+| No parking in lease | § 1947.6(d)(2) | Parking not provided as part of lease agreement |
+| < 5 parking spaces | § 1947.6(d)(3) | Property has fewer than 5 parking spaces |
+| Rent-controlled property | § 1947.6(d)(4) | Dwelling subject to public-entity residential rent control ordinance |
+
+Pinned by `ca_exemption_10_percent_evcs_exist` (20 spaces × 10% = 2 EVCS), `ca_exemption_no_parking_in_lease`, `ca_exemption_under_5_parking_spaces` (4 = exempt), `ca_exemption_5_parking_spaces_no_exemption` (5 = engaged), `ca_exemption_rent_controlled`.
+
+**California § 1947.6(c) tenant obligations**:
+
+| # | Obligation |
+|---|-----------|
+| 1 | Written agreement consenting to installation/use/maintenance/removal requirements |
+| 2 | Payment of ALL electrical usage as part of rent |
+| 3 | Payment of ALL damage + maintenance + repair + removal + replacement |
+| 4 | Payment of modifications/improvements to property |
+| 5 | **§ 1947.6(c)(8) — $1,000,000 LIABILITY INSURANCE naming landlord as ADDITIONAL INSURED** |
+
+Pinned by `ca_missing_written_agreement_violation`, `ca_missing_payment_obligations_violation`, `ca_missing_1m_insurance_violation`, `ca_landlord_refusal_when_obligated_violation` (§ 1947.6(a) SHALL APPROVE).
+
+**Colorado HB 23-1233 fee framework**: tenant may install Level 1 OR Level 2 EVCS at own expense; landlord SHALL NOT assess fee for placement or use; landlord MAY require reimbursement for ACTUAL ELECTRICITY COST OR REASONABLE ACCESS FEE (network fee pass-through permitted). State Electrical Board EVCS requirements effective March 1, 2024; cannot prohibit EVCS unless BONA FIDE SAFETY CONCERN. Pinned by `colorado_unreasonable_fee_violation`, `colorado_post_august_2023_engages` (boundary precision), `colorado_pre_august_2023_no_engagement`.
+
+**Maryland HB 830 — new construction / renovation EV-ready mandate**: all newly constructed OR renovated housing units with SEPARATE GARAGES, CARPORTS, OR DRIVEWAYS for each unit must include EVSE-INSTALLED OR EV-READY parking space. Pinned by `maryland_new_construction_no_evse_installed_violation`, `maryland_new_construction_with_evse_compliant`, `maryland_existing_construction_no_obligation`.
+
+**New York Gen. Bus. Law § 399-zzz**: tenant has right to install EVCS subject to landlord's reasonable procedural approval; landlord MAY NOT unreasonably withhold approval. Pinned by `ny_written_request_engages_obligation`, `ny_unreasonable_withholding_violation`.
+
+Mounted at `POST /api/rental/tenant-ev-charging-installation-right`. Thirty-eight tests pin: **CA post-July 2015 full compliance engaged**; **CA pre-July 2015 no obligation** (boundary); **CA July 2015 boundary engages**; **CA exemption 10% EVCS exist** (2 of 20 spaces); **CA exemption no parking in lease**; **CA exemption under 5 parking spaces** (4 = exempt); **CA exemption 5 parking spaces no exemption** (boundary); **CA exemption rent controlled**; **CA no written request no engagement**; **CA missing written agreement violation**; **CA missing payment obligations violation**; **CA missing $1M insurance violation**; **CA landlord refusal when obligated violation**; **Colorado post-August 2023 engages**; **Colorado pre-August 2023 no engagement**; **Colorado unreasonable fee violation**; **Maryland new construction no EVSE installed violation**; **Maryland new construction with EVSE compliant**; **Maryland existing construction no obligation**; **NY written request engages obligation**; **NY unreasonable withholding violation**; **default no obligation**; **jurisdiction truth table five cells**; **CA uniquely provides four exemptions invariant**; **citation pins all jurisdictions** (§ 1947.6 + AB 2565 + § 1952.7 + Colorado HB 23-1233 + Maryland HB 830 + Chapter 582 + NY § 399-zzz); **note pins CA approval mandate**; **note pins CA four exemptions**; **note pins CA tenant payment obligations**; **note pins CA $1M insurance requirement**; **note pins CA commercial companion**; **note pins Colorado HB 23-1233 no fee actual cost**; **note pins Colorado electrical board 2024**; **note pins Maryland HB 830 new construction**; **note pins NY § 399-zzz reasonable review**; **note pins default common law + ADA**; **note pins ten-state right-to-charge list**; **note pins cross-jurisdictional architecture**; **multiple CA failures stack**.
+
 `traderview-expense::tenant_fire_safety_plan_disclosure` is the **tenant fire safety plan + emergency preparedness notice disclosure compliance module** — when must a trader-landlord post and distribute fire safety plans + emergency preparedness notices to tenants of multi-unit residential properties? Trader-landlord critical for any multifamily building owner: failure to post + distribute required HPD-mandated signage exposes owner to HPD violations + civil penalties + tenant breach-of-habitability claims. Distinct from siblings `detector_requirements` (smoke + CO detector hardware standards), `fire_sprinkler_disclosure` (fire-suppression system disclosure), `water_heater_earthquake_strap` (CA § 19211 seismic), and `landlord_emergency_entry_notice` (post-emergency entry notice requirements).
 
 **Three regimes** — NYC most explicit vs CA disclosure-only vs Default IFC:
