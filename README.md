@@ -3205,6 +3205,48 @@ Mounted at `POST /api/rental/rental-sex-offender-registry-notice`. Twenty-seven 
 
 Mounted at `POST /api/rental/rental-sinkhole-disclosure`. Twenty-five tests pin: **FL no claim no sale compliant**; **FL paid claim sale without disclosure violation** (§ 627.7073(1)(c) BEFORE closing); **FL paid claim sale with disclosure compliant**; **FL known sinkhole concealment violation** (Johnson v. Davis); **FL known sinkhole disclosed compliant**; **FL property sold without tax summary violation** (§ 689.261); **FL claim without engineer report violation** (§ 627.707); **FL claim made but not paid no § 627.7073 required**; **FL paid claim no sale no § 627.7073 required**; **default clean compliant**; **default known sinkhole concealment violation** (common-law material fact); **default known sinkhole disclosed compliant**; **citation pins FL / default authorities** (both); **note pins FL § 627.7073 BEFORE closing**; **note pins FL § 627.707 engineer/geologist**; **note pins FL § 689.25 narrow exemptions** (homicide + HIV + sinkhole conditions remain material); **note pins FL Johnson v. Davis common-law**; **note pins default PA Seller Disclosure Law** (68 Pa.C.S. § 7301); **note pins default karst states** (TX hill country + PA limestone + MO + KY + TN); **FL uniquely requires paid-claim disclosure invariant**; **known concealment invariant across regimes**; **FL uniquely requires property tax summary at sale invariant**; **multiple FL violations stack** (4 violations); **defensive all-zero no violations**.
 
+`traderview-expense::rental_smoke_free_housing_disclosure` is the **multi-jurisdictional residential rental smoke-free housing disclosure framework module** — trader-landlord critical because modern shift toward smoke-free properties for insurance discounts + tenant health protection has made smoke-free policies a routine landlord choice; failure to disclose smoking policy in lease can expose landlord to constructive-eviction claims from secondhand-smoke-affected tenants; misclassifying tobacco-product coverage creates lease enforcement disputes; HUD public housing smoke-free rule applies to all federally-funded units including LIHTC trader-landlord investments. Distinct from siblings `rental_carbon_monoxide_detector` (CO sensor framework), `rental_pesticide_application_notification` (pesticide notice), `tenant_data_privacy`, `landlord_emergency_entry_notice`.
+
+**Five-jurisdiction statutory framework**:
+
+| Jurisdiction | Source | Trigger | Required Disclosure |
+|--------------|--------|---------|---------------------|
+| **California (private market)** | Cal. Civ. Code § 1947.5 (SB 332 of 2011, effective January 1, 2012) | Landlord adopts smoke-free policy | Post-2012 leases: in-lease provision specifying prohibited areas; pre-2012 leases: § 827 change-of-terms notice |
+| **HUD Public Housing** | HUD 24 CFR § 965.653 + Part 965 Subpart G + Part 966 Subpart G (final rule November 30, 2016 at 81 Fed. Reg. 87430; mandatory deadline July 31, 2018) | All federally-funded public housing | Living units + interior areas + **25-FOOT outdoor perimeter** |
+| **New York** | NY MDL § 17 + § 17-101 + § 17-179 + NY Public Health Law § 1399-n | Buildings with 3+ dwelling units | Written smoking policy disclosed in lease |
+| **Massachusetts** | Mass. G.L. c. 270 § 22 + § 22A (Smoke-Free Workplace Law) | Multifamily buildings (2+ units) with common-area workplaces | Common-area smoking prohibition + posted signs |
+| **Default** | Common-law nuisance + breach of warranty of habitability | None (statutory) | Common-law tenant remedies preserved |
+
+Pinned by `ca_post_2012_smoke_free_with_lease_provision_compliant`, `hud_public_housing_all_three_prongs_compliant`, `ny_3_unit_building_triggers_obligation`, `ny_2_unit_building_no_obligation`, `ma_2_unit_building_engages_workplace_law`, `default_jurisdiction_no_obligation`, `jurisdiction_truth_table_five_cells`.
+
+**California § 1947.5 three-prong framework**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 1947.5(a) | Landlord MAY prohibit smoking on property OR in building/portion (units, balconies, common areas) |
+| § 1947.5(b) | Post-January 1, 2012 leases: lease MUST include provision specifying prohibited areas; carveout if lessee previously occupied |
+| § 1947.5(c) + § 827 | Pre-2012 leases: prohibition is CHANGE OF TERMS OF TENANCY requiring adequate written notice |
+
+Pinned by `ca_post_2012_smoke_free_no_lease_provision_violation`, `ca_lessee_previously_occupied_no_obligation` (carveout), `ca_pre_2012_lease_requires_change_of_terms_notice`, `ca_pre_2012_lease_with_change_of_terms_notice_compliant`, `ca_uniquely_engages_change_of_terms_procedure_invariant`. Covers cigarettes + cigars + pipes + tobacco products per Cal. Bus. & Prof. Code § 22950.5; e-cigarettes added effective 2017 per SB 5.
+
+**HUD 24 CFR § 965.653 three-prong mandatory framework** (effective July 31, 2018):
+
+| # | Element |
+|---|---------|
+| 1 | All public housing **living units** |
+| 2 | All **interior areas** (hallways, rental/admin offices, community centers, daycare, laundry) |
+| 3 | **Outdoor areas within 25 FEET** of public housing and administrative office buildings |
+
+Pinned by `hud_missing_25_foot_perimeter_violation`, `hud_missing_interior_prohibition_violation`, `hud_uniquely_engages_25_foot_perimeter_invariant` (only HUD jurisdiction sets `hud_twenty_five_foot_perimeter_engaged: true`). § 965.653(b) PHA flexibility: designated smoking areas outside 25-foot zone OR additional smoke-free areas OR entire grounds smoke-free. § 965.651 "prohibited tobacco products" = cigarettes + cigars + pipes (e-cigarettes NOT federally mandated but PHAs may add). Part 966 Subpart G — single incident NOT grounds for eviction (compassionate enforcement).
+
+**HUD perimeter rationale** — 25-foot outdoor perimeter prevents secondhand smoke from entering open windows in lower-level units and exposing tenants on lower-floor balconies/porches.
+
+**New York MDL § 17 — 3+ dwelling unit threshold** — buildings with 3+ units must disclose written smoking policy specifying (1) whether smoking is permitted/prohibited/restricted; (2) common-area prohibitions per NY Public Health Law § 1399-n; (3) outdoor smoking-prohibition areas. Pinned by `ny_no_written_policy_violation`.
+
+**Massachusetts G.L. c. 270 § 22 + § 22A Smoke-Free Workplace Law** — common areas of multifamily buildings constituting workplaces (lobbies, hallways, maintenance areas) are smoke-free; landlord must POST SIGNS in common areas. Boston Public Health Commission Tobacco Control Regulations add municipal overlays. Pinned by `ma_no_common_area_signs_violation`, `ma_single_family_no_obligation`.
+
+Mounted at `POST /api/rental/rental-smoke-free-housing-disclosure`. Thirty-four tests pin: **CA post-2012 smoke-free with lease provision compliant**; **CA post-2012 smoke-free no lease provision violation** (§ 1947.5(b)); **CA lessee previously occupied no obligation** (carveout); **CA pre-2012 lease requires change of terms notice** (§ 827 + § 1947.5(c)); **CA pre-2012 lease with change of terms notice compliant**; **CA no policy no obligation**; **HUD public housing all three prongs compliant**; **HUD missing 25-foot perimeter violation**; **HUD missing interior prohibition violation**; **HUD non-HUD unit no obligation**; **NY 3-unit building triggers obligation**; **NY 2-unit building no obligation**; **NY no written policy violation**; **MA 2-unit building engages workplace law**; **MA single-family no obligation**; **MA no common-area signs violation**; **default jurisdiction no obligation**; **jurisdiction truth table five cells**; **HUD uniquely engages 25-foot perimeter invariant**; **CA uniquely engages change-of-terms procedure invariant**; **citation pins all authorities** (§ 1947.5 + SB 332 + § 22950.5 + § 827 + 24 CFR § 965.651-655 + Part 965/966 Subpart G + 81 Fed. Reg. 87430 + NY MDL § 17/17-101/17-179 + § 1399-n + Mass. c. 270 § 22/22A); **note pins CA landlord authority**; **note pins CA lease disclosure**; **note pins CA change of terms**; **note pins CA e-cigarette 2017 SB 5**; **note pins HUD three-prong framework**; **note pins HUD 25-foot perimeter rationale**; **note pins HUD PHA flexibility**; **note pins HUD prohibited tobacco definition**; **note pins HUD compassionate enforcement**; **note pins NY MDL 3-unit threshold**; **note pins MA Smoke-Free Workplace Law**; **note pins default nuisance/habitability**; **multiple failures stack**.
+
 `traderview-expense::rental_swimming_pool_drain_safety` is the **rental property swimming pool drain safety compliance module** — when must a trader-landlord operating a multifamily building with pool or spa comply with federal Virginia Graeme Baker Pool and Spa Safety Act (VGB Act) drain cover + anti-entrapment requirements? Trader-landlord operational concern: multifamily rental pools are treated as "public pools" under VGB Act; non-compliant drain covers create per-incident strict liability + CPSC civil penalty exposure + wrongful death tort liability. Distinct from siblings `swimming_pool_safety` (general pool fencing/barrier framework), `rental_carbon_monoxide_detector` (CO), `rental_bedroom_egress_window` (structural).
 
 **Three regimes** — Federal VGB Act + California (VGB + 5-foot fence) + Florida (VGB + DOH recertification):

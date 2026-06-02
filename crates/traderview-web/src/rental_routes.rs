@@ -565,6 +565,10 @@ use traderview_expense::rental_sinkhole_disclosure::{
     check as check_rental_sinkhole_disclosure, RentalSinkholeDisclosureInput,
     RentalSinkholeDisclosureResult,
 };
+use traderview_expense::rental_smoke_free_housing_disclosure::{
+    check as check_rental_smoke_free_housing_disclosure,
+    RentalSmokeFreeHousingDisclosureInput, RentalSmokeFreeHousingDisclosureResult,
+};
 use traderview_expense::rental_swimming_pool_drain_safety::{
     check as check_rental_swimming_pool_drain_safety,
     RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
@@ -982,6 +986,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
+        .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -6666,6 +6671,44 @@ async fn rental_sinkhole_disclosure_route(
     Json(b): Json<RentalSinkholeDisclosureInput>,
 ) -> Result<Json<RentalSinkholeDisclosureResult>, ApiError> {
     Ok(Json(check_rental_sinkhole_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_smoke_free_housing_disclosure: multi-jurisdictional residential
+// rental smoke-free housing disclosure framework — Cal. Civ. Code
+// § 1947.5 (SB 332 of 2011, effective January 1, 2012) — landlord MAY
+// prohibit smoking; § 1947.5(b) post-2012 leases must include in-lease
+// provision specifying prohibited areas; § 1947.5(c) pre-2012 leases
+// require § 827 change-of-terms notice; covers cigarettes + cigars +
+// pipes + e-cigarettes (added 2017 per SB 5). HUD 24 CFR § 965.653 +
+// Part 965 Subpart G + Part 966 Subpart G (final rule November 30,
+// 2016 at 81 Fed. Reg. 87430; mandatory implementation deadline July
+// 31, 2018) — PHAs MUST prohibit smoking in (1) living units; (2)
+// interior areas; (3) outdoor areas within 25 FEET of buildings;
+// compassionate enforcement (single incident NOT grounds for
+// eviction). NY MDL § 17 + § 17-101 + § 17-179 + NY Public Health
+// Law § 1399-n — buildings of 3+ dwelling units must adopt and
+// disclose written smoking policy. Mass. G.L. c. 270 § 22 + § 22A
+// Smoke-Free Workplace Law — common areas of multifamily buildings
+// constituting workplaces must be smoke-free; landlord must post
+// signs. Default — common-law nuisance + breach of warranty of
+// habitability available regardless of state regime. Mounted at POST
+// /api/rental/rental-smoke-free-housing-disclosure. Trader-landlord
+// critical because (1) modern shift toward smoke-free for insurance
+// discounts + tenant health; (2) failure to disclose can expose to
+// constructive-eviction claims; (3) HUD rule applies to LIHTC
+// trader-landlord investments. Sibling cluster:
+// rental_carbon_monoxide_detector,
+// rental_pesticide_application_notification, tenant_data_privacy,
+// landlord_emergency_entry_notice.
+// ---------------------------------------------------------------------------
+
+async fn rental_smoke_free_housing_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSmokeFreeHousingDisclosureInput>,
+) -> Result<Json<RentalSmokeFreeHousingDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_smoke_free_housing_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
