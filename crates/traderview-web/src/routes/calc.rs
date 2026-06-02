@@ -262,6 +262,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-871m",          post(section_871m_route))
+        .route("/calc/section-904",           post(section_904_route))
         .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-951a",          post(section_951a_route))
         .route("/calc/section-956",           post(section_956_route))
@@ -2858,6 +2859,46 @@ async fn section_871m_route(
 // US-gov / passive / pension) + §911(c)(2) housing cap 30% × FEIE +
 // §911(d)(1)(A) bona fide residence test + §911(d)(1)(B) physical
 // presence test ≥ 330 full days + §911(d)(7) base housing 16% × FEIE.
+
+// ── § 904 Limitation on Foreign Tax Credit (FTC) ─────────────────────
+// Mounted at /api/calc/section-904 (iter 516). Pure compute. § 904 caps
+// the foreign tax credit at the US tax that would otherwise be imposed
+// on foreign-source taxable income. § 904(a) formula: FTC ≤ US tax ×
+// (foreign-source TI / total worldwide TI). § 904(d) SEPARATE BASKET
+// RULE — limitation computed SEPARATELY for each post-TCJA basket
+// (effective taxable years beginning after December 31, 2017): (1)
+// Passive (dividends + interest + royalties + rents + annuities — with
+// high-tax kick-out and CFC look-through), (2) GILTI / NCTI (post-OBBBA
+// renamed — § 951A inclusions), (3) Foreign Branch (qualified business
+// unit income), (4) General (active business + wages + financial
+// services), (5) Treaty-Resourced (§ 904(d)(6)), (6) § 901(j)
+// sanctioned-country income (Iran + North Korea + Syria + Cuba + Sudan
+// partial), (7) Lump-Sum Distribution from foreign pension. § 904(c)
+// CARRYOVER: 1-year carryback + 10-year carryforward within same basket
+// — but § 951A GILTI/NCTI basket EXCLUDED from carryover per § 904(c)(1)
+// flush language (excess credits expire annually). § 904(f) OFL recapture:
+// prior-year foreign-source losses allocated against US-source income;
+// later years foreign-source income recharacterized as US-source until
+// OFL fully recaptured. § 904(g) ODL recapture: parallel for domestic
+// losses. OBBBA (Pub. L. 119-21, effective for taxable years beginning
+// after December 31, 2025): interest + R&D expense no longer allocated
+// to § 951A basket per § 864(e); § 960(d) deemed-paid FTC rate rises from
+// 80% to 90% (10% haircut down from 20%). Seven-mode severity ladder:
+// NotApplicable, FullyCreditedNoExcess, PartiallyCreditedExcessCarried-
+// Forward, GiltiNctiExcessExpired, OverallForeignLossRecaptureTriggered,
+// OverallDomesticLossRecaptureTriggered, Section901jSanctionedNon-
+// Creditable. Form 1116 (individual) or Form 1118 (corporate) plus
+// Schedule J OFL tracking. Coordinates with § 901 + § 960 + § 951A
+// + § 956 + § 959 (PTEP — sixteen-basket framework maintained within
+// each § 904(d) basket — iter 512) + § 962 + § 245A + § 965 + § 59A +
+// § 864(e) (expense allocation).
+
+async fn section_904_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_904::Section904Input>,
+) -> Result<Json<traderview_expense::section_904::Section904Result>, ApiError> {
+    Ok(Json(traderview_expense::section_904::check(&b)))
+}
 
 async fn section_911_route(
     _u: AuthUser,
