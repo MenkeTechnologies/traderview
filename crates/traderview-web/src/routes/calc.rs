@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-1375",          post(section_1375_route))
+        .route("/calc/section-1411",          post(section_1411_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-170",           post(section_170_route))
@@ -2276,6 +2277,31 @@ async fn section_1375_route(
         ));
     }
     Ok(Json(traderview_expense::section_1375::compute(&b)))
+}
+
+// ── §1411 Net Investment Income Tax (NIIT) 3.8% surtax ──────────────
+// Mounted at /api/calc/section-1411. § 1411(a)(1) tax = 3.8% × LESSER
+// of net investment income (NII) or excess of MAGI over applicable
+// threshold. § 1411(b) MAGI thresholds (NOT indexed; same since 2013
+// ACA enactment): Single/HoH $200,000; MFJ/QSS $250,000; MFS $125,000.
+// § 1411(c)(1) NII categories: interest + dividends + capital gains +
+// passive rental income + royalties + non-qualified annuity income;
+// § 1411(c)(1)(B) deductions for investment expenses + state tax;
+// § 1411(c)(2) trade or business carve-outs for material participation;
+// § 1411(c)(5) qualified retirement plan distributions EXCLUDED.
+// § 469(c)(7) real estate professional carve-out — if taxpayer
+// performs ≥ 750 hours per year in real property trades AND > 50% of
+// personal services in real property, rental income may be treated as
+// ACTIVE and excluded from NII. Pub. L. 119-21 OBBBA 2025 did NOT
+// modify § 1411; 3.8% rate + thresholds + categories + retirement-
+// plan exception remain identical to 2013 form. Trader-critical for
+// any high-income trader. IRS Form 8960 (2025); IRS Topic 559.
+
+async fn section_1411_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1411::Section1411Input>,
+) -> Result<Json<traderview_expense::section_1411::Section1411Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1411::check(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────

@@ -8164,6 +8164,45 @@ Where: PII = Passive Investment Income; GR = Gross Receipts; NPI = Net Passive I
 
 Mounted at `POST /api/calc/section-1375`. Twenty-four tests pin: **no E&P no tax engagement**; **PII at 25% exactly no engagement** (boundary); **PII just above 25% engages** (one-cent precision via exact-integer comparison); **PII below 25% no engagement**; **ENPI baseline math** ($200K ENPI × 21% = $42K tax); **ENPI capped at taxable income**; **ENPI zero when no engagement**; **ENPI full passive income when PII is all of gross receipts** ($600K ENPI); **consecutive year 1 warning level 1**; **consecutive year 2 warning level 2**; **consecutive year 3 election terminated** (§ 1362(d)(3) violation); **consecutive years only count when engagement present** (no E&P → no termination risk); **pre-TCJA 35% rate** ($70K tax); **zero rate no tax** (engaged but tax = 0); **engagement requires both triggers truth table** (4-cell sweep); **PII percentage calculation BPS invariant** (display math); **termination threshold constant invariant** (2500 bps / 2100 bps / 3 years); **citation pins all subsections** (§ 1375 + § 1375(a)/(b)/(b)(1)(A)/(b)(1)(B)/(d) + § 11(b) + § 1362(d)(3)/(d)(3)(B)/(d)(3)(C) + § 1.1375-1 + § 1362(g)); **sibling modules note present** (UX-text regression for 5-statute cluster + § 1368(e)(3) + § 1362(d)(3)); **defensive negative inputs clamped**; **defensive zero gross receipts no overflow** (avoids division by zero); **defensive rate above 100% clamped**; **ENPI formula high PII low NPI** ($68.75K); **taxable income zero caps tax at zero**.
 
+`traderview-expense::section_1411` is the **IRC § 1411 Net Investment Income Tax (NIIT) 3.8% surtax** module — trader-critical for any high-income trader (single MAGI > $200K; MFJ MAGI > $250K) paying 3.8% surtax on net investment income (interest + dividends + capital gains + passive rental income + royalties + non-qualified annuity income). § 469(c)(7) real estate professional carve-out carries through to § 1411 NIIT — trader-landlords who qualify (≥ 750 hours/year in real property trades AND > 50% of personal services) exclude rental income from NII. Distinct from siblings `section_469` (passive activity rules), `section_1256` (60/40 contract treatment), and `section_865` (sourcing of income).
+
+**§ 1411(a)(1) tax computation** — NIIT = 3.8% × LESSER of:
+1. Net investment income (NII), OR
+2. Excess of MAGI over applicable threshold
+
+Pinned by `nii_less_than_magi_excess_uses_nii` (NII is the binding minimum), `magi_excess_less_than_nii_uses_magi_excess` (MAGI excess is the binding minimum), `nii_zero_no_niit_even_above_threshold` (zero NII → zero tax even above threshold), `three_eight_percent_precision_at_round_amount` ($10M MAGI / $10M NII / $30M MAGI → 3.8% × $10M = $380K NIIT cents), and `note_pins_3_8_percent_formula`.
+
+**§ 1411(b) MAGI thresholds (NOT indexed for inflation; same since 2013 ACA enactment)**:
+
+| Filing status | Threshold | Source |
+|---------------|-----------|--------|
+| Single / Head of Household | **$200,000** | § 1411(b)(2) |
+| Married Filing Jointly / Qualifying Surviving Spouse | **$250,000** | § 1411(b)(1) |
+| Married Filing Separately | **$125,000** | § 1411(b)(3) |
+
+Pinned by `single_at_200k_boundary_no_tax` (exactly $200K compliant), `single_below_200k_no_tax`, `single_over_200k_engages_niit`, `mfj_at_250k_boundary_no_tax`, `mfj_over_250k_engages_niit`, `mfs_at_125k_boundary_no_tax`, `mfs_over_125k_engages_niit`, `filing_status_threshold_truth_table` (5-cell sweep), `mfj_uniquely_highest_threshold_invariant` ($250K > $200K Single + $125K MFS), `mfs_uniquely_lowest_threshold_invariant` ($125K < all others), and `note_pins_thresholds` (NOT indexed).
+
+**§ 1411(c) net investment income categories**:
+1. § 1411(c)(1)(A) interest
+2. § 1411(c)(1)(A) dividends
+3. § 1411(c)(1)(A) capital gains
+4. § 1411(c)(1)(A) passive rental income
+5. § 1411(c)(1)(A) royalty income
+6. § 1411(c)(1)(A) non-qualified annuity income
+7. § 1411(c)(1)(B) deductions allowed for investment expenses + state income tax
+8. § 1411(c)(2) trade-or-business carve-out for material participation (excludes income from trade or business in which taxpayer materially participates, other than trading financial instruments / commodities)
+9. § 1411(c)(5) qualified retirement plan distributions EXCLUDED
+
+Pinned by `retirement_distributions_always_excluded` (§ 1411(c)(5) qualified retirement distributions excluded regardless of REP status) and `note_pins_categories`.
+
+**§ 469(c)(7) real estate professional carve-out** — if taxpayer (a) performs ≥ 750 hours per year in real property trades or businesses AND (b) more than HALF of personal services in real property trades, rental income may be treated as ACTIVE and excluded from NII. Pinned by `real_estate_professional_excludes_rental_from_nii`, `non_real_estate_professional_keeps_rental_in_nii`, `rental_carve_out_capped_at_nii` (cannot exceed total NII), `rep_uniquely_excludes_rental_invariant`, `rep_and_retirement_both_excluded_compounding` (REP rental + § 1411(c)(5) retirement compounded exclusions), and `note_pins_real_estate_professional_469c7`.
+
+**One Big Beautiful Bill Act 2025 (OBBBA, Pub. L. 119-21) preserves § 1411** — did NOT repeal, amend, or modify; 3.8% rate + thresholds + categories + retirement-plan exception all remain identical to 2013 form. Pinned by `note_pins_obbba_2025_unchanged`.
+
+**Defensive arithmetic** — negative MAGI / NII / rental clamped via `.max(0)`; saturating multiplication for 3.8% computation prevents overflow even at i64::MAX. Pinned by `defensive_negative_magi_clamped`, `defensive_negative_nii_clamped`, `defensive_negative_rental_clamped`, and `defensive_overflow_saturating`.
+
+Mounted at `POST /api/calc/section-1411`. Thirty tests pin: **single below $200K no tax**; **single at $200K boundary no tax**; **single over $200K engages NIIT**; **MFJ at $250K boundary no tax**; **MFJ over $250K engages NIIT**; **MFS at $125K boundary no tax**; **MFS over $125K engages NIIT**; **NII less than MAGI excess uses NII**; **MAGI excess less than NII uses MAGI excess**; **real estate professional excludes rental from NII**; **non-REP keeps rental in NII**; **retirement distributions always excluded**; **citation pins all subsections** (a)(1) + (b)(1)-(3) + (c)(1)(A)-(B) + (c)(2) + (c)(5) + Form 8960 + § 469(c)(7) + Pub. L. 119-21; **note pins 3.8% formula**; **note pins thresholds** ($200K + $250K + $125K + NOT indexed); **note pins categories**; **note pins REP § 469(c)(7)** (750 hours + half + ACTIVE); **note pins OBBBA 2025 unchanged**; **filing status threshold truth table** (5-cell sweep); **defensive negative MAGI clamped**; **defensive negative NII clamped**; **defensive negative rental clamped**; **defensive overflow saturating** (i64::MAX); **rental carve-out capped at NII**; **REP uniquely excludes rental invariant**; **MFJ uniquely highest threshold invariant**; **MFS uniquely lowest threshold invariant**; **3.8% precision at round amount**; **REP and retirement both excluded compounding**; **NII zero no NIIT even above threshold**.
+
 `traderview-expense::section_7345` is the **IRC § 7345 passport revocation for seriously delinquent tax debt module** — added by Section 32101 of the Fixing America's Surface Transportation (FAST) Act, Pub. L. 114-94 (December 4, 2015). Trader-critical for high-net-worth individuals with international travel needs and unresolved IRS tax issues. IRS certifies "seriously delinquent tax debt" (Notice CP508C) to the State Department, which then denies passport applications, revokes existing passports, or limits passport use. Sibling to the disclosure + penalty cluster: § 6011 (taxpayer disclosure), § 6651 (failure-to-file/pay penalties — source of much of the assessed amount), § 6654 (failure-to-pay-estimated-tax), § 6662 (accuracy penalty), § 6707A (taxpayer disclosure penalty). § 7345 is the COLLECTION pressure layer — operates after underlying tax liability has been assessed and collection action has begun.
 
 **§ 7345(b)(1) "Seriously delinquent tax debt" — three required conditions**:
