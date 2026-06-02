@@ -509,6 +509,11 @@ use traderview_expense::landlord_foreclosure_status_disclosure::{
     check as check_landlord_foreclosure_status_disclosure,
     LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
 };
+use traderview_expense::commercial_lease_personal_guaranty_enforceability::{
+    check as check_commercial_lease_personal_guaranty_enforceability,
+    CommercialLeasePersonalGuarantyEnforceabilityInput,
+    CommercialLeasePersonalGuarantyEnforceabilityResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1016,6 +1021,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
         .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
+        .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6317,6 +6323,41 @@ async fn landlord_foreclosure_status_disclosure_route(
     Json(b): Json<LandlordForeclosureStatusDisclosureInput>,
 ) -> Result<Json<LandlordForeclosureStatusDisclosureResult>, ApiError> {
     Ok(Json(check_landlord_foreclosure_status_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Commercial lease personal guaranty enforceability framework.
+//
+// Mounted at POST /api/rental/commercial-lease-personal-guaranty-enforceability.
+// Four-jurisdiction framework: (1) New York City — NYC Admin. Code
+// § 22-1005 (May 26, 2020) renders unenforceable personal guaranties
+// of commercial lease obligations arising March 7, 2020 through
+// June 30, 2021 for food/beverage on-premises consumption ceased,
+// non-essential retail, or required to close under EO; Second
+// Circuit Melendez (16 F.4th 992 + 27 F.4th 119) found
+// constitutional concerns; SDNY Melendez II (668 F. Supp. 3d 184
+// March 31, 2023) held VIOLATES Contracts Clause because PERMANENTLY
+// extinguishes guaranties; pending Supreme Court review;
+// (2) New York State — NY GOL § 5-701(a)(1)/(2) Statute of Frauds
+// requires writing for guaranty of lease > 12 months and ALL
+// promises to answer for debt of another; "Good Guy Guaranty"
+// industry-standard NYC commercial limits liability to surrender-
+// date arrears; (3) California — Cal. Civ. Code § 2787-2856
+// suretyship + § 2819 material modification + § 1670.5
+// unconscionability + § 2799 continuing-guaranty revocation;
+// (4) Default — Restatement (Third) of Suretyship and Guaranty
+// (1996) § 41 material modification + § 39 novation extinguishes.
+// Sibling cluster: tenant_lease_guarantor_disclosure (residential),
+// lease_disclosures, lease_assignment_consent, lease_waiver_
+// enforceability, tenant_estoppel_certificate.
+// ---------------------------------------------------------------------------
+
+async fn commercial_lease_personal_guaranty_enforceability_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CommercialLeasePersonalGuarantyEnforceabilityInput>,
+) -> Result<Json<CommercialLeasePersonalGuarantyEnforceabilityResult>, ApiError> {
+    Ok(Json(check_commercial_lease_personal_guaranty_enforceability(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -4534,6 +4534,42 @@ Mounted at `POST /api/rental/balcony-inspection`. Thirty-four tests pin: **SB 72
 
 Mounted at `POST /api/rental/bedbug-disclosure-check`. Twenty-five tests pin: 51-row coverage; CA pre-lease history violation; AZ pamphlet required + **single-family exemption** (load-bearing carve-out); CA SFH not exempted (distinguishes from AZ); **NY 72h boundary** (complies at 72h, fails at 73h, no violation pre-learn, complies if notified); ME 5-day boundary (complies at 5d, fails at 6d, complies if completed); KS 5-day mirror; IA 7-day boundary; NJ pre-lease required; no-statute 24-state sweep always complies; unknown state errors; case-insensitive; sorted all_states; non-empty citations; pre-lease history states (CA/NJ) pinned; **NY-only adjacent-notice sweep** (every other state has None); inspection-duty 4-state sweep (ME/KS = 5d, IA/NH = 7d); multiple violations stack.
 
+`traderview-expense::commercial_lease_personal_guaranty_enforceability` is the **multi-jurisdictional commercial lease personal guaranty enforceability framework module** — trader-landlord critical because commercial leases routinely require personal guaranty of corporate or LLC tenant obligations as condition of rental. Recent NYC COVID-era legislation plus Second Circuit constitutional rulings significantly altered the enforceability landscape; "Good Guy Guaranty" industry-standard limitations cap guarantor exposure to surrender-date arrears; common-law Statute of Frauds and material-modification rules continue to constrain enforceability. Distinct from sibling `tenant_lease_guarantor_disclosure` (residential — NY HSTPA 2019 one-month-aggregate cap + FCRA + Restatement (Third) of Suretyship).
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Source | Key Rule |
+|--------------|--------|----------|
+| **NYC** | NYC Admin. Code § 22-1005 + Melendez v. City of New York three decisions | UNENFORCEABLE personal guaranty for commercial lease obligations arising March 7, 2020 through June 30, 2021 for three covered tenant categories (food/beverage on-premises consumption, non-essential retail, EO-required closure) |
+| **NY State** | NY GOL § 5-701(a)(1) plus § 5-701(a)(2) | Statute of Frauds requires WRITTEN guaranty for > 12-month leases AND ALL promises to answer for debt of another; "Good Guy Guaranty" industry standard limits to surrender-date arrears |
+| **California** | Cal. Civ. Code § 2787-2856 + § 2819 + § 1670.5 + § 2799 | Material modification (§ 2819) DISCHARGES; unconscionability (§ 1670.5); continuing-guaranty revocation (§ 2799) |
+| **Default** | Restatement (Third) of Suretyship and Guaranty (1996) § 41 + § 39 | Material modification (§ 41) and novation (§ 39) EXTINGUISH; strict construction against creditor |
+
+**NYC Admin. Code § 22-1005 (enacted May 26, 2020)** — UNENFORCEABLE personal guaranty for commercial lease obligations arising **March 7, 2020 through June 30, 2021** for three covered tenant categories: (1) food/beverage on-premises consumption ceased; (2) non-essential retail; (3) required to close under executive orders.
+
+**Melendez v. City of New York constitutional history (three decisions)**:
+1. **Melendez v. City of New York, 16 F.4th 992 (2d Cir. 2021)** — initial Second Circuit panel decision
+2. **Melendez v. City of New York, 27 F.4th 119 (2d Cir. 2022)** — panel rehearing VACATED dismissal and remanded; Second Circuit held law substantially impaired contracts and served legitimate public purpose BUT was not appropriate and reasonable means
+3. **Melendez v. City of New York, 668 F. Supp. 3d 184 (S.D.N.Y. Mar. 31, 2023)** — SDNY Judge Abrams held law **VIOLATES Contracts Clause (U.S. Const. art. I § 10)** because PERMANENTLY extinguishes guaranties rather than deferring enforcement; pending Supreme Court review
+
+**Second Circuit constitutional concerns**: (1) law effected PERMANENT (not temporary) unenforceability; (2) not limited to circumstances where guarantors owned or intended to reopen the businesses; (3) allocated economic risk to landlords rather than guarantors; (4) not conditioned on demonstrated financial need; (5) provided landlords with no alternative remedial avenues.
+
+**"Good Guy Guaranty" (GGG) industry-standard NYC commercial term (5 elements)**:
+1. Guarantor liability LIMITED to rent through DATE OF SURRENDER
+2. Surrender requires (a) tenant out of premises; (b) keys delivered; (c) advance notice typically 30-90 days
+3. Guarantor NOT LIABLE for (a) future rent post-surrender; (b) future damages from re-tenanting; (c) attorney's fees post-surrender
+4. Effectively converts full-recourse guaranty into surrender-date-arrears guaranty
+5. Strong tenant incentive to vacate cleanly rather than abandon
+
+**NY GOL § 5-701(a) Statute of Frauds**:
+- § 5-701(a)(1) — agreement not to be performed within one year (covers > 12-month leases)
+- § 5-701(a)(2) — promise to answer for debt of another (covers ALL guaranties)
+- Both require WRITING SIGNED by guarantor or authorized agent
+
+**Trader-landlord critical fact patterns**: (1) NYC retail LLC default March 2020 — § 22-1005 bars enforcement for blackout-window arrears (non-essential retail); arrears outside enforceable; (2) NY 36-month lease oral guaranty — § 5-701(a)(1) UNENFORCEABLE; (3) Good Guy Guaranty — tenant LLC vacates with 30-day notice plus keys at month 18 of 60-month lease — guarantor liable only for month-18 arrears, not remaining 42 months; (4) CA 15% rent increase without guarantor consent — § 2819 MATERIAL MODIFICATION discharges; (5) landlord novation with new tenant LLC — Restatement § 39 NOVATION extinguishes.
+
+Mounted at `POST /api/rental/commercial-lease-personal-guaranty-enforceability`. Twenty-seven tests pin: **NY 60-month written enforceable**; **NY 36-month oral unenforceable**; **NY 12-month oral enforceable**; **NYC § 22-1005 blackout unenforceable**; **NYC § 22-1005 engages only for covered business**; **NYC § 22-1005 engages only within blackout**; **Melendez constitutional history disclosed**; **Good Guy Guaranty with surrender limits liability**; **Good Guy Guaranty without surrender no limitation**; **CA material modification discharges**; **default material modification Restatement § 41**; **novation extinguishes**; **enforceable guaranty message displayed**; **jurisdiction truth table four cells**; **NYC uniquely engages § 22-1005 invariant**; **citation pins all authorities** (NYC Admin. Code § 22-1005 + Melendez 16 F.4th 992 + Melendez 27 F.4th 119 + Melendez 668 F. Supp. 3d 184 + NY GOL § 5-701(a)(1) + NY GOL § 5-701(a)(2) + Cal. Civ. Code § 2787-2856 + Cal. Civ. Code § 2819 + Cal. Civ. Code § 1670.5 + Cal. Civ. Code § 2799 + Restatement (Third) of Suretyship and Guaranty + § 41 + § 39 + U.S. Const. art. I § 10); **note pins four-jurisdiction framework**; **note pins NYC § 22-1005 three categories**; **note pins Melendez three decisions**; **note pins Second Circuit five concerns**; **note pins Good Guy Guaranty five elements**; **note pins NY GOL § 5-701 two subsections**; **note pins CA suretyship framework**; **note pins Restatement (Third) Suretyship 1996**; **note pins trader fact patterns five**; **note pins companion modules**; **multiple failures stack**.
+
 `traderview-expense::cooling_requirements` is the **state + municipal landlord cooling / maximum-indoor-temperature / AC-installation compliance check** — companion to `heat_requirements` (winter minimum) addressing the SUMMER maximum-temperature axis and the emerging AC-installation mandates that have surged in 2024–2026 driven by extreme-heat events. Habitability law now extends beyond the winter-heating canon.
 
 **Six regimes** diverge along five axes:

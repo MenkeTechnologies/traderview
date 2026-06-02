@@ -23,6 +23,7 @@ pub mod carpet_replacement_useful_life;
 pub mod chase;
 pub mod contractor_1099;
 pub mod condominium_conversion_protection;
+pub mod commercial_lease_personal_guaranty_enforceability;
 pub mod cooling_requirements;
 pub mod cosigner_rules;
 pub mod cost_segregation;
