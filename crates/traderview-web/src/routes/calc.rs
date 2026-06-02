@@ -224,6 +224,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
+        .route("/calc/section-4980",          post(section_4980_route))
         .route("/calc/section-4980h",         post(section_4980h_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
@@ -888,6 +889,31 @@ async fn section_4975_route(
     Json(b): Json<traderview_expense::section_4975::Section4975Input>,
 ) -> Result<Json<traderview_expense::section_4975::Section4975Result>, ApiError> {
     Ok(Json(traderview_expense::section_4975::check(&b)))
+}
+
+// ── § 4980 Tax on Reversion of Qualified Plan Assets to Employer ─────
+// Mounted at /api/calc/section-4980. Pure compute; § 4980(a) 20%
+// base excise tax on amount of employer reversion from qualified
+// retirement plan (defined benefit pension); § 4980(d)(1)
+// increases rate to 50% unless employer satisfies § 4980(d)(2)
+// qualified replacement plan (QRP) or § 4980(d)(3) pro rata
+// benefit increase requirement; § 4980(d)(2) QRP three
+// requirements (95% active participants + 25% direct transfer +
+// 7-year ratable allocation); § 4980(d)(3) pro rata benefit
+// increase 20%+ of maximum reversion with immediate effect on
+// plan termination; § 4980(c) employer reversion = cash or FMV
+// received as result of plan termination (excludes non-§ 404
+// deductible contributions); § 4980(d)(4) qualified participant
+// definition; stacks with corporate income tax for 70-75%
+// effective combined rate at 50% rate or 45-50% at 20% rate; Rev.
+// Rul. 2003-85 + PLR 9701036 confirm DB-to-DC transfer
+// preferential treatment.
+
+async fn section_4980_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4980::Section4980Input>,
+) -> Result<Json<traderview_expense::section_4980::Section4980Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4980::check(&b)))
 }
 
 // ── § 4980H Employer Shared Responsibility Payment (ESRP / ACA) ──────
