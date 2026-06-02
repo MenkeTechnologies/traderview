@@ -214,6 +214,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-408",           post(section_408_route))
         .route("/calc/section-408a",          post(section_408a_route))
+        .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
@@ -729,6 +730,25 @@ async fn section_408a_route(
     Json(b): Json<traderview_expense::section_408a::Section408aInput>,
 ) -> Result<Json<traderview_expense::section_408a::Section408aResult>, ApiError> {
     Ok(Json(traderview_expense::section_408a::check(&b)))
+}
+
+// ── § 4974 excise tax on RMD failures (post-SECURE 2.0) ──────────────
+// Mounted at /api/calc/section-4974. Pure compute; 25% standard +
+// 10% reduced (within § 4974(e) 2-year correction window) excise
+// tax on shortfall between RMD required and amount distributed;
+// SECURE Act 2.0 § 302 reduced rate from 50% to 25%; SECURE Act
+// 2.0 § 107 raised RMD age from 72 to 73 (born 1951-1959) and to
+// 75 (born 1960+) effective January 1, 2033; § 408(d)(8) QCD up
+// to $108K satisfies RMD without inclusion in gross income;
+// § 408A(c)(5) exempts Roth IRA from lifetime RMD; § 401(a)(9)(B)
+// post-death 5-category beneficiary stretch / 10-year rule;
+// § 4974(d) reasonable-error waiver via Form 5329.
+
+async fn section_4974_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4974::Section4974Input>,
+) -> Result<Json<traderview_expense::section_4974::Section4974Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4974::check(&b)))
 }
 
 // ── § 4975 prohibited transactions in IRA / qualified plans ──────────

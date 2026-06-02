@@ -11128,6 +11128,45 @@ Pinned by `contribution_principal_always_tax_free_penalty_free`, `conversion_pri
 
 Mounted at `POST /api/calc/section-408a`. Thirty-six tests pin: **under 50 2026 base limit $7,500**; **age 50 catch-up $8,600**; **single phase-out thresholds 2026** ($153K-$168K); **MFJ phase-out thresholds 2026** ($242K-$252K); **MFS phase-out thresholds $0 to $10K**; **below phase-out full contribution allowed**; **above phase-out zero contribution backdoor required**; **in phase-out partial contribution allowed**; **excess contribution violation** (§ 4973 6% excise tax); **qualified distribution 5-year + age 60**; **non-qualified earnings under 5-year taxable + penalty**; **earnings pre-59½ taxable + 10% penalty**; **disability qualifies distribution under age**; **post-death beneficiary qualifies distribution**; **first home purchase qualifies under $10K cap**; **first home cumulative $10K exhausts lifetime cap**; **conversion principal within 5-year 10% penalty**; **conversion principal after 5-year no penalty**; **contribution principal always tax-free penalty-free**; **citation pins all authorities** (§ 408A(a)-(f) + § 408 + § 219 + § 72(t) + § 401(a)(9) + § 1411 + § 415 + § 4973 + Taxpayer Relief Act of 1997 § 302 + Pub. L. 105-34 + August 5, 1997 + SECURE Act of 2019 § 401 + SECURE Act 2.0 of 2022 + IRS Notice 2025-77 + Treas. Reg. § 1.408A-1 to -10 + Form 5498); **note pins 2026 limits**; **note pins 2026 phase-out thresholds**; **note pins MAGI disregards conversion income**; **note pins qualified distribution two-prong**; **note pins § 408A(d)(3) ordering rules**; **note pins § 408A(d)(3)(A) conversion 5-year per-conversion**; **note pins § 408A(e) backdoor Roth pro-rata**; **note pins § 408A(c)(5) no RMD during lifetime**; **note pins § 1411 NIIT exempt**; **note pins trader-critical fact patterns four**; **note pins Taxpayer Relief Act 1997 origin**; **note pins § 4973 excess contribution excise tax**; **filing status truth table four cells**; **MFJ uniquely highest phase-out invariant**; **MFS uniquely zero low threshold invariant**; **defensive overflow saturating**.
 
+`traderview-expense::section_4974` is the **IRC § 4974 excise tax on RMD failures module** — natural companion to `section_408` (traditional IRA — iter 432), `section_408a` (Roth IRA — iter 430), `section_4975` (prohibited transactions — iter 434), `section_72t` (10% early-withdrawal penalty), `section_401a9` (RMD timing rules). § 4974(a) imposes excise tax on payee equal to percentage of shortfall between amount distributed during taxable year and the minimum required distribution under § 401(a)(9) or § 408(a)(6)/(b)(3).
+
+**SECURE Act 2.0 of 2022 (Pub. L. 117-328) reforms**:
+
+| Provision | Effect |
+|-----------|--------|
+| § 107 — RMD age increase | 72 → 73 (born 1951-1959) effective January 1, 2023; 73 → 75 (born 1960+) effective January 1, 2033 |
+| § 302 — excise rate cut | 50% → 25% standard; further reduced to 10% if corrected within § 4974(e) window |
+| § 307 — QCD inflation indexing | $108,000 (2026) annual qualified charitable distribution cap |
+
+**§ 4974(e) correction window** — begins on ORIGINAL RMD DUE DATE and ends on EARLIEST of (1) last day of SECOND TAX YEAR following missed-RMD year; (2) IRS notice of deficiency; (3) IRS assessment of excise tax.
+
+**§ 4974(c) qualified plans subject to excise (9 categories)**:
+1. § 401(a) qualified plans (401(k), pension, profit-sharing)
+2. § 403(a) annuity plans
+3. § 403(b) tax-sheltered annuities
+4. § 408(a) traditional IRAs
+5. § 408(b) individual retirement annuities
+6. § 408A Roth IRAs — **NO LIFETIME RMD for original owner** under § 408A(c)(5); post-death § 401(a)(9)(B) applies to beneficiaries
+7. § 457(b) governmental deferred compensation (not nongovernmental)
+8. § 408(p) SIMPLE IRAs
+9. § 408(k) SEP-IRAs
+
+**§ 401(a)(9)(B) post-death RMD rules (5 eligible-designated-beneficiary categories plus 10-year rule)**:
+- SURVIVING SPOUSE — stretch over spouse's life expectancy OR 10-year rule election
+- MINOR CHILD of decedent — stretch until majority then 10-year rule
+- DISABLED beneficiary — stretch over life expectancy
+- CHRONICALLY ILL beneficiary — stretch over life expectancy
+- BENEFICIARY < 10 years younger than decedent — stretch over life expectancy
+- ALL OTHER designated beneficiaries — **SECURE Act 1.0 10-year rule** (full distribution by December 31 of 10th year)
+
+**§ 4974(d) waiver** — IRS may waive excise tax if (1) shortfall due to REASONABLE ERROR and (2) reasonable steps being taken to remedy; Form 5329 with statement explaining reasonable cause plus correction.
+
+**§ 408(d)(8) QCD** — taxpayers 70½ or older may direct up to $108,000 (2026 SECURE 2.0 inflation-adjusted) of IRA distribution DIRECTLY to qualified charity; counts toward RMD WITHOUT inclusion in gross income; can ZERO OUT § 4974 obligation if QCD ≥ RMD.
+
+Trader fact patterns: (1) 75-year-old trader with $2M IRA fails $80,000 RMD — $20,000 excise at 25% (was $40,000 at 50% pre-SECURE 2.0); (2) corrects within 2 years — rate drops to 10% ($8,000); (3) $80,000 QCD to charity satisfies RMD — § 4974 excise = $0; (4) inherits IRA 2024 — beneficiary subject to 10-year rule (depletion by December 31, 2034); (5) Roth IRA owner age 80 — NO RMD during lifetime under § 408A(c)(5).
+
+Mounted at `POST /api/calc/section-4974`. Thirty-five tests pin: **standard 25% excise at age 75**; **10% reduced rate via correction window**; **partial distribution partial shortfall**; **full distribution no shortfall**; **QCD satisfies RMD zeros excise**; **partial QCD plus partial distribution zero shortfall**; **waiver zeros excise with reasonable error**; **Roth IRA no lifetime RMD original owner**; **RMD age 72 pre-1951 born**; **RMD age 73 born 1951-1959**; **RMD age 75 born 1960 or later**; **under RMD age no RMD required**; **surviving spouse beneficiary stretch or 10-year**; **minor child beneficiary stretch until majority**; **disabled / chronically ill beneficiary stretch life expectancy**; **less than 10 years younger beneficiary stretch**; **other designated beneficiary 10-year rule**; **plan type truth table nine cells**; **excise rate truth table three cells**; **Roth uniquely exempt lifetime RMD invariant**; **correction uniquely drops rate invariant**; **citation pins all authorities** (§ 4974(a)-(e) + § 401(a)(9) + § 408(a)(6) + § 408(b)(3) + § 408A(c)(5) + § 408(d)(8) + SECURE Act of 2019 § 114 + SECURE Act 2.0 § 107 + SECURE Act 2.0 § 302 + Pub. L. 117-328 + Form 5329 + Treas. Reg. § 54.4974-2 + Treas. Reg. § 1.401(a)(9)-1 through § 1.401(a)(9)-9); **note pins § 4974(a) rate history**; **note pins § 4974(e) correction window**; **note pins § 401(a)(9) RBD three eras**; **note pins § 4974(c) qualified plans nine**; **note pins § 401(a)(9)(B) post-death six categories**; **note pins § 4974(d) waiver**; **note pins § 408(d)(8) QCD**; **note pins SECURE 2.0 § 107 age increase**; **note pins SECURE 2.0 § 302 rate reduction**; **note pins Form 5329**; **note pins trader fact patterns**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_4975` is the **IRC § 4975 prohibited transactions module** — natural companion to `section_408` (traditional IRA — iter 432) and `section_408a` (Roth IRA — iter 430). Where § 408 and § 408A define what IRAs are, § 4975 imposes a **15%-then-100% excise tax** on transactions between IRAs (or qualified plans) and **"disqualified persons"** that constitute self-dealing or prohibited transfers. Trader-critical because self-directed IRA traders frequently invest in real estate, private equity, precious metals (with § 408(m)(3) bullion exception), cryptocurrency, and other non-traditional assets where the disqualified-person rules are easy to violate.
 
 **Six § 4975(c)(1) categories of prohibited transactions**:
