@@ -486,6 +486,10 @@ use traderview_expense::landlord_possession_delivery::{
     CheckResult as LandlordPossessionDeliveryResult,
     Input as LandlordPossessionDeliveryInput,
 };
+use traderview_expense::rental_application_denial_disclosure::{
+    check as check_rental_application_denial_disclosure,
+    RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
+};
 use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
@@ -837,6 +841,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
+        .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
@@ -5886,6 +5891,36 @@ async fn rental_broadband_mte_rules_route(
     Json(b): Json<RentalBroadbandMteRulesInput>,
 ) -> Result<Json<RentalBroadbandMteRulesResult>, ApiError> {
     Ok(Json(check_rental_broadband_mte_rules(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_application_denial_disclosure: Rental application denial
+// reason written disclosure compliance — when a trader-landlord
+// rejects a tenant applicant, what statutory written-disclosure
+// obligations attach? Mounted at POST /api/rental/rental-application-
+// denial-disclosure. Four regimes: California Cal. Civ. Code §§ 1950.6
+// + 1786.40 ICRAA (written notice + specific reason required when
+// credit score / history was reason for denial); New Jersey N.J.S.A.
+// 46:8-52 et seq. NJ Fair Chance in Housing Act (pre-fee criminal
+// history disclosure + rehabilitation evidence right + individualized
+// assessment required before criminal-background-based denial); New
+// York City Local Law 24 of 2023 NYC Fair Chance for Housing Law
+// (eff. Jan 1 2025; conditional offer + lookback + individualized
+// assessment framework + written notice with specific reason and
+// appeal rights) + FARE Act (eff. Jun 11 2025; broker fees prohibited
+// from being charged to tenants); Default federal FCRA § 615(a) 15
+// USC § 1681m (adverse action notice required when consumer report
+// was basis for denial; CRA contact info + dispute right + free-copy
+// right). Distinct from siblings adverse_action_notice (FCRA-only),
+// fair_chance_housing, application_fees, credit_check_authorization.
+// ---------------------------------------------------------------------------
+
+async fn rental_application_denial_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalApplicationDenialDisclosureInput>,
+) -> Result<Json<RentalApplicationDenialDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_application_denial_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
