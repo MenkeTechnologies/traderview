@@ -531,6 +531,10 @@ use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
 };
+use traderview_expense::rental_water_submetering_disclosure::{
+    check as check_rental_water_submetering_disclosure,
+    RentalWaterSubmeteringDisclosureInput, RentalWaterSubmeteringDisclosureResult,
+};
 use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
@@ -886,6 +890,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
+        .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
@@ -6266,6 +6271,38 @@ async fn rental_property_registration_route(
     Json(b): Json<RentalPropertyRegistrationInput>,
 ) -> Result<Json<RentalPropertyRegistrationResult>, ApiError> {
     Ok(Json(check_rental_property_registration(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_water_submetering_disclosure: Rental property water
+// submetering disclosure compliance — when a trader-landlord must
+// register with state PUC, disclose submetering arrangement at lease
+// signing, and follow billing-transparency rules before billing
+// tenants separately from rent for water/wastewater service via
+// submeters or RUBS (ratio utility billing system). Mounted at POST
+// /api/rental/rental-water-submetering-disclosure. Four regimes:
+// California SB 7 of 2016 (Cal. Civ. Code § 1954.201 et seq. + Cal.
+// Public Utilities Code § 739.5; MANDATORY submetering for newly
+// constructed multiunit/mixed-use structures with water connection
+// applications after January 1, 2018; pre-lease written disclosure
+// of billing method + frequency + dispute process required); Texas
+// Water Code § 13.503 + 16 TAC § 24.275 et seq. (PUCT registration
+// REQUIRED before billing tenants; tenant guide required; 30
+// percent administrative fee cap; quarterly past-usage disclosure);
+// Florida PSC voluntary framework (encouraged but not mandated;
+// no statewide PUC registration); Default RUBS framework (38+
+// states permit; pre-lease disclosure recommended; no statewide
+// administrative fee cap). Distinct from siblings rental_hot_water_
+// temperature, rental_bed_bug_disclosure, rental_gas_appliance_ban,
+// rental_property_registration.
+// ---------------------------------------------------------------------------
+
+async fn rental_water_submetering_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWaterSubmeteringDisclosureInput>,
+) -> Result<Json<RentalWaterSubmeteringDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_water_submetering_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
