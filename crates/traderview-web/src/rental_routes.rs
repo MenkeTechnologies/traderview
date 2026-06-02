@@ -762,6 +762,10 @@ use traderview_expense::rental_grill_propane_bbq_restriction::{
     check as check_rental_grill_propane_bbq_restriction,
     RentalGrillPropaneBbqRestrictionInput, RentalGrillPropaneBbqRestrictionResult,
 };
+use traderview_expense::rental_radiator_steam_heat_safety::{
+    check as check_rental_radiator_steam_heat_safety,
+    RentalRadiatorSteamHeatSafetyInput, RentalRadiatorSteamHeatSafetyResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1231,6 +1235,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-balcony-inspection-seismic-safety", axum::routing::post(rental_balcony_inspection_seismic_safety_route))
         .route("/rental-short-term-subletting-airbnb-restriction", axum::routing::post(rental_short_term_subletting_airbnb_restriction_route))
         .route("/rental-grill-propane-bbq-restriction", axum::routing::post(rental_grill_propane_bbq_restriction_route))
+        .route("/rental-radiator-steam-heat-safety", axum::routing::post(rental_radiator_steam_heat_safety_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10636,4 +10641,42 @@ async fn rental_grill_propane_bbq_restriction_route(
     Json(b): Json<RentalGrillPropaneBbqRestrictionInput>,
 ) -> Result<Json<RentalGrillPropaneBbqRestrictionResult>, ApiError> {
     Ok(Json(check_rental_grill_propane_bbq_restriction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_radiator_steam_heat_safety (iter 517): Trader-landlord radiator
+// safety framework. NYC Int 1489-2017 / Local Law 79 of 2018 amending NYC
+// Admin Code § 27-2076 requires radiator covers within 90 days of WRITTEN
+// tenant request when child age 12 or younger resides; cover must completely
+// enclose top + sides + front with grill openings preventing child finger
+// insertion. NYC Int 0925-2024 "Ben Z's Law" named after infant Bencel
+// "Ben Z" Yancanay who died December 2020 from steam radiator burns —
+// requires biennial radiator inspection in apartments and common areas
+// where children under 6 reside; exempts owner-occupied co-ops + condos.
+// HPD civil penalty up to $500 per violation. NYC steam radiators reach
+// 250°F at peak heating; severe contact burns occur in < 2 seconds per Mayo
+// Clinic; trader-landlord settlement exposure $500K-$2M for permanent
+// pediatric disfigurement. Four jurisdictions: NewYorkCity (Int 1489-2017
+// + Ben Z's Law), Boston (M.G.L. ch. 186 § 14 + 105 CMR 410.180 + 527
+// CMR 1.00), Chicago (Chicago Municipal Code § 5-12-110 RLTO + § 13-
+// 196-300), Default (common-law habitability + ASTM F2779-19). Five
+// heating-system types: SteamRadiator, HotWaterRadiator, ElectricBaseboard,
+// ForcedAirCentral, NoRadiator. Four tenant compositions: HouseholdWith-
+// ChildUnder12 (Int 1489-2017 cover-request right), HouseholdWithChild-
+// Under6 (Ben Z's Law biennial inspection), HouseholdWithElderlyOrImpaired,
+// StandardAdult. Seven-mode severity ladder: NotApplicable, CompliantCover-
+// InstalledOrNoRequest, LandlordCoverInstallationOverdue90Day (100pct rent),
+// BenZLawBiennialInspectionOverdue (100pct rent), CoverMissingGrillOpening-
+// ChildSafetySpec (100pct rent — ASTM F963-23 1/2-inch finger-trap spec),
+// SteamBurnInjuryHabitabilityBreach (100pct rent + $500K-$2M settlement
+// exposure), UnregulatedRadiatorWithoutThermostatHazard (50pct rent —
+// TRV upgrade $50-$150/radiator).
+// ---------------------------------------------------------------------------
+
+async fn rental_radiator_steam_heat_safety_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRadiatorSteamHeatSafetyInput>,
+) -> Result<Json<RentalRadiatorSteamHeatSafetyResult>, ApiError> {
+    Ok(Json(check_rental_radiator_steam_heat_safety(&b)))
 }
