@@ -188,6 +188,7 @@ pub mod rental_hot_water_temperature;
 pub mod rental_in_unit_laundry_appliance_provision;
 pub mod rental_junk_fee_transparency;
 pub mod rental_lead_pipe_disclosure;
+pub mod rental_marijuana_cultivation_restriction;
 pub mod rental_natural_gas_leak_response;
 pub mod rental_oil_tank_replacement_disclosure;
 pub mod rental_organic_waste_collection_disclosure;

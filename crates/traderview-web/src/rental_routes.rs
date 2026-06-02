@@ -771,6 +771,11 @@ use traderview_expense::rental_property_tax_pass_through_disclosure::{
     RentalPropertyTaxPassThroughDisclosureInput,
     RentalPropertyTaxPassThroughDisclosureResult,
 };
+use traderview_expense::rental_marijuana_cultivation_restriction::{
+    check as check_rental_marijuana_cultivation_restriction,
+    RentalMarijuanaCultivationRestrictionInput,
+    RentalMarijuanaCultivationRestrictionResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1242,6 +1247,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-grill-propane-bbq-restriction", axum::routing::post(rental_grill_propane_bbq_restriction_route))
         .route("/rental-radiator-steam-heat-safety", axum::routing::post(rental_radiator_steam_heat_safety_route))
         .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
+        .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10732,4 +10738,46 @@ async fn rental_property_tax_pass_through_disclosure_route(
     Json(b): Json<RentalPropertyTaxPassThroughDisclosureInput>,
 ) -> Result<Json<RentalPropertyTaxPassThroughDisclosureResult>, ApiError> {
     Ok(Json(check_rental_property_tax_pass_through_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_marijuana_cultivation_restriction (iter 521): Trader-landlord
+// tenant cannabis cultivation restriction framework. Eight jurisdictions:
+// California (Cal. Health and Safety Code 11362.1(a)(3) + 11362.45(h)
+// Prop 64 — 6 plants per residence; landlord lease prohibition expressly
+// permitted), Colorado (Colo. Const. Art. XVIII 16(3)(b)(I)-(II) — 6
+// plants total / 3 mature + tenant cultivation unless lease prohibits
+// in writing per 16(3)(b)(II)), New York (NY Cannabis Law 222 MRTA — 3
+// mature + 3 immature post-18-month delay + NY Office of Cannabis
+// Management OCM + NYC LL18 disqualifies cultivation premises from STR),
+// Massachusetts (M.G.L. ch. 94G 7 — 6 per person / 12 per residence +
+// MA Cannabis Control Commission), Illinois (410 ILCS 705 recreational
+// possession but PROHIBITS home cultivation + 410 ILCS 130 medical 5
+// plants), NoHomeCultivationState (WA recreational + NJ — cultivation
+// illegal regardless of lease), CannabisIllegalState (full state-statute-
+// violation termination), Default (21 U.S.C. 812 CSA Schedule I + HUD
+// Notice PIH 2011-25 federally-assisted prohibition + 16 states permitting
+// home grow as of 2025 + DEA Schedule III rescheduling pending June 2025).
+// Two housing programs: HudAssistedFederalCsaEnforcement (HUD PIH 2011-25
+// + 24 C.F.R. 5.852 termination + HUD General Counsel FHA non-
+// accommodation), PrivateMarketStateLawPrimary. Five cultivation
+// statuses: NoCultivation, RecreationalWithinStateLimit, ExceedingState-
+// PlantCountLimit, MedicalCannabisQualifyingPatient, BlackMarketCommercial-
+// Cultivation. Eight-mode severity ladder including MoldOrElectricalFire-
+// DamageHabitabilityBreach (100pct rent — 60-80pct relative humidity
+// grow rooms + insurance exclusion), HudFederalCsaTerminationGround
+// (100pct rent), BlackMarketCommercialEvictionGround (100pct rent +
+// federal RICO civil-forfeiture exposure), FhaMedicalCannabisAccommodation-
+// Denied (50pct rent — HUD General Counsel preemption), ExceedsState-
+// PlantCountViolation (50pct rent + 3-day Notice to Cure), LandlordProhi-
+// bitionEnforceable (50pct rent — explicitly permitted by state cannabis
+// statute even in legal-cultivation states).
+// ---------------------------------------------------------------------------
+
+async fn rental_marijuana_cultivation_restriction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMarijuanaCultivationRestrictionInput>,
+) -> Result<Json<RentalMarijuanaCultivationRestrictionResult>, ApiError> {
+    Ok(Json(check_rental_marijuana_cultivation_restriction(&b)))
 }
