@@ -205,6 +205,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7408",          post(section_7408_route))
         .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
+        .route("/calc/section-1291",          post(section_1291_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
@@ -2079,6 +2080,41 @@ async fn section_1092_route(
         ));
     }
     Ok(Json(traderview_expense::section_1092::compute(&b)))
+}
+
+// ── §1291 PFIC default excess distribution + interest charge ─────────
+// Mounted at /api/calc/section-1291. § 1291(a)(1)(A) excess
+// distribution allocated RATABLY to each day in shareholder's
+// holding period; § 1291(a)(1)(B) current-year + pre-PFIC-period
+// portion taxed as ordinary; § 1291(a)(1)(C) intermediate-PFIC-year
+// portion creates deferred tax at HIGHEST MARGINAL RATE for that
+// year + § 6621 interest charge compounded DAILY. § 1291(a)(2)
+// disposition gain converted to ordinary + interest charge.
+// § 1291(b)(2)(A) excess = > 125% of 3-year average distributions;
+// § 1291(b)(3)(B) FIRST YEAR all distributions excess.
+// § 1291(d)(1) disabled by QEF election; § 1291(d)(2) purging
+// election available; § 1291(f) disabled by mark-to-market.
+// § 1291(g) § 988 currency translation. Trader-critical for
+// foreign mutual funds + ETFs + hedge fund LP interests +
+// offshore insurance products. Companion: § 1297 (PFIC definition)
+// + § 1298 (special rules) + § 1295 (QEF election) + § 1296
+// (mark-to-market) + § 6621 (underpayment interest rate) + Form
+// 8621. Enacted by Tax Reform Act of 1986 § 1235 (Pub. L. 99-514,
+// October 22, 1986); HIRE Act of 2010 § 521 added § 1298(f) annual
+// reporting requirement.
+
+async fn section_1291_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1291::Section1291Input>,
+) -> Result<Json<traderview_expense::section_1291::Section1291Result>, ApiError> {
+    if b.current_year_marginal_rate_bps > 10_000
+        || b.prior_year_highest_marginal_rate_bps > 10_000
+    {
+        return Err(ApiError::BadRequest(
+            "marginal rate bps must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1291::check(&b)))
 }
 
 // ── §1295 PFIC Qualified Electing Fund election ──────────────────────

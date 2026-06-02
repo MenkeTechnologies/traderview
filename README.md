@@ -5110,6 +5110,55 @@ Mechanics: gain deferred = MIN(realized gain, replacement cost); boot received =
 
 Mounted at `POST /api/calc/section-1045`. Seventeen tests pin: full-replacement no-boot full deferral; partial replacement triggers boot recognition; boot exceeds gain caps recognition at gain; held under 6 months disqualified; replacement after 60-day window disqualified; replacement before sale disqualified; original/replacement not QSBS-qualified disqualified; **boundary tests** — exactly 6 months (183 days) disqualified, just over 6 months (184 days) qualifies, exactly 60 days qualifies, 61 days disqualified; loss returns no-op; holding period tacks to original acquisition; replacement basis never negative under stress; replacement_value − replacement_basis == deferred_gain invariant; multi-disqualification lists all reasons.
 
+`traderview-expense::section_1291` is the **IRC § 1291 default PFIC excess distribution + interest charge module** — the punitive DEFAULT PFIC tax regime that applies when a U.S. shareholder of a passive foreign investment company has neither timely elected QEF (`section_1295`) nor mark-to-market (`section_1296`). Completes the PFIC framework cluster: `section_1297` (PFIC definition — 75% income test or 50% asset test); `section_1298` (special rules — attribution, look-through, related-party); `section_1295` (QEF election — pass-through); `section_1296` (marketable PFIC mark-to-market election); `section_1291` (DEFAULT excess distribution + interest charge — this module). Companion to `section_6038d` (Form 8938 FATCA captures PFIC interests), `section_6011` (Form 8886 if PFIC sale is "loss transaction"), `section_988` (foreign currency translation), `section_67g` (TCJA misc itemized suspension affects PFIC fund expenses).
+
+Trader-critical fact patterns:
+
+- **Foreign-listed mutual funds** (Canadian, UK, Australian funds) — almost universally PFICs.
+- **Foreign ETFs not registered under '40 Act** — PFICs absent specific exception.
+- **Foreign hedge fund LP interests** — PFIC if 75% passive income or 50% passive asset test met.
+- **Foreign insurance products** (offshore annuities, variable life) — typically PFICs.
+- **§ 1291(a)(2) disposition treatment** — converts CAPITAL GAIN on PFIC sale to ORDINARY income with interest charge.
+
+**§ 1291(a) Default treatment — ratable allocation + interest charge**:
+
+| Subsection | Rule |
+|-------------|------|
+| § 1291(a)(1)(A) | Excess distribution allocated **RATABLY to EACH DAY** in shareholder's holding period |
+| § 1291(a)(1)(B) | Current-year + pre-PFIC-period portion = **ORDINARY INCOME at current rates** |
+| § 1291(a)(1)(C) | Intermediate-PFIC-period portion = deferred tax at **HIGHEST MARGINAL RATE** for that year + § 6621 interest charge compounded daily |
+| § 1291(a)(2) | Gain on DISPOSITION treated as excess distribution — CAPITAL GAIN converted to ORDINARY + interest charge |
+
+Pinned by `no_election_default_section_1291_applies`, `excess_distribution_above_125_percent_threshold` ($100M distribution - 125% × $40M avg = $50M excess), `ratable_allocation_across_holding_period`, `deferred_tax_at_prior_year_highest_marginal_rate`, `interest_charge_compounded_at_6621_rate`, `disposition_gain_treated_as_excess_distribution`, `total_tax_sums_three_components`.
+
+**§ 1291(b) Excess distribution definition**:
+
+| Trigger | Source | Rule |
+|---------|--------|------|
+| 125% of 3-year average | § 1291(b)(2)(A) | Distribution exceeding 125% of average distributions in preceding 3 taxable years |
+| Under 3 years held | § 1291(b)(2)(B)(i) | Average computed over actual holding period |
+| First year holding | § 1291(b)(3)(B) | ALL DISTRIBUTIONS treated as excess (125% rule does NOT apply) |
+
+Pinned by `excess_distribution_at_125_percent_threshold_no_excess` (boundary precision), `first_year_holding_all_distribution_is_excess` ($100M = $100M excess).
+
+**§ 1291(d)/(f) Coordination with elections**:
+
+| Election | Rule |
+|----------|------|
+| § 1295 QEF election | § 1291(d)(1) — § 1291 DOES NOT APPLY; QEF shareholders include pro rata share of ordinary earnings + net capital gain currently |
+| § 1296 mark-to-market | § 1291(f) — § 1291 DOES NOT APPLY once mark-to-market election effective |
+| § 1291(d)(2) purging election | DEEMED SALE OR DEEMED DIVIDEND to cleanse pre-election PFIC taint |
+
+Pinned by `qef_election_disables_section_1291`, `mark_to_market_election_disables_section_1291`, `purging_election_engages_d2`, `qef_uniquely_disables_section_1291_invariant`.
+
+**§ 1291(c) Interest charge — § 6621 underpayment rate compounded DAILY** — interest charged on deferred tax amount using rates and method applicable under § 6621 for UNDERPAYMENTS; compounded DAILY from original due date of each prior year's tax return through current year. Interest charge can SUBSTANTIALLY EXCEED underlying tax in long-held PFIC fact patterns.
+
+**§ 1291(g) Currency translation** — foreign currency translation of PFIC distribution uses § 988 rules.
+
+**Form 8621** — Information Return by Shareholder of Passive Foreign Investment Company or Qualified Electing Fund. § 1298(f) annual reporting threshold applies regardless of distribution status (added by HIRE Act of 2010 § 521).
+
+Mounted at `POST /api/calc/section-1291`. Thirty-seven tests pin: **no election default § 1291 applies**; **QEF election disables § 1291** (§ 1291(d)(1)); **mark-to-market election disables § 1291** (§ 1291(f)); **purging election engages § 1291(d)(2)**; **no distribution or disposition no engagement**; **excess distribution above 125% threshold** ($100M - $50M = $50M excess); **excess distribution at 125% threshold no excess** (boundary precision); **first year holding all distribution is excess** ($100M = $100M); **ratable allocation across holding period** (per-day math); **disposition gain treated as excess distribution** (§ 1291(a)(2)); **deferred tax at prior year highest marginal rate**; **interest charge compounded at § 6621 rate**; **pre-PFIC period taxed as ordinary no interest**; **first year holding with high rate substantial tax**; **total tax sums three components** (current ordinary + deferred + interest); **election truth table four cells** (NoElection + QEF + MTM + Purging); **scenario truth table three cells** (Distribution + Disposition + None); **QEF uniquely disables § 1291 invariant**; **citation pins all authorities** (§ 1291(a)(1)(A)-(C) + § 1291(a)(2) + § 1291(b)(2)(A)-(B) + § 1291(b)(3)(B) + § 1291(c) + § 1291(d)(1)-(2) + § 1291(f) + § 1291(g) + § 1295 + § 1296 + § 1297 + § 1298 + § 6621 + Form 8621 + 1986 Tax Reform Act § 1235 + HIRE Act 2010 § 521); **note pins subsection (a)(1)(A) ratable allocation**; **note pins subsection (a)(1)(B) current/pre-PFIC ordinary**; **note pins subsection (a)(1)(C) highest rate + interest**; **note pins subsection (a)(2) disposition gain**; **note pins subsection (b)(2)(A) 125% threshold**; **note pins subsection (b)(2)(B)(i) under-3-year lookback**; **note pins subsection (b)(3)(B) first year all excess**; **note pins subsection (c) § 6621 interest**; **note pins subsection (d)(1) QEF disables**; **note pins subsection (d)(2) purging election**; **note pins subsection (f) mark-to-market disables**; **note pins subsection (g) § 988 currency**; **note pins Form 8621 reporting**; **note pins 1986 Tax Reform origin** (Pub. L. 99-514 + HIRE Act 2010 § 521); **note pins PFIC framework cluster**; **note pins trader fact patterns**; **defensive zero distribution no excess**; **defensive zero holding period no panic**.
+
 `traderview-expense::section_1295` is the **IRC §1295 Qualified Electing Fund (QEF) election module** — the natural companion to `section_1296`. Both let a U.S. shareholder escape the punitive §1291 excess-distribution regime, but with different tradeoffs:
 
 - **§1296 MTM** (iter 22) — annual mark-to-market reported as ordinary income/loss. Loss limited to "unreversed inclusions" (cumulative prior gain). Only available for marketable PFIC stock. Simpler; doesn't require the PFIC to cooperate.
