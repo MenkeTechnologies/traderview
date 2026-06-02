@@ -170,6 +170,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6700",          post(section_6700_route))
         .route("/calc/section-6701",          post(section_6701_route))
         .route("/calc/section-6707a",         post(section_6707a_route))
+        .route("/calc/section-6713",          post(section_6713_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-6862",          post(section_6862_route))
@@ -5107,6 +5108,30 @@ async fn section_6707a_route(
     Json(b): Json<traderview_expense::section_6707a::Section6707AInput>,
 ) -> Result<Json<traderview_expense::section_6707a::Section6707AResult>, ApiError> {
     Ok(Json(traderview_expense::section_6707a::check(&b)))
+}
+
+// ── §6713 civil penalty for disclosure or use of information by ─────
+// return preparers. Mounted at /api/calc/section-6713. Civil
+// companion to § 7216 criminal penalty. § 6713(a) — $250 per
+// disclosure/use; $10,000 annual cap. § 6713(b) — § 7216(b)
+// exceptions apply: court order/subpoena + preparer in firm +
+// assisting firm (e-filing) + bookkeeping + quality/peer review +
+// professional liability insurance + tax authority investigation +
+// other federal law + taxpayer written consent. § 6713 strict
+// liability (no knowing/reckless requirement) vs § 7216 criminal
+// requires KNOWING OR RECKLESS conduct (misdemeanor + 1 year + $1,000
+// fine + costs). Both penalties may apply concurrently to the same
+// disclosure. Trader-relevant for preparer monetizing/sharing trader
+// financial data (1099-Bs + § 475(f) M2M + cost basis + § 1091 wash
+// sale + § 1256 60/40 + § 988 + § 6038D). Rev. Proc. 2013-14 +
+// AICPA sample consent forms. Companion to § 7216 criminal +
+// § 7525 FATP + § 6694 preparer substantive + § 6695 preparer
+// procedural + Circular 230 § 10.50.
+async fn section_6713_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6713::Section6713Input>,
+) -> Result<Json<traderview_expense::section_6713::Section6713Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6713::check(&b)))
 }
 
 // ── §6851 termination assessment of income tax ──────────────────────
