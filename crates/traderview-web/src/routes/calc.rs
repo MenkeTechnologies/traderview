@@ -225,6 +225,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4940",          post(section_4940_route))
         .route("/calc/section-4941",          post(section_4941_route))
         .route("/calc/section-4942",          post(section_4942_route))
+        .route("/calc/section-4943",          post(section_4943_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
@@ -985,6 +986,41 @@ async fn section_4942_route(
     Json(b): Json<traderview_expense::section_4942::Section4942Input>,
 ) -> Result<Json<traderview_expense::section_4942::Section4942Result>, ApiError> {
     Ok(Json(traderview_expense::section_4942::check(&b)))
+}
+
+// ── § 4943 taxes on PF excess business holdings ──────────────────────
+// Mounted at /api/calc/section-4943. Pure compute; § 4943(a)(1) 10%
+// Tier-1 excise tax on value of excess business holdings of private
+// foundation as of date of greatest excess during taxable year;
+// § 4943(b) 200% Tier-2 if not corrected within taxable period.
+// Combined holding limits under § 4943(c)(2): § 4943(c)(2)(A) default
+// 20% combined PF + DP voting stock of corporation (or equivalent
+// profits interest in partnership/joint venture/unincorporated
+// enterprise); § 4943(c)(2)(B) raised to 35% if PF establishes
+// effective control of business is in non-DPs; § 4943(c)(2)(C) 2%
+// de minimis — PF alone may hold up to 2% regardless of DPs.
+// § 4943(c)(3)(B) non-voting stock — PF may hold ALL non-voting
+// stock if combined DP voting holdings under applicable limit.
+// Business enterprise per § 4943(d)(3) EXCLUDES: (A) functionally-
+// related business substantially related to PF exempt purpose; (B)
+// 95% passive income test trade or business with ≥ 95% gross income
+// from interest + dividends + rents + royalties + capital gains; and
+// § 4944(c) program-related investments. § 4943(c)(6) FIVE-YEAR
+// disposition period for holdings acquired by gift/bequest/devise;
+// § 4943(c)(7) IRS may grant additional 5-year (10-year total)
+// extension for complex/unusual estates. § 4943(g) FAMILY BUSINESS
+// EXCEPTION (added by Tax Cuts and Jobs Act 2017, Pub. L. 115-97,
+// Dec 22 2017) permits 100% PF ownership of philanthropic business
+// holding if ALL THREE: PF owns ALL voting stock at all times; PF
+// received voting stock OTHER THAN by purchase; all net operating
+// income distributed annually + no DP serves as director/officer/
+// employee. Original enactment Tax Reform Act of 1969 Pub. L. 91-172.
+
+async fn section_4943_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4943::Section4943Input>,
+) -> Result<Json<traderview_expense::section_4943::Section4943Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4943::check(&b)))
 }
 
 // ── § 4958 intermediate sanctions on excess benefit transactions ─────
