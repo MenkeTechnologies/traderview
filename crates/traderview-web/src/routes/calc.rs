@@ -269,6 +269,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-956",           post(section_956_route))
         .route("/calc/section-959",           post(section_959_route))
         .route("/calc/section-960",           post(section_960_route))
+        .route("/calc/section-961",           post(section_961_route))
         .route("/calc/section-962",           post(section_962_route))
         .route("/calc/section-965",           post(section_965_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
@@ -3118,6 +3119,44 @@ async fn section_960_route(
     Json(b): Json<traderview_expense::section_960::Section960Input>,
 ) -> Result<Json<traderview_expense::section_960::Section960Result>, ApiError> {
     Ok(Json(traderview_expense::section_960::check(&b)))
+}
+
+// ── § 961 Basis Adjustments for CFC Stock ──────────────────────────
+// Mounted at /api/calc/section-961 (iter 522). Pure compute. § 961
+// establishes stock-basis tracking that prevents double US taxation
+// of CFC earnings: § 961(a) PTEP inclusion (§ 951(a) Subpart F + §
+// 951A GILTI/NCTI + § 956 US property) INCREASES basis; § 961(b)(1)
+// actual PTEP distribution under § 959(a) DECREASES basis; § 961(b)(2)
+// distribution exceeding basis = § 301(c)(3) capital gain (basis cannot
+// go negative). § 961(c) indirectly-owned CFC stock basis limited to
+// § 951 inclusion determination only — not for gain/loss recognition
+// on intermediate stock disposition. Notice 2024-16 (January 16,
+// 2024) carryover rule: in qualifying inbound § 332 liquidation
+// or § 368(a)(1) asset reorg where domestic acquiring corp receives
+// CFC stock from another domestic corp, § 961(c) basis CARRIES OVER
+// to acquiror — prevents trapped-PTEP gain on subsequent distribution.
+// Proposed Regs REG-105479-18 (Nov 29 2024 / pub Dec 2 2024) implement
+// § 959 sixteen-basket PTEP framework + § 961 basis tracking + § 962
+// election + currency translation + S corp PTEP + consolidated group
+// PTEP + anti-avoidance rules. Six basis adjustment events: PtepInclusion-
+// SubpartF, PtepInclusionGiltiOrNcti, PtepInclusionSection956, Actual-
+// PtepDistribution, Section332InboundLiquidation, Section368Asset-
+// Reorganization. Six-mode severity ladder: NotApplicable, BasisIncrease-
+// UnderSection961a, BasisDecreaseUnderSection961b, BasisFloorExcess-
+// DistributionGainSection961b2, InboundNonrecognitionCarryoverUnder-
+// Notice2024_16, IndirectlyOwnedSection961cLimitedToSection951Inclusion.
+// Form 5471 Schedule J + Schedule P (PTEP) + Schedule D for § 961(b)(2)
+// gain. Coordinates with § 959 (PTEP — iter 512), § 960 (deemed-paid
+// FTC — iter 520), § 951 + § 951A + § 956 + § 962 (individual election
+// — iter 510), § 245A (DRD — iter 502), § 965 (transition tax — iter
+// 514), § 301 (corporate distribution framework — § 301(c)(3)), § 332
+// + § 368 (Notice 2024-16 carryover).
+
+async fn section_961_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_961::Section961Input>,
+) -> Result<Json<traderview_expense::section_961::Section961Result>, ApiError> {
+    Ok(Json(traderview_expense::section_961::check(&b)))
 }
 
 async fn section_962_route(
