@@ -745,6 +745,10 @@ use traderview_expense::rental_solar_panel_disclosure::{
     check as check_rental_solar_panel_disclosure,
     RentalSolarPanelDisclosureInput, RentalSolarPanelDisclosureResult,
 };
+use traderview_expense::rental_storage_unit_lease_disclosure::{
+    check as check_rental_storage_unit_lease_disclosure,
+    RentalStorageUnitLeaseDisclosureInput, RentalStorageUnitLeaseDisclosureResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1210,6 +1214,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
         .route("/rental-solar-panel-disclosure", axum::routing::post(rental_solar_panel_disclosure_route))
+        .route("/rental-storage-unit-lease-disclosure", axum::routing::post(rental_storage_unit_lease_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10470,4 +10475,38 @@ async fn tenant_kitchen_appliance_replacement_route(
     Json(b): Json<TenantKitchenApplianceReplacementInput>,
 ) -> Result<Json<TenantKitchenApplianceReplacementResult>, ApiError> {
     Ok(Json(check_tenant_kitchen_appliance_replacement(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_storage_unit_lease_disclosure (iter 509): Trader-landlord rental
+// storage unit lease disclosure framework — covers (1) commercial self-
+// service storage facilities subject to state SSF Acts plus newly-enacted
+// California SB 709 first-page disclosure requirements effective January 1
+// 2026 + (2) residential rental storage (basement, garage, external locker
+// leased to apartment tenant) governed by landlord-tenant law plus UCC
+// Article 7 warehouse-keeper lien. Five jurisdictions: California (Cal.
+// Bus. & Prof. Code § 21700-21716 SSF Act + SB 709 amending § 21712 with
+// six first-page disclosures effective January 1 2026 + AB 1916 + AB 1108),
+// New York (N.Y. General Business Law § 182 + Lien Law § 184 + S3690
+// 2025 pending notice expansion), Florida (Fla. Stat. § 83.801-83.809 +
+// 7-day default trigger + newspaper publication twice in successive weeks),
+// Texas (Tex. Prop. Code § 59.001-59.046 + § 59.044 verified mail notice
+// + § 59.041(c) identity document return), Default (Uniform Self-Service
+// Storage Facility Act + UCC § 7-209/7-210 warehouse-keeper lien). Four
+// storage types: CommercialSelfServiceStorageFacility, ResidentialStorage-
+// IncludedWithApartmentLease (excluded from SSF Act per § 21702(c)),
+// SeparateResidentialStorageRental, NoStorageUnit. Eight-mode severity
+// ladder including SbSix709FirstPageDisclosureMissing + LienDefaultCure-
+// WindowNotMet (CA 14-day) + LienSaleNoticeRequirementsNotMet (CA 60-day)
+// + IdentityDocumentReturnRequirementBreached (Cal. Penal § 530.5 + 18
+// U.S.C. § 1028) + ExcessProceedsReturnFailureToTenant (90-day return
+// window + Cal. Civ. Code § 1500 escheat).
+// ---------------------------------------------------------------------------
+
+async fn rental_storage_unit_lease_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalStorageUnitLeaseDisclosureInput>,
+) -> Result<Json<RentalStorageUnitLeaseDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_storage_unit_lease_disclosure(&b)))
 }
