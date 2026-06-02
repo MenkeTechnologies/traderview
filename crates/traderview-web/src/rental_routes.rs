@@ -749,6 +749,10 @@ use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
 };
+use traderview_expense::rental_in_unit_laundry_appliance_provision::{
+    check as check_rental_in_unit_laundry_appliance_provision,
+    RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
+};
 use traderview_expense::rental_hoa_disclosure_at_lease::{
     check as check_rental_hoa_disclosure_at_lease,
     RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
@@ -1170,6 +1174,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
+        .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
@@ -10312,4 +10317,38 @@ async fn rental_pellet_stove_disclosure_route(
     Json(b): Json<RentalPelletStoveDisclosureInput>,
 ) -> Result<Json<RentalPelletStoveDisclosureResult>, ApiError> {
     Ok(Json(check_rental_pellet_stove_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_in_unit_laundry_appliance_provision (iter 501): Trader-landlord
+// in-unit washer/dryer provision plus dryer-vent fire safety and mold
+// liability framework. Five jurisdictions: California (Cal. Civ. Code §
+// 1941.1 + § 1942 + Cal. Health & Safety Code § 17920.3 mold + AB 628
+// eff. January 1, 2026 [refrigerator + stove only — no W/D mandate]),
+// Massachusetts (M.G.L. ch. 186 § 14 quiet enjoyment + 105 CMR 410 State
+// Sanitary Code + 527 CMR 50.00 fire prevention + Mass.gov DFS Dryer Fire
+// Safety), New York (Real Property Law § 235-b + NYC Admin Code § 27-
+// 2017.3 mold remediation Local Law 55 of 2018 + MDL § 78), Washington
+// (RCW 59.18.060 + RCW 59.18.060(11) Mold Disclosure Act + DOH 'Got Mold?'
+// publication), Default (IRC Section M1502 + NFPA 211 + IFC 504 + UL 2158A
+// Clothes Dryer Transition Duct). Four appliance-provision statuses: No-
+// LaundryAppliances, TenantOwnedTenantMaintained, LandlordProvidedWith-
+// ContinuingDuty, SharedCoinOpLaundryRoom. Four dryer-vent termination
+// types: ExteriorWallWithBackdraftDamper, AtticTerminationProhibited,
+// CrawlspaceTerminationProhibited, GarageOrUnconditionedSpace. Eight-mode
+// severity ladder: NotApplicable, CompliantWithMaintenanceCadence, Land-
+// lordProvidedRepairOverdueHabitabilityBreach (100pct rent at risk), Im-
+// properVentingAtticOrCrawlspaceMoldRisk (100pct rent at risk), NonCompliant-
+// TransitionDuctFireRisk (100pct rent at risk), LintBuildupAnnualMaintenance-
+// OverdueFireRisk (50pct rent at risk — 2,900 US dryer fires annually per
+// USFA), GasDryerCoExposureWithoutAdequateVentilation (100pct rent at risk),
+// DisclosureRequiredAtLeaseSigning (50pct rent at risk).
+// ---------------------------------------------------------------------------
+
+async fn rental_in_unit_laundry_appliance_provision_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalInUnitLaundryApplianceProvisionInput>,
+) -> Result<Json<RentalInUnitLaundryApplianceProvisionResult>, ApiError> {
+    Ok(Json(check_rental_in_unit_laundry_appliance_provision(&b)))
 }
