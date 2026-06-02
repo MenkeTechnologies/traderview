@@ -8694,6 +8694,46 @@ Tax shelter disqualification blocks ALL cascade exemptions even at $0 receipts. 
 
 Mounted at `POST /api/calc/section-448`. Twenty tests pin: **5-year threshold table** (2018 $25M / 2024 $30M / 2025 $31M / 2026 $32M + unknown-year falls back to 2025); **small C-corp qualifies — full cascade** (cash method + all 4 exemptions); **large C-corp fails — mandatory accrual + all 4 apply**; **exact threshold qualifies** (≤ test); **$1 over threshold fails** (boundary); **tax shelter disqualifies even when receipts test satisfied** with all cascade off + TAX SHELTER DISQUALIFICATION note priority; **aggregation can blow through threshold** (entity $10M / aggregated $40M); partnership-with-C-corp-partner subject to § 448(a) mandatory accrual; **S-corp at $50M can use cash but NOT exempt from § 163(j)** (entity-type / cascade decoupling); **sole proprietor at $100M same** ($163(j) still applies); average computed from 3 prior years ($5M + $10M + $15M → $10M); qualified note describes all 4 cascade exemptions by name; failed-test note describes "ALL apply"; citation mentions all 8 relevant authorities (§448(a), §448(b)(3), §448(c), §448(c)(2), §448(a)(3), TCJA, §263A, §163(j)); $1B aggregated receipts handled safely; zero receipts qualifies.
 
+`traderview-expense::section_422` is the **IRC § 422 Incentive Stock Options (ISO) module** — trader-critical because traders working at venture-backed companies routinely receive ISO grants where the choice between qualifying disposition (LTCG at 0/15/20% plus § 1411 NIIT 3.8%) and disqualifying disposition (ordinary income up to 37%) determines net wealth at exit. Companion to `section_475c2` (mark-to-market for trader stock), `section_1411` (NIIT 3.8% on qualifying disposition LTCG), `section_408a` (Roth IRA — note ISOs cannot be held in IRA), `section_53` (AMT credit recovery), `section_56` (AMT preference items).
+
+**§ 422(b) ISO statutory requirements (6 conditions)**:
+
+| Subsection | Requirement |
+|------------|-------------|
+| § 422(b)(1) | Granted pursuant to SHAREHOLDER-APPROVED PLAN (within 12 months of board adoption) |
+| § 422(b)(2) | Granted within 10 YEARS of plan adoption |
+| § 422(b)(3) | Exercise period ≤ 10 YEARS from grant (5 years for 10%+ shareholders) |
+| § 422(b)(4) | Option price ≥ FMV at grant (110% of FMV for 10%+ shareholders) |
+| § 422(b)(5) | NOT TRANSFERABLE except by will or inheritance |
+| § 422(b)(6) | Employee through 3 MONTHS BEFORE EXERCISE |
+
+**§ 422(d) $100,000 annual limit** — aggregate FMV (at GRANT DATE, not vesting) of ISOs first exercisable in calendar year cannot exceed $100,000. Excess automatically treated as NQSO from grant — ordinary income on exercise, no AMT preference on the NQSO portion.
+
+**§ 422(a) qualified-disposition holding periods**:
+- **2 YEARS** from GRANT DATE
+- **1 YEAR** from EXERCISE DATE
+- BOTH must be satisfied — fails either equals DISQUALIFYING DISPOSITION
+
+**§ 421(b) disqualifying-disposition treatment** — ordinary income equals **LESSER of**:
+1. FMV at exercise minus exercise price
+2. Sale price minus exercise price (capped at actual gain)
+
+Remaining gain capital gain (short-term or long-term from exercise). Employer gets § 162 compensation deduction (lost in qualifying disposition).
+
+**§ 56(b)(3) AMT preference on exercise** — spread (FMV at exercise minus exercise price) is **POSITIVE AMT adjustment** in year of exercise; AMT basis equals FMV at exercise (NOT exercise price); 28% AMT rate above exemption; subsequent sale generates AMT-basis capital gain DIFFERENT from regular-tax capital gain.
+
+**§ 422(c)(2) same-year disqualifying disposition REVERSES § 56(b)(3) AMT** — if ISO stock sold in SAME YEAR as exercise (disqualifying), § 56(b)(3) AMT adjustment REVERSED; no AMT preference applies; ordinary income on disqualifying disposition replaces AMT preference.
+
+**§ 53 AMT credit** — AMT paid in ISO exercise year creates MINIMUM TAX CREDIT recoverable against REGULAR tax in future years; limited to excess of regular tax over tentative minimum tax; recovery often slow (7-15+ years).
+
+**Trader-critical fact patterns**: (1) pre-IPO trader exercises 50,000 ISOs at $1 strike when FMV $50 — $2.45M AMT spread → ~$686K AMT at 28%; (2) same trader sells immediately (disqualifying same-year) — ordinary income $2.45M at 37% = $906K but § 422(c)(2) REVERSES AMT; (3) trader holds 2+1 years, sells at $80 — entire $79/share LTCG at 23.8% = $951K (vs $1.46M if same-year disqualifying); (4) § 422(d) — $200K ISO vest year 1 → $100K treated as NQSO; (5) trader leaves company June 1, exercises September 1 — § 422(b)(6) AUTO-CONVERTS to NQSO.
+
+**Form 3921** — ISO Exercise Information Statement; employer must furnish to employee by January 31 of year after exercise; reports grant date, exercise date, exercise price, FMV at exercise, shares acquired. Trader must keep for life of stock to track AMT-basis vs regular-basis split.
+
+**California conformity** — FTB Publication 1004; CA conforms to federal § 422 with modifications; CA AMT separately computed under R&TC § 17062; CA AMT rate 7%; disqualifying-disposition ordinary income subject to CA wage tax up to 13.3%.
+
+Mounted at `POST /api/calc/section-422`. Thirty-one tests pin: **qualifying disposition LTCG only**; **qualifying disposition AMT preference on exercise**; **disqualifying disposition ordinary income**; **disqualifying lesser-of rule when sale below FMV exercise**; **same-year disqualifying reverses AMT**; **$100K limit no excess**; **$100K limit excess treated as NQSO**; **no shareholder plan ISO fails**; **price below FMV ISO fails**; **left company > 3 months ISO fails**; **exercise period > 10 years fails**; **holding period boundaries 2+1**; **no disposition AMT preference only**; **ISO fails statutory no AMT preference**; **disposition truth table four cells**; **same-year uniquely reverses AMT invariant**; **citation pins all authorities** (§ 422(a)-(d) + § 421(a)-(b) + § 56(b)(3) + § 56(b)(3)(B) + § 53 + § 1411 + § 162 + Treas. Reg. § 1.422-1 through § 1.422-5 + Treas. Reg. § 1.421-1 through § 1.421-2 + Form 3921 + IRS Pub. 525 + Rev. Rul. 71-52 + FTB Pub. 1004); **note pins § 422(b) six requirements**; **note pins § 422(d) $100K limit**; **note pins § 422(a) holding periods**; **note pins § 421(b) disqualifying lesser rule**; **note pins § 56(b)(3) AMT adjustment**; **note pins § 53 AMT credit**; **note pins § 422(c)(2) same-year reversal**; **note pins § 1411 NIIT 3.8%**; **note pins trader fact patterns five**; **note pins Form 3921**; **note pins California conformity**; **note pins companion modules**; **ISO uniquely generates AMT preference invariant**; **defensive overflow saturating**.
+
 `traderview-expense::section_444` is the **IRC §444 fiscal year election module** — clean rule letting partnerships, S corporations, and personal service corporations (PSCs) elect a non-calendar fiscal year, subject to a strict 3-month deferral cap and a §7519 "required payment" mechanism that approximates the tax benefit of the deferral. Useful for businesses with strongly seasonal income patterns (agricultural partnerships, retail S-corps with December peak) that benefit from matching tax year to natural business cycle ([Cornell LII 26 U.S.C. § 444](https://www.law.cornell.edu/uscode/text/26/444), [Cornell LII 26 CFR § 1.444-1T](https://www.law.cornell.edu/cfr/text/26/1.444-1T)).
 
 **§444(b)(2) 3-month deferral cap** — the deferral period is the months between the elected fiscal year end and the required tax year end. For entities whose required year is the calendar year (Dec 31), only 3 fiscal year ends qualify:

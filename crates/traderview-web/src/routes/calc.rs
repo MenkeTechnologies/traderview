@@ -214,6 +214,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1092",          post(section_1092_route))
         .route("/calc/section-408",           post(section_408_route))
         .route("/calc/section-408a",          post(section_408a_route))
+        .route("/calc/section-422",           post(section_422_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-453",           post(section_453_route))
@@ -730,6 +731,25 @@ async fn section_408a_route(
     Json(b): Json<traderview_expense::section_408a::Section408aInput>,
 ) -> Result<Json<traderview_expense::section_408a::Section408aResult>, ApiError> {
     Ok(Json(traderview_expense::section_408a::check(&b)))
+}
+
+// ── § 422 Incentive Stock Options (ISOs) ─────────────────────────────
+// Mounted at /api/calc/section-422. Pure compute; § 422(b) 6-element
+// statutory test (shareholder-approved plan + 10-year window + price
+// ≥ FMV + 3-month employment trail + transferability + 10-year
+// exercise period); § 422(d) $100K annual limit (excess auto NQSO);
+// § 422(a) 2-year-from-grant + 1-year-from-exercise qualified-
+// disposition holding periods; § 421(b) disqualifying-disposition
+// ordinary-income lesser-of rule (FMV-exercise - strike OR sale -
+// strike); § 56(b)(3) AMT preference on exercise spread; § 422(c)(2)
+// same-year disqualifying-disposition AMT reversal; § 53 AMT credit
+// recovery; § 1411 NIIT 3.8% on qualified-disposition LTCG.
+
+async fn section_422_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_422::Section422Input>,
+) -> Result<Json<traderview_expense::section_422::Section422Result>, ApiError> {
+    Ok(Json(traderview_expense::section_422::check(&b)))
 }
 
 // ── § 4974 excise tax on RMD failures (post-SECURE 2.0) ──────────────
