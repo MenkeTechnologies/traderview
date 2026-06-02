@@ -30,6 +30,7 @@ pub mod damage_deduction_itemization;
 pub mod duty_to_mitigate_damages;
 pub mod credit_check_authorization;
 pub mod death_in_unit_disclosure;
+pub mod dog_breed_restriction_ban;
 pub mod demolition_tenant_notice;
 pub mod crime_victim_termination;
 pub mod crypto_tax;

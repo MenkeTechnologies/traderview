@@ -262,6 +262,10 @@ use traderview_expense::meth_contamination_disclosure::{
 use traderview_expense::death_in_unit_disclosure::{
     check as check_death_in_unit_disclosure, DeathDisclosureInput, DeathDisclosureResult,
 };
+use traderview_expense::dog_breed_restriction_ban::{
+    check as check_dog_breed_restriction_ban, DogBreedRestrictionBanInput,
+    DogBreedRestrictionBanResult,
+};
 use traderview_expense::rent_payment_method::{
     check as check_rent_payment_method, RentPaymentMethodInput, RentPaymentMethodResult,
 };
@@ -762,6 +766,7 @@ pub fn router() -> Router<AppState> {
         .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
         .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
         .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
+        .route("/dog-breed-restriction-ban", axum::routing::post(dog_breed_restriction_ban_route))
         .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
         .route("/window-guard-requirements", axum::routing::post(window_guard_requirements_route))
         .route("/rent-increase-notice-period", axum::routing::post(rent_increase_notice_period_route))
@@ -3857,6 +3862,37 @@ async fn death_in_unit_disclosure_route(
         ));
     }
     Ok(Json(check_death_in_unit_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// dog_breed_restriction_ban: Dog breed-specific restriction (BSL) ban
+// in residential rental housing — when may a landlord lawfully refuse
+// to rent to a tenant purely because of the breed of the tenant's
+// dog? Mounted at POST /api/rental/dog-breed-restriction-ban. Two
+// regimes: Nevada (SB 166 eff. October 1, 2025 — insurers MAY NOT use
+// dog breed as a factor when underwriting landlord liability policies
+// for multi-family residential properties; SB 103 2021 — insurers MAY
+// NOT deny coverage based SOLELY on dog breed; NV Rev. Stat. §
+// 202.500 2013 statewide BSL preemption — local governments CANNOT
+// pass laws banning specific breeds; Nevada was 14th state to
+// prohibit BSL; landlords may require pet deposits + liability
+// coverage + behavior screenings but MAY NOT refuse to rent purely
+// because of breed); Default (no statewide protection; ~22 states
+// have BSL preemption laws varying by state; many still allow
+// breed-specific bans at city/county level; insurance may still
+// consider breed in most states; FHA does NOT cover breed unless
+// tied to disability service-animal accommodation). Distinct from
+// siblings pet_fees (pet deposit caps), emotional_support_animal_
+// documentation, service_animal, tenant_organizing, fair_chance_
+// housing.
+// ---------------------------------------------------------------------------
+
+async fn dog_breed_restriction_ban_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DogBreedRestrictionBanInput>,
+) -> Result<Json<DogBreedRestrictionBanResult>, ApiError> {
+    Ok(Json(check_dog_breed_restriction_ban(&b)))
 }
 
 // ---------------------------------------------------------------------------
