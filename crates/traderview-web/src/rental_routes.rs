@@ -147,6 +147,9 @@ use traderview_expense::lease_termination_notice::{
 use traderview_expense::occupancy_standards::{
     check as check_occupancy, OccupancyInput, OccupancyResult,
 };
+use traderview_expense::move_in_fee_cap::{
+    check as check_move_in_fee_cap, MoveInFeeCapInput, MoveInFeeCapResult,
+};
 use traderview_expense::move_in_inspection::{
     check as check_move_in_inspection, InspectionInput, InspectionResult,
 };
@@ -693,6 +696,7 @@ pub fn router() -> Router<AppState> {
         .route("/lease-termination-catastrophic-damage", axum::routing::post(lease_termination_catastrophic_damage_route))
         .route("/occupancy-check", axum::routing::post(occupancy_check_route))
         .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
+        .route("/move-in-fee-cap", axum::routing::post(move_in_fee_cap_route))
         .route("/mandatory-renters-insurance-provider-choice", axum::routing::post(mandatory_renters_insurance_provider_choice_route))
         .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
         .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
@@ -2764,6 +2768,34 @@ async fn move_in_inspection_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_move_in_inspection(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// move_in_fee_cap: Move-in fee cap and disclosure obligations — when
+// landlord charges one-time non-refundable move-in fee (cleaning +
+// screening + administrative + lease-prep), how much may that fee be,
+// what purposes may it cover, what disclosure must accompany it?
+// Mounted at POST /api/rental/move-in-fee-cap. Four regimes: Seattle
+// SMC § 7.24.030 + RCW 59.18.285 + RCW 59.18.610 (most explicit —
+// non-refundable fees ONLY for cleaning + screening; capped at 10% of
+// one month's rent; security deposit + fees combined ≤ one month's
+// rent; disclosed-as-non-refundable required); Washington RCW
+// 59.18.285 (state-wide disclosure-only; if undisclosed reclassified
+// as refundable deposit; no amount cap); Chicago Mun. Code § 5-12-080
+// + § 5-12-081 RLTO (no amount cap; itemized purpose disclosure
+// required; fee is landlord's property no interest); Default (no
+// statutory cap or disclosure obligation; common-law unconscionability
+// only). Distinct from `application_fees` (pre-tenancy screening),
+// `late_fee_caps` (post-tenancy delinquency), `advance_rent_limit`
+// (advance rent), `move_in_inspection` (procedural walk-through).
+// ---------------------------------------------------------------------------
+
+async fn move_in_fee_cap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MoveInFeeCapInput>,
+) -> Result<Json<MoveInFeeCapResult>, ApiError> {
+    Ok(Json(check_move_in_fee_cap(&b)))
 }
 
 // ---------------------------------------------------------------------------

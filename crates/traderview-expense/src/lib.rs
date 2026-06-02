@@ -109,6 +109,7 @@ pub mod mileage;
 pub mod mobile_home_park;
 pub mod military_termination;
 pub mod mold_disclosure;
+pub mod move_in_fee_cap;
 pub mod move_in_inspection;
 pub mod mlp_ubti;
 pub mod mtm_475f;
