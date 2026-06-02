@@ -217,6 +217,11 @@ use traderview_expense::smoke_free_housing::{
 use traderview_expense::tenant_data_privacy::{
     check as check_tenant_privacy, PrivacyInput, PrivacyResult,
 };
+use traderview_expense::tenant_domestic_violence_lease_termination::{
+    check as check_tenant_domestic_violence_lease_termination,
+    TenantDomesticViolenceLeaseTerminationInput,
+    TenantDomesticViolenceLeaseTerminationResult,
+};
 use traderview_expense::tenant_fire_safety_plan_disclosure::{
     check as check_tenant_fire_safety_plan_disclosure,
     TenantFireSafetyPlanDisclosureInput, TenantFireSafetyPlanDisclosureResult,
@@ -791,6 +796,7 @@ pub fn router() -> Router<AppState> {
         .route("/submetering-check", axum::routing::post(submetering_check_route))
         .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
         .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
+        .route("/tenant-domestic-violence-lease-termination", axum::routing::post(tenant_domestic_violence_lease_termination_route))
         .route("/tenant-fire-safety-plan-disclosure", axum::routing::post(tenant_fire_safety_plan_disclosure_route))
         .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
         .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
@@ -3395,6 +3401,43 @@ async fn tenant_privacy_check_route(
         ));
     }
     Ok(Json(check_tenant_privacy(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_domestic_violence_lease_termination: Tenant domestic
+// violence early lease termination compliance — when a tenant or
+// household member is a victim of domestic violence, sexual assault,
+// stalking, or human trafficking and seeks to terminate the rental
+// agreement early without penalty. Mounted at POST /api/rental/
+// tenant-domestic-violence-lease-termination. Four regimes: Federal
+// VAWA Reauthorization Act of 2022 (34 USC § 12491 + 24 CFR §
+// 5.2005; HUD-covered housing — Section 8, public housing, LIHTC §
+// 42, HOME, Section 202/811; Form HUD-91066 self-certification
+// accepted; lease provisions terminating on police calls in DV
+// situations are VOID; lease provisions requiring waiver of VAWA
+// rights are VOID; emergency transfer plan required); California
+// Cal. Civ. Code § 1946.7 (14-day notice + 180-day documentation
+// lookback — restraining/protective order OR police report OR
+// qualified third-party statement; tenant liable for rent only up
+// to 14 days; confidentiality of documentation; landlord retaliation
+// prohibited); Illinois Safe Homes Act 765 ILCS 750 (§ 750/15(a)(1)
+// termination if DV occurred at premises; protective order OR
+// qualified third-party statement; § 750/30 eviction defense;
+// § 750/25 confidentiality); Washington RCW 59.18.575 (90-day
+// termination window from reported DV act; tenant liable for month
+// of termination but discharged from rent thereafter; protective
+// order OR qualified third-party report; confidentiality + non-
+// retaliation). Distinct from siblings tenant_accessible_parking
+// (ADA), rental_application_denial_disclosure (screening), rental_
+// bed_bug_disclosure (lease disclosure), tenant_data_privacy.
+// ---------------------------------------------------------------------------
+
+async fn tenant_domestic_violence_lease_termination_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantDomesticViolenceLeaseTerminationInput>,
+) -> Result<Json<TenantDomesticViolenceLeaseTerminationResult>, ApiError> {
+    Ok(Json(check_tenant_domestic_violence_lease_termination(&b)))
 }
 
 // ---------------------------------------------------------------------------
