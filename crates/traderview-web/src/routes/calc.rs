@@ -97,6 +97,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7206",          post(section_7206_route))
         .route("/calc/section-7207",          post(section_7207_route))
         .route("/calc/section-7421",          post(section_7421_route))
+        .route("/calc/section-7426",          post(section_7426_route))
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7433",          post(section_7433_route))
         .route("/calc/section-7434",          post(section_7434_route))
@@ -3187,6 +3188,33 @@ async fn section_7421_route(
     Json(b): Json<traderview_expense::section_7421::Section7421Input>,
 ) -> Result<Json<traderview_expense::section_7421::Section7421Result>, ApiError> {
     Ok(Json(traderview_expense::section_7421::check(&b)))
+}
+
+// ── §7426 third-party wrongful levy + surplus + substituted proceeds ─
+// Mounted at /api/calc/section-7426. § 7426(a)(1) wrongful levy — any
+// person OTHER than the assessed taxpayer with interest or lien on
+// property wrongfully levied; civil action in district court. §
+// 7426(a)(2) surplus proceeds — claimant interest JUNIOR to United
+// States, entitled to excess sale proceeds. § 7426(a)(3) substituted
+// sales proceeds — fund substituted for property under agreement. §
+// 7426(c) SOL — 2 years (730 days) for wrongful levy post-12/22/2017
+// TCJA Pub. L. 115-97 § 11071; pre-TCJA 9 months (274 days). § 7426(h)
+// civil damages for unauthorized collection: lesser of $1,000,000
+// (reckless/intentional) / $100,000 (negligence) OR actual damages +
+// costs; mirrors § 7433 framework. § 7421(a) Anti-Injunction Act
+// exception — § 7426(a) + (b)(1) statutorily excepted. Trader-relevant
+// when IRS levies on third-party property (joint accounts + nominee
+// accounts + community-property third-party interests + trader's co-
+// owner / lender / lien-holder rights in seized rental property).
+// Procedural-companion to § 7421 + § 7433 + § 7430 + § 6334. Pair with
+// IRS Pub. 4528 (Making an Administrative Wrongful Levy Claim) + IRM
+// 34.5.3 (Suits Brought Against the United States).
+
+async fn section_7426_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7426::Section7426Input>,
+) -> Result<Json<traderview_expense::section_7426::Section7426Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7426::check(&b)))
 }
 
 // ── §7433 civil damages for unauthorized collection actions ─────────
