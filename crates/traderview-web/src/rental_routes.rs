@@ -786,6 +786,11 @@ use traderview_expense::rental_pet_breed_restriction_disclosure::{
     RentalPetBreedRestrictionDisclosureInput,
     RentalPetBreedRestrictionDisclosureResult,
 };
+use traderview_expense::rental_emergency_action_plan_high_rise::{
+    check as check_rental_emergency_action_plan_high_rise,
+    RentalEmergencyActionPlanHighRiseInput,
+    RentalEmergencyActionPlanHighRiseResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1260,6 +1265,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
+        .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10872,4 +10878,41 @@ async fn rental_pet_breed_restriction_disclosure_route(
     Json(b): Json<RentalPetBreedRestrictionDisclosureInput>,
 ) -> Result<Json<RentalPetBreedRestrictionDisclosureResult>, ApiError> {
     Ok(Json(check_rental_pet_breed_restriction_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_emergency_action_plan_high_rise (iter 527): Trader-landlord high-
+// rise residential Emergency Action Plan (EAP) compliance framework. Five
+// jurisdictions: NewYorkCity (NYC Local Law 26 of 2004 post-9/11 EAP
+// expansion + FDNY 3 RCNY § 404-01 + NYC Admin Code § 404.2.1 + Fire Code
+// Title 29 + § 28-202.1 civil penalty + Fire Safety Director F-32
+// certification + 24/7 on-site presence + $1,000-$25,000 per violation
+// per day FDNY civil penalty), Chicago (Municipal Code § 13-160-070 +
+// Chicago Fire Department + post-2003 Cook County Administration Building
+// fire enhanced requirements), LosAngeles (Cal. Fire Code + LAMC §
+// 57.4901 + LA County Code Title 32 + LAFD certification), International
+// FireCodeAdopted (IFC § 404.2.1 Comprehensive fire safety/emergency
+// action plan Level 1 + § 404.3 implementation + § 404.4 staff training),
+// Default (NFPA 1 § 10.8 high-rise framework + § 11.10 EAP + NFPA 101
+// Life Safety Code § 4.7 + OSHA 29 C.F.R. § 1910.38). High-rise threshold:
+// ≥ 75 feet OR 7+ stories. Three building classifications: HighRise-
+// Residential75FtOr7Stories (full EAP), MidRiseResidential4To6Stories
+// (limited), LowRiseResidential1To3Stories (inapplicable). Seven compliance
+// statuses: AllRequirementsCurrent, FireSafetyDirectorNotPresent,
+// FspEapNotFiledWithAhj, AnnualFireDrillMissed, TenantInstructionsNot-
+// Distributed, AccessibleEvacuationMissing (FHA + ADA + NFPA 101 § 7.2.12
+// Areas of Refuge + IFC § 1009 accessible means of egress), Emergency-
+// IncidentDuringNonCompliance. Eight-mode severity ladder including
+// PostIncidentNonComplianceFatalityRisk (100pct rent + $5M-$50M wrongful-
+// death litigation), AccessibleEvacuationFhaAdaViolation (100pct rent),
+// FireSafetyDirectorPresenceViolation (50pct rent + $1,000-$25,000/day
+// FDNY penalty).
+// ---------------------------------------------------------------------------
+
+async fn rental_emergency_action_plan_high_rise_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalEmergencyActionPlanHighRiseInput>,
+) -> Result<Json<RentalEmergencyActionPlanHighRiseResult>, ApiError> {
+    Ok(Json(check_rental_emergency_action_plan_high_rise(&b)))
 }
