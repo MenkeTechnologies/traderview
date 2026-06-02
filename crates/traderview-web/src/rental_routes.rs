@@ -740,6 +740,10 @@ use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
 };
+use traderview_expense::rental_radon_mitigation_disclosure::{
+    check as check_rental_radon_mitigation_disclosure,
+    RentalRadonMitigationDisclosureInput, RentalRadonMitigationDisclosureResult,
+};
 use traderview_expense::residential_lease_arbitration_clause::{
     check as check_residential_arbitration, ArbitrationClauseInput, ArbitrationClauseResult,
 };
@@ -1146,6 +1150,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
+        .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
         .route("/rental-septic-system-disclosure", axum::routing::post(rental_septic_system_disclosure_route))
@@ -7705,6 +7710,54 @@ async fn rental_property_registration_route(
     Json(b): Json<RentalPropertyRegistrationInput>,
 ) -> Result<Json<RentalPropertyRegistrationResult>, ApiError> {
     Ok(Json(check_rental_property_registration(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_radon_mitigation_disclosure: Multi-jurisdictional rental
+// property radon disclosure and mitigation compliance framework. When a
+// landlord rents a residential property, what radon-hazard disclosure
+// must be provided to tenant at lease signing, what tenant testing
+// rights attach, what mitigation obligations follow elevated test
+// results, and what failure-mode liabilities expose landlord after a
+// tenant develops lung cancer with multi-decade latency? Radon is the
+// #2 LEADING CAUSE OF LUNG CANCER in the United States per EPA,
+// killing approximately 21,000 Americans annually. Mounted at POST
+// /api/rental/rental-radon-mitigation-disclosure. Three-jurisdiction
+// framework: Illinois (MOST STRINGENT for tenants — Illinois Tenants
+// Radon Protection Act, 765 ILCS 90/ effective January 1, 2024; pre-
+// lease disclosure of IEMA-OHS radon pamphlet + known hazard records +
+// tenant 90-DAY testing window + 4 pCi/L action level + tenant LEASE
+// TERMINATION right if landlord declines to mitigate); Maine (10
+// M.R.S. § 1494-A et seq. landlord-rented residential properties must
+// test for radon every 10 years and provide written disclosure of
+// results); Default (EPA 4 pCi/L action level + EPA Map of Radon Zones
+// Zone 1/2/3 + common-law implied warranty of habitability per Hilder
+// v. St. Peter, 478 A.2d 202 (Vt. 1984) + Green v. Superior Court, 10
+// Cal. 3d 616 (1974) + Cal. Civ. Code § 1941.1). Mitigation
+// methodology: AARST-NRPP certified contractor for active soil
+// depressurization (ASD) $800-$1,500 + sub-slab + sub-membrane +
+// crack sealing + post-mitigation verification testing. Five
+// universal failure-mode liabilities: failure to provide IL radon
+// pamphlet (765 ILCS 90 statutory violation); failure to disclose
+// known elevated radon (fraud + tort); decline to mitigate after
+// tenant test > 4 pCi/L (IL 90-day lease termination right); failure
+// to engage AARST-NRPP certified contractor (ineffective remediation
+// + insurance denial); lung cancer claim with multi-decade latency
+// ($1M-$5M+ settlement routine). Distinct from siblings rental_lead_
+// pipe_disclosure (lead service lines), rental_basement_water_
+// intrusion_disclosure, rental_chimney_fireplace_inspection_disclosure
+// (iter 471), rental_carbon_monoxide_detector, rental_natural_gas_
+// leak_response (iter 485 — methane leak), rental_underground_
+// storage_tank_disclosure (UST/LUST), tenant_emotional_distress_
+// damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_radon_mitigation_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRadonMitigationDisclosureInput>,
+) -> Result<Json<RentalRadonMitigationDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_radon_mitigation_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
