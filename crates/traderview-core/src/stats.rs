@@ -415,6 +415,178 @@ pub fn by_month(trades: &[Trade]) -> Vec<Bucket> {
     })
 }
 
+/// Tradervue parity: bucket trades by entry-price range.
+pub fn by_price_bucket(trades: &[Trade]) -> Vec<Bucket> {
+    let buckets = bucket_from(trades, |t| Some(price_range(t.entry_avg)));
+    let order = [
+        "< $2.00",
+        "$2 - $4.99",
+        "$5 - $9.99",
+        "$10 - $19.99",
+        "$20 - $49.99",
+        "$50 - $99.99",
+        "$100 - $199.99",
+        "$200 - $499.99",
+        "$500 - $999.99",
+        ">= $1000",
+    ];
+    let mut sorted: Vec<Bucket> = order
+        .iter()
+        .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
+        .collect();
+    // Append any unexpected keys at end.
+    for b in &buckets {
+        if !order.contains(&b.key.as_str()) {
+            sorted.push(b.clone());
+        }
+    }
+    sorted
+}
+
+fn price_range(p: Decimal) -> String {
+    let f = p.to_string().parse::<f64>().unwrap_or(0.0);
+    if f < 2.0 {
+        "< $2.00"
+    } else if f < 5.0 {
+        "$2 - $4.99"
+    } else if f < 10.0 {
+        "$5 - $9.99"
+    } else if f < 20.0 {
+        "$10 - $19.99"
+    } else if f < 50.0 {
+        "$20 - $49.99"
+    } else if f < 100.0 {
+        "$50 - $99.99"
+    } else if f < 200.0 {
+        "$100 - $199.99"
+    } else if f < 500.0 {
+        "$200 - $499.99"
+    } else if f < 1000.0 {
+        "$500 - $999.99"
+    } else {
+        ">= $1000"
+    }
+    .to_string()
+}
+
+// ===========================================================================
+// Daily volume + per-day series (Tradervue dashboard parity)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DailySeriesPoint {
+    pub day: NaiveDate,
+    pub volume: Decimal,
+    pub trades: usize,
+    pub winners: usize,
+    pub net_pnl: Decimal,
+    pub running_avg_pnl: Decimal,
+    pub running_win_rate: f64,
+}
+
+/// Per-day rollups: volume, win rate, running average trade P&L.
+/// Open trades (no net_pnl) contribute volume but not P&L.
+pub fn daily_series(trades: &[Trade]) -> Vec<DailySeriesPoint> {
+    let mut grouped: BTreeMap<NaiveDate, Vec<&Trade>> = BTreeMap::new();
+    for t in trades {
+        if let Some(closed) = t.closed_at {
+            grouped.entry(closed.date_naive()).or_default().push(t);
+        }
+    }
+    let mut out = Vec::with_capacity(grouped.len());
+    let mut cum_pnl = Decimal::ZERO;
+    let mut cum_count: usize = 0;
+    let mut cum_wins: usize = 0;
+    for (day, day_trades) in grouped {
+        let mut day_pnl = Decimal::ZERO;
+        let mut day_vol = Decimal::ZERO;
+        let mut day_wins = 0usize;
+        for t in &day_trades {
+            let pnl = t.net_pnl.unwrap_or(Decimal::ZERO);
+            day_pnl += pnl;
+            day_vol += t.qty * t.entry_avg;
+            if pnl > Decimal::ZERO {
+                day_wins += 1;
+            }
+        }
+        cum_pnl += day_pnl;
+        cum_count += day_trades.len();
+        cum_wins += day_wins;
+        let running_avg = if cum_count > 0 {
+            cum_pnl / Decimal::from(cum_count as i64)
+        } else {
+            Decimal::ZERO
+        };
+        let running_win_rate = if cum_count > 0 {
+            cum_wins as f64 / cum_count as f64
+        } else {
+            0.0
+        };
+        out.push(DailySeriesPoint {
+            day,
+            volume: day_vol,
+            trades: day_trades.len(),
+            winners: day_wins,
+            net_pnl: day_pnl,
+            running_avg_pnl: running_avg,
+            running_win_rate,
+        });
+    }
+    out
+}
+
+// ===========================================================================
+// Winning days vs losing days breakdown (Tradervue "Win vs Loss Days")
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct WinLossDays {
+    /// Buckets keyed by day-of-week / hour / etc.; one set per cohort.
+    pub by_dow: WinLossSplit,
+    pub by_hour: WinLossSplit,
+    pub by_hold: WinLossSplit,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct WinLossSplit {
+    pub winning_days: Vec<Bucket>,
+    pub losing_days: Vec<Bucket>,
+}
+
+/// Split trades by whether their closed_at falls on a net-winning vs net-losing
+/// day, then re-bucket each cohort. Mirrors Tradervue's "Win vs Loss Days" report.
+pub fn win_loss_days(trades: &[Trade]) -> WinLossDays {
+    use std::collections::HashMap;
+    let mut day_pnl: HashMap<NaiveDate, Decimal> = HashMap::new();
+    for t in trades {
+        if let Some(closed) = t.closed_at {
+            *day_pnl.entry(closed.date_naive()).or_default() +=
+                t.net_pnl.unwrap_or(Decimal::ZERO);
+        }
+    }
+    let (winning_set, losing_set): (Vec<_>, Vec<_>) = trades
+        .iter()
+        .filter(|t| t.closed_at.is_some())
+        .partition(|t| {
+            let day = t.closed_at.unwrap().date_naive();
+            day_pnl.get(&day).copied().unwrap_or(Decimal::ZERO) > Decimal::ZERO
+        });
+    WinLossDays {
+        by_dow: WinLossSplit {
+            winning_days: by_day_of_week(&winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+            losing_days: by_day_of_week(&losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+        },
+        by_hour: WinLossSplit {
+            winning_days: by_hour_of_day(&winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+            losing_days: by_hour_of_day(&losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+        },
+        by_hold: WinLossSplit {
+            winning_days: by_hold_bucket(&winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+            losing_days: by_hold_bucket(&losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+        },
+    }
+}
+
 // ===========================================================================
 // R-multiple distribution
 // ===========================================================================

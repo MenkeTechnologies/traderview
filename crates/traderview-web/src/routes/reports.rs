@@ -22,6 +22,9 @@ pub fn router() -> Router<AppState> {
         .route("/reports/by-hour", get(by_hour))
         .route("/reports/by-hold", get(by_hold))
         .route("/reports/by-month", get(by_month))
+        .route("/reports/by-price", get(by_price))
+        .route("/reports/daily-series", get(daily_series))
+        .route("/reports/win-loss-days", get(win_loss_days))
         .route("/reports/r-distribution", get(r_distribution))
         .route("/reports/streaks", get(streaks))
         .route("/reports/comparison", get(comparison))
@@ -143,6 +146,33 @@ async fn by_month(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_month(
+        &load(&s, user.id, &q).await?,
+    )))
+}
+async fn by_price(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    Ok(Json(stats::by_price_bucket(
+        &load(&s, user.id, &q).await?,
+    )))
+}
+async fn daily_series(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::DailySeriesPoint>>, ApiError> {
+    Ok(Json(stats::daily_series(
+        &load(&s, user.id, &q).await?,
+    )))
+}
+async fn win_loss_days(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<stats::WinLossDays>, ApiError> {
+    Ok(Json(stats::win_loss_days(
         &load(&s, user.id, &q).await?,
     )))
 }

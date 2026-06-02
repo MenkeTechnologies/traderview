@@ -219,25 +219,28 @@ export const api = {
     bySymbol: (account_id) => request(`/reports/by-symbol?account_id=${account_id}`),
     bySide: (account_id) => request(`/reports/by-side?account_id=${account_id}`),
     byAssetClass: (account_id) => request(`/reports/by-asset-class?account_id=${account_id}`),
-    byDow: (account_id) => request(`/reports/by-day-of-week?account_id=${account_id}`),
-    byHour: (account_id) => request(`/reports/by-hour?account_id=${account_id}`),
-    byHold: (account_id) => request(`/reports/by-hold?account_id=${account_id}`),
-    byMonth: (account_id) => request(`/reports/by-month?account_id=${account_id}`),
-    rDist: (account_id) => request(`/reports/r-distribution?account_id=${account_id}`),
-    streaks: (account_id) => request(`/reports/streaks?account_id=${account_id}`),
-    comparison: (account_id) => request(`/reports/comparison?account_id=${account_id}`),
-    exitEff: (account_id) => request(`/reports/exit-efficiency?account_id=${account_id}`),
-    commissions: (account_id) => request(`/reports/commissions?account_id=${account_id}`),
+    byDow: (account_id, days) => request(`/reports/by-day-of-week${qs({ account_id, days })}`),
+    byHour: (account_id, days) => request(`/reports/by-hour${qs({ account_id, days })}`),
+    byHold: (account_id, days) => request(`/reports/by-hold${qs({ account_id, days })}`),
+    byMonth: (account_id, days) => request(`/reports/by-month${qs({ account_id, days })}`),
+    byPrice: (account_id, days) => request(`/reports/by-price${qs({ account_id, days })}`),
+    dailySeries: (account_id, days) => request(`/reports/daily-series${qs({ account_id, days })}`),
+    winLossDays: (account_id, days) => request(`/reports/win-loss-days${qs({ account_id, days })}`),
+    rDist: (account_id, days) => request(`/reports/r-distribution${qs({ account_id, days })}`),
+    streaks: (account_id, days) => request(`/reports/streaks${qs({ account_id, days })}`),
+    comparison: (account_id, days) => request(`/reports/comparison${qs({ account_id, days })}`),
+    exitEff: (account_id, days) => request(`/reports/exit-efficiency${qs({ account_id, days })}`),
+    commissions: (account_id, days) => request(`/reports/commissions${qs({ account_id, days })}`),
     liquidity: (account_id, adv = '') => request(`/reports/liquidity${qs({ account_id, adv })}`),
-    risk: (account_id) => request(`/reports/risk?account_id=${account_id}`),
-    drawdown: (account_id, starting_cash) =>
-        request(`/reports/drawdown${qs({ account_id, starting_cash })}`),
-    riskAdjusted: (account_id, starting_cash) =>
-        request(`/reports/risk-adjusted${qs({ account_id, starting_cash })}`),
-    calendar: (account_id) => request(`/reports/calendar?account_id=${account_id}`),
-    summary: (account_id) => request(`/stats/summary?account_id=${account_id}`),
-    equity: (account_id, starting_cash) =>
-        request(`/stats/equity${qs({ account_id, starting_cash })}`),
+    risk: (account_id, days) => request(`/reports/risk${qs({ account_id, days })}`),
+    drawdown: (account_id, starting_cash, days) =>
+        request(`/reports/drawdown${qs({ account_id, starting_cash, days })}`),
+    riskAdjusted: (account_id, starting_cash, days) =>
+        request(`/reports/risk-adjusted${qs({ account_id, starting_cash, days })}`),
+    calendar: (account_id, days) => request(`/reports/calendar${qs({ account_id, days })}`),
+    summary: (account_id, days) => request(`/stats/summary${qs({ account_id, days })}`),
+    equity: (account_id, starting_cash, days) =>
+        request(`/stats/equity${qs({ account_id, starting_cash, days })}`),
 
     // --- expenses -------------------------------------------------------
     expenseAccounts: () => request('/expense/accounts'),

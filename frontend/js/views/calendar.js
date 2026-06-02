@@ -1,150 +1,176 @@
 import { api } from '../api.js';
-import { esc, fmtMoney } from '../util.js';
+import { esc, fmtMoney, pnlClass } from '../util.js';
 import { t } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+
+const ACTIVE_MONTH_KEY = 'calendar_active_month';
+const ACTIVE_YEAR_KEY  = 'calendar_active_year';
+const DOW_SHORT = ['sun','mon','tue','wed','thu','fri','sat'];
+
+function monthName(m) {
+    const keys = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    return t(`common.month.${keys[m - 1]}`);
+}
+
+function getActiveYearMonth(cells) {
+    const storedY = Number(sessionStorage.getItem(ACTIVE_YEAR_KEY));
+    const storedM = Number(sessionStorage.getItem(ACTIVE_MONTH_KEY));
+    if (storedY > 0 && storedM >= 1 && storedM <= 12) return { y: storedY, m: storedM };
+    // Default: most recent month with trades, fallback to current.
+    const withData = cells.filter(c => Number(c.trades) > 0).sort((a, b) => b.day.localeCompare(a.day));
+    if (withData[0]) {
+        const [y, m] = withData[0].day.split('-').map(Number);
+        return { y, m };
+    }
+    const now = new Date();
+    return { y: now.getFullYear(), m: now.getMonth() + 1 };
+}
+
+function setActive(y, m) {
+    sessionStorage.setItem(ACTIVE_YEAR_KEY,  String(y));
+    sessionStorage.setItem(ACTIVE_MONTH_KEY, String(m));
+}
 
 export async function renderCalendar(mount, state) {
+    const tok = currentViewToken();
     if (!state.accountId) {
         mount.innerHTML = '<p data-i18n="view.calendar.hint.no_account" class="boot">No account.</p>';
         return;
     }
     const cells = await api.calendar(state.accountId);
+    if (!viewIsCurrent(tok)) return;
     if (!cells.length) {
         mount.innerHTML = '<p data-i18n="view.calendar.hint.no_data_yet" class="boot">No data yet.</p>';
         return;
     }
+
     const byDay = new Map(cells.map(c => [c.day, c]));
-    const max = Math.max(...cells.map(c => Math.abs(Number(c.net_pnl))), 1);
-
-    // Build year-month grid showing all months that have data.
-    const months = new Set();
-    cells.forEach(c => months.add(c.day.slice(0, 7)));
-    const sortedMonths = Array.from(months).sort();
-
-    const monthHtml = sortedMonths.map(ym => {
-        const [yyyy, mm] = ym.split('-').map(Number);
-        const firstDay = new Date(yyyy, mm - 1, 1);
-        const daysInMonth = new Date(yyyy, mm, 0).getDate();
-        const startCol = firstDay.getDay(); // 0=Sun
-        let cellsRow = '';
-        // Padding for first row.
-        for (let i = 0; i < startCol; i++) cellsRow += '<div class="cal-cell empty"></div>';
-        for (let d = 1; d <= daysInMonth; d++) {
-            const date = `${yyyy}-${String(mm).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const cell = byDay.get(date);
-            if (cell) {
-                const v = Number(cell.net_pnl);
-                const intensity = Math.min(1, Math.abs(v) / max);
-                const color = v >= 0
-                    ? `rgba(35, 209, 96, ${0.15 + intensity * 0.7})`
-                    : `rgba(255, 56, 96, ${0.15 + intensity * 0.7})`;
-                cellsRow += `<div class="cal-cell large" style="background:${color}"
-                    title="${esc(t('view.dashboard.cal.tooltip', { day: date, pnl: fmtMoney(v), n: cell.trades }))}">${d}</div>`;
-            } else {
-                cellsRow += `<div class="cal-cell large empty">${d}</div>`;
-            }
-        }
-        return `<div class="cal-month">
-            <h3>${esc(t('common.month_year', { month: monthName(mm), year: yyyy }))}</h3>
-            <div class="cal-grid">
-                <div class="cal-dow">${esc(t('common.dow.short.sun'))}</div><div class="cal-dow">${esc(t('common.dow.short.mon'))}</div><div class="cal-dow">${esc(t('common.dow.short.tue'))}</div>
-                <div class="cal-dow">${esc(t('common.dow.short.wed'))}</div><div class="cal-dow">${esc(t('common.dow.short.thu'))}</div><div class="cal-dow">${esc(t('common.dow.short.fri'))}</div>
-                <div class="cal-dow">${esc(t('common.dow.short.sat'))}</div>
-                ${cellsRow}
-            </div>
-        </div>`;
-    }).join('');
+    const yearsSet = new Set(cells.map(c => Number(c.day.slice(0, 4))));
+    const years = [...yearsSet].sort();
+    const { y: activeY, m: activeM } = getActiveYearMonth(cells);
+    const renderYear = years.includes(activeY) ? activeY : years[years.length - 1];
 
     mount.innerHTML = `
-        <h1 data-i18n="view.calendar.h1.calendar" class="view-title">// CALENDAR</h1>
-        <div class="cal-months">${monthHtml}</div>
-        <div class="chart-panel">
-            <h2 data-i18n="view.calendar.h2.daily_chart">Daily net P&L (sorted by date)</h2>
-            <div id="cal-chart" style="width:100%;height:240px"></div>
+        <div class="cal-tv-header">
+            <h1 class="view-title" style="margin:0"><span data-i18n="view.calendar.h1.calendar">// CALENDAR</span></h1>
+            <div class="cal-tv-year" role="tablist">
+                ${years.map(y => `<button type="button" data-year="${y}" class="${y === renderYear ? 'active' : ''}">${y}</button>`).join('')}
+            </div>
         </div>
-
-        <div class="chart-panel">
-            <h2 data-i18n="view.calendar.h2.cum_chart">Cumulative net P&L (running equity)</h2>
-            <div id="cal-cum-chart" style="width:100%;height:220px"></div>
+        ${activeMonthHtml(byDay, activeY, activeM)}
+        <div class="cal-tv-thumbs">
+            ${[...Array(12)].map((_, i) => thumbnailHtml(byDay, renderYear, i + 1, activeY === renderYear && activeM === (i + 1))).join('')}
         </div>
     `;
-    renderDailyChart(cells);
-    renderCumChart(cells);
+
+    mount.querySelectorAll('.cal-tv-year button[data-year]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const y = Number(btn.dataset.year);
+            setActive(y, 1);
+            renderCalendar(mount, state);
+        });
+    });
+    mount.querySelectorAll('.cal-tv-thumb-open[data-y][data-m]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setActive(Number(btn.dataset.y), Number(btn.dataset.m));
+            renderCalendar(mount, state);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
 }
 
-function renderDailyChart(cells) {
-    const el = document.getElementById('cal-chart');
-    if (!el || !window.uPlot) return;
-    el.innerHTML = '';
-    const sorted = [...cells]
-        .filter(c => Number.isFinite(Number(c.net_pnl)))
-        .sort((a, b) => a.day.localeCompare(b.day));
-    if (sorted.length < 1) {
-        el.innerHTML = `<div class="muted" data-i18n="view.calendar.empty_chart">${esc(t('view.calendar.empty_chart'))}</div>`;
-        return;
+function activeMonthHtml(byDay, year, month) {
+    const firstDay   = new Date(year, month - 1, 1);
+    const daysInMo   = new Date(year, month, 0).getDate();
+    const startCol   = firstDay.getDay();
+    const totalCells = startCol + daysInMo;
+    const rows       = Math.ceil(totalCells / 7);
+
+    let monthlyPnl = 0, monthlyTrades = 0;
+    for (let d = 1; d <= daysInMo; d++) {
+        const key = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const c = byDay.get(key);
+        if (c) { monthlyPnl += Number(c.net_pnl) || 0; monthlyTrades += Number(c.trades) || 0; }
     }
-    const labels = sorted.map(c => c.day.slice(5));
-    const ys = sorted.map(c => Number(c.net_pnl));
-    const xs = labels.map((_, i) => i + 1);
-    const zero = xs.map(() => 0);
-    new window.uPlot({
-        title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
-        series: [
-            { label: t('view.calendar.chart.day_idx') },
-            { label: t('view.calendar.chart.pnl'),
-              stroke: '#00e5ff', width: 0,
-              points: { show: true, size: 8, fill: '#00e5ff', stroke: '#00e5ff' } },
-            { label: t('view.calendar.chart.zero'),
-              stroke: '#ffd84a', width: 1.0, dash: [4, 4],
-              points: { show: false } },
-        ],
-        axes: [
-            { stroke: '#aab', size: 28,
-              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
-            { stroke: '#aab', size: 60 },
-        ],
-        legend: { show: true },
-    }, [xs, ys, zero], el);
-}
 
-function renderCumChart(cells) {
-    const el = document.getElementById('cal-cum-chart');
-    if (!el || !window.uPlot) return;
-    el.innerHTML = '';
-    const sorted = [...cells]
-        .filter(c => Number.isFinite(Number(c.net_pnl)))
-        .sort((a, b) => a.day.localeCompare(b.day));
-    if (sorted.length < 1) {
-        el.innerHTML = `<div class="muted" data-i18n="view.calendar.empty_cum_chart">${esc(t('view.calendar.empty_cum_chart'))}</div>`;
-        return;
+    let cellsHtml = '';
+    let cursor = 1 - startCol;
+    for (let r = 0; r < rows; r++) {
+        let weekPnl = 0, weekTrades = 0;
+        for (let d = 0; d < 7; d++, cursor++) {
+            if (cursor < 1 || cursor > daysInMo) {
+                cellsHtml += `<div class="cal-tv-day"><div class="cal-tv-day-num muted"></div></div>`;
+                continue;
+            }
+            const key = `${year}-${String(month).padStart(2, '0')}-${String(cursor).padStart(2, '0')}`;
+            const c = byDay.get(key);
+            const v = Number(c?.net_pnl) || 0;
+            const tr = Number(c?.trades) || 0;
+            weekPnl += v; weekTrades += tr;
+            const cls = tr === 0 ? 'zero' : v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+            cellsHtml += `
+                <div class="cal-tv-day ${cls}">
+                    <div class="cal-tv-day-num">${cursor}</div>
+                    <div class="cal-tv-day-pnl ${pnlClass(v)}">${tr === 0 ? '$0' : fmtMoney(v)}</div>
+                    <div class="cal-tv-day-trades">${tr} ${tr === 1 ? 'trade' : 'trades'}</div>
+                </div>`;
+        }
+        cellsHtml += `
+            <div class="cal-tv-week-total">
+                <div class="cal-tv-week-label">${esc(t('view.calendar.tv.week', { n: r + 1 }))}</div>
+                <div class="cal-tv-day-pnl ${pnlClass(weekPnl)}" style="margin-top:auto">${weekTrades === 0 ? '$0' : fmtMoney(weekPnl)}</div>
+                <div class="cal-tv-day-trades">${weekTrades} ${weekTrades === 1 ? 'trade' : 'trades'}</div>
+            </div>`;
     }
-    const labels = sorted.map(c => c.day.slice(5));
-    let acc = 0;
-    const cum = sorted.map(c => { acc += Number(c.net_pnl); return acc; });
-    const xs = labels.map((_, i) => i + 1);
-    const zero = xs.map(() => 0);
-    new window.uPlot({
-        title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
-        series: [
-            { label: t('view.calendar.chart.day_idx') },
-            { label: t('view.calendar.chart.cum_pnl'),
-              stroke: '#7af0a8', width: 1.5,
-              fill: 'rgba(122,240,168,0.10)',
-              points: { show: false } },
-            { label: t('view.calendar.chart.zero'),
-              stroke: '#ffd84a', width: 1.0, dash: [4, 4], points: { show: false } },
-        ],
-        axes: [
-            { stroke: '#aab', size: 28,
-              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
-            { stroke: '#aab', size: 60 },
-        ],
-        legend: { show: true },
-    }, [xs, cum, zero], el);
+
+    return `
+        <div class="cal-tv-active">
+            <div class="cal-tv-active-head">
+                <div class="cal-tv-active-month">${esc(monthName(month))}, ${year}</div>
+                <div class="cal-tv-active-pnl">${esc(t('view.calendar.tv.monthly_pnl'))}: <span class="${pnlClass(monthlyPnl)}">${fmtMoney(monthlyPnl)}</span></div>
+            </div>
+            <div class="cal-tv-active-grid">
+                ${DOW_SHORT.map(d => `<div class="cal-tv-active-dow">${esc(t('common.dow.short.' + d))}</div>`).join('')}
+                <div class="cal-tv-active-dow">${esc(t('view.calendar.tv.total'))}</div>
+                ${cellsHtml}
+            </div>
+        </div>
+    `;
 }
 
-function monthName(m) {
-    const keys = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-    return t(`common.month.${keys[m - 1]}`);
+function thumbnailHtml(byDay, year, month, isActive) {
+    const firstDay = new Date(year, month - 1, 1);
+    const daysInMo = new Date(year, month, 0).getDate();
+    const startCol = firstDay.getDay();
+    const totalCells = startCol + daysInMo;
+    const rows = Math.ceil(totalCells / 7);
+
+    let grid = '';
+    for (let i = 0; i < rows * 7; i++) {
+        const day = i - startCol + 1;
+        if (day < 1 || day > daysInMo) {
+            grid += `<div class="cal-tv-thumb-cell muted"></div>`;
+            continue;
+        }
+        const key = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const c = byDay.get(key);
+        const v = Number(c?.net_pnl) || 0;
+        const tr = Number(c?.trades) || 0;
+        const cls = tr === 0 ? 'muted' : v > 0 ? 'pos' : v < 0 ? 'neg' : 'muted';
+        grid += `<div class="cal-tv-thumb-cell ${cls}">${day}</div>`;
+    }
+    return `
+        <div class="cal-tv-thumb">
+            <div class="cal-tv-thumb-head">
+                <div class="cal-tv-thumb-name">${esc(monthName(month))}, ${year}</div>
+                <button type="button" class="cal-tv-thumb-open" data-y="${year}" data-m="${month}">
+                    ${isActive ? esc(t('view.calendar.tv.active')) : esc(t('view.calendar.tv.open'))}
+                </button>
+            </div>
+            <div class="cal-tv-thumb-grid">
+                ${DOW_SHORT.map(d => `<div class="cal-tv-thumb-dow">${esc(t('common.dow.short.' + d))}</div>`).join('')}
+                ${grid}
+            </div>
+        </div>
+    `;
 }

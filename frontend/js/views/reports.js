@@ -7,6 +7,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 const TABS = [
     ['overview',       'Overview'],
     ['year-month-day', 'Year / Month / Day'],
+    ['win-loss-days',  'Win vs Loss Days'],
     ['by-symbol',      'By Symbol'],
     ['by-side',        'By Side'],
     ['by-asset',       'By Asset'],
@@ -59,6 +60,12 @@ export async function renderReports(mount, state, sub) {
             if (!viewIsCurrent(tok)) return;
             const body = mount.querySelector('#report-body');
             if (body) renderYearMonthDay(body, monthly, cal);
+        }
+        else if (sub === 'win-loss-days') {
+            const wld = await api.winLossDays(acct);
+            if (!viewIsCurrent(tok)) return;
+            const body = mount.querySelector('#report-body');
+            if (body) renderWinLossDays(body, wld);
         }
         else if (sub === 'r-dist') {
             const dist = await api.rDist(acct);
@@ -414,4 +421,106 @@ function renderYearMonthDay(body, monthly, cal) {
         days.map(d => d.day),
         days.map(d => Number(d.net_pnl) || 0),
         { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_day') });
+}
+
+// ---------- Win vs Loss Days (Tradervue parity) ------------------------------
+function renderWinLossDays(body, wld) {
+    if (!wld) {
+        body.innerHTML = '<p class="boot">' + esc(t('view.reports.hint.no_data')) + '</p>';
+        return;
+    }
+    body.innerHTML = `
+        <h2 class="view-title" style="margin-top:0">Win vs Loss Days</h2>
+        <div class="panel-grid">
+            <div class="chart-panel">
+                <h2>Trade Distribution By Day Of Week</h2>
+                <div id="wld-dow-w" style="width:100%;height:240px"></div>
+            </div>
+            <div class="chart-panel">
+                <h2>Performance By Day Of Week</h2>
+                <div id="wld-dow-l" style="width:100%;height:240px"></div>
+            </div>
+        </div>
+        <div class="panel-grid">
+            <div class="chart-panel">
+                <h2>Trade Distribution By Hour</h2>
+                <div id="wld-hour-w" style="width:100%;height:240px"></div>
+            </div>
+            <div class="chart-panel">
+                <h2>Performance By Hour</h2>
+                <div id="wld-hour-l" style="width:100%;height:240px"></div>
+            </div>
+        </div>
+        <div class="panel-grid">
+            <div class="chart-panel">
+                <h2>Trade Distribution By Hold Time</h2>
+                <div id="wld-hold-w" style="width:100%;height:240px"></div>
+            </div>
+            <div class="chart-panel">
+                <h2>Performance By Hold Time</h2>
+                <div id="wld-hold-l" style="width:100%;height:240px"></div>
+            </div>
+        </div>
+    `;
+    renderWinLossPair(body.querySelector('#wld-dow-w'), wld.by_dow, 'trades');
+    renderWinLossPair(body.querySelector('#wld-dow-l'), wld.by_dow, 'net_pnl');
+    renderWinLossPair(body.querySelector('#wld-hour-w'), wld.by_hour, 'trades');
+    renderWinLossPair(body.querySelector('#wld-hour-l'), wld.by_hour, 'net_pnl');
+    renderWinLossPair(body.querySelector('#wld-hold-w'), wld.by_hold, 'trades');
+    renderWinLossPair(body.querySelector('#wld-hold-l'), wld.by_hold, 'net_pnl');
+}
+
+function renderWinLossPair(el, split, valKey) {
+    if (!el || !split) return;
+    const keys = Array.from(new Set([
+        ...split.winning_days.map(b => b.key),
+        ...split.losing_days.map(b => b.key),
+    ]));
+    const winMap  = new Map(split.winning_days.map(b => [b.key, Number(b[valKey]) || 0]));
+    const lossMap = new Map(split.losing_days.map(b => [b.key, Number(b[valKey]) || 0]));
+    const isMoney = valKey === 'net_pnl';
+    el.innerHTML = '';
+    if (!window.uPlot) { el.textContent = 'chart unavailable'; return; }
+    const xs = keys.map((_, i) => i);
+    const winY  = keys.map(k => winMap.get(k)  ?? 0);
+    const lossY = keys.map(k => lossMap.get(k) ?? 0);
+    const max = Math.max(...winY.map(Math.abs), ...lossY.map(Math.abs), 1);
+    const drawPair = (u) => {
+        const ctx = u.ctx; ctx.save();
+        const bw = Math.max(2, (u.bbox.width / xs.length) * 0.32);
+        const yZero = u.valToPos(0, 'y', true);
+        for (let i = 0; i < xs.length; i++) {
+            const xc = u.valToPos(xs[i], 'x', true);
+            const wY = u.valToPos(winY[i], 'y', true);
+            const lY = u.valToPos(lossY[i], 'y', true);
+            ctx.fillStyle = '#ffd84a'; // winning days = yellow
+            ctx.fillRect(xc - bw - 1, Math.min(yZero, wY), bw, Math.abs(wY - yZero));
+            ctx.fillStyle = '#3aa1ff'; // losing days = blue
+            ctx.fillRect(xc + 1, Math.min(yZero, lY), bw, Math.abs(lY - yZero));
+        }
+        ctx.restore();
+        return null;
+    };
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 240,
+        scales: { x: {}, y: { auto: true, range: [-max * 1.1, max * 1.1] } },
+        series: [
+            { label: 'idx' },
+            { label: 'win days',  stroke: 'transparent', paths: drawPair },
+            { label: 'loss days', stroke: 'transparent' },
+        ],
+        axes: [
+            { stroke: '#aab', rotate: -45, size: 60,
+              values: (_u, splits) => splits.map(v => keys[Math.round(v)] || '') },
+            { stroke: '#aab', size: 64,
+              values: (_u, ticks) => ticks.map(v => {
+                  if (!isMoney) return v.toFixed(0);
+                  const a = Math.abs(v); const sgn = v < 0 ? '-' : '';
+                  if (a >= 1e6) return `${sgn}$${(a/1e6).toFixed(1)}M`;
+                  if (a >= 1e3) return `${sgn}$${(a/1e3).toFixed(1)}K`;
+                  return `${sgn}$${a.toFixed(0)}`;
+              }) },
+        ],
+        legend: { show: false },
+    }, [xs, winY, lossY], el);
 }

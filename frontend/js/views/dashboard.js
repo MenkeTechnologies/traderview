@@ -193,6 +193,104 @@ function drawdownChart(elId, dd) {
     return true;
 }
 
+function byPriceWidget(rows) {
+    if (!Array.isArray(rows) || !rows.length) {
+        return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
+    }
+    const maxAbs = Math.max(...rows.map(b => Math.abs(Number(b.net_pnl) || 0)), 1);
+    const total  = rows.reduce((a, b) => a + Math.abs(Number(b.net_pnl) || 0), 0) || 1;
+    return compareWidget(rows.map(b => {
+        const v = Number(b.net_pnl) || 0;
+        const pct = (Math.abs(v) / total) * 100;
+        return `
+            <div class="dash-tv-compare-row">
+                <div class="dash-tv-compare-label">${esc(b.key)}</div>
+                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" style="width:${(Math.abs(v) / maxAbs * 100).toFixed(0)}%"></div></div>
+                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted" style="font-weight:400">${pct.toFixed(2)}%</span></div>
+            </div>
+        `;
+    }));
+}
+
+function dailyVolumeChart(elId, daily) {
+    if (!daily || !daily.length) return false;
+    setTimeout(() => {
+        const el = document.getElementById(elId);
+        if (!el || !window.uPlot) return;
+        const xs = daily.map((_, i) => i);
+        const ys = daily.map(d => Number(d.volume) || 0);
+        const labels = daily.map(d => d.day);
+        const barsPath = (u) => {
+            const ctx = u.ctx;
+            ctx.save();
+            const bw = Math.max(2, (u.bbox.width / xs.length) * 0.7);
+            const yZero = u.valToPos(0, 'y', true);
+            for (let i = 0; i < xs.length; i++) {
+                const x = u.valToPos(xs[i], 'x', true);
+                const y = u.valToPos(ys[i], 'y', true);
+                ctx.fillStyle = '#39ff14';
+                ctx.fillRect(x - bw / 2, Math.min(yZero, y), bw, Math.abs(y - yZero));
+            }
+            ctx.restore();
+            return null;
+        };
+        new window.uPlot({
+            title: '', width: el.clientWidth || 600, height: 220,
+            scales: { x: {}, y: {} },
+            series: [
+                { label: 'day' },
+                { label: 'volume', stroke: 'transparent', paths: barsPath },
+            ],
+            axes: [
+                { stroke: '#aab', size: 28, rotate: -45,
+                  values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
+                { stroke: '#aab', size: 64,
+                  values: (_u, ticks) => ticks.map(v => {
+                      const a = Math.abs(v);
+                      if (a >= 1e6) return `${(v/1e6).toFixed(1)}M`;
+                      if (a >= 1e3) return `${(v/1e3).toFixed(0)}K`;
+                      return v.toFixed(0);
+                  }) },
+            ],
+            legend: { show: false },
+        }, [xs, ys], el);
+    }, 0);
+    return true;
+}
+
+function lineChart(elId, daily, valueKey, color) {
+    if (!daily || !daily.length) return false;
+    setTimeout(() => {
+        const el = document.getElementById(elId);
+        if (!el || !window.uPlot) return;
+        const xs = daily.map((_, i) => i);
+        const ys = daily.map(d => Number(d[valueKey]) || 0);
+        const labels = daily.map(d => d.day);
+        new window.uPlot({
+            title: '', width: el.clientWidth || 600, height: 220,
+            scales: { x: {}, y: { auto: true } },
+            series: [
+                { label: 'day' },
+                { label: valueKey, stroke: color, width: 2 },
+            ],
+            axes: [
+                { stroke: '#aab', size: 28, rotate: -45,
+                  values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
+                { stroke: '#aab', size: 64,
+                  values: (_u, ticks) => ticks.map(v => {
+                      if (valueKey === 'running_win_rate') return `${(v * 100).toFixed(0)}%`;
+                      const a = Math.abs(v); const sgn = v < 0 ? '-' : '';
+                      if (a >= 1e6) return `${sgn}$${(a/1e6).toFixed(1)}M`;
+                      if (a >= 1e3) return `${sgn}$${(a/1e3).toFixed(1)}K`;
+                      return `${sgn}$${a.toFixed(0)}`;
+                  }) },
+            ],
+            legend: { show: false },
+        }, [xs, ys], el);
+    }, 0);
+    return true;
+}
+
 function durationWidget(hold) {
     if (!Array.isArray(hold) || !hold.length) {
         return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
@@ -231,6 +329,145 @@ function winPctSummary(s) {
     `;
 }
 
+// ===========================================================================
+// Widget catalog + layout persistence
+// ===========================================================================
+
+// Each entry: { id, titleKey, spans2, html(data), mount(data) }
+// `spans2` makes the panel span 2 grid columns (used by line/area charts).
+// `html` returns the inner contents (the chart-panel wrapper, drag handle,
+// and delete button are added by renderLayoutPanels around it).
+// `mount` runs after the panel is in the DOM — for uPlot init etc.
+const WIDGETS = [
+    { id: 'cumulative_pnl', titleKey: 'view.dashboard.tv.cumulative_pnl', spans2: true,
+        html: () => `<div id="equity-chart"></div>`,
+        mount: (data, mount) => { const el = mount.querySelector('#equity-chart'); if (el) equityChart(el, data.equity); } },
+    { id: 'win_loss', titleKey: 'view.dashboard.tv.win_loss',
+        html: (d) => winLossCount(d.summary) },
+    { id: 'hold_win_loss', titleKey: 'view.dashboard.tv.hold_win_loss',
+        html: (d) => holdTimeWinLoss(d.summary) },
+    { id: 'avg_win_loss', titleKey: 'view.dashboard.tv.avg_win_loss',
+        html: (d) => avgWinLoss(d.summary) },
+    { id: 'largest_gain_loss', titleKey: 'view.dashboard.tv.largest_gain_loss',
+        html: (d) => largestGainLoss(d.summary) },
+    { id: 'win_pct', titleKey: 'view.dashboard.tv.win_pct',
+        html: (d) => `<div id="dash-win-pct-chart" style="width:100%;height:220px">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        mount: (d) => { if (d.daily && d.daily.length) lineChart('dash-win-pct-chart', d.daily, 'running_win_rate', '#39ff14'); } },
+    { id: 'perf_dow', titleKey: 'view.dashboard.tv.perf_dow',
+        html: (d) => dayOfWeekWidget(d.dow) },
+    { id: 'mfe_mae', titleKey: 'view.dashboard.tv.mfe_mae',
+        html: () => `<div class="dash-tv-na">${esc(t('view.dashboard.tv.mfe_mae_unavailable'))}</div>` },
+    { id: 'perf_duration', titleKey: 'view.dashboard.tv.perf_duration',
+        html: (d) => durationWidget(d.hold) },
+    { id: 'perf_hour', titleKey: 'view.dashboard.tv.perf_hour',
+        html: (d) => hourOfDayWidget(d.hour) },
+    { id: 'profit_factor', titleKey: 'view.dashboard.tv.profit_factor',
+        html: (d) => profitFactorGauge(d.summary.profit_factor) },
+    { id: 'total_fees', titleKey: 'view.dashboard.tv.total_fees',
+        html: (d) => `<div style="display:flex;align-items:center;justify-content:center;padding:36px 0"><div style="font-size:32px;font-weight:700;color:#ffd84a;font-family:'JetBrains Mono',monospace">${esc(fmtMoney(d.summary.fees))}</div></div>` },
+    { id: 'cumulative_drawdown', titleKey: 'view.dashboard.tv.cumulative_drawdown', spans2: true,
+        html: (d) => `<div id="dash-drawdown-chart" style="width:100%;height:220px">${d.dd ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        mount: (d) => { if (d.dd) drawdownChart('dash-drawdown-chart', d.dd); } },
+    { id: 'perf_price', titleKey: 'view.dashboard.tv.perf_price',
+        html: (d) => byPriceWidget(d.byPrice) },
+    { id: 'daily_volume', titleKey: 'view.dashboard.tv.daily_volume', spans2: true,
+        html: (d) => `<div id="dash-daily-volume-chart" style="width:100%;height:220px">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        mount: (d) => { if (d.daily && d.daily.length) dailyVolumeChart('dash-daily-volume-chart', d.daily); } },
+    { id: 'avg_trade_pnl', titleKey: 'view.dashboard.tv.avg_trade_pnl', spans2: true,
+        html: (d) => `<div id="dash-avg-pnl-chart" style="width:100%;height:220px">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        mount: (d) => { if (d.daily && d.daily.length) lineChart('dash-avg-pnl-chart', d.daily, 'running_avg_pnl', '#00e5ff'); } },
+];
+const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
+const DEFAULT_LAYOUT = WIDGETS.map(w => w.id);
+
+function renderLayoutPanels(layout, data) {
+    return layout
+        .map(id => WIDGETS_BY_ID.get(id))
+        .filter(Boolean)
+        .map(w => `
+            <div class="chart-panel${w.spans2 ? ' dash-tv-span-2' : ''}" draggable="true" data-widget-id="${w.id}">
+                <span class="dash-tv-drag-handle" title="drag to reorder">⠿</span>
+                <span class="dash-tv-del-btn" title="remove from layout" data-del-widget="${w.id}">✕</span>
+                <h2 data-i18n="${w.titleKey}">${esc(t(w.titleKey))}</h2>
+                ${w.html(data)}
+            </div>
+        `).join('');
+}
+
+function attachLayoutHandlers(mount, layout, data, persistFn) {
+    const grid = mount.querySelector('#dash-tv-grid');
+    if (!grid) return;
+    let dragged = null;
+
+    grid.addEventListener('dragstart', (e) => {
+        const panel = e.target.closest('.chart-panel[data-widget-id]');
+        if (!panel) return;
+        dragged = panel;
+        panel.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', panel.dataset.widgetId);
+    });
+    grid.addEventListener('dragend', (e) => {
+        const panel = e.target.closest('.chart-panel[data-widget-id]');
+        if (panel) panel.classList.remove('dragging');
+        grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+        dragged = null;
+    });
+    grid.addEventListener('dragover', (e) => {
+        const over = e.target.closest('.chart-panel[data-widget-id]');
+        if (!over || over === dragged) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+        over.classList.add('drop-target');
+    });
+    grid.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        const over = e.target.closest('.chart-panel[data-widget-id]');
+        if (!over || !dragged || over === dragged) return;
+        const order = [...grid.querySelectorAll('.chart-panel[data-widget-id]')];
+        const srcIdx = order.indexOf(dragged);
+        const dstIdx = order.indexOf(over);
+        if (srcIdx < 0 || dstIdx < 0) return;
+        order.splice(srcIdx, 1);
+        order.splice(dstIdx, 0, dragged);
+        const newLayout = order.map(el => el.dataset.widgetId);
+        await persistFn(newLayout);
+    });
+
+    grid.querySelectorAll('[data-del-widget]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.delWidget;
+            const next = layout.filter(w => w !== id);
+            await persistFn(next);
+        });
+    });
+}
+
+let cachedSettings = null;
+async function loadLayout() {
+    try {
+        cachedSettings = await api.settings();
+        const stored = cachedSettings?.dashboard_layout;
+        if (stored && Array.isArray(stored.order)) {
+            // Drop unknown IDs (e.g. widgets removed between versions).
+            const known = stored.order.filter(id => WIDGETS_BY_ID.has(id));
+            return known.length ? known : DEFAULT_LAYOUT.slice();
+        }
+    } catch (_) { /* fall through to default */ }
+    return DEFAULT_LAYOUT.slice();
+}
+async function saveLayout(order) {
+    if (!cachedSettings) return;
+    cachedSettings.dashboard_layout = { order };
+    try {
+        await api.updateSettings(cachedSettings);
+    } catch (e) {
+        console.warn('layout save failed', e);
+    }
+}
+
 export async function renderDashboard(mount, state) {
     const tok = currentViewToken();
     const interval = getInterval();
@@ -246,16 +483,20 @@ export async function renderDashboard(mount, state) {
         return;
     }
 
-    const [summary, equity, cal, dow, hold, hour, dd] = await Promise.all([
-        api.summary(state.accountId),
-        api.equity(state.accountId),
-        api.calendar(state.accountId),
-        api.byDow(state.accountId).catch(() => []),
-        api.byHold(state.accountId).catch(() => []),
-        api.byHour(state.accountId).catch(() => []),
-        api.drawdown(state.accountId).catch(() => null),
+    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, layout] = await Promise.all([
+        api.summary(state.accountId, interval),
+        api.equity(state.accountId, undefined, interval),
+        api.calendar(state.accountId, interval),
+        api.byDow(state.accountId, interval).catch(() => []),
+        api.byHold(state.accountId, interval).catch(() => []),
+        api.byHour(state.accountId, interval).catch(() => []),
+        api.drawdown(state.accountId, undefined, interval).catch(() => null),
+        api.byPrice(state.accountId, interval).catch(() => []),
+        api.dailySeries(state.accountId, interval).catch(() => []),
+        loadLayout(),
     ]);
     if (!viewIsCurrent(tok)) return;
+    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily };
 
     mount.innerHTML = `
         <div class="dash-tv-header">
@@ -265,6 +506,10 @@ export async function renderDashboard(mount, state) {
                     data-tip="view.dashboard.tip.refresh"
                     data-shortcut="dashboard_refresh"
                     style="font-size:11px;padding:4px 10px">⟳ Refresh</button>
+            <div class="dash-tv-layout-controls">
+                <button type="button" id="dash-add-widget" class="btn btn-secondary" style="font-size:11px;padding:4px 10px">+ ${esc(t('view.dashboard.tv.add_widget'))}</button>
+                <button type="button" id="dash-reset-layout" class="btn btn-secondary" style="font-size:11px;padding:4px 10px">⟲ ${esc(t('view.dashboard.tv.reset_layout'))}</button>
+            </div>
             <div class="dash-tv-toggle" role="tablist">
                 ${VALID_INTERVALS.map(d => `<button type="button" data-interval="${d}" class="${d === interval ? 'active' : ''}">${d} Days</button>`).join('')}
             </div>
@@ -272,73 +517,10 @@ export async function renderDashboard(mount, state) {
         <div class="dash-tv-range">${esc(rangeLabel(interval))}</div>
         <div class="dash-tv-day-strip">${dayStrip(cal)}</div>
 
-        <div class="dash-tv-grid">
-            <div class="chart-panel dash-tv-span-2">
-                <h2 data-i18n="view.dashboard.tv.cumulative_pnl">Cumulative P&L</h2>
-                <div id="equity-chart"></div>
-            </div>
+        <div class="dash-tv-add-menu" id="dash-add-menu" hidden></div>
 
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.win_loss">Winning vs Losing Trades</h2>
-                ${winLossCount(summary)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.hold_win_loss">Hold Time Winning Trades vs Losing Trades</h2>
-                ${holdTimeWinLoss(summary)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.avg_win_loss">Average Winning Trade vs Losing Trade</h2>
-                ${avgWinLoss(summary)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.largest_gain_loss">Largest Gain vs Largest Loss</h2>
-                ${largestGainLoss(summary)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.win_pct">Win %</h2>
-                ${winPctSummary(summary)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.perf_dow">Performance By Day Of Week</h2>
-                ${dayOfWeekWidget(dow)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.mfe_mae">Average MFE vs MAE</h2>
-                <div class="dash-tv-na">${esc(t('view.dashboard.tv.mfe_mae_unavailable'))}</div>
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.perf_duration">Performance By Duration</h2>
-                ${durationWidget(hold)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.perf_hour">Performance By Hour Of Day</h2>
-                ${hourOfDayWidget(hour)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.profit_factor">Profit Factor</h2>
-                ${profitFactorGauge(summary.profit_factor)}
-            </div>
-
-            <div class="chart-panel">
-                <h2 data-i18n="view.dashboard.tv.total_fees">Total Fees</h2>
-                <div style="display:flex;align-items:center;justify-content:center;padding:36px 0">
-                    <div style="font-size:32px;font-weight:700;color:#ffd84a;font-family:'JetBrains Mono',monospace">${esc(fmtMoney(summary.fees))}</div>
-                </div>
-            </div>
-
-            <div class="chart-panel dash-tv-span-2">
-                <h2 data-i18n="view.dashboard.tv.cumulative_drawdown">Cumulative Drawdown</h2>
-                <div id="dash-drawdown-chart" style="width:100%;height:220px">${dd ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>
-            </div>
+        <div class="dash-tv-grid" id="dash-tv-grid">
+            ${renderLayoutPanels(layout, data)}
         </div>
 
         <div id="world-markets-mount" style="margin-top:14px"></div>
@@ -366,15 +548,56 @@ export async function renderDashboard(mount, state) {
         });
     });
 
-    const eqEl  = mount.querySelector('#equity-chart');
+    // Mount widgets that need post-DOM init (uPlot, etc). Walk the actual
+    // layout — never assume a widget is present.
+    for (const id of layout) {
+        const w = WIDGETS_BY_ID.get(id);
+        if (w && typeof w.mount === 'function') w.mount(data, mount);
+    }
+
     const wmEl  = mount.querySelector('#world-markets-mount');
     const rgEl  = mount.querySelector('#dash-rg');
     const discEl = mount.querySelector('#dash-disc');
-    if (eqEl)   equityChart(eqEl, equity);
     if (wmEl)   renderWorldMarkets(wmEl);
     if (rgEl)   loadRiskGateBadge(rgEl);
     if (discEl) loadDisciplineScore(discEl, state.accountId);
-    if (dd)     drawdownChart('dash-drawdown-chart', dd);
+
+    const persist = async (newLayout) => {
+        await saveLayout(newLayout);
+        renderDashboard(mount, state);
+    };
+    attachLayoutHandlers(mount, layout, data, persist);
+
+    const resetBtn = mount.querySelector('#dash-reset-layout');
+    if (resetBtn) resetBtn.addEventListener('click', () => persist(DEFAULT_LAYOUT.slice()));
+
+    const addBtn = mount.querySelector('#dash-add-widget');
+    const addMenu = mount.querySelector('#dash-add-menu');
+    if (addBtn && addMenu) {
+        addBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const inLayout = new Set(layout);
+            const missing = WIDGETS.filter(w => !inLayout.has(w.id));
+            if (!missing.length) {
+                addMenu.innerHTML = `<div class="dash-tv-add-empty">${esc(t('view.dashboard.tv.all_widgets_shown'))}</div>`;
+            } else {
+                addMenu.innerHTML = missing.map(w =>
+                    `<button type="button" class="dash-tv-add-item" data-add-widget="${w.id}">+ ${esc(t(w.titleKey))}</button>`
+                ).join('');
+            }
+            addMenu.hidden = !addMenu.hidden;
+        });
+        document.addEventListener('click', (e) => {
+            if (!addMenu.hidden && !addMenu.contains(e.target) && e.target !== addBtn) addMenu.hidden = true;
+        }, { once: true });
+        addMenu.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-add-widget]');
+            if (!btn) return;
+            const id = btn.dataset.addWidget;
+            if (!WIDGETS_BY_ID.has(id) || layout.includes(id)) return;
+            await persist([...layout, id]);
+        });
+    }
 }
 
 async function loadDisciplineScore(el, accountId) {
