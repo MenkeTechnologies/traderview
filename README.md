@@ -4095,6 +4095,42 @@ Mounted at `POST /api/rental/bedbug-extermination-cost-check`. Thirty tests pin:
 
 Mounted at `POST /api/rental/crime-victim-termination-check`. Thirty-six tests pin: **5 regime classifications** (CA / TX / WA / IL + default AL/FL/NY/MA/NJ/DC/WY); **CA human trafficking covered + elder abuse covered + force/threat path independent of category**; **CA 14-day notice satisfied vs 13-day not satisfied** (boundary); **TX 30-day notice satisfied + 29-day not satisfied** (boundary); **TX human trafficking NOT covered** (regression — TX narrower than CA); **TX rent obligation continues during notice period**; **WA 89-day within window + day-90 boundary satisfied + day-91 outside window** (regression target); **WA unlawful harassment covered** (unique to WA); **WA rent obligation terminates at notice** (regression target — only WA does this); **IL credible imminent threat 3-day path**; **IL past sexual violence within 60-day window + day-61 outside window** (boundary); **IL stalking NOT covered** (regression — IL Safe Homes Act narrower); default state no broad termination right; CA no documentation fails; **4 citation regression targets** (CA § 1946.7 + AB 1493 2022 + "broadest U.S. scope"; TX §§ 92.0161 + 30-day; WA RCW 59.18.575 + 90 days; IL 765 ILCS 750 + dual-path + 3 days + 60 days); **51-state coverage**; non-empty citations; **2 single-state-uniqueness invariants** (CA-only broadest / WA-only rent-terminates-at-notice); CA compliant note describes regime; TX human-trafficking note says not covered; lowercase state code normalizes.
 
+`traderview-expense::lease_renewal_offer_timing` is the **multi-jurisdictional lease renewal offer timing and disclosure framework module** — trader-landlord critical because failure to provide timely renewal offer (or non-renewal notice) can EXTEND tenancy as month-to-month, INVALIDATE rent increase, or FORFEIT landlord's right to non-renew. Distinct from sibling `rent_increase_notice_period` (periodic-tenancy rent increase notices). Companion to `lease_auto_renewal`, `lease_succession`, `lease_assignment_consent`, `lease_copy_delivery`, `rent_increase_notice_period`.
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Source | Window | Form / Method |
+|--------------|--------|--------|---------------|
+| **NY Rent-Stabilized** | 9 NYCRR § 2523.5 plus DHCR Form RTP-8 | **90-150 DAYS** before expiry | Mail OR personal delivery; current RTP-8 form; 1-year AND 2-year option |
+| **NY Non-Stabilized** | NY RPL § 226-c (HSTPA 2019) | 30/60/90 day tiers | Written notice when increase ≥ 5% or non-renewal |
+| **California TPA** | Cal. Civ. Code § 1946.2 (AB 1482) | Written notice | Just-cause required; § 1946.2(d) ONE MONTH'S RENT relocation for no-fault |
+| **D.C.** | D.C. Code § 42-3505.54 + § 42-3505.01 | 30 days | 12-MONTH RENEWAL mandatory except just-cause grounds |
+
+**NY § 226-c tier structure (HSTPA 2019)**:
+- Tenancy < 1 year → **30 days** advance notice
+- Tenancy 1-2 years → **60 days** advance notice
+- Tenancy 2+ years → **90 days** advance notice
+- Trigger: rent increase ≥ 5% OR non-renewal
+
+**NY rent-stabilized RTP-8 content requirements (six elements)**:
+1. Offer of 1-year OR 2-year renewal term at tenant's option
+2. Current legal regulated rent
+3. Proposed new rent based on Rent Guidelines Board (RGB) increase percentages
+4. Tenant's right to renew without vacancy or longevity bonus (HSTPA repealed)
+5. Notice of MCI or IAI surcharge if any
+6. Tenant's right to file challenge with DHCR
+
+**California TPA § 1946.2 just-cause categories**:
+- AT-FAULT just cause — nonpayment + breach + nuisance + criminal activity + assignment without consent
+- NO-FAULT just cause — withdrawal from rental market + owner move-in + rehabilitation + government order
+- § 1946.2(d) — no-fault grounds require ONE MONTH'S RENT relocation assistance (or rent waiver for final month)
+
+**D.C. RHA § 42-3505.01 enumerated just-cause grounds**: nonpayment, violation, landlord personal use, demolition, substantial rehabilitation, sale to qualifying purchaser. Statutory presumption FAVOR OF RENEWAL.
+
+**Trader-landlord critical fact patterns**: (1) NYC trader sends rent-stabilized renewal 60 days before expiry — UNTIMELY under § 2523.5; rent increase INVALIDATED; tenant continues at current rent; (2) NY non-stabilized trader sends 2-year tenant 45-day non-renewal — UNTIMELY under RPL § 226-c (requires 90 days); (3) CA trader seeks TPA non-renewal without just cause — § 1946.2(d) ONE MONTH RELOCATION required for no-fault; (4) DC trader seeks non-renewal without just cause — presumption FAVOR OF RENEWAL; (5) NYC trader uses outdated RTP-8 form — RENEWAL INVALID.
+
+Mounted at `POST /api/rental/lease-renewal-offer-timing`. Thirty tests pin: **NY stabilized 120-day compliant**; **NY stabilized 60-day untimely**; **NY stabilized 160-day too early**; **NY stabilized 90-day boundary compliant**; **NY stabilized 150-day boundary compliant**; **NY stabilized no RTP-8 form invalid**; **NY stabilized no both-terms invalid**; **NY stabilized email delivery invalid**; **NY non-stabilized under 1-year 30-day tier**; **NY non-stabilized 1-2 year 60-day tier**; **NY non-stabilized 2+ year 90-day tier**; **NY non-stabilized under 5% no invalidation**; **NY non-stabilized 5%+ invalidated**; **CA TPA no just-cause invalidates**; **CA TPA no relocation assistance invalidates**; **DC no just-cause renewal required**; **no renewal offer given at all**; **jurisdiction window truth table five cells**; **NY stabilized uniquely requires RTP-8 form invariant**; **CA uniquely requires relocation assistance invariant**; **citation pins all authorities** (DHCR Form RTP-8 + 9 NYCRR § 2523.5 + NY RPL § 226-c + HSTPA 2019 + Cal. Civ. Code § 1946.2 + AB 1482 + D.C. Code § 42-3505.01 + D.C. Code § 42-3505.54 + Rental Housing Act of 1985); **note pins four-jurisdiction framework**; **note pins NY § 2523.5**; **note pins NY RPL § 226-c tiers**; **note pins RTP-8 content six elements**; **note pins CA TPA just-cause grounds**; **note pins DC RHA just-cause**; **note pins trader fact patterns five**; **note pins companion modules**; **multiple failures stack**.
+
 `traderview-expense::lease_succession` is the **state succession rights — surviving family member lease-assumption compliance table** — distinct from `tenant_death_termination` (which covers the estate's right to TERMINATE the lease) by addressing the COMPETING right of a family member living with the deceased tenant to ASSUME or RENEW the lease in their own name. Only NY has a comprehensive succession framework for rent-regulated units; NJ provides limited anti-eviction protections; the rest leave succession to the lease, which extinguishes on the named tenant's death.
 
 **Three regimes**:

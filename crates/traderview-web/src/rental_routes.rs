@@ -497,6 +497,10 @@ use traderview_expense::landlord_property_sale_notice::{
     check as check_landlord_property_sale_notice,
     LandlordPropertySaleNoticeInput, LandlordPropertySaleNoticeResult,
 };
+use traderview_expense::lease_renewal_offer_timing::{
+    check as check_lease_renewal_offer_timing,
+    LeaseRenewalOfferTimingInput, LeaseRenewalOfferTimingResult,
+};
 use traderview_expense::security_deposit_bank_disclosure::{
     check as check_security_deposit_bank_disclosure,
     CheckResult as SecurityDepositBankDisclosureResult,
@@ -1001,6 +1005,7 @@ pub fn router() -> Router<AppState> {
         .route("/tenant-lease-guarantor-disclosure", axum::routing::post(tenant_lease_guarantor_disclosure_route))
         .route("/tenant-estoppel-certificate", axum::routing::post(tenant_estoppel_certificate_route))
         .route("/landlord-property-sale-notice", axum::routing::post(landlord_property_sale_notice_route))
+        .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
         .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
         .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
         .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
@@ -6210,6 +6215,35 @@ async fn landlord_property_sale_notice_route(
     Json(b): Json<LandlordPropertySaleNoticeInput>,
 ) -> Result<Json<LandlordPropertySaleNoticeResult>, ApiError> {
     Ok(Json(check_landlord_property_sale_notice(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Lease renewal offer timing and disclosure framework.
+//
+// Mounted at POST /api/rental/lease-renewal-offer-timing.
+// Four-jurisdiction framework for when landlord must send renewal
+// offer or non-renewal notice: (1) New York rent-stabilized — NY
+// Rent Stabilization Code (9 NYCRR) § 2523.5 + DHCR Form RTP-8:
+// 90-150 day window; 1-year + 2-year option at tenant's choice;
+// mail or personal delivery; failure forfeits rent increase;
+// (2) New York non-stabilized — NY RPL § 226-c (HSTPA 2019):
+// 30/60/90 day tiers based on tenancy length when rent increase
+// >= 5% or non-renewal; (3) California TPA — Cal. Civ. Code
+// § 1946.2 (AB 1482, 2019): just-cause requirement; § 1946.2(d)
+// one-month-rent relocation assistance for no-fault non-renewal;
+// (4) DC — D.C. Code § 42-3505.01 + § 42-3505.54 (Rental Housing
+// Act of 1985): 12-month mandatory renewal except enumerated
+// just-cause grounds. Sibling cluster: lease_auto_renewal,
+// lease_succession, lease_assignment_consent, lease_copy_delivery,
+// rent_increase_notice_period.
+// ---------------------------------------------------------------------------
+
+async fn lease_renewal_offer_timing_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeaseRenewalOfferTimingInput>,
+) -> Result<Json<LeaseRenewalOfferTimingResult>, ApiError> {
+    Ok(Json(check_lease_renewal_offer_timing(&b)))
 }
 
 // ---------------------------------------------------------------------------
