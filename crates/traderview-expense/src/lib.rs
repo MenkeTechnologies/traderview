@@ -171,6 +171,7 @@ pub mod rental_organic_waste_collection_disclosure;
 pub mod rental_pet_deposit_separate_security;
 pub mod rental_property_registration;
 pub mod rental_satellite_dish_installation_right;
+pub mod rental_security_deposit_interest;
 pub mod rental_sex_offender_registry_notice;
 pub mod rental_sinkhole_disclosure;
 pub mod rental_swimming_pool_drain_safety;

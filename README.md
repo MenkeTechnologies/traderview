@@ -2945,6 +2945,60 @@ Mounted at `POST /api/rental/rental-water-submetering-disclosure`. Thirty-one te
 
 Mounted at `POST /api/rental/rental-unpermitted-unit-disclosure`. Thirty-two tests pin: **CA clean compliant**; **CA unpermitted renting violation** (§ 1942.4 + Espinoza); **CA unpermitted no rent collection no violation**; **CA unpermitted sale without TDS violation** (§ 1102); **CA unpermitted sale with TDS compliant**; **Oakland unpermitted with relocation compliant**; **Oakland unpermitted no relocation payment violation** (§ 8.22.450); **Oakland substantial rehab eviction basis carve-out** (no eviction prohibition); **Oakland relocation amount base only** ($79,310); **Oakland relocation amount one qualifying member** ($79,310 + $52,870); **Oakland relocation amount three qualifying members** ($79,310 + $158,610); **Oakland defensive relocation overflow saturates without panic**; **NYC unpermitted 3-unit building violation** (§ 325 + § 27-2107); **NYC unpermitted 2-unit building out of MDL scope**; **NYC Certificate of Occupancy compliant**; **default clean compliant**; **default unpermitted renting without disclosure violation**; **default unpermitted renting with disclosure compliant**; **citation pins CA / Oakland / NYC / default authorities** (all four); **note pins CA asymmetric enforceability doctrine** (Espinoza); **note pins Oakland relocation amounts** ($7,931 + $5,287); **note pins NYC 3-unit MDL threshold**; **note pins NYC Loft Law Article 7-C**; **note pins default HUD Section 8**; **Oakland uniquely requires relocation payment invariant** (CA has $0 relocation); **NYC uniquely requires MDL 3+ unit scope invariant**; **CA uniquely triggers TDS at sale invariant** (Oakland + NYC do not); **tenant enforceability asymmetry across regimes** (all three rent-collection regimes preserve tenant enforcement); **multiple Oakland violations stack** (3 violations).
 
+`traderview-expense::rental_security_deposit_interest` is the **multi-jurisdictional security deposit interest framework module** — Chicago RLTO + Massachusetts G.L. c. 186 § 15B + Connecticut Gen. Stat. § 47a-21 + N.J.S.A. 46:8-19 + N.Y. Gen. Oblig. Law § 7-103. Trader-landlord critical because the **STRICT-LIABILITY DOUBLE AND TREBLE DAMAGES** penalties for non-compliance are among the steepest tenant remedies in residential landlord-tenant law — Massachusetts and Chicago award tenants 3x or 2x the deposit (or interest) even WITHOUT proof of bad faith, actual loss, or fault. Distinct from siblings `landlord_annual_rent_statement`, `tenant_rent_judgment_wage_garnishment`, `rental_property_registration`, `landlord_identification_disclosure`.
+
+**Five-jurisdiction statutory rate comparison**:
+
+| Jurisdiction | Rate | Source | Strict-Liability Penalty |
+|--------------|------|--------|--------------------------|
+| **Chicago** | **0.01%** (2026) | RLTO § 5-12-080(c) + § 5-12-081 (set annually by City Comptroller, Chase Bank avg) | **2x deposit + attorney fees** (§ 5-12-080(f) — no fault required) |
+| **Massachusetts** | **5% OR actual lesser** | G.L. c. 186 § 15B(3)(b) | **TREBLE damages (3x interest) + costs + attorney fees** (§ 15B(6)(e) + § 15B(7) — MA SJC strict liability) |
+| **Connecticut** | Avg savings deposit rate set quarterly | § 47a-21(i) + § 47a-21(j) (Banking Commissioner) | **DOUBLE damages + $100 + costs + attorney fees** (§ 47a-21(d)(2) — beyond 30 days after demand) |
+| **New Jersey** | Bank rate (annual) | N.J.S.A. 46:8-19 (1% landlord admin fee) | Tenant self-help offset (§ 46:8-19(c)) |
+| **New York** | Bank rate (6+ unit buildings) | Gen. Oblig. Law § 7-103(2) (1% landlord admin fee in lieu of all custodial expenses) | Trust + commingling violation (§ 7-103(1)) |
+
+Pinned by `chicago_2026_rate_one_basis_point` (1 bps = 0.01%), `massachusetts_5_percent_annual_rate` (500 bps + $100 interest on $2K deposit annual), `connecticut_15_bps_default_rate`, `new_jersey_1_percent_with_1_percent_admin_fee` (annual rate 100 bps + landlord retains 100 bps), `new_york_6_unit_threshold_triggers_interest_required` (6 = threshold, 5 = none).
+
+**Chicago RLTO § 5-12-080(c) trigger threshold — held more than 6 MONTHS**:
+
+| Days held | Interest required |
+|-----------|-------------------|
+| 0-180 | No |
+| 181+ | Yes |
+
+Pinned by `chicago_under_6_months_no_interest_required` (180 days = no), `chicago_at_181_days_interest_required` (181 days = yes), `chicago_failure_to_pay_triggers_2x_deposit_strict_liability` ($2,000 deposit → $4,000 penalty).
+
+**Massachusetts G.L. c. 186 § 15B treble-damage clock — 30 days after termination**:
+
+| Days post-termination | Treble damages exposure |
+|-----------------------|-------------------------|
+| ≤ 30 | No (statutory grace) |
+| > 30 | YES (3x interest) |
+
+Pinned by `massachusetts_at_day_30_post_termination_no_treble_yet` (exactly 30 = no penalty), `massachusetts_failure_to_pay_within_30_days_triggers_treble_damages` (31 days = penalty engages), `massachusetts_improper_account_triggers_5_percent_compounding_violation` (§ 15B(3)(a) tenant-name MA bank account requirement separate violation).
+
+**Massachusetts treble multiplier uniquely highest in the framework** — pinned by `massachusetts_treble_uniquely_highest_multiplier_invariant`: MA 30,000 bps > Chicago 20,000 bps = CT 20,000 bps > NJ 10,000 bps = NY 10,000 bps > Default 0.
+
+**New Jersey N.J.S.A. 46:8-21.2 deposit cap — 1.5 months' rent**:
+
+| Deposit/Rent ratio | Cap violation |
+|--------------------|---------------|
+| ≤ 1.5x monthly rent | No |
+| > 1.5x monthly rent | Yes |
+
+Pinned by `new_jersey_at_exactly_1_5x_no_violation` (300% of $2K monthly = $3K deposit = compliant), `new_jersey_1_5x_monthly_rent_cap_violation_at_1_51x` ($3,020 = violation).
+
+**New York Gen. Oblig. Law § 7-103(2) — 6-unit threshold**:
+
+| Building unit count | Interest-bearing account required |
+|---------------------|------------------------------------|
+| 1-5 | No |
+| 6+ | Yes |
+
+Pinned by `new_york_6_unit_threshold_triggers_interest_required`, `new_york_under_6_units_no_interest_account_required` (5 units = no requirement), `new_york_6_unit_improper_account_violation` (8 units + improper account = § 7-103(2) violation).
+
+Mounted at `POST /api/rental/rental-security-deposit-interest`. Thirty-four tests pin: **Chicago 2026 rate one basis point**; **Chicago under 6 months no interest required**; **Chicago at 181 days interest required**; **Chicago failure to pay triggers 2x deposit strict liability**; **Massachusetts 5 percent annual rate**; **Massachusetts under one year no interest required**; **Massachusetts failure to pay within 30 days triggers treble damages**; **Massachusetts at day 30 post-termination no treble yet** (exactly 30 boundary); **Massachusetts improper account triggers 5 percent compounding violation**; **Connecticut 15 bps default rate**; **Connecticut failure beyond 30-day demand triggers double plus $100**; **New Jersey 1 percent with 1 percent admin fee**; **New Jersey 1.5x monthly rent cap violation at 1.51x**; **New Jersey at exactly 1.5x no violation**; **New York 6-unit threshold triggers interest required**; **New York under 6 units no interest account required**; **New York 6-unit improper account violation**; **Default jurisdiction no interest required**; **penalty multiplier truth table six cells** (Chicago 2x + MA 3x + CT 2x + NJ 1x + NY 1x + Default 0); **Massachusetts treble uniquely highest multiplier invariant**; **citation pins all five jurisdictions**; **note pins Chicago 2026 rate 0.01%**; **note pins Chicago strict-liability 2x**; **note pins Massachusetts 5% or actual lesser**; **note pins Massachusetts separate tenant-name account**; **note pins Massachusetts treble damages 30-day**; **note pins Connecticut quarterly Banking Commissioner**; **note pins Connecticut double + $100**; **note pins New Jersey 1.5-month cap**; **note pins New Jersey 1% admin fee**; **note pins New York 6-unit threshold**; **note pins New York trust no commingling**; **defensive zero days held no interest Chicago**; **defensive overflow clamped with saturating mul**.
+
 `traderview-expense::rental_sex_offender_registry_notice` is the **rental property sex offender registry notice disclosure compliance module** — when must a trader-landlord include a statutory Megan's Law notice in residential rental agreements, and what restrictions apply to the landlord's use of registry information? Trader-landlord operational concern: failure to include statutory Megan's Law disclosure in lease creates per-violation penalty exposure + tenant rescission claim; landlord USE of registry information to deny tenancy or evict triggers Fair Housing Act discrimination liability. Distinct from siblings `fair_chance_housing` (criminal-background screening), `rental_application_denial_disclosure` (denial reason), `tenant_data_privacy` (general data handling).
 
 **Three regimes** — California (mandatory lease disclosure) vs New Jersey (tier-based use restrictions) vs Default (federal SORNA + HUD disparate-impact):

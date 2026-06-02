@@ -569,6 +569,11 @@ use traderview_expense::rental_satellite_dish_installation_right::{
     check as check_rental_satellite_dish_installation_right,
     RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
 };
+use traderview_expense::rental_security_deposit_interest::{
+    check as check_rental_security_deposit_interest,
+    SecurityDepositInterestInput as RentalSecurityDepositInterestInput,
+    SecurityDepositInterestResult as RentalSecurityDepositInterestResult,
+};
 use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
@@ -947,6 +952,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
+        .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
@@ -6632,6 +6638,36 @@ async fn rental_satellite_dish_installation_right_route(
     Json(b): Json<RentalSatelliteDishInstallationRightInput>,
 ) -> Result<Json<RentalSatelliteDishInstallationRightResult>, ApiError> {
     Ok(Json(check_rental_satellite_dish_installation_right(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_security_deposit_interest: multi-jurisdictional security deposit
+// interest framework — Chicago RLTO § 5-12-080(c)/(f) + § 5-12-081 (2026
+// rate 0.01%, > 6 months held, 30 days post-12-month-period, STRICT-LIABILITY
+// 2x deposit damages); Mass. G.L. c. 186 § 15B(3)(a)/(b) + § 15B(6)(e) +
+// § 15B(7) (5% OR actual lesser, 30 days post-termination, STRICT-LIABILITY
+// TREBLE DAMAGES + costs + attorney fees per MA SJC precedent); Conn. Gen.
+// Stat. § 47a-21(i)/(j) + § 47a-21(d)(2) (avg savings deposit rate set
+// quarterly by Banking Commissioner, DOUBLE damages + $100 + attorney fees
+// for retention beyond 30 days after demand); N.J.S.A. 46:8-19 + § 46:8-21.2
+// (1.5 months' rent cap, NJ interest-bearing institution, 1% per annum
+// landlord admin fee, annual payment); N.Y. Gen. Oblig. Law § 7-103(1)/(2)
+// (TRUST hold always, interest-bearing NY-chartered bank for 6+ unit
+// buildings, 1% per annum landlord admin fee in lieu of all custodial
+// expenses). Mounted at POST /api/rental/rental-security-deposit-interest.
+// Trader-landlord critical because strict-liability double + treble damages
+// are among the steepest tenant remedies in landlord-tenant law. Sibling
+// cluster: landlord_annual_rent_statement,
+// tenant_rent_judgment_wage_garnishment, rental_property_registration,
+// landlord_identification_disclosure.
+// ---------------------------------------------------------------------------
+
+async fn rental_security_deposit_interest_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSecurityDepositInterestInput>,
+) -> Result<Json<RentalSecurityDepositInterestResult>, ApiError> {
+    Ok(Json(check_rental_security_deposit_interest(&b)))
 }
 
 // ---------------------------------------------------------------------------
