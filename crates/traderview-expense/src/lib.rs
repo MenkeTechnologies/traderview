@@ -170,6 +170,7 @@ pub mod rental_hot_water_temperature;
 pub mod rental_junk_fee_transparency;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_organic_waste_collection_disclosure;
+pub mod rental_pesticide_application_notification;
 pub mod rental_pet_deposit_separate_security;
 pub mod rental_property_registration;
 pub mod rental_satellite_dish_installation_right;

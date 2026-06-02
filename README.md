@@ -2987,6 +2987,51 @@ Mounted at `POST /api/rental/rental-lead-pipe-disclosure`. Thirty-two tests pin:
 
 Mounted at `POST /api/rental/rental-hoa-disclosure-at-lease`. Twenty-eight tests pin: **CA clean compliant**; **CA no tenant info to HOA violation** (§ 4740); **CA sensitive info shared without redaction violation** (financial privacy); **CA pre-acquisition rental prohibition enforceable**; **CA post-acquisition rental prohibition not enforceable**; **CA owner leased despite pre-acquisition prohibition violation** (Davis-Stirling); **FL clean compliant**; **FL no Disclosure Summary violation** (§ 720.401); **FL no CC&Rs/rules furnished violation**; **NV clean compliant**; **NV post-acquisition prohibition unenforceable violation** (§ 116.335); **NV owner leased despite pre-acquisition prohibition violation**; **NV pre-acquisition only enforceable**; **citation pins CA / FL / NV authorities** (all three); **note pins CA tenant info requirement** (BEFORE lease execution); **note pins CA redaction right**; **note pins FL Disclosure Summary three elements** (HOA membership + assessments + lien); **note pins FL Condominium rent diversion** (§ 718.503); **note pins NV § 116.335 pre-acquisition grandfathering** (TIME OF PURCHASE); **note pins NV § 118A landlord-tenant framework**; **CA uniquely requires tenant info to HOA invariant**; **FL uniquely requires Disclosure Summary invariant**; **NV uniquely prohibits post-acquisition restriction invariant**; **pre-acquisition rental prohibition invariant across CA + NV**; **CA redaction right uniquely available invariant**; **multiple CA violations stack** (3 violations).
 
+`traderview-expense::rental_pesticide_application_notification` is the **multi-jurisdictional residential rental pesticide application notification framework module** — trader-landlord critical because pesticide application is routine maintenance (ant colonies, cockroach extermination, termite treatment, mosquito spraying, rodent bait) but failure to satisfy state pre-application notice requirements creates per-violation civil exposure PLUS tenant common-law tort claims for chemical exposure injuries (especially when a tenant has chemical sensitivity, asthma, or pregnancy that the landlord knew or should have known about). Distinct from siblings `rental_carbon_monoxide_detector` (CO sensor framework), `rental_organic_waste_collection_disclosure` (organic waste diversion), `rental_basement_water_intrusion_disclosure` (water damage), `landlord_emergency_entry_notice` (entry without notice).
+
+**Four-jurisdiction statutory framework**:
+
+| Jurisdiction | Source | Required Notice |
+|--------------|--------|------------------|
+| **California** | Cal. Civ. Code § 1940.8.5 (SB 328 of 2015, effective January 1, 2016) | **24-HOUR** pre-application notice with 5 delivery methods |
+| **New York** | NY ECL § 33-1004 + § 33-1005 (Pesticide Neighbor Notification Law + 2020 amendment) | **48-HOUR** notice + visual markers + English/Spanish multilingual requirement |
+| **Massachusetts** | Mass. G.L. c. 132B § 6F + § 6I (Children and Families Protection Act of 2000) | **48-HOUR** notice + visual markers + IPM plans |
+| **Default** | 40 CFR Part 170 (federal Worker Protection Standard) + EPA FIFRA 7 USC § 136 | No statewide pre-application notice; common-law negligence claims preserved |
+
+Pinned by `ca_24_hour_advance_notice_compliant`, `ny_48_hour_advance_notice_compliant`, `ma_48_hour_advance_notice_compliant`, `default_no_advance_notice_compliant_but_warning_engaged`, `jurisdiction_truth_table_four_cells`, `ca_uniquely_provides_24_hour_standard_invariant` (CA 24 < NY 48 = MA 48), `ny_ma_share_48_hour_standard_invariant`.
+
+**California Civ. Code § 1940.8.5 four-prong notice requirement**:
+
+| Subsection | Element |
+|-------------|---------|
+| § 1940.8.5(a) | Definitions: pesticide + active ingredient + dwelling unit + authorized agent |
+| § 1940.8.5(b) | Required notice content: brand name + active ingredient + scheduled date/time + reasonable application statement + label warnings |
+| § 1940.8.5(c) | **24-HOUR** pre-application notice via 5 delivery methods (first-class mail + personal delivery + under-door + electronic + posted) |
+| § 1940.8.5(d) | Emergency exception: immediate health/safety threat → post-notice within **1 HOUR after application** |
+| § 1940.8.5(e) | Tenant-requested oral agreement exception: must include **PESTICIDE PRODUCT BRAND NAME** |
+
+Pinned by `ca_23_hour_advance_notice_violation` (23 hours = violation), `ca_missing_content_violation`, `ca_emergency_within_one_hour_post_notice_compliant`, `ca_emergency_post_notice_2_hours_violation` (2 hours = violation), `ca_tenant_oral_agreement_with_brand_name_compliant`, `ca_tenant_oral_agreement_without_brand_name_violation`.
+
+**New York ECL 33-1004 + 33-1005 dual-format requirements**:
+
+| Element | Source | Rule |
+|---------|--------|------|
+| Pre-application notice | NY ECL 33-1004 | **48-HOUR** for commercial lawn applications + residential one-or-two-family dwelling pesticide label |
+| Visual notification markers | NY ECL 33-1004 | Signs/flags posted at residential lawn application sites |
+| Multilingual notice (2020 amendment) | NY ECL 33-1004 | **English AND Spanish** for commercial lawn applications (plus other language Commissioner deems necessary) |
+| Schools | NY ECL | 48-hour notice to registered staff/parents |
+| Daycare facilities | NY ECL | 48-hour pre-application notice posted in common area visible to those dropping off/picking up children |
+
+Pinned by `ny_47_hour_advance_notice_violation`, `ny_no_multilingual_notice_violation`, `ny_no_visual_markers_violation`.
+
+**Massachusetts Mass. G.L. c. 132B § 6F + § 6I — Children and Families Protection Act of 2000**: 48-HOUR written notice to occupants of indoor pesticide application + visual notification markers + posted in common area + mandatory IPM (Integrated Pest Management) plans for schools and daycare facilities. Pinned by `ma_under_48_hours_violation`.
+
+**California Bus. & Prof. Code § 8538 parallel structural pest control operator framework** — licensed companies have parallel pre-application notice obligations under SPCB regulations; § 1940.8.5 closes the gap for LANDLORD-applied pesticides.
+
+**EPA FIFRA 7 USC § 136 federal preemption carveout**: federal Insecticide, Fungicide, and Rodenticide Act preempts state pesticide labeling but PRESERVES state notice and disclosure requirements for landlord-tenant relationships.
+
+Mounted at `POST /api/rental/rental-pesticide-application-notification`. Thirty-three tests pin: **CA 24-hour advance notice compliant**; **CA 23-hour advance notice violation** (1-hour boundary precision); **CA missing content violation**; **CA emergency within 1-hour post-notice compliant**; **CA emergency post-notice 2 hours violation**; **CA tenant oral agreement with brand name compliant**; **CA tenant oral agreement without brand name violation**; **NY 48-hour advance notice compliant**; **NY 47-hour advance notice violation**; **NY no multilingual notice violation** (2020 amendment); **NY no visual markers violation**; **MA 48-hour advance notice compliant**; **MA under 48 hours violation**; **default no advance notice compliant but warning engaged**; **jurisdiction truth table four cells**; **NY/MA share 48-hour standard invariant**; **CA uniquely provides 24-hour standard invariant**; **CA emergency only engages with immediate threat**; **CA oral agreement only engages with tenant request**; **citation pins all four jurisdictions** (§ 1940.8.5 + SB 328 + § 8538 + NY ECL § 33-1004 + § 33-1005 + § 33-0903 + § 33-0905 + Mass. c. 132B § 6F + § 6I + 40 CFR Part 170 + EPA FIFRA 7 USC § 136); **note pins CA 24-hour five delivery methods** (first-class mail + personal + under-door + electronic + posted); **note pins CA required content** (brand + active ingredient + warnings); **note pins CA emergency exception 1-hour**; **note pins CA tenant oral agreement brand name**; **note pins NY ECL 48-hour visual markers**; **note pins NY 2020 amendment English+Spanish**; **note pins NY school daycare 48-hour registry**; **note pins MA IPM Children and Families Protection Act**; **note pins default federal floor** (40 CFR Part 170 agricultural + common-law negligence); **note pins CA SPCB § 8538 parallel**; **note pins FIFRA federal preemption carveout**; **defensive zero hours routine non-compliant**; **multiple failures stack**.
+
 `traderview-expense::rental_pet_deposit_separate_security` is the **rental property pet deposit and separate security charge compliance module** — when must a trader-landlord fold pet deposits into the general security deposit cap vs. when may they collect separate pet deposits, pet fees, and pet rent simultaneously? Trader-landlord operational concern: post-2024 California framework folds all pet deposits into a single security deposit cap; misclassifying a "pet deposit" as separate from the security deposit creates per-violation statutory damages and refund liability. Distinct from siblings `pet_fees` (general pet fee framework), `security_deposit_caps` (general security deposit caps), `rental_application_denial_disclosure` (screening).
 
 **Four regimes** — California (single-cap fold-in) vs Washington ($150 pet damage cap + separate non-refundable fee) vs New York (no separate pet category) vs Texas (no cap):

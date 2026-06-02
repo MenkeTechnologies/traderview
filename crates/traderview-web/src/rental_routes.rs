@@ -583,6 +583,11 @@ use traderview_expense::rental_security_deposit_interest::{
     SecurityDepositInterestInput as RentalSecurityDepositInterestInput,
     SecurityDepositInterestResult as RentalSecurityDepositInterestResult,
 };
+use traderview_expense::rental_pesticide_application_notification::{
+    check as check_rental_pesticide_application_notification,
+    RentalPesticideApplicationNotificationInput,
+    RentalPesticideApplicationNotificationResult,
+};
 use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
@@ -970,6 +975,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
+        .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
@@ -6793,6 +6799,44 @@ async fn rental_security_deposit_interest_route(
     Json(b): Json<RentalSecurityDepositInterestInput>,
 ) -> Result<Json<RentalSecurityDepositInterestResult>, ApiError> {
     Ok(Json(check_rental_security_deposit_interest(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_pesticide_application_notification: multi-jurisdictional
+// residential rental pesticide application notification framework — Cal.
+// Civ. Code § 1940.8.5 (SB 328 of 2015, effective January 1, 2016) — 24
+// hours pre-application notice with 5 delivery methods (first-class mail,
+// personal delivery, under-door, electronic, posted); § 1940.8.5(d)
+// emergency exception (immediate threat → post-notice within 1 hour);
+// § 1940.8.5(e) tenant-requested oral agreement exception (must include
+// brand name); NY ECL 33-1004 + 33-1005 (Pesticide Neighbor Notification
+// Law) — 48-hour notice for commercial lawn applications + visual
+// notification markers + 2020 amendment English+Spanish requirement; NY
+// schools 48-hour registry + daycare common-area posting; Mass. G.L.
+// c. 132B § 6F + § 6I (Children and Families Protection Act of 2000) —
+// 48-hour notice + visual markers + IPM plans for schools/daycare;
+// Default — federal Worker Protection Standard (40 CFR Part 170) only
+// applies to agricultural applications; absence of state statute does
+// not preclude common-law negligence claims for chemical exposure
+// injuries. Mounted at POST /api/rental/rental-pesticide-application-
+// notification. Trader-landlord critical because pesticide application
+// is routine maintenance (ant colonies, cockroach extermination, termite
+// treatment, mosquito spraying, rodent bait) but failure to satisfy
+// state pre-application notice requirements creates per-violation civil
+// exposure PLUS tenant common-law tort claims for chemical exposure
+// injuries (especially chemical sensitivity, asthma, pregnancy). Sibling
+// cluster: rental_carbon_monoxide_detector,
+// rental_organic_waste_collection_disclosure,
+// rental_basement_water_intrusion_disclosure,
+// landlord_emergency_entry_notice.
+// ---------------------------------------------------------------------------
+
+async fn rental_pesticide_application_notification_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPesticideApplicationNotificationInput>,
+) -> Result<Json<RentalPesticideApplicationNotificationResult>, ApiError> {
+    Ok(Json(check_rental_pesticide_application_notification(&b)))
 }
 
 // ---------------------------------------------------------------------------
