@@ -216,6 +216,7 @@ pub mod tenant_ev_charging_installation_right;
 pub mod tenant_fire_safety_plan_disclosure;
 pub mod tenant_death_termination;
 pub mod tenant_organizing;
+pub mod tenant_positive_rent_reporting;
 pub mod tenant_solar_installation;
 pub mod tenant_relocation_assistance;
 pub mod tenant_rights_statement_disclosure;

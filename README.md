@@ -1790,6 +1790,57 @@ Mounted at `POST /api/rental/lease-copy-delivery-check`. Twenty-nine tests pin: 
 
 Mounted at `POST /api/rental/tenant-organizing-check`. Thirty-two tests pin: **5 regime classifications** (NY / DC / NJ / CA + default AL/FL/TX/WA/WY/MA — note **MA is in the default regime** as it has no specific tenant-organizing statute despite strong general tenant protections); **NY refused common-room access → violation**; **NY charged fee for meeting room → violation** (RPL § 230 requires no-cost access); NY room access granted no violation; **DC adverse action triggers $10,000 civil penalty**; **DC business license remedy available on violation**; DC no violation → no license remedy; **CA day 90 within 180-day window → retaliation presumed**; **CA day 180 boundary still within window** (regression — strict ≤ 180); **CA day 181 outside window → no presumption** + landlord compliant; **NJ adverse action against organizer non-compliant**; **NJ no civil-penalty dollar amount** (regression — distinguishes NJ from DC); no organizing activity → statute dormant; default state TX no protection; **4 citation regression targets** (NY RPL § 230 + "NO COST"; DC § 42-3505.06 + "$10,000" + "business licenses"; NJ 2A:42-10.10 + "reprisal"; CA § 1942.5(d) + "180-day"); **51-state coverage**; non-empty citations; **4 single-state-uniqueness invariants** (NY-only / DC-only / NJ-only / CA-only); DC violation note mentions business license; NY violation note mentions RPL § 230; CA within-window note mentions 180-day; lowercase state code normalizes.
 
+`traderview-expense::tenant_positive_rent_reporting` is the **multi-jurisdictional tenant positive rent reporting (credit-bureau) requirement framework module** — California AB 2747 of 2024 (codified at Cal. Civ. Code § 1954.07, **effective April 1, 2025**) mandates that landlords of 16+ unit residential buildings OFFER tenants the option to have their POSITIVE rental payments reported to at least one nationwide consumer reporting agency (Experian, Equifax, TransUnion). Companion to `landlord_annual_rent_statement`, `tenant_data_privacy`, `rental_application_denial_disclosure`, `fair_chance_housing`.
+
+Trader-landlord critical because (1) AB 2747 imposes affirmative offer obligation with annual repetition; (2) $10/month fee cap is strictly enforced; (3) failure to offer creates per-violation civil exposure; (4) misreporting positive vs late payments creates FCRA exposure (15 USC § 1681 et seq.); (5) tenant non-payment of fee CANNOT be cause for termination of tenancy AND CANNOT be deducted from security deposit.
+
+**Four-jurisdiction framework**:
+
+| Jurisdiction | Source | Effective Date | Trigger |
+|--------------|--------|----------------|---------|
+| **California** | Cal. Civ. Code § 1954.07 (AB 2747 of 2024) | **April 1, 2025** | 16+ unit buildings (or 15-or-fewer with corporate-multiple-building carveout) |
+| **Colorado** | Colorado HB 23-1099 | 2023 | Section 8 voucher holders + tenant-elected |
+| **Washington** | Washington SB 5495 of 2024 | 2024 | Buildings of 5+ units |
+| **Default** | No statewide framework | — | FCRA (15 USC § 1681) furnisher duties only |
+
+Pinned by `ca_16_plus_units_post_april_2025_obligation_engaged`, `ca_pre_april_2025_no_obligation`, `ca_april_2025_boundary_engages`, `colorado_engages_2023_and_later`, `washington_5_unit_threshold`, `jurisdiction_truth_table_four_cells`, `ca_carveout_only_engages_in_california_invariant`.
+
+**California § 1954.07 building-size threshold + carveout**:
+
+| Condition | Result |
+|-----------|--------|
+| ≥ 16 units | OBLIGATION TRIGGERED |
+| 15 or fewer + individual landlord | EXEMPT |
+| 15 or fewer + REIT/corp/LLC w/corp member + multiple buildings | **CARVEOUT ENGAGES — obligation triggered** |
+| 15 or fewer + corp + single building | EXEMPT |
+
+Pinned by `ca_15_or_fewer_units_individual_no_obligation`, `ca_15_units_corporate_multiple_buildings_carveout_engages`, `ca_15_units_reit_carveout_engages`, `ca_15_units_corporate_single_building_no_carveout`.
+
+**California § 1954.07 offer timing — dual track**:
+
+| Lease Type | Offer Required |
+|------------|----------------|
+| Leases entered into ON OR AFTER April 1, 2025 | At time of lease + at least once annually |
+| Leases OUTSTANDING as of January 1, 2025 | No later than April 1, 2025 + at least once annually |
+
+Pinned by `ca_16_units_no_offer_violation`, `ca_no_annual_offer_violation`.
+
+**California § 1954.07 $10/month fee cap — LESSER of actual cost OR $10**: pinned by `fee_at_10_dollar_cap_compliant`, `fee_at_actual_cost_below_10_compliant`, `fee_above_10_dollar_cap_violation`, `fee_above_actual_cost_violation_even_below_10`.
+
+**Positive-only definition** — "positive rental payment information" means COMPLETE, TIMELY payments of rent; specifically EXCLUDES incomplete or late payments. Pinned by `negative_reporting_violation`.
+
+**California § 1954.07 tenant fee non-payment three-prong protection**:
+
+1. Failure to pay fee SHALL NOT BE CAUSE FOR TERMINATION OF TENANCY
+2. Landlord SHALL NOT DEDUCT unpaid fee from security deposit
+3. 30+ days unpaid: landlord may stop reporting + tenant blocked from re-electing for 6 MONTHS
+
+Pinned by `termination_for_fee_nonpayment_violation`, `deducting_fee_from_security_deposit_violation`, `fee_unpaid_30_days_stop_reporting_engages`, `fee_unpaid_29_days_no_stop_reporting` (1-day boundary precision).
+
+**FCRA furnisher duties (15 USC § 1681s-2)** — landlord furnishing positive rental payment data is a "FURNISHER" subject to accuracy and dispute-investigation requirements; failure to investigate disputed inaccurate report creates private right of action under § 1681s-2(b).
+
+Mounted at `POST /api/rental/tenant-positive-rent-reporting`. Thirty-six tests pin: **CA 16+ units post-April 2025 obligation engaged**; **CA pre-April 2025 no obligation** (boundary precision); **CA April 2025 boundary engages**; **CA 15-or-fewer-units individual no obligation**; **CA 15 units corporate multiple buildings carveout engages**; **CA 15 units REIT carveout engages**; **CA 15 units corporate single building no carveout**; **CA 16 units no offer violation**; **CA no annual offer violation**; **fee above $10 cap violation**; **fee at $10 cap compliant**; **fee at actual cost below $10 compliant**; **fee above actual cost violation even below $10**; **negative reporting violation**; **termination for fee non-payment violation**; **deducting fee from security deposit violation**; **fee unpaid 30 days stop reporting engages**; **fee unpaid 29 days no stop reporting** (1-day boundary); **Colorado engages 2023 and later**; **Washington 5-unit threshold**; **default jurisdiction no obligation**; **jurisdiction truth table four cells**; **CA carveout only engages in California invariant**; **citation pins all authorities** (§ 1954.07 + AB 2747 of 2024 + April 1, 2025 + Colorado HB 23-1099 + Washington SB 5495 of 2024 + HUD Tenant Credit Reporting Pilot + 15 USC § 1681 et seq. + § 1681s-2); **note pins CA 16-unit threshold**; **note pins CA 15-unit carveout**; **note pins CA offer timing dual track**; **note pins CA $10 fee cap**; **note pins CA positive-only definition**; **note pins CA tenant protections three-prong**; **note pins Colorado HB 23-1099**; **note pins Washington SB 5495**; **note pins HUD pilot 2023-2025**; **note pins FCRA furnisher duties**; **note pins optional election** (OFFER MANDATE not REPORT MANDATE); **multiple failures stack**.
+
 `traderview-expense::tenant_rent_judgment_wage_garnishment` is the **post-judgment wage garnishment for tenant rent debt** module — when a trader-landlord obtains a money judgment for unpaid rent + damages after eviction, can it enforce the judgment by garnishing the former tenant's wages at the employer level? Distinct from `damage_deduction_itemization` (security deposit deductions at move-out), `rent_credit_reporting` (positive rent reporting to consumer reporting agencies), and `prevailing_party_attorney_fees` (lease attorney-fee shifting) — this module addresses ONLY the post-money-judgment wage garnishment enforcement pathway.
 
 **Three regimes**:

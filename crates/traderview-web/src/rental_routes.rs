@@ -664,6 +664,10 @@ use traderview_expense::lease_nondisparagement_prohibition::{
 use traderview_expense::tenant_organizing::{
     check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
 };
+use traderview_expense::tenant_positive_rent_reporting::{
+    check as check_tenant_positive_rent_reporting,
+    TenantPositiveRentReportingInput, TenantPositiveRentReportingResult,
+};
 use traderview_expense::tenant_rights_statement_disclosure::{
     check as check_tenant_rights_statement_disclosure, TenantRightsStatementInput,
     TenantRightsStatementResult,
@@ -899,6 +903,7 @@ pub fn router() -> Router<AppState> {
         .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
         .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
         .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
+        .route("/tenant-positive-rent-reporting", axum::routing::post(tenant_positive_rent_reporting_route))
         .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
         .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
         .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
@@ -3897,6 +3902,40 @@ async fn tenant_organizing_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_organizing(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_positive_rent_reporting: California AB 2747 of 2024 (codified at
+// Cal. Civ. Code § 1954.07, effective April 1, 2025) — residential
+// landlord of 16+ unit building MUST OFFER tenants option to have
+// positive rental payment information reported to at least one
+// nationwide consumer reporting agency. § 1954.07 15-or-fewer-unit
+// exemption WITH corporate-multiple-building carveout. Offer timing:
+// at lease execution + at least once annually; for outstanding leases
+// (Jan 1, 2025): no later than April 1, 2025 + annually. Fee cap:
+// lesser of actual cost OR $10/month. Positive-only definition:
+// COMPLETE, TIMELY payments — no incomplete/late reporting. Tenant
+// protections: failure to pay fee NOT cause for termination; NOT
+// deductible from security deposit; if unpaid 30+ days, landlord may
+// stop reporting + tenant blocked 6 months. Colorado HB 23-1099 +
+// Washington SB 5495 of 2024 + HUD Tenant Credit Reporting Pilot (FY
+// 2023-2025) parallel state expansions. FCRA (15 USC § 1681 et seq.)
+// furnisher duties apply under § 1681s-2. Mounted at POST /api/rental/
+// tenant-positive-rent-reporting. Trader-landlord critical because
+// (1) annual repeat-offer obligation; (2) $10/month strict fee cap;
+// (3) failure to offer creates per-violation civil exposure; (4)
+// FCRA exposure for misreporting; (5) tenant fee non-payment cannot
+// trigger eviction or security deposit deduction. Sibling cluster:
+// landlord_annual_rent_statement, tenant_data_privacy,
+// rental_application_denial_disclosure, fair_chance_housing.
+// ---------------------------------------------------------------------------
+
+async fn tenant_positive_rent_reporting_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantPositiveRentReportingInput>,
+) -> Result<Json<TenantPositiveRentReportingResult>, ApiError> {
+    Ok(Json(check_tenant_positive_rent_reporting(&b)))
 }
 
 // ---------------------------------------------------------------------------
