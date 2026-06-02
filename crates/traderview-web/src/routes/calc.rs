@@ -67,6 +67,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
+        .route("/calc/section-1366",          post(section_1366_route))
         .route("/calc/section-1367",          post(section_1367_route))
         .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
@@ -3225,6 +3226,38 @@ async fn section_1361_route(
     Json(b): Json<traderview_expense::section_1361::Section1361Input>,
 ) -> Result<Json<traderview_expense::section_1361::Section1361Result>, ApiError> {
     Ok(Json(traderview_expense::section_1361::compute(&b)))
+}
+
+// ── § 1366 S-corp pass-thru of items to shareholders ─────────────────
+// Mounted at /api/calc/section-1366. Pure compute; cornerstone S-corp
+// pass-through provision under § 1366(a)(1) — every shareholder reports
+// pro rata share of (A) separately-stated items that could affect tax
+// liability differently (capital gains/losses + § 1231 + charitable
+// contributions + dividend income + tax-exempt interest + foreign tax
+// credit + investment interest expense + § 179 expense + AMT
+// preferences + § 199A QBI deduction + § 1411 NII items) and (B)
+// non-separately-stated ordinary trade or business income/loss.
+// § 1366(b) character flow-through: items treated by shareholder as
+// if generated at shareholder level. § 1366(d)(1) three-tier loss
+// limitation: § 1366(d)(1)(A) basis cap = adjusted basis in stock +
+// adjusted basis in indebtedness; § 465 at-risk limitation; § 469
+// passive activity loss limitation. § 1366(d)(2) suspended losses
+// carry over indefinitely. § 1366(d)(3) post-termination transition
+// period (1 year or 120 days after IRS notice). § 1366(e) family
+// group reasonable compensation (IRS reallocation tool). § 1366(f)
+// adjustment for § 1374 built-in gains tax and § 1375 passive
+// investment income tax paid by S corp. Three-tier ordering per
+// 26 C.F.R. § 1.1366-2: basis → at-risk → passive. Distinction from
+// § 702 partnership pass-through (partners allow § 704(b) basis
+// tracking and § 704 special allocations; S corp requires single-
+// class-of-stock under § 1361(b)(1)(D)). Original framework Tax
+// Reform Act of 1982 Subchapter S Revision Pub. L. 97-354.
+
+async fn section_1366_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1366::Section1366Input>,
+) -> Result<Json<traderview_expense::section_1366::Section1366Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1366::check(&b)))
 }
 
 // ── § 1367 S-corp shareholder stock basis adjustments ───────────────

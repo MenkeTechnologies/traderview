@@ -10891,6 +10891,47 @@ Mounted at `POST /api/calc/section-1341`. Nineteen tests pin: **below $3,000 thr
 
 Mounted at `POST /api/calc/section-1361`. Twenty tests pin: **baseline qualifies** (50 effective shareholders, all 6 prongs pass); **foreign corp fails domestic prong**; **3 ineligible-corp-type failures** (financial institution reserve method + insurance Subchapter L + foreign sales corp / DISC); **exactly 100 shareholders qualifies** (boundary); **101 shareholders fails** (strict ≤ 100); **family attribution collapses 50 members to 1** (50 family + 49 non-family = 50 effective); **family attribution lets large family avoid cap** (200 family + 50 non-family = 51 effective); **partnership shareholder fails** §1361(b)(1)(D); **NRA shareholder fails** even one share; **two classes of stock fails**; **domestic failure short-circuits other failures** (regression — highest priority wins); **financial institution short-circuits count failure**; **count failure reported before NRA failure** (priority ordering); citation mentions all 6 prongs + §1361(c)(1) + §1361(c)(2); **citation mentions voting-rights differences ARE permitted** (regression — common confusion); note qualifying path mentions "qualifies as S corporation"; note failure path describes §1361(b)(1)(E) + nonresident alien; note reports effective shareholder count post-§1361(c)(1).
 
+`traderview-expense::section_1366` is the **IRC § 1366 — Pass-thru of items to shareholders module** — the cornerstone S-corporation pass-through provision under which every item of income, loss, deduction, credit, and tax-exempt income earned by an S corporation flows through to shareholders in pro rata share and retains its character at the shareholder level. Direct trader-business-owner companion to `section_1361` (S corporation election), `section_1367` (basis adjustments), `section_1368` (distributions), `section_1374` (built-in gains), `section_1375` (passive investment income), `section_1042` (ESOP rollover — iter 480), `section_4978` (ESOP recapture — iter 484), `section_6166` (estate tax installment — iter 486). § 1366 current framework from Tax Reform Act of 1982 Subchapter S Revision, Pub. L. 97-354.
+
+**§ 1366(a)(1) Pro rata share** — every shareholder reports on personal return their pro rata share of:
+1. **§ 1366(a)(1)(A) SEPARATELY-STATED ITEMS** — items that could affect shareholder tax liability differently than if not separately stated:
+   - Short-term capital gains and losses
+   - Long-term capital gains and losses
+   - § 1231 gains and losses
+   - Charitable contributions (retain § 170(b) 30%/60% AGI limitation at shareholder level)
+   - Dividend income (qualified vs ordinary)
+   - Tax-exempt interest income
+   - Foreign tax credit items
+   - Investment interest expense
+   - § 179 expense election
+   - AMT preference items
+   - **§ 199A qualified business income (QBI) deduction**
+   - § 1411 net investment income tax items
+2. **§ 1366(a)(1)(B) NON-SEPARATELY STATED INCOME OR LOSS** — ordinary trade or business income/loss (lumped together)
+
+**§ 1366(b) Character flow-through**: each pro rata share item treated by shareholder as if the underlying activity had occurred at the SHAREHOLDER level — long-term capital gains stay long-term capital gains; § 1231 stays § 1231; tax-exempt interest stays tax-exempt.
+
+**§ 1366(d)(1) Three-tier loss limitation**:
+1. **§ 1366(d)(1)(A) BASIS LIMITATION** — aggregate losses + deductions cannot exceed sum of (adjusted basis in S corp STOCK) + (adjusted basis in INDEBTEDNESS of S corp to shareholder)
+2. **§ 465 AT-RISK LIMITATION** — losses also limited to amount shareholder is at risk in S corp activity
+3. **§ 469 PASSIVE ACTIVITY LOSS LIMITATION** — passive losses can offset only passive income
+
+Three-tier ordering per 26 C.F.R. § 1.1366-2: basis applied first → at-risk second → passive third. Losses suspended at one tier may flow through to next tier only if next-tier test allows.
+
+**§ 1366(d)(2) Carryover**: any loss or deduction disallowed by basis limitation is treated as incurred by the S corporation in the succeeding tax year with respect to that shareholder; carries over **INDEFINITELY** until basis restored (basis adjustments per § 1367, distributions per § 1368).
+
+**§ 1366(d)(3) Post-termination transition period**: if S election terminates, suspended losses become deductible during PTTP (greater of **1-year** window after termination or **120 days** after IRS notice of termination determination) to extent of basis increase resulting from shareholder capital contribution.
+
+**§ 1366(e) Family group reasonable compensation**: IRS authorized to reallocate items among family group members of S corporation if compensation paid to family members performing services is unreasonable. Forces family-shareholder S-corps to pay **reasonable W-2 wages**.
+
+**§ 1366(f) S-corporation-level tax adjustments**: § 1366(f)(1) pro rata share reduced for § 1374 built-in gains tax paid by S corp (avoids double tax); § 1366(f)(2) pro rata share adjusted for § 1375 passive investment income tax when passive income exceeds 25% of gross receipts.
+
+**Trader-business-owner critical fact patterns**: (1) Trader-CEO of S corp with $2M corporate loss + 60% pro rata share + $1M stock+debt basis cap → $1M allowed at basis, **$200K suspended INDEFINITELY** under § 1366(d)(2); (2) S corp losses offset shareholder's W-2 wages, capital gains, and other income — but ONLY to extent of stock + debt basis under § 1366(d)(1); (3) at-risk and passive activity loss limitations **stack on top** of basis limitation; (4) charitable contributions flow through SEPARATELY at character of contribution — retain 30%/60% AGI limitation per § 170(b); (5) § 199A 20% QBI deduction flows through SEPARATELY as a deduction; (6) **§ 1366(e) family group reasonable compensation** is the primary IRS enforcement tool against family S-corp wage-vs-distribution arbitrage; (7) suspended losses under § 1366(d)(2) preserve indefinitely so patient shareholders eventually capture economic losses when basis restored.
+
+**Distinction from § 702** (partnership pass-through): both require separately-stated items and character flow-through, but partnerships allow partner-specific § 704(b) basis tracking and § 704 special allocations. **S corporations require single-class-of-stock** under § 1361(b)(1)(D).
+
+Mounted at `POST /api/calc/section-1366`. Twenty-eight tests pin: **C corp not eligible**; **partnership not eligible**; **sole proprietor not eligible**; **losses fully within basis compliant**; **losses exceed basis partially suspended**; **losses fully suspended zero basis**; **at-risk limitation below basis**; **passive activity no passive income fully suspended at passive**; **passive activity partial offset**; **non-passive no passive offset needed**; **pro rata share 25%**; **pro rata share 100%**; **long-term capital loss separately stated**; **separately-stated loss flows through**; **basis limit + at-risk + passive limit stack** (60K → 40K → 20K); **citation pins all authorities** (§ 1366(a)(1)/(b)/(d)(1)/(d)(1)(A)/(d)(2)/(d)(3)/(e)/(f)/(f)(1)/(f)(2) + § 465 + § 469 + § 1361 + § 1367 + § 1368 + § 1374 + § 1375 + § 1377 + § 199A + § 1411 + § 170(b) + § 702 + § 704 + § 1361(b)(1)(D) + 26 C.F.R. § 1.1366-2); **note pins pro rata separately-stated categories**; **note pins character flow-through**; **note pins three-tier loss limitation**; **note pins § 1366(d)(2) indefinite carryover**; **note pins § 1366(d)(3) post-termination transition period** (1 year + 120 days); **note pins § 1366(e) family group reasonable compensation** (reasonable W-2 wages); **note pins partnership distinction** (§ 702 + § 704 + single-class-of-stock); **note pins companion modules**; **6-cell severity truth table**; **saturating arithmetic overflow defense**; **boundary zero loss compliant**; **realistic $2M trader S corp loss** ($1.2M shareholder share → $1M allowed + $200K suspended).
+
 `traderview-expense::section_1367` is the **IRC § 1367 S-corp shareholder stock basis adjustment module** — core math for any trader organizing as an S corporation. § 1367 governs how shareholder stock basis shifts each year as the corporation's income, losses, distributions, and expenses flow through. The basis figure controls (a) how much corporate loss may be deducted on the personal return under § 1366(d), (b) whether distributions are tax-free under § 1368, and (c) gain recognition on disposition. Direct sibling to `section_1361` (S-corp definition + eligibility) and `section_1374` (built-in gains tax on C-to-S conversion). Form 7203 is the IRS basis-tracking schedule.
 
 **§ 1367(a)(1) basis increases** (positive items, applied first):
