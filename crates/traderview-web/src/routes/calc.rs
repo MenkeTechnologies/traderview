@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
         .route("/calc/section-1366",          post(section_1366_route))
+        .route("/calc/section-1377",          post(section_1377_route))
         .route("/calc/section-1367",          post(section_1367_route))
         .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
@@ -3258,6 +3259,41 @@ async fn section_1366_route(
     Json(b): Json<traderview_expense::section_1366::Section1366Input>,
 ) -> Result<Json<traderview_expense::section_1366::Section1366Result>, ApiError> {
     Ok(Json(traderview_expense::section_1366::check(&b)))
+}
+
+// ── § 1377 S-corp pro rata + terminating election + PTTP ─────────────
+// Mounted at /api/calc/section-1377. § 1377(a)(1) pro rata share
+// general rule — DAILY ASSIGNMENT method: each shareholder's pro rata
+// share determined by assigning equal portion of any S corp item to
+// each day of taxable year, then dividing pro rata among shares
+// outstanding on that day. Special-day rules per 26 C.F.R.
+// § 1.1377-1(a)(2): disposing shareholder treated as shareholder for
+// day of disposition; deceased shareholder for day of death.
+// § 1377(a)(2) TERMINATING ELECTION ('closing of the books'): if
+// shareholder's entire interest terminates AND all affected
+// shareholders consent, corporation may elect to apply § 1377(a)(1)
+// AS IF taxable year consisted of two separate years, first ending
+// on termination date. Eligibility: § 1377(a)(2)(A) full disposition
+// (sale + exchange + gift) OR § 1377(a)(2)(B) § 302 or § 303
+// redemption + all-affected-shareholder consent + timely Form 1120-S
+// attached statement. § 1377(b) POST-TERMINATION TRANSITION PERIOD
+// (PTTP) definitions: § 1377(b)(1)(A) 1-year period after S corp
+// ceases; § 1377(b)(1)(B) 120-day determination period; § 1377(b)(1)(C)
+// 120-day E&P determination period. § 1377(b)(2) distribution during
+// PTTP treated as reducing AAA under § 1368(c) first (tax-free), then
+// E&P (dividend treatment). § 1377(b)(3) determination definitions
+// (§ 1313(a)(1) IRS or court determination + Secretary determination
+// + corporation-Secretary agreement). Distinction from § 706
+// partnership: partnerships use varying interest rules under
+// § 706(d) (interim closing or proration); S corps restricted to
+// § 1377(a)(1) daily method unless § 1377(a)(2) election. Current
+// framework Subchapter S Revision Act of 1982 Pub. L. 97-354.
+
+async fn section_1377_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1377::Section1377Input>,
+) -> Result<Json<traderview_expense::section_1377::Section1377Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1377::check(&b)))
 }
 
 // ── § 1367 S-corp shareholder stock basis adjustments ───────────────
