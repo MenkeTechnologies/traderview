@@ -494,6 +494,10 @@ use traderview_expense::rental_application_denial_disclosure::{
     check as check_rental_application_denial_disclosure,
     RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
 };
+use traderview_expense::rental_bedroom_egress_window::{
+    check as check_rental_bedroom_egress_window, RentalBedroomEgressWindowInput,
+    RentalBedroomEgressWindowResult,
+};
 use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
@@ -855,6 +859,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
+        .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
@@ -5995,6 +6000,32 @@ async fn rental_application_denial_disclosure_route(
     Json(b): Json<RentalApplicationDenialDisclosureInput>,
 ) -> Result<Json<RentalApplicationDenialDisclosureResult>, ApiError> {
     Ok(Json(check_rental_application_denial_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_bedroom_egress_window: Rental property bedroom egress window
+// requirement compliance — when a trader-landlord must ensure every
+// bedroom has an emergency escape and rescue opening (EERO) meeting
+// IRC § R310 minimum standards. Mounted at POST /api/rental/rental-
+// bedroom-egress-window. Two regimes: IRC R310 (49 state-adopting
+// jurisdictions including California Residential Code § R310 + 2020
+// New York State Residential Code § R310 — four simultaneous
+// requirements per § R310.2.1: net clear opening ≥ 5.7 sq ft (5.0 sq
+// ft grade exception), height ≥ 24 in, width ≥ 20 in, sill ≤ 44 in;
+// § R310.2.3 window well requirements if below grade: ≥ 9 sq ft area
+// + 36 in projection + ladder if depth > 44 in); Default (no
+// statewide IRC adoption; local building code + common-law warranty
+// of habitability govern). Distinct from siblings detector_
+// requirements, fire_sprinkler_disclosure, tenant_fire_safety_plan_
+// disclosure, window_guard_requirements.
+// ---------------------------------------------------------------------------
+
+async fn rental_bedroom_egress_window_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBedroomEgressWindowInput>,
+) -> Result<Json<RentalBedroomEgressWindowResult>, ApiError> {
+    Ok(Json(check_rental_bedroom_egress_window(&b)))
 }
 
 // ---------------------------------------------------------------------------
