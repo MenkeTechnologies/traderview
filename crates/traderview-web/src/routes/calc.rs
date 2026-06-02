@@ -224,6 +224,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4975",          post(section_4975_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
+        .route("/calc/section-457b",          post(section_457b_route))
         .route("/calc/section-461l",          post(section_461l_route))
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-691",           post(section_691_route))
@@ -906,6 +907,28 @@ async fn section_453a_route(
         ));
     }
     Ok(Json(traderview_expense::section_453a::compute(&b)))
+}
+
+// ── § 457(b) Governmental and Tax-Exempt Deferred Compensation ───────
+// Mounted at /api/calc/section-457b. Pure compute; 2026 limits:
+// elective deferral § 457(b)(2) $24,500; age-50 catch-up § 414(v)
+// $8,000 (GOVERNMENTAL ONLY); ages-60-63 SECURE 2.0 § 109 enhanced
+// catch-up $11,250 (GOVERNMENTAL ONLY); § 457(b)(3) special 3-year
+// pre-retirement catch-up = lesser of 2× annual limit ($49,000) or
+// underutilized prior-year limitation (BOTH governmental + tax-
+// exempt). Two plan types: GOVERNMENTAL (§ 457(g) trust, no § 72(t)
+// 10% penalty, rollovers permitted) vs TAX-EXEMPT (unfunded top-
+// hat, substantial credit risk in employer bankruptcy, § 72(t)
+// applies, rollovers not permitted). § 402(g)(1) NON-AGGREGATION
+// rule allows DOUBLE DEFERRAL with § 401(k)/§ 403(b) ($49,000 in
+// 2026). § 457(b)(3) ANTI-STACKING with § 414(v) catch-up
+// (participant must choose ONE catch-up mechanism per year).
+
+async fn section_457b_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_457b::Section457bInput>,
+) -> Result<Json<traderview_expense::section_457b::Section457bResult>, ApiError> {
+    Ok(Json(traderview_expense::section_457b::check(&b)))
 }
 
 // ── §168(e)(6) Qualified Improvement Property ────────────────────────

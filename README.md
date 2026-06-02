@@ -8625,6 +8625,52 @@ The election is rational when basis is close to FMV (gain elimination matters le
 
 Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG-public-FMV path with all numbers spelled out ($100k → $60k deduct + $40k CF + $90k gain eliminated); basis election trade-off; STCG and ordinary income same reduction; LTCG-private-foundation QAS at 20% cap; non-QAS reduces to basis; tangible unrelated use to both public (50%) and private (30%); prior carryover compounds against current cap; other-this-year contributions eat budget; **zero AGI → full carryforward**; contribution exactly at cap → 0 carryforward; **other contributions exceeding cap clamp remaining at 0** (negative-budget regression target); **FMV below basis no gain eliminated reports 0 not negative** (the underwater-stock no-bonus case); basis election flag ignored for STCG; QAS flag ignored for public-charity path; QAS+election combo → election wins (branch ordering pinned); note describes rule path citation + cap pct; QAS path note mentions §170(e)(5); very large donation no precision loss ($9.87B basis with $20B AGI); multi-year roll picks up prior carryforward only (zero new contribution case); **carryforward never negative under pathological negative input**; private-foundation STCG uses 30% cap not 20% (rule × charity-type interaction).
 
+`traderview-expense::section_457b` is the **IRC § 457(b) Governmental and Tax-Exempt Deferred Compensation Plans module** — direct trader companion to `section_401k` (iter 448), `section_408` (traditional IRA — iter 432), `section_408a` (Roth IRA — iter 430), `section_4973` (excess contribution excise — iter 442), `section_4974` (RMD excise — iter 436), `section_72t` (10% early-withdrawal penalty), `section_162m` ($1M public-company exec comp deduction — iter 446). Trader-critical because public-sector and nonprofit traders can stack § 457(b) on top of § 401(k) or § 403(b) for substantial **DOUBLE DEFERRAL strategy** — separate $24,500 elective deferral limits at each plan type under § 402(g)(1) non-aggregation rule.
+
+**Two structurally distinct § 457(b) plan types**:
+
+| Plan Type | Funding | § 72(t) Penalty | Rollovers | Credit Risk |
+|-----------|---------|-----------------|-----------|-------------|
+| **GOVERNMENTAL** § 457(b) | § 457(g) TRUST for exclusive benefit | **NO 10% penalty** | PERMITTED to/from § 401(k), § 403(b), § 408 IRAs | None (trust protection) |
+| **TAX-EXEMPT** § 457(b) | UNFUNDED "top-hat" general employer assets | **10% penalty applies** | NOT permitted to other plan types | **SUBSTANTIAL credit risk** — unsecured creditor in employer bankruptcy |
+
+**2026 contribution limit framework (IRS Notice 2025-67)**:
+
+| Limit | 2026 Amount | Eligibility |
+|-------|-------------|-------------|
+| Elective deferral § 457(b)(2) | $24,500 | Both plan types |
+| Age 50+ catch-up § 414(v) | $8,000 | **GOVERNMENTAL ONLY** |
+| Ages 60-63 enhanced catch-up § 414(v)(2)(E) | $11,250 | **GOVERNMENTAL ONLY** (SECURE 2.0 § 109) |
+| Special 3-year pre-retirement catch-up § 457(b)(3) | up to $49,000 (2× annual) | Both plan types |
+
+**§ 457(b)(3) special 3-year pre-retirement catch-up**:
+- Available in 3 taxable years immediately preceding NORMAL RETIREMENT AGE specified by plan
+- Maximum = lesser of (a) 2× annual limit ($49,000 for 2026); OR (b) underutilized contribution capacity from prior eligible years
+- **ANTI-STACKING** — CANNOT be combined with age-50 catch-up under § 414(v) OR ages-60-63 enhanced catch-up; participant must choose ONE catch-up mechanism per year
+- Available to BOTH governmental AND tax-exempt § 457(b) plans (unlike age-50 which is governmental-only)
+
+**§ 457(g) governmental trust requirement** — Small Business Jobs Protection Act of 1996 (Pub. L. 104-188) required governmental § 457(b) assets be held in TRUST for EXCLUSIVE BENEFIT of participants and beneficiaries effective January 1, 1999; protects from employer creditors.
+
+**§ 402(g)(1) non-aggregation rule (KEY ADVANTAGE)**:
+- § 401(k) + § 403(b) plans aggregated under single $24,500 elective deferral limit
+- § 457(b) **NOT AGGREGATED** — SEPARATE $24,500 limit
+- **DOUBLE DEFERRAL STRATEGY** — governmental or nonprofit employee with both § 401(k)/§ 403(b) AND § 457(b) can defer **UP TO $49,000 in 2026**
+
+**§ 457(d)(1) distribution triggers**: (1) separation from service (most common); (2) age 70½ (now superseded by § 401(a)(9) RMD rules — age 73 for born 1951-1959, age 75 for born 1960+); (3) unforeseeable emergency under Treas. Reg. § 1.457-6(c); (4) plan termination; (5) § 457(d)(9) in-service distribution at 59½ (added by SECURE Act 2.0 § 314 for emergency expenses).
+
+**§ 457(d)(2) rollover rules**:
+- **Governmental § 457(b)** — rollovers PERMITTED to/from § 401(k), § 403(b), § 408 traditional IRAs, § 408A Roth IRAs (after tax inclusion); rolled-over amounts retain source plan's § 72(t) status
+- **Tax-exempt § 457(b)** — rollovers NOT PERMITTED to other plan types; only to another tax-exempt § 457(b) within 60-day window
+
+**Trader-critical fact patterns**:
+1. State employee age 40 defers $24,500 § 457(b) + $24,500 § 401(k) = **$49,000 DOUBLE DEFERRAL** under § 402(g)(1) non-aggregation rule
+2. State employee age 55 separates from service — governmental § 457(b) immediate distribution at any age WITHOUT § 72(t) penalty (vs § 401(k) requires rule-of-55 or 59½)
+3. Tax-exempt nonprofit CFO age 62 maxes $24,500 only ($11,250 enhanced catch-up NOT available — § 414(v)(3) ineligibility)
+4. State employee age 62 (within 3 years of NRA 65) invokes § 457(b)(3) special 3-year catch-up $49,000; cannot combine with $11,250 enhanced (anti-stacking)
+5. Tax-exempt § 457(b) participant in employer Chapter 11 — UNFUNDED plan assets subject to ALL creditor claims; participant becomes **UNSECURED CREDITOR**
+
+Mounted at `POST /api/calc/section-457b`. Thirty-four tests pin: **governmental max compliant**; **over $24,500 limit violation**; **governmental age 50 eligible for $8,000 catch-up**; **governmental ages 60-63 enhanced $11,250**; **governmental age 64+ reverts to $8,000**; **tax-exempt no age-50 catch-up eligibility** (§ 414(v)(3)); **tax-exempt no enhanced catch-up eligibility**; **special 3-year catch-up doubles limit**; **special 3-year capped at 2× annual ($49,000)**; **special 3-year anti-stacking with catch-up violation**; **governmental no § 72(t) penalty**; **tax-exempt § 72(t) penalty applies**; **governmental rollover permitted**; **tax-exempt rollover not permitted**; **double deferral strategy disclosed** ($49,000); **tax-exempt employer distress credit risk engaged** (unsecured creditor); **governmental employer distress no credit risk** (trust protection); **separation from service disclosed**; **age bracket truth table five cells governmental**; **tax-exempt uniquely § 72(t) applies invariant**; **special 3-year uniquely doubles limit invariant**; **citation pins all authorities** (§ 457(a)-(g) + § 457(b)(2) + § 457(b)(3) + § 457(d) + § 457(g) + § 402(g)(1) + § 72(t) + § 414(v)(2)(E) + § 414(v)(3) + Pub. L. 104-188 + SECURE Act 2.0 § 314 + SECURE Act 2.0 § 109 + Pub. L. 117-328 + IRS Notice 2025-67 + Treas. Reg. § 1.457-1); **note pins eligible deferred compensation plan**; **note pins two plan types (governmental vs tax-exempt)**; **note pins 2026 limits**; **note pins special 3-year anti-stacking**; **note pins § 457(g) trust requirement**; **note pins § 72(t) interaction**; **note pins § 402(g)(1) double deferral**; **note pins § 457(d)(1) distribution triggers**; **note pins § 457(d)(2) rollover rules**; **note pins trader fact patterns five**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_461l` is the **IRC §461(l) excess business loss limitation module** — **completes the loss-limitation cascade** for individual, trust, and estate taxpayers:
 
 | Order | Section          | Limit                                | Module                |
