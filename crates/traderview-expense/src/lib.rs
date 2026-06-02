@@ -178,6 +178,7 @@ pub mod rental_fire_extinguisher_requirement;
 pub mod rental_flood_hazard_disclosure;
 pub mod rental_broadband_mte_rules;
 pub mod rental_energy_benchmarking;
+pub mod rental_garage_door_safety_compliance;
 pub mod rental_gas_appliance_ban;
 pub mod rental_hardwired_smoke_alarm_responsibility;
 pub mod rental_hoa_disclosure_at_lease;

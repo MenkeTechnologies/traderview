@@ -628,6 +628,10 @@ use traderview_expense::rental_energy_benchmarking::{
     check as check_rental_energy_benchmarking, RentalEnergyBenchmarkingInput,
     RentalEnergyBenchmarkingResult,
 };
+use traderview_expense::rental_garage_door_safety_compliance::{
+    check as check_rental_garage_door_safety_compliance,
+    RentalGarageDoorSafetyComplianceInput, RentalGarageDoorSafetyComplianceResult,
+};
 use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
     RentalGasApplianceBanResult,
@@ -1125,6 +1129,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
+        .route("/rental-garage-door-safety-compliance", axum::routing::post(rental_garage_door_safety_compliance_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
@@ -7533,6 +7538,63 @@ async fn rental_gas_appliance_ban_route(
     Json(b): Json<RentalGasApplianceBanInput>,
 ) -> Result<Json<RentalGasApplianceBanResult>, ApiError> {
     Ok(Json(check_rental_gas_appliance_ban(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_garage_door_safety_compliance: Multi-jurisdictional rental
+// property automatic garage door opener safety compliance framework.
+// When a landlord rents a property with an automatic garage door opener,
+// what entrapment-protection standards apply (UL 325 photoelectric eye
+// + auto-reverse + sensing edge), what pre-1993 legacy opener
+// replacement obligations attach, and what failure-mode liabilities
+// expose landlord after a child-entrapment injury or fatality? Mounted
+// at POST /api/rental/rental-garage-door-safety-compliance. Three-
+// jurisdiction framework: Federal/CPSC (universal floor — Consumer
+// Product Safety Improvement Act of 1990, Pub. L. 101-608, 15 U.S.C.
+// § 2056 + 16 C.F.R. Part 1211 Safety Standard for Automatic
+// Residential Garage Door Operators + ANSI/UL 325 mandatory standard
+// since JANUARY 1, 1993; CPSC reports child-entrapment incidents
+// reduced to NEARLY ZERO with properly installed external photo-eye
+// protection); California (Cal. Civ. Code § 1941.1 implied warranty
+// per Green v. Superior Court, 10 Cal. 3d 616 (1974) + Cal. Bus. &
+// Prof. Code § 7026 C-61/D-28 contractor licensing + Cal. SB 969
+// (2018) battery-backup requirement effective July 1, 2019 for
+// emergency egress during power outages); Default (common-law implied
+// warranty per Hilder v. St. Peter, 478 A.2d 202 (Vt. 1984) + tort
+// negligence + premises liability + 15 U.S.C. § 2068 prohibited acts
+// when continuing to lease unit with recalled opener). UL 325 (post-
+// 1993) five safety requirements: external entrapment protection via
+// photoelectric infrared sensors (mounted 4-6 inches above floor) OR
+// sensing-edge contact strips; internal entrapment monitoring via
+// motor strain detection; auto-reverse on contact within 2 seconds
+// plus 3-second timeout; 5.5-second close time enforced minimum;
+// annual 2x4 lumber test (door should auto-reverse without crushing).
+// Three opener generations: PRE-1993 NOT equipped with external
+// protection — CPSC + manufacturers recommend REPLACEMENT (not
+// repair); insurance carriers commonly deny coverage for pre-1993
+// opener incidents; 1993-2010 first-generation UL 325 compliant;
+// POST-2010 current edition with enhanced features including battery
+// backup. Five universal failure-mode liabilities: pre-1993 opener
+// still in service; photoelectric eye obstructed or disabled by
+// tenant; auto-reverse 2x4 test failure; pinch-point unprotected
+// (finger amputation); CA SB 969 battery-backup missing on post-July-
+// 1-2019 installation. Child-entrapment fatality settlements
+// routinely exceed $5M; pre-1993 opener replacement cost $300-$800
+// vs litigation exposure. Distinct from siblings rental_window_blind_
+// cord_safety (iter 469), rental_window_guard_installation, rental_
+// swimming_pool_drain_safety, rental_carbon_monoxide_detector,
+// rental_chimney_fireplace_inspection_disclosure (iter 471), rental_
+// fire_extinguisher_requirement (iter 473), rental_hardwired_smoke_
+// alarm_responsibility (iter 481), rental_bedroom_egress_window,
+// tenant_emotional_distress_damages.
+// ---------------------------------------------------------------------------
+
+async fn rental_garage_door_safety_compliance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalGarageDoorSafetyComplianceInput>,
+) -> Result<Json<RentalGarageDoorSafetyComplianceResult>, ApiError> {
+    Ok(Json(check_rental_garage_door_safety_compliance(&b)))
 }
 
 // ---------------------------------------------------------------------------
