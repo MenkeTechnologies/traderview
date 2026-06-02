@@ -217,6 +217,10 @@ use traderview_expense::smoke_free_housing::{
 use traderview_expense::tenant_data_privacy::{
     check as check_tenant_privacy, PrivacyInput, PrivacyResult,
 };
+use traderview_expense::tenant_fire_safety_plan_disclosure::{
+    check as check_tenant_fire_safety_plan_disclosure,
+    TenantFireSafetyPlanDisclosureInput, TenantFireSafetyPlanDisclosureResult,
+};
 use traderview_expense::drug_eviction::{
     check as check_drug_eviction, DrugEvictionInput, DrugEvictionResult,
 };
@@ -767,6 +771,7 @@ pub fn router() -> Router<AppState> {
         .route("/submetering-check", axum::routing::post(submetering_check_route))
         .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
         .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
+        .route("/tenant-fire-safety-plan-disclosure", axum::routing::post(tenant_fire_safety_plan_disclosure_route))
         .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
         .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
         .route("/flood-disclosure-check", axum::routing::post(flood_disclosure_check_route))
@@ -3335,6 +3340,35 @@ async fn tenant_privacy_check_route(
         ));
     }
     Ok(Json(check_tenant_privacy(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_fire_safety_plan_disclosure: Tenant fire safety plan +
+// emergency preparedness notice disclosure compliance — when a
+// trader-landlord must post and distribute fire safety plans +
+// emergency preparedness notices to tenants of multi-unit residential
+// properties. Mounted at POST /api/rental/tenant-fire-safety-plan-
+// disclosure. Three regimes: NYC HMC § 27-2046 + Article 11 + HPD
+// Required Signs (3+ apartments; Fire Safety Plan posted at entrance
+// + mailed annually; Emergency Preparedness Notice on inside of all
+// apartment entrance doors + lobby/common area; Smoke Detector
+// Notice at/near mailboxes; CO Detector Notice in common area);
+// California Cal. Health & Safety Code §§ 13145 + 17926 + 2010
+// Carbon Monoxide Poisoning Prevention Act + 1991 Smoke Detector Act
+// (3+ apartments; fire alarm disclosure at entrance OR lobby);
+// Default IFC § 403.10 (4+ unit buildings; state-specific
+// habitability). Distinct from siblings detector_requirements (smoke
+// + CO detector hardware), fire_sprinkler_disclosure (fire-
+// suppression), water_heater_earthquake_strap, landlord_emergency_
+// entry_notice.
+// ---------------------------------------------------------------------------
+
+async fn tenant_fire_safety_plan_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantFireSafetyPlanDisclosureInput>,
+) -> Result<Json<TenantFireSafetyPlanDisclosureResult>, ApiError> {
+    Ok(Json(check_tenant_fire_safety_plan_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
