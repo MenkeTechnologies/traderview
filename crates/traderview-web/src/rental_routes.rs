@@ -502,6 +502,10 @@ use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
 };
+use traderview_expense::rental_energy_benchmarking::{
+    check as check_rental_energy_benchmarking, RentalEnergyBenchmarkingInput,
+    RentalEnergyBenchmarkingResult,
+};
 use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
     RentalGasApplianceBanResult,
@@ -861,6 +865,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
+        .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
@@ -5970,6 +5975,33 @@ async fn rental_broadband_mte_rules_route(
     Json(b): Json<RentalBroadbandMteRulesInput>,
 ) -> Result<Json<RentalBroadbandMteRulesResult>, ApiError> {
     Ok(Json(check_rental_broadband_mte_rules(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_energy_benchmarking: Rental property energy benchmarking +
+// GHG emissions disclosure compliance — when a trader-landlord owning
+// a large multifamily building must annually report energy/water
+// consumption AND comply with carbon emissions caps. Mounted at POST
+// /api/rental/rental-energy-benchmarking. Three regimes: NYC Local
+// Law 84 of 2009 + Local Law 97 of 2019 (Climate Mobilization Act;
+// LL84 buildings > 25,000 sq ft or groups > 100,000 sq ft aggregate
+// must report via ENERGY STAR Portfolio Manager by May 1st; LL84
+// penalties $500 missed + $500/quarter additional + up to $2,000/year
+// max; LL97 covered buildings report annual GHG to NYC DOB; $268/
+// metric ton CO2e exceedance penalty); Boston BERDO 2.0 (35,000 sq ft
+// threshold; net-zero by 2050; $300/metric ton CO2e above limits);
+// Default (no federal mandate; verify CA AB 802 50,000 sq ft +
+// Seattle BAEDO + DC GBES + Chicago Energy Benchmarking +
+// Minneapolis). Distinct from siblings rental_property_registration,
+// rental_gas_appliance_ban, landlord_annual_rent_statement.
+// ---------------------------------------------------------------------------
+
+async fn rental_energy_benchmarking_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalEnergyBenchmarkingInput>,
+) -> Result<Json<RentalEnergyBenchmarkingResult>, ApiError> {
+    Ok(Json(check_rental_energy_benchmarking(&b)))
 }
 
 // ---------------------------------------------------------------------------

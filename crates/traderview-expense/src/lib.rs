@@ -157,6 +157,7 @@ pub mod rental_depreciation;
 pub mod rental_application_denial_disclosure;
 pub mod rental_bedroom_egress_window;
 pub mod rental_broadband_mte_rules;
+pub mod rental_energy_benchmarking;
 pub mod rental_gas_appliance_ban;
 pub mod rental_hot_water_temperature;
 pub mod rental_junk_fee_transparency;
