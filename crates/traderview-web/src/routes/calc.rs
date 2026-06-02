@@ -228,6 +228,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
         .route("/calc/section-457b",          post(section_457b_route))
+        .route("/calc/section-461g",          post(section_461g_route))
         .route("/calc/section-461l",          post(section_461l_route))
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-691",           post(section_691_route))
@@ -959,6 +960,31 @@ async fn section_453a_route(
         ));
     }
     Ok(Json(traderview_expense::section_453a::compute(&b)))
+}
+
+// ── § 461(g) Prepaid Interest Deduction Timing ───────────────────────
+// Mounted at /api/calc/section-461g. Pure compute; § 461(g)(1)
+// cash-basis taxpayer must treat prepaid interest like accrual-
+// basis (interest allocable to period after close of taxable year
+// CHARGED TO CAPITAL ACCOUNT and deducted in period properly
+// allocable); § 461(g)(2) EXCEPTION for points on principal
+// residence purchase or improvement (5 conditions: principal
+// residence purchase/improvement + secured by residence +
+// established practice in area + not excessive + percentage of
+// principal); Rev. Rul. 87-22 refinancing exclusion (points
+// amortized over loan life); Rev. Rul. 70-540 rental property
+// straight-line amortization; Rev. Proc. 94-27 seller-paid
+// points treated as buyer-paid; interaction with § 163(d)
+// investment interest (margin loan) + § 163(j) business
+// interest + § 163(h) qualified residence interest + § 475(f)
+// trader mark-to-market reclassification + § 263A UNICAP
+// capitalization for construction-period interest.
+
+async fn section_461g_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_461g::Section461gInput>,
+) -> Result<Json<traderview_expense::section_461g::Section461gResult>, ApiError> {
+    Ok(Json(traderview_expense::section_461g::check(&b)))
 }
 
 // ── § 457(b) Governmental and Tax-Exempt Deferred Compensation ───────

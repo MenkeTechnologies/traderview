@@ -8839,6 +8839,42 @@ Mounted at `POST /api/calc/section-170e`. Twenty-three tests pin: canonical LTCG
 
 Mounted at `POST /api/calc/section-457b`. Thirty-four tests pin: **governmental max compliant**; **over $24,500 limit violation**; **governmental age 50 eligible for $8,000 catch-up**; **governmental ages 60-63 enhanced $11,250**; **governmental age 64+ reverts to $8,000**; **tax-exempt no age-50 catch-up eligibility** (§ 414(v)(3)); **tax-exempt no enhanced catch-up eligibility**; **special 3-year catch-up doubles limit**; **special 3-year capped at 2× annual ($49,000)**; **special 3-year anti-stacking with catch-up violation**; **governmental no § 72(t) penalty**; **tax-exempt § 72(t) penalty applies**; **governmental rollover permitted**; **tax-exempt rollover not permitted**; **double deferral strategy disclosed** ($49,000); **tax-exempt employer distress credit risk engaged** (unsecured creditor); **governmental employer distress no credit risk** (trust protection); **separation from service disclosed**; **age bracket truth table five cells governmental**; **tax-exempt uniquely § 72(t) applies invariant**; **special 3-year uniquely doubles limit invariant**; **citation pins all authorities** (§ 457(a)-(g) + § 457(b)(2) + § 457(b)(3) + § 457(d) + § 457(g) + § 402(g)(1) + § 72(t) + § 414(v)(2)(E) + § 414(v)(3) + Pub. L. 104-188 + SECURE Act 2.0 § 314 + SECURE Act 2.0 § 109 + Pub. L. 117-328 + IRS Notice 2025-67 + Treas. Reg. § 1.457-1); **note pins eligible deferred compensation plan**; **note pins two plan types (governmental vs tax-exempt)**; **note pins 2026 limits**; **note pins special 3-year anti-stacking**; **note pins § 457(g) trust requirement**; **note pins § 72(t) interaction**; **note pins § 402(g)(1) double deferral**; **note pins § 457(d)(1) distribution triggers**; **note pins § 457(d)(2) rollover rules**; **note pins trader fact patterns five**; **note pins companion modules**; **defensive overflow saturating**.
 
+`traderview-expense::section_461g` is the **IRC § 461(g) prepaid interest deduction timing module** — direct trader companion to `section_163d` (investment interest limitation), `section_163h` (qualified residence interest), `section_163j` (business interest limit), `section_263a` (UNICAP capitalization), `section_481` (accounting method change), `section_469` (passive activity loss), `section_475c2` (trader mark-to-market), `section_162` (ordinary and necessary business expenses). Trader-critical because traders routinely prepay margin loan interest at end of taxable year, pay mortgage points on rental property acquisition, refinance personal residence mortgage, and acquire principal residence with points — § 461(g) governs the timing of each deduction.
+
+§ 461(g)(1) provides that a CASH-BASIS taxpayer must treat prepaid interest in the same manner as an ACCRUAL-BASIS taxpayer for purposes of deduction timing. Interest paid that is properly allocable to any period AFTER the close of the taxable year in which paid shall be **CHARGED TO CAPITAL ACCOUNT** and treated as paid in the period to which so allocable.
+
+**§ 461(g)(2) EXCEPTION — points on principal residence (5 conditions)**:
+1. Points paid in connection with **PURCHASE OR IMPROVEMENT** of principal residence
+2. **SECURED BY** principal residence (not investment property, not vacation home)
+3. Points charged represent **ESTABLISHED PRACTICE** in geographic area
+4. Points DO NOT **EXCEED** amount generally charged in geographic area
+5. Points **COMPUTED AS PERCENTAGE OF PRINCIPAL** (not flat fees for appraisal, escrow, title)
+
+All five conditions must be met for current-year deduction; otherwise points must be AMORTIZED over loan life.
+
+**§ 461(g)(2) refinancing exclusion** — points paid on REFINANCING of existing mortgage NOT eligible for current deduction even if same principal residence; must be AMORTIZED over loan life (Rev. Rul. 87-22 + IRS Pub. 936). Exception: refinancing proceeds used for IMPROVEMENTS to residence may qualify pro rata.
+
+**§ 461(g) application to rental property**:
+- Mortgage points on rental property purchase or refinance = PREPAID INTEREST under § 461(g)(1)
+- MUST be AMORTIZED over loan life via straight-line method (Rev. Rul. 70-540)
+- Annual deduction = total points / loan term in years
+- Remaining unamortized points at loan payoff deductible in year of payoff (Schedule E rental income)
+- § 461(g)(2) EXCEPTION does NOT apply to rental property (residence requirement)
+
+**§ 461(g) application to margin loan interest**:
+- Year-end prepayment of margin interest does NOT accelerate deduction
+- Interest allocable to next year DEFERRED under § 461(g)(1)
+- § 163(d) investment interest limitation applies separately (deductible only up to net investment income; excess carried forward indefinitely under § 163(d)(2))
+- § 475(f) trader-status election may reclassify margin interest from § 163(d) investment interest to § 162 business interest expense subject to § 163(j) business interest limit
+
+**Rev. Proc. 94-27 seller-paid points** — seller-paid points on principal residence purchase TREATED AS PAID BY BUYER under industry practice; buyer-deductible in year of purchase under § 461(g)(2); buyer's basis in residence REDUCED by seller-paid points to avoid double benefit; seller CANNOT also deduct.
+
+**§ 461(g) interaction with § 163(h) qualified residence interest** — § 163(h)(3) qualified residence interest includes ACQUISITION INDEBTEDNESS plus HOME EQUITY INDEBTEDNESS; TCJA 2017 suspended home equity interest deduction unless used for residence improvements through 2025 (extended by OBBBA 2025); § 461(g)(2) current-deduction exception applies WITHIN § 163(h)(3) framework.
+
+**Trader-critical fact patterns**: (1) trader purchases personal residence $1M with $30K points — § 461(g)(2) EXCEPTION applies; FULL $30,000 DEDUCTIBLE in year of purchase under § 163(h)(3); (2) refinances personal residence $1M with $20K points for lower interest rate — § 461(g)(2) EXCLUSION; must AMORTIZE over loan life ($20K / 30 = $667 annual); (3) purchases $1M rental property with $25K points — § 461(g)(2) does NOT apply (rental not residence); AMORTIZE over 30 years ($833 annual) on Schedule E; (4) prepays $50K margin loan interest December 30 for Q1 next year — § 461(g)(1) APPLIES; only December portion deductible current year; (5) § 475(f) trader-status election reclassifies margin interest from § 163(d) to § 162 business interest subject to § 163(j) limit.
+
+Mounted at `POST /api/calc/section-461g`. Twenty-seven tests pin: **principal residence purchase exception applies**; **principal residence not established practice no exception**; **principal residence excessive no exception**; **principal residence flat fee no exception**; **principal residence refinance amortization required** (Rev. Rul. 87-22); **principal residence refinance for improvements full deduction**; **rental property points amortization required** (Rev. Rul. 70-540 + Schedule E); **rental property 30-year loan $833/year**; **margin loan interest prepayment deferred** (§ 163(d) + net investment income); **margin loan with § 475(f) election reclassifies** (§ 162 + § 163(j)); **business loan interest prepayment deferred** (§ 163(j)); **seller-paid points treated as buyer-paid** (Rev. Proc. 94-27); **category truth table six cells**; **principal residence uniquely qualifies for current deduction invariant**; **citation pins all authorities** (§ 461(g)(1) + § 461(g)(2) + § 163(d) + § 163(h) + § 163(h)(3) + § 163(j) + § 263A + § 162 + § 475(f) + Treas. Reg. § 1.461-1 + § 1.461-5 + § 1.163-10T + § 1.263A-1 + Rev. Rul. 87-22 + Rev. Rul. 70-540 + Rev. Proc. 94-27 + Pub. L. 115-97 TCJA + Pub. L. 119-21 OBBBA + IRS Pub. 936 + IRS Topic 504); **note pins § 461(g) overview**; **note pins § 461(g)(1) general rule**; **note pins § 461(g)(2) five conditions**; **note pins refinancing exclusion Rev. Rul. 87-22**; **note pins rental property amortization Rev. Rul. 70-540**; **note pins margin loan § 163(d) interaction**; **note pins Rev. Proc. 94-27 seller-paid points**; **note pins § 263A UNICAP interaction**; **note pins § 163(h) qualified residence interaction**; **note pins trader fact patterns five**; **note pins companion modules**; **defensive overflow saturating**.
+
 `traderview-expense::section_461l` is the **IRC §461(l) excess business loss limitation module** — **completes the loss-limitation cascade** for individual, trust, and estate taxpayers:
 
 | Order | Section          | Limit                                | Module                |
