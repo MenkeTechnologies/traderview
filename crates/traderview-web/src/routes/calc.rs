@@ -199,6 +199,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-1033",          post(section_1033_route))
         .route("/calc/section-481",           post(section_481_route))
+        .route("/calc/section-514",           post(section_514_route))
         .route("/calc/section-530",           post(section_530_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-280b",          post(section_280b_route))
@@ -3274,6 +3275,39 @@ async fn section_481_route(
     Json(b): Json<traderview_expense::section_481::Section481Input>,
 ) -> Result<Json<traderview_expense::section_481::Section481Result>, ApiError> {
     Ok(Json(traderview_expense::section_481::compute(&b)))
+}
+
+// ── § 514 Unrelated Debt-Financed Income (UBTI) ─────────────────────
+// Mounted at /api/calc/section-514 (iter 506). Pure compute. Tax Reform
+// Act of 1969 (Pub. L. 91-172) § 514 expands UBTI framework of § 511 to
+// capture investment income that would otherwise be excluded under §
+// 512(b)(1)-(5) when underlying property is debt-financed — prevents
+// tax-exempt orgs (pension funds, university endowments, foundations,
+// churches, IRAs) from using exempt status to guarantee leveraged
+// investments without paying tax on the debt-financed portion. § 514(a)
+// general rule: include in UBTI a debt/basis percentage of gross income
+// from debt-financed property (avg acquisition indebtedness ÷ avg
+// adjusted basis). § 514(b)(1) debt-financed property definition;
+// § 514(b)(1)(A) substantially-exempt-function-use exclusion (university-
+// owned dormitory + mortgaged hospital). § 514(c)(1) acquisition
+// indebtedness definition (incurred-in-acquiring + pre-acquisition
+// but-for + post-acquisition reasonably-foreseeable). § 514(c)(9)
+// qualified real property exception (educational institution + qualified
+// pension trust + § 501(c)(25) title-holding co + § 403(b)(9) account)
+// with fractions rule under § 514(c)(9)(E). § 512(c) partnership look-
+// through. Form 990-T under § 6012(a)(2); IRA UBTI above $1,000 annual
+// exemption per § 512(b)(12). Tax at corporate rate per § 511(a) for
+// § 501(c) orgs, trust rate per § 511(b) for § 401(a) qualified trusts
+// and IRAs. Coordinates with § 511 (UBTI tax), § 512 (computation +
+// partnership look-through + investment-income exclusions), § 513
+// (unrelated trade/business definition), § 4940 (PF NII excise separate
+// regime), § 408 (IRA rules), § 4944 (PF jeopardy investment).
+
+async fn section_514_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_514::Section514Input>,
+) -> Result<Json<traderview_expense::section_514::Section514Result>, ApiError> {
+    Ok(Json(traderview_expense::section_514::check(&b)))
 }
 
 // ── §530 Coverdell Education Savings Accounts (ESA) ──────────────────
