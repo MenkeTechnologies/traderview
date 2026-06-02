@@ -505,6 +505,10 @@ use traderview_expense::rent_concession_disclosure::{
     check as check_rent_concession_disclosure,
     RentConcessionDisclosureInput, RentConcessionDisclosureResult,
 };
+use traderview_expense::rent_abatement_construction_nuisance::{
+    check as check_rent_abatement_construction_nuisance,
+    RentAbatementConstructionNuisanceInput, RentAbatementConstructionNuisanceResult,
+};
 use traderview_expense::landlord_foreclosure_status_disclosure::{
     check as check_landlord_foreclosure_status_disclosure,
     LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
@@ -1040,6 +1044,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-property-sale-notice", axum::routing::post(landlord_property_sale_notice_route))
         .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
         .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
+        .route("/rent-abatement-construction-nuisance", axum::routing::post(rent_abatement_construction_nuisance_route))
         .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
         .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
         .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
@@ -6315,6 +6320,41 @@ async fn rent_concession_disclosure_route(
     Json(b): Json<RentConcessionDisclosureInput>,
 ) -> Result<Json<RentConcessionDisclosureResult>, ApiError> {
     Ok(Json(check_rent_concession_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// Tenant rent abatement during landlord construction nuisance framework.
+//
+// Mounted at POST /api/rental/rent-abatement-construction-nuisance.
+// Three-jurisdiction framework: (1) NYC rent-stabilized — 9 NYCRR
+// § 2523.4 + DHCR Form RA-84 decreased building-wide services
+// rent reduction; NYC HMC § 27-2005.1 24-72 hour pre-construction
+// notice + § 27-2005(d) construction harassment civil penalty
+// $1,000-$10,000; NYC Noise Code § 24-218 dB limits; Tenant Anti-
+// Harassment Act 2018; DHCR Operational Bulletin 2024-1 MCI 2%
+// cap; (2) California — Cal. Civ. Code § 1927 covenant of quiet
+// enjoyment + § 1941.1 habitability + § 1942 repair-and-deduct +
+// § 1942.4 no rent collection during uninhabitability; Green v.
+// Superior Court, 10 Cal. 3d 616 (1974); (3) Default — Park West
+// Mgmt. Corp. v. Mitchell, 47 N.Y.2d 316 (1979); Boston Housing
+// Auth. v. Hemingway, 363 Mass. 184 (1973); Restatement (Second)
+// of Property § 5.4 (warranty of habitability) + § 6.1 (covenant
+// of quiet enjoyment); URLTA § 2.104 + § 4.103 + § 4.107.
+// Five construction nuisance categories (noise, dust, vibration,
+// debris, service interruption); industry-standard 22-40%
+// abatement during construction; 100% on constructive eviction.
+// Sibling cluster: landlord_water_heat_emergency_response,
+// habitability_remedies, landlord_pest_extermination_timeline,
+// landlord_harassment, tenant_noise_nuisance_enforcement,
+// retaliation_windows, tenant_emotional_distress_damages.
+// ---------------------------------------------------------------------------
+
+async fn rent_abatement_construction_nuisance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentAbatementConstructionNuisanceInput>,
+) -> Result<Json<RentAbatementConstructionNuisanceResult>, ApiError> {
+    Ok(Json(check_rent_abatement_construction_nuisance(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -145,6 +145,7 @@ pub mod recurring;
 pub mod radon_disclosure;
 pub mod reasonable_accommodation_modification;
 pub mod religious_display_doorpost;
+pub mod rent_abatement_construction_nuisance;
 pub mod rent_acceleration_enforceability;
 pub mod rent_concession_disclosure;
 pub mod rent_control;
