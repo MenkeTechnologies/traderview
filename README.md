@@ -5210,6 +5210,49 @@ Pinned by `qef_election_disables_section_1291`, `mark_to_market_election_disable
 
 Mounted at `POST /api/calc/section-1291`. Thirty-seven tests pin: **no election default § 1291 applies**; **QEF election disables § 1291** (§ 1291(d)(1)); **mark-to-market election disables § 1291** (§ 1291(f)); **purging election engages § 1291(d)(2)**; **no distribution or disposition no engagement**; **excess distribution above 125% threshold** ($100M - $50M = $50M excess); **excess distribution at 125% threshold no excess** (boundary precision); **first year holding all distribution is excess** ($100M = $100M); **ratable allocation across holding period** (per-day math); **disposition gain treated as excess distribution** (§ 1291(a)(2)); **deferred tax at prior year highest marginal rate**; **interest charge compounded at § 6621 rate**; **pre-PFIC period taxed as ordinary no interest**; **first year holding with high rate substantial tax**; **total tax sums three components** (current ordinary + deferred + interest); **election truth table four cells** (NoElection + QEF + MTM + Purging); **scenario truth table three cells** (Distribution + Disposition + None); **QEF uniquely disables § 1291 invariant**; **citation pins all authorities** (§ 1291(a)(1)(A)-(C) + § 1291(a)(2) + § 1291(b)(2)(A)-(B) + § 1291(b)(3)(B) + § 1291(c) + § 1291(d)(1)-(2) + § 1291(f) + § 1291(g) + § 1295 + § 1296 + § 1297 + § 1298 + § 6621 + Form 8621 + 1986 Tax Reform Act § 1235 + HIRE Act 2010 § 521); **note pins subsection (a)(1)(A) ratable allocation**; **note pins subsection (a)(1)(B) current/pre-PFIC ordinary**; **note pins subsection (a)(1)(C) highest rate + interest**; **note pins subsection (a)(2) disposition gain**; **note pins subsection (b)(2)(A) 125% threshold**; **note pins subsection (b)(2)(B)(i) under-3-year lookback**; **note pins subsection (b)(3)(B) first year all excess**; **note pins subsection (c) § 6621 interest**; **note pins subsection (d)(1) QEF disables**; **note pins subsection (d)(2) purging election**; **note pins subsection (f) mark-to-market disables**; **note pins subsection (g) § 988 currency**; **note pins Form 8621 reporting**; **note pins 1986 Tax Reform origin** (Pub. L. 99-514 + HIRE Act 2010 § 521); **note pins PFIC framework cluster**; **note pins trader fact patterns**; **defensive zero distribution no excess**; **defensive zero holding period no panic**.
 
+`traderview-expense::section_1293` is the **IRC § 1293 current-taxation mechanic for income from qualified electing funds** module — the CURRENT-TAXATION MECHANIC that engages when a U.S. shareholder of a PFIC has made a valid § 1295 QEF election. Completes the PFIC framework cluster: `section_1291` (default excess distribution + interest charge — punitive); `section_1295` (QEF election mechanism); `section_1296` (mark-to-market alternative); `section_1297` (PFIC definition — 75% income or 50% asset test); `section_1298` (special rules — attribution, look-through, related-party). Companion to `section_6038d` (Form 8938 FATCA), `section_988` (foreign currency translation), `section_67g` (TCJA misc itemized suspension affects QEF expenses).
+
+Trader-critical because QEF election is the preferred escape from § 1291 punitive regime — converts what would be ORDINARY income + interest charge into current-year pass-through inclusion that PRESERVES CHARACTER (long-term capital gain stays LTCG; qualified dividend treatment may apply per § 1(h)(11)).
+
+**§ 1293(a)(1) Pro rata inclusion — dual-character split**:
+
+| Source | Character |
+|--------|-----------|
+| § 1293(a)(1)(A) | Pro rata share of ORDINARY EARNINGS = **ORDINARY INCOME** |
+| § 1293(a)(1)(B) | Pro rata share of NET CAPITAL GAIN = **LONG-TERM CAPITAL GAIN** (character preserved) |
+
+Pinned by `pro_rata_share_1_percent_ordinary_and_ltcg_split` (1% of $100M ordinary + $50M LTCG = $1M ordinary + $500K LTCG), `pro_rata_5_percent_5x_baseline` ($5M + $2.5M), `zero_ordinary_earnings_no_ordinary_inclusion`, `zero_net_capital_gain_no_ltcg_inclusion`, `ltcg_character_preserved_regardless_of_holding_period`.
+
+**§ 1293(b) Definitions**:
+
+| Term | Source | Definition |
+|------|--------|------------|
+| Ordinary Earnings | § 1293(b)(1) | EXCESS of fund's earnings and profits over net capital gain |
+| Net Capital Gain | § 1293(b)(2) + § 1222(11) | Excess of net long-term capital gain over net short-term capital loss |
+
+**§ 1293(c) Pro rata share definition** — amount that WOULD HAVE BEEN DISTRIBUTED with respect to shareholder's stock if, on each day during the taxable year, the fund had distributed to each shareholder a pro rata share of that day's ratable share of ordinary earnings and net capital gain.
+
+**§ 1293(d) Basis adjustments — anti-double-taxation mechanic**:
+
+| Adjustment | Source | Effect |
+|------------|--------|--------|
+| Basis INCREASED by inclusion | § 1293(d)(1) | Prevents double taxation of the same earnings |
+| Basis DECREASED by PTI distribution | § 1293(d)(2) | Previously taxed income distribution reduces basis rather than re-creating income |
+
+Pinned by `basis_increased_by_inclusion` ($200M + $1.5M = $201.5M), `pti_distribution_reduces_basis`, `pti_distribution_capped_at_inclusion` ($3M distribution capped at $1.5M PTI), `basis_tracking_invariant_increase_then_decrease`.
+
+**§ 1293(e) Coordination with § 951 subpart F + § 1297(d) PFIC-CFC overlap** — to extent earnings already taxed under subpart F controlled foreign corporation rules, § 1293 does NOT impose additional inclusion. Pinned by `subpart_f_overlap_note_engages`.
+
+**§ 1293(f) Coordination with § 1294 deferral election** — shareholder may elect to defer payment of tax on QEF inclusion (with interest charge) when fund has not made distribution sufficient to pay the tax. § 1294 deferral RARELY USED due to interest charge accrual. Pinned by `section_1294_deferral_election_note_engages`.
+
+**Treas. Reg. § 1.1295-1(g) PFIC Annual Information Statement** — REQUIRED for QEF election validity + ordinary-earnings/net-capital-gain split documentation; absence defeats § 1293(a)(1)(B) LTCG character preservation. Pinned by `missing_information_statement_violation`, `character_preserved_when_statement_provided`, `character_preservation_unique_to_information_statement_invariant`.
+
+**§ 1(h)(11) Qualified dividend treatment** — may apply to QEF ordinary inclusion if fund is qualified foreign corporation under § 1(h)(11)(C); typical QEF treatment, however, is ordinary income at marginal rates.
+
+**Form 8621** — Information Return by Shareholder of PFIC or QEF; QEF election + § 1293 inclusion reported annually; required attachment to § 1298(f) annual disclosure (added by HIRE Act of 2010 § 521).
+
+Mounted at `POST /api/calc/section-1293`. Thirty tests pin: **pro rata share 1% ordinary and LTCG split** ($1M + $500K); **character preserved when statement provided**; **missing information statement violation** (§ 1.1295-1(g)); **basis increased by inclusion**; **PTI distribution reduces basis**; **PTI distribution capped at inclusion**; **zero ordinary earnings no ordinary inclusion**; **zero net capital gain no LTCG inclusion**; **pro rata 5% = 5x baseline**; **subpart F overlap note engages**; **§ 1294 deferral election note engages**; **citation pins all authorities** (§ 1293(a)(1)(A)-(B) + § 1293(b)(1)-(2) + § 1293(c) + § 1293(d)(1)-(2) + § 1293(e) + § 1293(f) + § 1222(11) + § 1294 + § 1295 + § 1296 + § 1297(d) + § 951 + § 1(h)(11) + § 1298(f) + Treas. Reg. § 1.1293-1 to -3 + § 1.1295-1(g) + Form 8621 + 1986 Tax Reform + HIRE Act 2010); **note pins subsection (a)(1)(A) ordinary income**; **note pins subsection (a)(1)(B) LTCG character preserved**; **note pins subsection (b)(1) ordinary earnings definition**; **note pins subsection (b)(2) net capital gain § 1222(11)**; **note pins subsection (c) pro rata share daily ratable**; **note pins subsection (d)(1) basis increase**; **note pins subsection (d)(2) basis decrease PTI**; **note pins subsection (e) subpart F coordination**; **note pins subsection (f) § 1294 deferral**; **note pins § 1.1295-1(g) information statement**; **note pins qualified dividend treatment § 1(h)(11)**; **note pins Form 8621 annual reporting**; **note pins PFIC framework cluster**; **note pins 1986 Tax Reform origin**; **character preservation unique to information statement invariant**; **basis tracking invariant increase then decrease**; **defensive overflow saturating**; **LTCG character preserved regardless of holding period**.
+
 `traderview-expense::section_1295` is the **IRC §1295 Qualified Electing Fund (QEF) election module** — the natural companion to `section_1296`. Both let a U.S. shareholder escape the punitive §1291 excess-distribution regime, but with different tradeoffs:
 
 - **§1296 MTM** (iter 22) — annual mark-to-market reported as ordinary income/loss. Loss limited to "unreversed inclusions" (cumulative prior gain). Only available for marketable PFIC stock. Simpler; doesn't require the PFIC to cooperate.

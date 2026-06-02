@@ -206,6 +206,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7701",          post(section_7701_route))
         .route("/calc/section-7872",          post(section_7872_route))
         .route("/calc/section-1291",          post(section_1291_route))
+        .route("/calc/section-1293",          post(section_1293_route))
         .route("/calc/section-1295",          post(section_1295_route))
         .route("/calc/section-1058",          post(section_1058_route))
         .route("/calc/section-1092",          post(section_1092_route))
@@ -2115,6 +2116,40 @@ async fn section_1291_route(
         ));
     }
     Ok(Json(traderview_expense::section_1291::check(&b)))
+}
+
+// ── §1293 PFIC QEF current-taxation mechanic ─────────────────────────
+// Mounted at /api/calc/section-1293. § 1293(a)(1)(A) pro-rata
+// inclusion of ORDINARY EARNINGS as ordinary income; § 1293(a)(1)(B)
+// pro-rata inclusion of NET CAPITAL GAIN as LONG-TERM capital gain
+// (CHARACTER PRESERVED regardless of shareholder holding period).
+// § 1293(b)(1) ordinary earnings = E&P minus net capital gain;
+// § 1293(b)(2) net capital gain per § 1222(11) (LT gain - ST loss).
+// § 1293(c) pro rata share = daily-ratable distribution. § 1293(d)(1)
+// basis INCREASED by inclusion (prevents double tax); § 1293(d)(2)
+// basis DECREASED by PTI distribution. § 1293(e) coordinates with
+// § 951 subpart F via § 1297(d) PFIC-CFC overlap rule. § 1293(f) +
+// § 1294 deferral election (rarely used due to interest charge).
+// Treas. Reg. § 1.1295-1(g) PFIC Annual Information Statement
+// required for QEF election validity + ordinary/LTCG split.
+// § 1(h)(11) qualified dividend treatment may apply for qualified
+// foreign corporation status. Form 8621 + § 1298(f) annual
+// reporting. Trader-critical for foreign-fund holders who elected
+// QEF to escape § 1291 punitive regime. Completes PFIC framework
+// cluster: § 1291 + § 1293 + § 1295 + § 1296 + § 1297 + § 1298.
+// Sibling cluster: § 1222(11) + § 1294 + § 1297(d) + § 951 +
+// § 1(h)(11) + Form 8621.
+
+async fn section_1293_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1293::Section1293Input>,
+) -> Result<Json<traderview_expense::section_1293::Section1293Result>, ApiError> {
+    if b.pro_rata_share_bps > 10_000 {
+        return Err(ApiError::BadRequest(
+            "pro_rata_share_bps must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_1293::check(&b)))
 }
 
 // ── §1295 PFIC Qualified Electing Fund election ──────────────────────
