@@ -194,6 +194,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-864b2",         post(section_864b2_route))
         .route("/calc/section-72t",           post(section_72t_route))
         .route("/calc/section-7345",          post(section_7345_route))
+        .route("/calc/section-7623",          post(section_7623_route))
         .route("/calc/section-7405",          post(section_7405_route))
         .route("/calc/section-7408",          post(section_7408_route))
         .route("/calc/section-7701",          post(section_7701_route))
@@ -1215,6 +1216,46 @@ async fn section_7345_route(
         ));
     }
     Ok(Json(traderview_expense::section_7345::compute(&b)))
+}
+
+// ── §7623 IRS whistleblower awards (Tax Relief 2006 / BBA 2018 / TFA 2019) ─
+// Mounted at /api/calc/section-7623. § 7623 framework spans 1867
+// discretionary regime (§ 7623(a)) + 2006 Tax Relief and Health Care
+// Act § 406 mandatory 15-30% regime (§ 7623(b)) + 2018 Bipartisan
+// Budget Act § 41108 broadened "collected proceeds" definition
+// (§ 7623(c)) + 2019 Taxpayer First Act § 1405 anti-retaliation
+// protections (§ 7623(d)). Mandatory thresholds (§ 7623(b)(5)):
+// amount in dispute > $2,000,000 AND if individual, gross income
+// > $200,000. Public-information-based awards capped at 10%
+// (§ 7623(b)(2)(A)); planned/initiated noncompliance reduces award
+// (§ 7623(b)(2)(B)); criminal conviction arising from role denies
+// award entirely (§ 7623(b)(3)). § 7623(b)(4) Tax Court appeal
+// within 30 days. § 7623(c) "collected proceeds" includes criminal
+// fines, civil forfeitures, and FBAR penalties under 31 USC § 5321.
+// § 7623(d) remedies: reinstatement, DOUBLE back pay with interest,
+// special damages, attorney fees. Trader-relevant: wealthy/
+// sophisticated traders are precisely the IRS Whistleblower Office
+// target taxpayer class — high gross income + complex tax positions
+// makes them disproportionately exposed to whistleblower tips from
+// disgruntled fund employees, ex-spouses, business partners, or
+// accountants. Sibling cluster: § 6663 + § 7201 + § 7202 + § 7206 +
+// § 6701 + § 7430 + § 6038D + § 6111 + § 6112.
+
+async fn section_7623_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7623::Section7623Input>,
+) -> Result<Json<traderview_expense::section_7623::Section7623Result>, ApiError> {
+    if b.award_percentage_bps > 10_000 {
+        return Err(ApiError::BadRequest(
+            "award_percentage_bps must be ≤ 10000 (100%)".into(),
+        ));
+    }
+    if b.days_to_tax_court_appeal > 36_500 {
+        return Err(ApiError::BadRequest(
+            "days_to_tax_court_appeal out of range".into(),
+        ));
+    }
+    Ok(Json(traderview_expense::section_7623::check(&b)))
 }
 
 // ── §7405 IRS action for recovery of erroneous refunds ─────────────
