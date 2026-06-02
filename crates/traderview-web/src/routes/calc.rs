@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-250",           post(section_250_route))
+        .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6042",          post(section_6042_route))
@@ -3700,6 +3701,37 @@ async fn section_250_route(
         ));
     }
     Ok(Json(traderview_expense::section_250::compute(&b)))
+}
+
+// ── § 56A Corporate Alternative Minimum Tax (CAMT) ─────────────────
+// Mounted at /api/calc/section-56a (iter 498). Pure compute. IRA 2022
+// Pub. L. 117-169 § 10101; 15% minimum tax on adjusted financial statement
+// income (AFSI) for applicable corporations effective for taxable years
+// beginning after December 31, 2022. § 59(k)(1) applicable-corporation
+// test: corporation (not S corp / RIC / REIT) with three-year-average AFSI
+// exceeding $1B for years ending after December 31, 2021. § 59(k)(2)
+// FPMG (Foreign-Parented Multinational Group) aggregation: US-resident
+// member's AFSI test includes ALL FPMG members plus § 52 single-employer
+// aggregation; US member applicable when FPMG aggregate > $1B AND US
+// member's own three-year-average AFSI >= $100M safe-harbor floor.
+// § 56A(c) sixteen AFSI adjustments to GAAP/IFRS book net income (federal
+// tax back-out, defined benefit pension, qualified depreciation via § 168
+// not book, cooperative dividends, CFC distributions, wholly-owned
+// disregarded entity, consolidated tax group, etc.). § 56A(d) FSNOL
+// limited to 80% of AFSI parallel to § 172 regular-tax NOL. § 38(c)(6)(E)
+// general business credit usable against CAMT up to 75% of tentative
+// minimum tax. § 53(c)-(d) CAMT credit carryforward indefinite against
+// future regular tax. Form 4626 attached to Form 1120. Coordination with
+// § 4501 (1% stock buyback excise — same IRA 2022 package), § 481
+// (accounting method change AFSI restatement), § 55 (general AMT
+// framework), § 53 (AMT credit), § 38 (general business credit), § 59A
+// (BEAT — inbound FPMG members).
+
+async fn section_56a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_56a::Section56aInput>,
+) -> Result<Json<traderview_expense::section_56a::Section56aResult>, ApiError> {
+    Ok(Json(traderview_expense::section_56a::check(&b)))
 }
 
 // ── §59A BEAT (Base Erosion and Anti-Abuse Tax) ─────────────────────
