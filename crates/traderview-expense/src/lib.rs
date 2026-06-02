@@ -163,6 +163,7 @@ pub mod rental_elevator_safety_inspection;
 pub mod rental_broadband_mte_rules;
 pub mod rental_energy_benchmarking;
 pub mod rental_gas_appliance_ban;
+pub mod rental_hoa_disclosure_at_lease;
 pub mod rental_hot_water_temperature;
 pub mod rental_junk_fee_transparency;
 pub mod rental_lead_pipe_disclosure;

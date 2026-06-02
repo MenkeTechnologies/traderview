@@ -581,6 +581,10 @@ use traderview_expense::rental_lead_pipe_disclosure::{
     check as check_rental_lead_pipe_disclosure, RentalLeadPipeDisclosureInput,
     RentalLeadPipeDisclosureResult,
 };
+use traderview_expense::rental_hoa_disclosure_at_lease::{
+    check as check_rental_hoa_disclosure_at_lease,
+    RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
+};
 use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
@@ -937,6 +941,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
+        .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
@@ -6689,6 +6694,38 @@ async fn rental_lead_pipe_disclosure_route(
     Json(b): Json<RentalLeadPipeDisclosureInput>,
 ) -> Result<Json<RentalLeadPipeDisclosureResult>, ApiError> {
     Ok(Json(check_rental_lead_pipe_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_hoa_disclosure_at_lease: Rental property HOA / Condominium
+// Association disclosure at lease signing compliance — when a trader-
+// landlord renting a unit governed by an HOA or COA must disclose
+// association rules, CC&Rs, fee structure, rental restrictions, and
+// tenant-information sharing to prospective tenants at lease
+// execution and to the association before/after lease execution.
+// Mounted at POST /api/rental/rental-hoa-disclosure-at-lease. Three
+// regimes: California Cal. Civ. Code § 4740 + § 4525 + § 1102 et
+// seq. (Davis-Stirling Common Interest Development Act — landlord
+// must provide HOA with tenant name and contact info before lease;
+// may redact financial info; pre-acquisition rental prohibitions
+// enforceable, post-acquisition grandfathered for existing owners);
+// Florida FL Statute § 720.401 + § 718.503 (HOA Disclosure Summary
+// before contract execution + condominium rent diversion remedy);
+// Nevada Nev. Rev. Stat. § 116 + § 116.335 (Uniform Common-Interest
+// Ownership Act — pre-acquisition rental prohibition only;
+// association may not require approval to rent unless required at
+// time of purchase) + § 118A landlord-tenant framework. Distinct
+// from siblings rental_application_denial_disclosure, tenant_data_
+// privacy, rental_property_registration, short_term_rental_
+// conversion.
+// ---------------------------------------------------------------------------
+
+async fn rental_hoa_disclosure_at_lease_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHoaDisclosureAtLeaseInput>,
+) -> Result<Json<RentalHoaDisclosureAtLeaseResult>, ApiError> {
+    Ok(Json(check_rental_hoa_disclosure_at_lease(&b)))
 }
 
 // ---------------------------------------------------------------------------
