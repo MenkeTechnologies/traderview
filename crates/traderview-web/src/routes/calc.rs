@@ -114,6 +114,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7430",          post(section_7430_route))
         .route("/calc/section-7433",          post(section_7433_route))
         .route("/calc/section-7434",          post(section_7434_route))
+        .route("/calc/section-7463",          post(section_7463_route))
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-7502",          post(section_7502_route))
@@ -3545,6 +3546,30 @@ async fn section_7434_route(
     Json(b): Json<traderview_expense::section_7434::Section7434Input>,
 ) -> Result<Json<traderview_expense::section_7434::Section7434Result>, ApiError> {
     Ok(Json(traderview_expense::section_7434::check(&b)))
+}
+
+// ── §7463 disputes involving $50,000 or less (Tax Court small case) ─
+// Mounted at /api/calc/section-7463. § 7463(a) — Tax Court small
+// case procedure for petitions where amount in dispute does not
+// exceed $50,000 per taxable year (income), per estate (estate
+// tax), per calendar year (gift tax), or per period/event (excise
+// tax); proceedings at option of taxpayer concurred by Tax Court
+// BEFORE the hearing. § 7463(b) — decision NOT REVIEWED IN ANY
+// OTHER COURT and NOT TREATED AS PRECEDENT. § 7463(c) — taxpayer
+// or Secretary may discontinue designation before final decision.
+// § 7463(d) — proceedings under Tax Court Rules 170-175; as
+// informally as possible; any evidence with probative value
+// admissible. § 7463(f) — also available for § 6320 (CDP-lien),
+// § 6330 (CDP-levy), § 6015 (innocent spouse), § 7436 (worker
+// classification) under $50,000. Procedural tradeoff: faster +
+// cheaper + informal + pro se friendly BUT no appeal + no
+// precedential value. Trader-relevant for smaller audit
+// deficiencies seeking faster + cheaper Tax Court resolution.
+async fn section_7463_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_7463::Section7463Input>,
+) -> Result<Json<traderview_expense::section_7463::Section7463Result>, ApiError> {
+    Ok(Json(traderview_expense::section_7463::check(&b)))
 }
 
 // ── §7491 burden of proof shifts to Secretary ───────────────────────
