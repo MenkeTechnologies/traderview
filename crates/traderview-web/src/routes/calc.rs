@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6213",          post(section_6213_route))
         .route("/calc/section-6320",          post(section_6320_route))
         .route("/calc/section-6321",          post(section_6321_route))
+        .route("/calc/section-6323",          post(section_6323_route))
         .route("/calc/section-6330",          post(section_6330_route))
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
@@ -2728,6 +2729,35 @@ async fn section_6321_route(
     Json(b): Json<traderview_expense::section_6321::Section6321Input>,
 ) -> Result<Json<traderview_expense::section_6321::Section6321Result>, ApiError> {
     Ok(Json(traderview_expense::section_6321::check(&b)))
+}
+
+// ── §6323 federal tax lien validity / priority against third parties ─
+// Mounted at /api/calc/section-6323. § 6323(a) four protected classes
+// — lien NOT valid against (1) purchaser; (2) holder of security
+// interest; (3) mechanic's lienor; (4) judgment lien creditor UNTIL
+// NFTL filed under § 6323(f); first-in-time wins among NFTL filing
+// and competing perfection. § 6323(b) ten superpriorities — priority
+// OVER federal tax lien EVEN AFTER NFTL filed when interest arose
+// without actual notice: (1) securities; (2) motor vehicles; (3)
+// retail purchase; (4) casual sale; (5) possessory lien; (6) real
+// property tax/special assessment; (7) residential mechanic's lien
+// (repair/improvement); (8) attorney's lien; (9) insurance contracts;
+// (10) passbook loans. § 6323(c)+(d) 45-day window for commercial
+// transactions financing agreements + after-acquired personal
+// property without actual notice. § 6323(g) NFTL refiling required
+// every 10 years (paired with § 6502 CSED). Trader-relevant for
+// trader-landlords whose rental property holdings interact with
+// mortgages + judgment liens + mechanics' liens + secured creditors.
+// Foundational lien-priority constellation companion to § 6321 (lien
+// attachment) + § 6322 (period of lien) + § 6325 (release) + § 6334
+// (exempt property) + § 7426 (third-party wrongful levy). Rev. Rul.
+// 2003-108; IRM 5.12.1, 5.12.2, 5.12.7, 5.12.8.
+
+async fn section_6323_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6323::Section6323Input>,
+) -> Result<Json<traderview_expense::section_6323::Section6323Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6323::check(&b)))
 }
 
 // ── §6330 Collection Due Process (CDP) for levies ───────────────────

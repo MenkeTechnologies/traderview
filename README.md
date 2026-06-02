@@ -6178,6 +6178,44 @@ When all three present, lien arises AUTOMATICALLY upon ALL property and rights t
 
 Mounted at `POST /api/calc/section-6321`. Twenty-seven tests pin: **all three elements lien arises**; **no assessment no lien** (§ 6201); **no notice and demand no lien** (§ 6303); **no neglect or refusal no lien**; **lien arises without NFTL filing**; **lien arises with NFTL filing independent**; **NFTL required for attachment always false** (16-cell exhaustive sweep); **three-element truth table 2x2x2** (8-cell sweep: only TTT permits lien); **three failures stack when all three missing**; **citation pins lien constellation** (§§ 6321 + 6322 + 6323 + 6325 + § 6201 + § 6303 + Drye + Craft + IRM 5.17.2); **note pins three-element test** (real or personal + tangible or intangible); **note pins NFTL priority vs attachment distinction**; **note pins § 6322 period of lien** (§ 6502 CSED); **note pins Drye and Craft state-law doctrine** (528 U.S. 49 (1999) + 535 U.S. 274 (2002) + tenancy by entirety); **relates back to assessment date when lien arises**; **relates back false when lien does not arise**; **attaches to all property true when lien arises**; **attaches to all property false when lien does not arise**; **two of three no lien assessment demand only**; **two of three no lien assessment neglect only**; **two of three no lien demand neglect only**; **NFTL filing does not affect lien attachment**; **NFTL filed field preserved through result**; **lien attaches to intangible property per note**; **missing assessment failure reason specific**; **missing demand failure reason specific**; **missing neglect failure reason specific**.
 
+`traderview-expense::section_6323` is the **IRC § 6323 validity and priority of federal tax lien against certain persons** module — determines when a § 6321 lien that ATTACHES to taxpayer's property actually takes PRIORITY over competing third-party interests. Foundational lien-priority constellation companion to `section_6321` (lien attachment), `section_6322` (period of lien), `section_6325` (release), `section_6334` (exempt property), and `section_7426` (third-party wrongful levy). Trader-relevant for trader-landlords whose rental property holdings interact with mortgages + judgment liens + mechanics' liens + secured creditors.
+
+**§ 6323(a) four protected classes** — lien is NOT valid against these classes UNTIL Notice of Federal Tax Lien (NFTL) is filed under § 6323(f). First-in-time wins among NFTL filing and competing third-party interest perfection.
+
+| Protected class | Source |
+|-----------------|--------|
+| Purchaser | § 6323(a)(1) |
+| Holder of security interest | § 6323(a)(2) |
+| Mechanic's lienor | § 6323(a)(3) |
+| Judgment lien creditor | § 6323(a)(4) |
+
+Pinned by `nftl_filed_first_grants_lien_priority`, `nftl_not_filed_competing_claimant_wins`, `nftl_filed_after_competing_interest_loses_priority`, `purchaser_class_protected`, `mechanics_lienor_class_protected`, `judgment_lien_creditor_class_protected`, `judgment_lien_creditor_nftl_first_wins`, `purchaser_no_nftl_loses_to_purchaser`, `unprotected_creditor_loses_to_lien_even_without_nftl` (only the four protected classes need NFTL filing; general unsecured creditors do not), `competing_claimant_protection_truth_table` (5-cell sweep: 4 protected + 1 unprotected), `nftl_filing_2x2_truth_table` (4-cell sweep: TT permits priority; TF/FT/FF do not), `nftl_filed_priority_against_purchaser_invariant`, and `note_pins_four_protected_classes`.
+
+**§ 6323(b) ten superpriorities** — categories where competing claimant takes priority OVER federal tax lien EVEN AFTER NFTL is filed, when interest came into existence without actual notice of the federal tax lien:
+
+| # | Superpriority | Source |
+|---|---------------|--------|
+| 1 | Securities | § 6323(b)(1) |
+| 2 | Motor vehicles | § 6323(b)(2) |
+| 3 | Personal property purchased at retail | § 6323(b)(3) |
+| 4 | Personal property purchased in casual sale | § 6323(b)(4) |
+| 5 | Personal property subject to possessory lien | § 6323(b)(5) |
+| 6 | Real property tax / special assessment liens | § 6323(b)(6) |
+| 7 | Residential property mechanic's lien (repair/improvement) | § 6323(b)(7) |
+| 8 | Attorney's lien | § 6323(b)(8) |
+| 9 | Insurance contracts | § 6323(b)(9) |
+| 10 | Passbook loans | § 6323(b)(10) |
+
+Pinned by `superpriority_truth_table` (10-superpriority sweep), `superpriority_securities_overrides_lien`, `superpriority_motor_vehicle_overrides_lien`, `superpriority_real_property_tax_overrides`, `superpriority_residential_mechanics_lien_overrides`, `superpriority_attorneys_lien_overrides`, `ten_superpriorities_all_distinct` (pairwise distinctness verification), `superpriority_overrides_nftl_filing` (NFTL filed + first-in-time still loses to superpriority), and `note_pins_ten_superpriorities`.
+
+**Actual-notice gating clause** — § 6323(b) superpriority protection only engages when competing claimant did NOT have actual notice of the federal tax lien at the time their interest came into existence. Actual notice defeats superpriority and reverts to § 6323(a) first-in-time rule. Pinned by `superpriority_blocked_by_actual_notice` and `superpriority_with_actual_notice_loses`.
+
+**§ 6323(c)+(d) 45-day commercial transaction window** — commercial transactions financing agreements + after-acquired personal property purchases without actual notice get 45-day grace period. Pinned by `note_pins_45_day_commercial_window`.
+
+**§ 6323(g) NFTL refiling — every 10 years** — NFTL refiling required every 10 years to maintain priority status against subsequent interests; paired with § 6502 10-year Collection Statute Expiration Date. Pinned by `note_pins_10_year_refiling`.
+
+Mounted at `POST /api/calc/section-6323`. Thirty tests pin: **NFTL filed first grants lien priority**; **NFTL not filed competing claimant wins**; **NFTL filed after competing interest loses priority** (first-in-time); **purchaser class protected**; **mechanic's lienor class protected**; **judgment lien creditor class protected**; **unprotected creditor loses to lien even without NFTL** (only protected classes need NFTL); **superpriority securities overrides lien** (§ 6323(b)(1)); **superpriority motor vehicle overrides lien** (§ 6323(b)(2)); **superpriority attorney's lien overrides** (§ 6323(b)(8)); **superpriority blocked by actual notice** (gating clause); **superpriority real property tax overrides** (§ 6323(b)(6)); **superpriority residential mechanics lien overrides** (§ 6323(b)(7)); **superpriority truth table** (10-superpriority sweep); **competing claimant protection truth table** (5-cell sweep); **NFTL filing 2x2 truth table** (4-cell sweep); **citation pins all subsections** (a)(1)-(4) + (b)(1)-(10) + (c) + (d) + (f) + (g) + (h) + § 6321 + § 6322 + Rev. Rul. 2003-108 + IRM 5.12.1/2/7/8; **note pins four protected classes**; **note pins ten superpriorities**; **note pins 45-day commercial window**; **note pins 10-year refiling** (§ 6502); **NFTL filed field preserved**; **superpriority overrides NFTL filing** (NFTL filed + first-in-time still loses); **superpriority with actual notice loses**; **purchaser no NFTL loses to purchaser**; **judgment lien creditor NFTL first wins**; **unprotected creditor with NFTL filed lien wins**; **unprotected creditor no NFTL lien still wins**; **NFTL filed priority against purchaser invariant**; **ten superpriorities all distinct** (pairwise distinctness).
+
 `traderview-expense::section_6511` is the **IRC § 6511 limitations period on credit or refund** — controls WHEN a taxpayer may file a claim for refund of an overpayment. Trader-critical for every amended return (Form 1040-X) seeking money back from the IRS — beyond § 6511's deadline a claim is forever barred regardless of merits.
 
 **Four claim-type regimes**:
