@@ -265,6 +265,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-911",           post(section_911_route))
         .route("/calc/section-951a",          post(section_951a_route))
         .route("/calc/section-956",           post(section_956_route))
+        .route("/calc/section-959",           post(section_959_route))
         .route("/calc/section-962",           post(section_962_route))
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
@@ -2931,6 +2932,41 @@ async fn section_956_route(
     Json(b): Json<traderview_expense::section_956::Section956Input>,
 ) -> Result<Json<traderview_expense::section_956::Section956Result>, ApiError> {
     Ok(Json(traderview_expense::section_956::check(&b)))
+}
+
+// ── § 959 Exclusion from Gross Income of Previously-Taxed Earnings
+// and Profits (PTEP) ─────────────────────────────────────────────────
+// Mounted at /api/calc/section-959 (iter 512). Pure compute. § 959
+// prevents double US taxation of CFC earnings already included under
+// § 951(a) Subpart F + § 951A GILTI/NCTI + § 956 US-property
+// investment provisions. § 959(c) three-category distribution
+// ordering: (c)(1) US property investment-related PTEP first, then
+// (c)(2) Subpart F + GILTI/NCTI PTEP, finally (c)(3) untaxed E&P
+// triggering taxable dividend. § 961 stock basis adjustment: § 961(a)
+// basis increase on PTEP inclusion + § 961(b) basis decrease on PTEP
+// distribution. Notice 2019-01 (December 14, 2018) sixteen-basket
+// PTEP framework: 9 § 959(c)(1) groups + 7 § 959(c)(2) groups within
+// each § 904 FTC category. Proposed Regs REG-105479-18 (published
+// December 2, 2024 in Federal Register, signed November 29, 2024)
+// implement Notice 2019-01 framework plus shareholder-level + CFC-
+// level accounting. Notice 2024-16 additional § 961(c) basis in §
+// 332 liquidation + § 368(a)(1) asset reorg regulations forthcoming.
+// Form 5471 Schedule J + Schedule P PTEP reporting. Six-mode severity
+// ladder: NotApplicable, NotUsShareholderNoExclusion, FullyAttributable-
+// ToSection959C1PtepExcluded, FullyAttributableToSection959C2Ptep-
+// Excluded, PartiallyAttributableNonPtepTaxableRemainder, FullyAttributable-
+// ToNonPtepDividend. Coordinates with § 951 (Subpart F inclusion → PTEP
+// (c)(2)), § 951A (GILTI/NCTI inclusion → PTEP (c)(2)), § 956 (US
+// property → PTEP (c)(1) + reclassification of (c)(2) to (c)(1)), § 962
+// (§ 962 E&P treated as PTEP per § 962(d)), § 245A (DRD pathway for
+// non-PTEP foreign-source portion — iter 502), § 961 (basis), § 965
+// (transition tax → § 959(c)(2) PTEP), § 904 (FTC limitation baskets).
+
+async fn section_959_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_959::Section959Input>,
+) -> Result<Json<traderview_expense::section_959::Section959Result>, ApiError> {
+    Ok(Json(traderview_expense::section_959::check(&b)))
 }
 
 // ── § 962 Election by Individuals to Be Subject to Tax at Corporate
