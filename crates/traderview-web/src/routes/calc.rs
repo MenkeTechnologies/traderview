@@ -226,6 +226,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4941",          post(section_4941_route))
         .route("/calc/section-4942",          post(section_4942_route))
         .route("/calc/section-4943",          post(section_4943_route))
+        .route("/calc/section-4944",          post(section_4944_route))
         .route("/calc/section-4958",          post(section_4958_route))
         .route("/calc/section-4960",          post(section_4960_route))
         .route("/calc/section-4973",          post(section_4973_route))
@@ -1021,6 +1022,37 @@ async fn section_4943_route(
     Json(b): Json<traderview_expense::section_4943::Section4943Input>,
 ) -> Result<Json<traderview_expense::section_4943::Section4943Result>, ApiError> {
     Ok(Json(traderview_expense::section_4943::check(&b)))
+}
+
+// ── § 4944 taxes on PF jeopardizing investments ──────────────────────
+// Mounted at /api/calc/section-4944. Pure compute; § 4944(a)(1) 10%
+// Tier-1 PF excise on amount of jeopardizing investment for each year
+// or partial year in taxable period; § 4944(a)(2) 10% Tier-1 manager
+// excise (knowing willful without reasonable cause) capped at $10,000
+// per investment per § 4944(d)(2); § 4944(b)(1) 25% Tier-2 PF excise
+// if not removed from jeopardy within taxable period; § 4944(b)(2) 5%
+// Tier-2 manager excise (refuses correction) capped at $20,000.
+// Jeopardizing investment standard = ordinary business care and
+// prudence at TIME OF INVESTMENT (not hindsight) providing for long-
+// term and short-term financial needs of PF to carry out exempt
+// purposes; modern portfolio theory recognized. Categories typically
+// scrutinized per 26 C.F.R. § 53.4944-1(a)(2): trading on margin +
+// short sales + options/derivatives + futures/commodity + warrants +
+// working interests oil/gas + land contracts + speculative private
+// placements (NOT per se jeopardizing — facts and circumstances).
+// § 4944(c) PROGRAM-RELATED INVESTMENT (PRI) EXCEPTION: NOT jeopardizing
+// if ALL THREE — (1) primary purpose accomplishes § 170(c)(2)(B)
+// charitable; (2) no significant income or appreciation purpose; (3)
+// no political/lobbying purpose under § 4945(d)(1) or § 4945(d)(2).
+// Distinction from § 4943 (iter 474): § 4943 limits concentration in
+// single business enterprise; § 4944 evaluates prudence across
+// portfolio. Original enactment Tax Reform Act of 1969 Pub. L. 91-172.
+
+async fn section_4944_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4944::Section4944Input>,
+) -> Result<Json<traderview_expense::section_4944::Section4944Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4944::check(&b)))
 }
 
 // ── § 4958 intermediate sanctions on excess benefit transactions ─────
