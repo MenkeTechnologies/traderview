@@ -633,6 +633,39 @@ Each condition is independently pinned at boundaries: CA notice warranted at day
 
 Mounted at `POST /api/rental/abandonment-check`. Twenty-five tests pin: 51-row coverage; CA boundaries at 14/13d rent unpaid; CA without indicia not warranted (gatekeeper regression target); CA notice period at 14/13d boundaries; CA belongings disposal at 18/17d boundaries; **WA 45-day strictest belongings window** + sweep; TX 30-day belongings; NY court-process-only + CO/NJ mirror; **4-state court-process sweep** (NY/CO/DC/NJ); FL/MA case-by-case; no-statute 9-state sweep; unknown state handled; case-insensitive lookup; sorted all_states; non-empty citations; statutory states have all three day thresholds (integrity sweep); case-by-case states have no day thresholds (integrity sweep); **CA complete-workflow sweep** through all three compliance steps (notice warranted → period satisfied → disposal allowed).
 
+`traderview-expense::tenant_accessible_parking` is the **rental property tenant accessible parking accommodation right module** — when must a trader-landlord (1) provide accessible parking spaces as a matter of design and construction requirements, AND (2) grant a reasonable accommodation request from a disabled tenant for reserved or accessible parking? Trader-landlord critical for any multifamily property owner: refusal to grant reasonable parking accommodation exposes owner to FHA enforcement + HUD complaints + private right of action + significant civil penalties. Distinct from siblings `emotional_support_animal_documentation` (ESA accommodation framework), `service_animal` (ADA service animal rules), `fha_design_construction` (FHA § 3604(f)(3)(C) generally), and `fair_chance_housing` (criminal-background screening).
+
+**Three regimes** — Federal FHA universal vs California FEHA extension vs Default:
+
+| Regime | Authority | State extension |
+|--------|-----------|------------------|
+| Federal FHA only | 42 USC § 3604(f) + 24 CFR §§ 100.204, 100.205(c) | No |
+| California | + Cal. Gov. Code §§ 12955(c) + 12927(c) FEHA + Cal. Civ. Code § 54.1 Disabled Persons Act | **YES** ($4K+ statutory damages) |
+| Default | Federal FHA only (ADA Title III not applicable to private residential) | No |
+
+**§ 100.204 reasonable accommodation three-prong test** — applies to ALL multifamily rental housing (no covered-dwelling exception). Landlord must grant request from disabled tenant if:
+1. Tenant has FHA-recognized disability
+2. Accommodation necessary for equal opportunity to use and enjoy dwelling
+3. Accommodation is reasonable (not unduly burdensome + no fundamental alteration of services)
+
+Pinned by `ra_three_prong_satisfied_grant_compliant`, `ra_three_prong_satisfied_refusal_violates`, `ra_no_disability_no_obligation`, `ra_accommodation_not_necessary_no_obligation`, `ra_unreasonable_request_no_obligation`, `ra_three_prong_truth_table` (6-cell sweep — only all-three-true triggers grant requirement), and `note_pins_three_prong_test`.
+
+**§ 100.205(c) FHA design and construction — 2% minimum + accessible route**:
+- Applies only to "covered multifamily dwellings" first occupied AFTER March 13, 1991
+- Minimum 2% of parking spaces serving covered dwellings must be accessible (rounded UP, minimum 1)
+- Accessible spaces must be located on accessible route
+- Sufficient number of EACH TYPE (surface, garage, covered) must be accessible
+
+Exemptions:
+- Multifamily dwellings with fewer than 4 units
+- Multifamily townhouses without elevator
+
+Pinned by `dc_50_spaces_1_accessible_compliant` (2% of 50 = 1), `dc_100_spaces_2_accessible_compliant`, `dc_100_spaces_1_accessible_violates`, `dc_under_4_units_not_covered`, `dc_pre_march_13_1991_not_covered`, `dc_townhouse_without_elevator_not_covered`, `dc_not_on_accessible_route_violates`, `dc_two_violations_stack_low_count_no_route`, `dc_minimum_calculation_truth_table` (8-cell sweep), `dc_design_construction_engagement_truth_table` (6-cell sweep — only 4+ units + post-1991 + not-townhouse triggers engagement), and `note_pins_2_percent_design_construction`.
+
+**California FEHA + Disabled Persons Act extension** — Cal. Gov. Code §§ 12955(c) + 12927(c) FEHA extends FHA reasonable accommodation requirements with broader coverage; Cal. Civ. Code § 54.1 Disabled Persons Act establishes equal right with statutory damages of at least $4,000 + attorney's fees. Pinned by `ca_state_law_extension_engaged`, `ca_citation_pins_feha_dpa`, `ca_uniquely_engages_state_extension_invariant` (CA alone engages state extension; FHA + Default do not), `fha_only_no_state_extension`, and `default_no_state_extension`.
+
+Mounted at `POST /api/rental/tenant-accessible-parking`. Twenty-six tests pin: **RA three-prong satisfied grant compliant**; **RA three-prong satisfied refusal violates** (§ 3604(f) + § 100.204); **RA no disability no obligation**; **RA accommodation not necessary no obligation**; **RA unreasonable request no obligation**; **RA three-prong truth table** (6-cell sweep); **DC 50 spaces 1 accessible compliant** (2% of 50 = 1); **DC 100 spaces 2 accessible compliant**; **DC 100 spaces 1 accessible violates**; **DC under 4 units not covered**; **DC pre-March 13 1991 not covered**; **DC townhouse without elevator not covered**; **DC not on accessible route violates**; **DC two violations stack low count + no route**; **DC minimum calculation truth table** (8-cell sweep: 0/1/49/50 → 1; 51-100 → 2; 101-200 → 3+); **DC design and construction engagement truth table** (6-cell sweep); **CA state law extension engaged** (FEHA + § 12955(c) + $4,000 + Disabled Persons Act); **CA citation pins FEHA + DPA** (§§ 12955(c), 12927(c) + § 54.1); **FHA only no state extension**; **default no state extension**; **note pins FHA reasonable accommodation** (§ 3604(f) + § 100.204); **note pins 2% design and construction** (§ 100.205(c) + accessible route); **note pins exemptions** (4 units + townhouses without elevator); **note pins three-prong test**; **three regimes routed correctly**; **CA uniquely engages state extension invariant**.
+
 `traderview-expense::str_regulation` is the **state short-term rental (Airbnb/VRBO) regulation compliance table** — directly affects trader-landlords using Airbnb/VRBO/Booking.com. Recent legislative wave (2018-2024) reshaped the STR landscape with state tax-and-register regimes, primary-residence requirements, and major-city outright bans.
 
 **Four regimes** across 51 jurisdictions:

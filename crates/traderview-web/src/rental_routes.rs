@@ -618,6 +618,10 @@ use traderview_expense::service_animal::{
 use traderview_expense::tenant_abandonment::{
     check as check_tenant_abandonment, TenantAbandonmentInput, TenantAbandonmentResult,
 };
+use traderview_expense::tenant_accessible_parking::{
+    check as check_tenant_accessible_parking, TenantAccessibleParkingInput,
+    TenantAccessibleParkingResult,
+};
 use traderview_expense::lockout_penalties::{
     check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
 };
@@ -876,6 +880,7 @@ pub fn router() -> Router<AppState> {
         .route("/rent-escrow-check", axum::routing::post(rent_escrow_check_route))
         .route("/right-to-dry-check", axum::routing::post(right_to_dry_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
+        .route("/tenant-accessible-parking", axum::routing::post(tenant_accessible_parking_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
         // 1099-NEC contractor $600 threshold tracker
@@ -2601,6 +2606,36 @@ async fn abandonment_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     Ok(Json(check_tenant_abandonment(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_accessible_parking: Rental property tenant accessible parking
+// accommodation right — when a trader-landlord must (1) provide
+// accessible parking spaces as a matter of design and construction
+// requirements under FHA + state law, AND (2) grant a reasonable
+// accommodation request from a disabled tenant. Mounted at POST /api/
+// rental/tenant-accessible-parking. Three regimes: Federal FHA only
+// (42 USC § 3604(f) reasonable accommodation universal across all
+// multifamily rentals + 24 CFR § 100.205(c) 2% accessible parking
+// design and construction for covered multifamily first occupied
+// after March 13, 1991; exemptions for <4 unit buildings and
+// multifamily townhouses without elevator); California FEHA (Cal.
+// Gov. Code §§ 12955(c) + 12927(c) + Cal. Civ. Code § 54.1 Disabled
+// Persons Act with $4K+ statutory damages); Default federal FHA only
+// (ADA Title III not generally applicable to private residential
+// housing). Three-prong reasonable accommodation test under §
+// 100.204: (1) tenant FHA disability + (2) accommodation necessary
+// for equal opportunity + (3) accommodation reasonable. Distinct
+// from siblings emotional_support_animal_documentation, service_
+// animal, fha_design_construction, fair_chance_housing.
+// ---------------------------------------------------------------------------
+
+async fn tenant_accessible_parking_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantAccessibleParkingInput>,
+) -> Result<Json<TenantAccessibleParkingResult>, ApiError> {
+    Ok(Json(check_tenant_accessible_parking(&b)))
 }
 
 // ---------------------------------------------------------------------------
