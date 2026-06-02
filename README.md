@@ -666,6 +666,62 @@ Pinned by `dc_50_spaces_1_accessible_compliant` (2% of 50 = 1), `dc_100_spaces_2
 
 Mounted at `POST /api/rental/tenant-accessible-parking`. Twenty-six tests pin: **RA three-prong satisfied grant compliant**; **RA three-prong satisfied refusal violates** (§ 3604(f) + § 100.204); **RA no disability no obligation**; **RA accommodation not necessary no obligation**; **RA unreasonable request no obligation**; **RA three-prong truth table** (6-cell sweep); **DC 50 spaces 1 accessible compliant** (2% of 50 = 1); **DC 100 spaces 2 accessible compliant**; **DC 100 spaces 1 accessible violates**; **DC under 4 units not covered**; **DC pre-March 13 1991 not covered**; **DC townhouse without elevator not covered**; **DC not on accessible route violates**; **DC two violations stack low count + no route**; **DC minimum calculation truth table** (8-cell sweep: 0/1/49/50 → 1; 51-100 → 2; 101-200 → 3+); **DC design and construction engagement truth table** (6-cell sweep); **CA state law extension engaged** (FEHA + § 12955(c) + $4,000 + Disabled Persons Act); **CA citation pins FEHA + DPA** (§§ 12955(c), 12927(c) + § 54.1); **FHA only no state extension**; **default no state extension**; **note pins FHA reasonable accommodation** (§ 3604(f) + § 100.204); **note pins 2% design and construction** (§ 100.205(c) + accessible route); **note pins exemptions** (4 units + townhouses without elevator); **note pins three-prong test**; **three regimes routed correctly**; **CA uniquely engages state extension invariant**.
 
+`traderview-expense::tenant_assistance_animal_accommodation` is the **multi-jurisdictional tenant assistance animal accommodation framework module** — among the highest-stakes landlord exposure regimes in residential landlord-tenant law. Misclassifying an emotional support animal as a "pet" and applying pet fees, weight restrictions, breed restrictions, or refusing the accommodation is the single most common Fair Housing Act discrimination complaint received by HUD and state fair-housing agencies. Trader-landlord critical because complaints route to HUD administrative penalties (2026: $25,597 first / $63,993 second / $127,985 third+ per 24 CFR § 30.65, annually inflation-adjusted) PLUS DOJ Pattern-or-Practice exposure PLUS private § 3613 actions with actual + PUNITIVE damages + attorney fees + costs. Distinct from siblings `rental_pet_deposit_separate_security` (general pet deposit rules), `tenant_data_privacy` (HIPAA-adjacent documentation rules), `fair_chance_housing` (criminal-background screening), `landlord_self_help_eviction_prohibition`.
+
+**Federal framework — Fair Housing Act § 3604(f)(3)(B) + HUD FHEO Notice 2020-01**:
+
+| Authority | Rule |
+|-----------|------|
+| 42 USC § 3604(f)(3)(B) | Unlawful housing discrimination to refuse to make reasonable accommodations in rules, policies, practices, or services when necessary to afford disabled tenant equal opportunity to enjoy and use a dwelling |
+| HUD FHEO Notice 2020-01 (January 28, 2020) | Replaced HUD 2013 guidance; defines two animal types |
+| 42 USC § 3604(f)(9) | Direct-threat OR substantial-property-damage defense (INDIVIDUALIZED finding required) |
+| 42 USC § 3613 | Private enforcement: actual + PUNITIVE damages + attorney fees + costs + injunctive relief |
+| 24 CFR § 30.65 (2026) | HUD administrative penalties: $25,597 / $63,993 / $127,985 (first / second / third+) |
+
+**Two animal types under HUD FHEO 2020-01**:
+
+| Type | Source | Scope |
+|------|--------|-------|
+| **Service Animal** | ADA Title III + 28 CFR § 36.302(c) | Dogs (and sometimes miniature horses) individually trained to perform tasks for individual with disability |
+| **Support Animal** | HUD FHEO 2020-01 | Any species providing emotional support, comfort, well-being, therapeutic benefit; need NOT be individually trained but must be necessary to ameliorate a disability symptom |
+
+Pinned by `service_animal_engages_accommodation`, `baseline_esa_compliant`, `pet_no_accommodation_required`, `animal_type_truth_table_three_cells` (ServiceAnimal + SupportAnimal + Pet sweep).
+
+**HUD FHEO 2020-01 — pet fee and deposit PROHIBITION**: landlords may NOT charge a pet fee or deposit for assistance animals as a condition of granting a reasonable accommodation; assistance animals are NOT pets. Tenant remains responsible for actual damage caused by the animal (general security deposit recovery). Pinned by `pet_fee_charged_for_esa_violation`.
+
+**HUD FHEO 2020-01 — NO breed, weight, or species restrictions** for assistance animals. Pinned by `breed_or_weight_restriction_for_esa_violation`.
+
+**HUD FHEO 2020-01 — documentation standards** — five prohibitions on landlord requests:
+
+1. NO specific form requirement
+2. NO notarized statements
+3. NO statements under penalty of perjury
+4. NO individual's diagnosis
+5. NO detailed physical or mental impairment information
+
+Reliable documentation may be requested ONLY when disability OR disability-related need is NON-OBVIOUS. Pinned by `excessive_documentation_requirement_violation` and `non_obvious_disability_no_documentation_violation` and `obvious_disability_no_documentation_required`.
+
+**§ 3604(f)(9) Direct-threat / substantial-property-damage defense** — refusal valid IF:
+
+1. Finding is INDIVIDUALIZED (not based on generic breed reputation, stereotypes, or fears); AND
+2. Cannot be eliminated by another reasonable accommodation
+
+Pinned by `direct_threat_defense_engages_with_individualized_finding`, `substantial_property_damage_defense_engages`, `direct_threat_with_finding_engages_defense_unique_invariant`.
+
+**California overlay — Cal. Gov. Code § 12955 + Cal. Civ. Code § 54.1 + AB 468 of 2021** — California-specific ESA documentation requires licensed mental health professional to have ESTABLISHED CLIENT RELATIONSHIP of at least 30 DAYS before issuing ESA documentation (effective January 1, 2022); must complete clinical evaluation; must comply with California professional standards. Pinned by `california_ab468_30_day_relationship_required` and `california_ab468_only_applies_to_support_animals` (service animals exempt).
+
+**HUD administrative penalty tier progression (24 CFR § 30.65, 2026)**:
+
+| Offense | Maximum |
+|---------|---------|
+| First offense | **$25,597** |
+| Second offense (within 5 years) | **$63,993** |
+| Third+ offense (within 7 years) | **$127,985** |
+
+Pinned by `hud_first_offense_2026_penalty_25597`, `hud_second_offense_2026_penalty_63993`, `hud_third_offense_2026_penalty_127985`, `offense_history_progressive_increase_invariant`.
+
+Mounted at `POST /api/rental/tenant-assistance-animal-accommodation`. Thirty-four tests pin: **baseline ESA compliant**; **service animal engages accommodation**; **pet no accommodation required**; **no disability no accommodation**; **pet fee charged for ESA violation**; **breed or weight restriction for ESA violation**; **accommodation refusal without direct threat violation**; **excessive documentation requirement violation**; **non-obvious disability no documentation violation**; **obvious disability no documentation required**; **direct threat defense engages with individualized finding**; **substantial property damage defense engages**; **California AB 468 30-day relationship required**; **California AB 468 only applies to support animals** (service animal carveout); **HUD first offense 2026 penalty $25,597**; **HUD second offense 2026 penalty $63,993**; **HUD third offense 2026 penalty $127,985**; **offense history progressive increase invariant**; **animal type truth table three cells** (ServiceAnimal + SupportAnimal + Pet); **citation pins all authorities** (§ 3604(f)(3)(B) + § 3604(f)(9) + HUD FHEO Notice 2020-01 + § 3613 + 24 CFR § 30.65 + ADA Title III + § 504 Rehabilitation Act + § 12955 + § 54.1 + AB 468); **note pins FHA § 3604(f)(3)(B) reasonable accommodation**; **note pins HUD 2020-01 two animal types**; **note pins HUD 2020-01 pet fee prohibition**; **note pins HUD 2020-01 no breed/weight/species**; **note pins documentation standards five prohibitions**; **note pins § 3604(f)(9) direct threat substantial damage**; **note pins ADA Title III dogs horses**; **note pins California FEHA**; **note pins California AB 468 30-day relationship**; **note pins § 504 Rehabilitation Act**; **note pins § 3613 private enforcement punitive**; **note pins HUD 2026 penalty tiers**; **multiple failures stack**; **direct threat with finding engages defense unique invariant**.
+
 `traderview-expense::str_regulation` is the **state short-term rental (Airbnb/VRBO) regulation compliance table** — directly affects trader-landlords using Airbnb/VRBO/Booking.com. Recent legislative wave (2018-2024) reshaped the STR landscape with state tax-and-register regimes, primary-residence requirements, and major-city outright bans.
 
 **Four regimes** across 51 jurisdictions:

@@ -716,6 +716,11 @@ use traderview_expense::tenant_accessible_parking::{
     check as check_tenant_accessible_parking, TenantAccessibleParkingInput,
     TenantAccessibleParkingResult,
 };
+use traderview_expense::tenant_assistance_animal_accommodation::{
+    check as check_tenant_assistance_animal_accommodation,
+    AssistanceAnimalAccommodationInput as TenantAssistanceAnimalAccommodationInput,
+    AssistanceAnimalAccommodationResult as TenantAssistanceAnimalAccommodationResult,
+};
 use traderview_expense::lockout_penalties::{
     check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
 };
@@ -997,6 +1002,7 @@ pub fn router() -> Router<AppState> {
         .route("/right-to-dry-check", axum::routing::post(right_to_dry_check_route))
         .route("/abandonment-check", axum::routing::post(abandonment_check_route))
         .route("/tenant-accessible-parking", axum::routing::post(tenant_accessible_parking_route))
+        .route("/tenant-assistance-animal-accommodation", axum::routing::post(tenant_assistance_animal_accommodation_route))
         .route("/service-animal-check", axum::routing::post(service_animal_check_route))
         .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
         // 1099-NEC contractor $600 threshold tracker
@@ -2752,6 +2758,42 @@ async fn tenant_accessible_parking_route(
     Json(b): Json<TenantAccessibleParkingInput>,
 ) -> Result<Json<TenantAccessibleParkingResult>, ApiError> {
     Ok(Json(check_tenant_accessible_parking(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// tenant_assistance_animal_accommodation: multi-jurisdictional tenant
+// assistance animal accommodation framework — among the highest-stakes
+// landlord exposure regimes in residential landlord-tenant law. Federal
+// Fair Housing Act § 3604(f)(3)(B) (42 USC § 3604(f)(3)(B)) + HUD FHEO
+// Notice 2020-01 (January 28, 2020) defining two animal types (service
+// animals + support animals); pet fee/deposit prohibition; no breed /
+// weight / species restrictions; documentation standards (no specific
+// form, notarized statement, perjury statement, diagnosis, detailed
+// impairment info); § 3604(f)(9) individualized direct-threat OR
+// substantial-property-damage defense; ADA Title III public-
+// accommodation overlay (dogs + miniature horses only); § 504
+// Rehabilitation Act for federally-funded housing; Cal. Gov. Code
+// § 12955 + Cal. Civ. Code § 54.1 FEHA overlay; Cal. AB 468 of 2021
+// (effective January 1, 2022) — California-specific ESA documentation
+// 30-day established-client-relationship requirement. FHA private
+// enforcement under 42 USC § 3613: actual + PUNITIVE damages + attorney
+// fees + costs + injunctive relief. HUD administrative penalties under
+// 24 CFR § 30.65 (2026): FIRST OFFENSE $25,597; SECOND $63,993;
+// THIRD+ $127,985. Mounted at POST /api/rental/tenant-assistance-animal-
+// accommodation. Trader-landlord critical because misclassifying an
+// emotional support animal as a "pet" is the single most common Fair
+// Housing Act discrimination complaint received by HUD. Sibling
+// cluster: rental_pet_deposit_separate_security (general pet rules),
+// tenant_data_privacy (HIPAA-adjacent), fair_chance_housing,
+// landlord_self_help_eviction_prohibition.
+// ---------------------------------------------------------------------------
+
+async fn tenant_assistance_animal_accommodation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<TenantAssistanceAnimalAccommodationInput>,
+) -> Result<Json<TenantAssistanceAnimalAccommodationResult>, ApiError> {
+    Ok(Json(check_tenant_assistance_animal_accommodation(&b)))
 }
 
 // ---------------------------------------------------------------------------

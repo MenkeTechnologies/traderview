@@ -203,6 +203,7 @@ pub mod swimming_pool_safety;
 pub mod submetering_rules;
 pub mod tenant_abandonment;
 pub mod tenant_accessible_parking;
+pub mod tenant_assistance_animal_accommodation;
 pub mod tenant_in_foreclosure_protection;
 pub mod tenant_late_fee_cap;
 pub mod tenant_cannabis_use_protection;
