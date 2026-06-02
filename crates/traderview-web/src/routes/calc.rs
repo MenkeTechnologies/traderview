@@ -224,6 +224,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-4973",          post(section_4973_route))
         .route("/calc/section-4974",          post(section_4974_route))
         .route("/calc/section-4975",          post(section_4975_route))
+        .route("/calc/section-4980h",         post(section_4980h_route))
         .route("/calc/section-453",           post(section_453_route))
         .route("/calc/section-453a",          post(section_453a_route))
         .route("/calc/section-457b",          post(section_457b_route))
@@ -886,6 +887,30 @@ async fn section_4975_route(
     Json(b): Json<traderview_expense::section_4975::Section4975Input>,
 ) -> Result<Json<traderview_expense::section_4975::Section4975Result>, ApiError> {
     Ok(Json(traderview_expense::section_4975::check(&b)))
+}
+
+// ── § 4980H Employer Shared Responsibility Payment (ESRP / ACA) ──────
+// Mounted at /api/calc/section-4980h. Pure compute; 2026 amounts:
+// § 4980H(a) failure-to-offer-MEC penalty $3,340 per FT minus 30
+// (monthly $278.33); § 4980H(b) unaffordable or non-MV penalty
+// $5,010 per FT receiving PTC (monthly $417.50); § 4980H(c)(2)
+// ALE = 50+ FT employees (30+ hours/week) including § 4980H(c)(2)
+// (E) FTE-equivalents; § 4980H(c)(2)(D) seasonal worker 120-day-
+// or-fewer exception; § 4980H(c)(4) affordability 9.96% of
+// household income (2026, up from 9.02% for 2025); § 36B(c)(2)(C)
+// (ii) minimum value 60% of expected healthcare costs; § 4980H(d)
+// MEC definition under § 5000A(f); § 6056 Form 1094-C transmittal
+// + Form 1095-C employee statement by January 31; § 6721/§ 6722
+// civil penalties up to $310 per return; § 414(b)/(c)/(m)/(o)
+// controlled group aggregation for ALE threshold determination
+// + each entity separately assessed ESRP; Pub. L. 111-148 PPACA
+// + Pub. L. 111-152 HCERA enacting authority.
+
+async fn section_4980h_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4980h::Section4980hInput>,
+) -> Result<Json<traderview_expense::section_4980h::Section4980hResult>, ApiError> {
+    Ok(Json(traderview_expense::section_4980h::check(&b)))
 }
 
 // ── §453 installment sale gain deferral ──────────────────────────────
