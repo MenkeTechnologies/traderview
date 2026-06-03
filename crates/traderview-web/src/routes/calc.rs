@@ -111,6 +111,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-676",           post(section_676_route))
         .route("/calc/section-677",           post(section_677_route))
         .route("/calc/section-678",           post(section_678_route))
+        .route("/calc/section-679",           post(section_679_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
         .route("/calc/section-6042",          post(section_6042_route))
@@ -5761,6 +5762,47 @@ async fn section_678_route(
     Json(b): Json<traderview_expense::section_678::Section678Input>,
 ) -> Result<Json<traderview_expense::section_678::Section678Result>, ApiError> {
     Ok(Json(traderview_expense::section_678::compute(&b)))
+}
+
+// ── §679 foreign trusts with US beneficiaries / anti-deferral ─────────
+// Mounted at /api/calc/section-679. § 679 is the LAST substantive
+// grantor-trust trigger in the §§ 671-679 progression after § 673
+// (reversionary — iter 648), § 674 (beneficial enjoyment), § 675
+// (administrative powers — iter 644), § 676 (power to revoke — iter
+// 646), § 677 (income for benefit of grantor — iter 642), § 678
+// (person other than grantor — iter 640). § 679(a)(1) general rule:
+// US person who directly or indirectly transfers property to foreign
+// trust treated as OWNER of portion attributable to property if any
+// US beneficiary exists in that taxable year. § 679(a)(2) US
+// beneficiary presumption — Secretary may treat any foreign trust
+// as having US beneficiary unless transferor rebuts by documenting
+// no part of income or corpus may benefit US person. § 679(a)(3)
+// transfer-at-death exception — transfers by reason of death of
+// transferor excepted; foreign grantor trust status terminates at
+// US settlor death. § 679(a)(4) outbound trust migration — domestic
+// trust that becomes foreign during transferor's life treated as if
+// transferor transferred to foreign trust on migration date.
+// § 679(a)(5) 5-year pre-immigration lookback — nonresident alien
+// with residency starting date within 5 years after transfer deemed
+// to have transferred property on residency starting date.
+// § 679(c) 5-year beneficiary lookback — beneficiary not treated as
+// US person if first became US person more than 5 years after
+// transfer. Form 3520-A (Annual Information Return of Foreign Trust
+// With US Owner) due 15th day of 3rd month after end of trust's
+// taxable year; Foreign Grantor Trust Owner Statement flows to
+// grantor's Form 1040 via § 671 attribution. Form 3520 (Annual
+// Return To Report Transactions With Foreign Trusts and Receipt of
+// Certain Foreign Gifts) required of US transferor/owner. § 6048
+// reporting penalty: greater of $10,000 OR 35 % of gross reportable
+// amount. Small Business Job Protection Act of 1996 (PL 104-188)
+// significant amendments. Treasury Proposed Regs (May 8, 2024;
+// 89 FR 39440) modernize § 679 + § 6048 implementing rules.
+
+async fn section_679_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_679::Section679Input>,
+) -> Result<Json<traderview_expense::section_679::Section679Result>, ApiError> {
+    Ok(Json(traderview_expense::section_679::compute(&b)))
 }
 
 // ── §67(g) TCJA misc itemized deduction suspension ────────────────────

@@ -613,6 +613,7 @@ pub mod section_675;
 pub mod section_676;
 pub mod section_677;
 pub mod section_678;
+pub mod section_679;
 pub mod section_67g;
 pub mod section_6011;
 pub mod section_6020;
