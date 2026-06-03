@@ -178,6 +178,7 @@ pub mod rental_bedroom_egress_window;
 pub mod rental_boiler_inspection_compliance;
 pub mod rental_carbon_monoxide_detector;
 pub mod rental_chimney_fireplace_inspection_disclosure;
+pub mod rental_climate_mobilization_act_ll97_emissions;
 pub mod rental_elevator_safety_inspection;
 pub mod rental_emergency_action_plan_high_rise;
 pub mod rental_eviction_record_sealing_screening;

@@ -630,6 +630,11 @@ use traderview_expense::rental_chimney_fireplace_inspection_disclosure::{
     RentalChimneyFireplaceInspectionDisclosureInput,
     RentalChimneyFireplaceInspectionDisclosureResult,
 };
+use traderview_expense::rental_climate_mobilization_act_ll97_emissions::{
+    check as check_rental_climate_mobilization_act_ll97_emissions,
+    ClimateMobilizationActLl97EmissionsInput as RentalClimateMobilizationActLl97EmissionsInput,
+    ClimateMobilizationActLl97EmissionsResult as RentalClimateMobilizationActLl97EmissionsResult,
+};
 use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
@@ -1369,6 +1374,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
+        .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
@@ -7630,6 +7636,34 @@ async fn rental_chimney_fireplace_inspection_disclosure_route(
     Json(b): Json<RentalChimneyFireplaceInspectionDisclosureInput>,
 ) -> Result<Json<RentalChimneyFireplaceInspectionDisclosureResult>, ApiError> {
     Ok(Json(check_rental_chimney_fireplace_inspection_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_climate_mobilization_act_ll97_emissions: NYC Local Law 97
+// of 2019 (Climate Mobilization Act) building greenhouse-gas
+// emissions cap compliance. NYC Admin Code § 28-320 et seq.
+// Effective 2024 with progressive tightening through 2050 (40%
+// reduction by 2030, 80% by 2050). Applies to buildings > 25,000
+// sqft. Emissions intensity limits by occupancy: R-2 multifamily
+// 6.75 kgCO2e/sqft (2024-2029) → 4.07 (2030-2034); B business
+// office 8.46 → 4.53. Penalty $268 per metric ton CO2e annual
+// excess. Article 321 alternative compliance for buildings with
+// > 35% rent-regulated units: 13 prescriptive ECMs in lieu of
+// emissions-limit compliance. Adjustments: financial hardship
+// (§ 28-320.7), critical facility (§ 28-320.8). Sibling cluster:
+// rental_energy_benchmarking (NYC LL 84 — predicate energy
+// reporting), rental_facade_inspection_fisp_local_law_11 (iter 583
+// — NYC LL 11 facade), rental_gas_piping_inspection_local_law_152
+// (iter 585 — NYC LL 152 gas), rental_gas_appliance_ban (all-
+// electric mandate as compliance pathway).
+// ---------------------------------------------------------------------------
+
+async fn rental_climate_mobilization_act_ll97_emissions_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalClimateMobilizationActLl97EmissionsInput>,
+) -> Result<Json<RentalClimateMobilizationActLl97EmissionsResult>, ApiError> {
+    Ok(Json(check_rental_climate_mobilization_act_ll97_emissions(&b)))
 }
 
 // ---------------------------------------------------------------------------
