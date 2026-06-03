@@ -98,6 +98,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-641",           post(section_641_route))
         .route("/calc/section-643",           post(section_643_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
@@ -5375,6 +5376,32 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §641 imposition of tax on trusts and estates ────────────────────
+// Mounted at /api/calc/section-641. § 641(a) tax imposed on
+// taxable income of estates, trusts, bankruptcy estates; paid on
+// Form 1041. § 641(b) taxable income computed as for individual
+// subject to § 642 + § 643 DNI + § 651/§ 661 distribution
+// deductions. § 641(c) ESBT S corp portion at top 37 % rate with
+// NO § 651/§ 661 distribution deduction. § 641(d) ESBT non-S-corp
+// portion at normal trust rules. § 1(e) compressed four-bracket
+// rate schedule (10/24/35/37). 2025 brackets (Rev. Proc. 2024-40):
+// 10 % $0-$3,150; 24 % $3,150-$11,450; 35 % $11,450-$15,650; 37 %
+// above $15,650. 2026 top bracket ~ $16,000. § 642(b) exemption:
+// $600 estate / $300 complex trust / $100 simple trust (NOT
+// inflation-indexed). § 1411(a)(2) NIIT 3.8 % on undistributed
+// NII above top bracket threshold (same compressed level). TCJA
+// 2017 rate structure made permanent by OBBBA 2025 § 70411.
+// Trader-critical: trust top bracket $15,650 vs individual single
+// $626,350 = ≈ 40× compression — trust planning + DNI optimization
+// dominates after-tax outcome.
+
+async fn section_641_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_641::Section641Input>,
+) -> Result<Json<traderview_expense::section_641::Section641Result>, ApiError> {
+    Ok(Json(traderview_expense::section_641::compute(&b)))
 }
 
 // ── §643 trust/estate DNI + accounting income definition ────────────
