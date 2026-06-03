@@ -233,6 +233,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6721",          post(section_6721_route))
         .route("/calc/section-6722",          post(section_6722_route))
         .route("/calc/section-6723",          post(section_6723_route))
+        .route("/calc/section-6724",          post(section_6724_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-6862",          post(section_6862_route))
@@ -9357,6 +9358,38 @@ async fn section_6723_route(
     Json(b): Json<traderview_expense::section_6723::Section6723Input>,
 ) -> Result<Json<traderview_expense::section_6723::Section6723Result>, ApiError> {
     Ok(Json(traderview_expense::section_6723::compute(&b)))
+}
+
+// ── §6724 waiver / definitions / reasonable cause defense ─────────────
+// Mounted at /api/calc/section-6724. § 6724 completes the § 6721/
+// § 6722/§ 6723/§ 6724 information-return penalty quartet by
+// providing the reasonable-cause waiver standard, de minimis failure
+// exception, and statutory definitions of "information return"/
+// "payee statement"/"specified information reporting requirement"
+// referenced by all three preceding penalty sections. § 6724(a)
+// reasonable cause waiver: no penalty under §§ 6721, 6722, or 6723
+// if failure due to REASONABLE CAUSE and NOT WILLFUL NEGLECT.
+// Treas. Reg. § 301.6724-1 two-prong test: (1) significant
+// mitigating factors OR events beyond filer's control (impediment);
+// AND (2) filer acted in responsible manner before AND after
+// failure. Examples of impediments: natural disaster, IRS systems
+// failure, death/serious illness, fire/casualty destroying records.
+// § 6724(b) payment of penalty on notice and demand same as tax.
+// § 6724(c) DE MINIMIS EXCEPTION: § 6721 and § 6722 penalties NOT
+// imposed on failures corrected by Aug 1 if number does NOT exceed
+// GREATER OF (i) 10 OR (ii) 0.5 % of total returns/statements;
+// applies AFTER reasonable cause analysis; NOT available for § 6723.
+// § 6724(d) definitions: (d)(1) "information return" Forms 1098,
+// 1099, 3921, 3922, 5498, W-2G, 1097, W-2, W-3, 5471, 8865;
+// (d)(2) "payee statement"; (d)(3) "specified information reporting
+// requirement" for § 6723. IRS Pub 1586 reasonable cause guidance.
+// Rev. Proc. 2025-22 TIN solicitation procedures. IRS IRM 20.1.7.
+
+async fn section_6724_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6724::Section6724Input>,
+) -> Result<Json<traderview_expense::section_6724::Section6724Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6724::compute(&b)))
 }
 
 // ── §6851 termination assessment of income tax ──────────────────────

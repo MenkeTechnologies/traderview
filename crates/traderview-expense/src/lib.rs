@@ -686,6 +686,7 @@ pub mod section_6713;
 pub mod section_6721;
 pub mod section_6722;
 pub mod section_6723;
+pub mod section_6724;
 pub mod section_6851;
 pub mod section_6861;
 pub mod section_6862;
