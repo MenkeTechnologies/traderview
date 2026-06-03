@@ -209,6 +209,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-354",           post(section_354_route))
+        .route("/calc/section-358",           post(section_358_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
@@ -2767,6 +2768,56 @@ async fn section_354_route(
     Json(b): Json<traderview_expense::section_354::Section354Input>,
 ) -> Result<Json<traderview_expense::section_354::Section354Result>, ApiError> {
     Ok(Json(traderview_expense::section_354::check(&b)))
+}
+
+// ── § 358 Basis to Distributees (Shareholder Basis in Stock Received) ─
+// Mounted at /api/calc/section-358 (iter 560 milestone). Pure compute.
+// § 358 governs the basis a shareholder takes in stock + securities
+// received in tax-free § 351 corporate formations and § 368 tax-free
+// reorganizations. Combined with § 362 corporation-basis side, § 358
+// implements double basis preservation that keeps gain or loss latent
+// across formation/reorganization transactions.
+//
+// § 358(a)(1) general rule: shareholder's basis in stock received =
+// adjusted basis of property transferred + gain recognized on transfer
+// - money received (boot) - FMV of other property received (boot) -
+// liabilities assumed (treated as boot under § 358(d)).
+//
+// § 358(a)(2) basis allocation: among multiple classes of property
+// received, basis allocated to each class in proportion to FMV at
+// receipt.
+//
+// § 358(c) reorganizations: tracing method per Federal Register 2006
+// final regulations — basis traced from each surrendered share to each
+// received share.
+//
+// § 358(d) liability-as-boot: liabilities assumed by transferee reduce
+// shareholder basis; § 357(c)(1) triggers gain recognition if
+// liabilities exceed adjusted basis of property transferred.
+//
+// § 358(h) anti-loss-importation: added Pub. L. 106-554 (2000),
+// finalized in 2014 Treasury regs. Shareholder basis REDUCED to FMV
+// if liability assumption is part of tax-avoidance scheme to import
+// built-in loss into United States. Companion: § 362(e) corporate-level
+// anti-loss-importation.
+//
+// Five-mode severity ladder: NotApplicable,
+// Section358InapplicableNotTaxDeferred,
+// Section358ABasisPreservedCarryoverWithAdjustments,
+// Section358HAntiLossImportationBasisReducedToFmv,
+// Section358ABasisReducedBelowZeroSection357C1GainRecognition.
+//
+// Coordinates with § 351 (transfer to controlled corp), § 354 (basis
+// in reorganization stock), § 357 (liability rules + § 357(a)/(b)/(c)),
+// § 362 (corporation basis in transferred property), § 368 (reorg
+// definitions), § 368(c) 80% control requirement, § 1001 (general
+// realization), § 1012 (cost basis general rule).
+
+async fn section_358_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_358::Section358ShareholderBasisInput>,
+) -> Result<Json<traderview_expense::section_358::Section358ShareholderBasisOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_358::check(&b)))
 }
 
 // ── § 367 Foreign Corporations ────────────────────────────────────────
