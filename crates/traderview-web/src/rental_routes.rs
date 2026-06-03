@@ -975,6 +975,11 @@ use traderview_expense::rental_tenant_relocation_assistance::{
     RentalTenantRelocationAssistanceInput,
     RentalTenantRelocationAssistanceResult,
 };
+use traderview_expense::rental_tenant_estoppel_certificate::{
+    check as check_rental_tenant_estoppel_certificate,
+    RentalTenantEstoppelCertificateInput,
+    RentalTenantEstoppelCertificateResult,
+};
 use traderview_expense::rental_tenant_data_privacy_compliance::{
     check as check_rental_tenant_data_privacy_compliance,
     RentalTenantDataPrivacyComplianceInput,
@@ -1524,6 +1529,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
         .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
+        .route("/rental-tenant-estoppel-certificate", axum::routing::post(rental_tenant_estoppel_certificate_route))
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
         .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
@@ -12635,6 +12641,34 @@ async fn rental_tenant_data_privacy_compliance_route(
     Json(b): Json<RentalTenantDataPrivacyComplianceInput>,
 ) -> Result<Json<RentalTenantDataPrivacyComplianceResult>, ApiError> {
     Ok(Json(check_rental_tenant_data_privacy_compliance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_tenant_estoppel_certificate: residential tenant estoppel
+// certificate compliance. Tenant required to sign ONLY when lease
+// contains estoppel provision; absent provision, tenant not
+// obligated. Refusal to sign when lease requires = breach of lease.
+// Typical 10-day response window per standard lease clause.
+// California Evidence Code § 622: facts recited in written
+// instrument conclusively presumed true between parties or
+// successors in interest — statements binding and tenant cannot
+// later contradict. Common transactional triggers: sale,
+// refinancing, line-of-credit, mortgage modification. Required
+// content: rent + lease terms + protected tenancy status + oral
+// agreements + amendments + landlord promises + utilities.
+// Eleven-mode severity ladder × five transactional triggers × four
+// lease clause types × four tenant responses × seven content
+// defect categories. Trader-landlord critical because defective
+// estoppel demands and false statements create transaction-failure
+// and litigation exposure during refinancing and sale.
+// ---------------------------------------------------------------------------
+
+async fn rental_tenant_estoppel_certificate_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantEstoppelCertificateInput>,
+) -> Result<Json<RentalTenantEstoppelCertificateResult>, ApiError> {
+    Ok(Json(check_rental_tenant_estoppel_certificate(&b)))
 }
 
 // ── /rental-ev-charging-accommodation (iter 563) ────────────────────────────
