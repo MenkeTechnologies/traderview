@@ -1059,6 +1059,11 @@ use traderview_expense::rental_texas_hb_2127_state_preemption::{
     RentalTexasHb2127StatePreemptionInput,
     RentalTexasHb2127StatePreemptionResult,
 };
+use traderview_expense::rental_minneapolis_renter_protections_ordinance_2020::{
+    check as check_rental_minneapolis_renter_protections_ordinance_2020,
+    RentalMinneapolisRenterProtectionsOrdinance2020Input,
+    RentalMinneapolisRenterProtectionsOrdinance2020Result,
+};
 use traderview_expense::rental_mold_disclosure_remediation::{
     check as check_rental_mold_disclosure_remediation,
     RentalMoldDisclosureRemediationInput,
@@ -1706,6 +1711,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
         .route("/rental-texas-hb-2127-state-preemption", axum::routing::post(rental_texas_hb_2127_state_preemption_route))
         .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
+        .route("/rental-minneapolis-renter-protections-ordinance-2020", axum::routing::post(rental_minneapolis_renter_protections_ordinance_2020_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
@@ -13647,6 +13653,51 @@ async fn rental_mold_disclosure_remediation_route(
     Json(b): Json<RentalMoldDisclosureRemediationInput>,
 ) -> Result<Json<RentalMoldDisclosureRemediationResult>, ApiError> {
     Ok(Json(check_rental_mold_disclosure_remediation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_minneapolis_renter_protections_ordinance_2020: Minneapolis
+// Renter Protections Ordinance — unanimously passed by Minneapolis
+// City Council on September 13, 2019; effective June 1, 2020 for
+// large landlords (more than 15 rental homes) and December 1, 2020
+// for small landlords (15 or fewer rental homes); administered by
+// Minneapolis Department of Regulatory Services Inspections
+// Division. Security deposit cap = ONE MONTH'S RENT. Criminal
+// screening look-back limits: 3 years (misdemeanors), 7 years
+// (felonies), 10 years (serious offenses: first-degree arson,
+// assault, manslaughter, kidnapping, criminal sexual conduct,
+// murder, aggravated robbery). Eviction record look-back limits:
+// 3 years (judgments), 1 year (settlements), NEVER for dismissed
+// evictions (absolute prohibition). Two screening options under
+// § 244.2025: (1) standard criteria + individualized assessment;
+// (2) inclusionary screening (pre-approved City criteria). Source-
+// of-income (public assistance) protections: must accept Section 8
+// HCV, MNsure, RAP, HOPWA, Section 202. Energy cost disclosure
+// requirement at application (prior 12 months). Sixteen-mode
+// severity ladder × 2 property jurisdictions × 2 landlord sizes ×
+// 6 compliance aspects × 7 criminal offense classifications × 6
+// eviction record classifications × 3 public assistance statuses ×
+// variable monthly rent / security deposit / disclosure inputs.
+// Sibling cluster: rental_san_francisco_rent_ordinance_chapter_37
+// (iter 677 — SF), rental_berkeley_rent_stabilization_ordinance_
+// bmc_chapter_13_76 (iter 679 — Berkeley), rental_seattle_smc_22_
+// 206_160_just_cause_eviction (iter 669 — Seattle), rental_oakland_
+// measure_ee_just_cause_omc_8_22 (iter 681 — Oakland), rental_
+// california_sb_567_no_fault_eviction_amendments (iter 673 — CA
+// SB 567), rental_eviction_record_sealing_screening (parallel
+// eviction screening regime), rental_application_denial_disclosure
+// (FCRA-adjacent screening regime), rental_source_of_income_
+// discrimination (multi-state public-assistance regime), rental_
+// hud_section_504_rehabilitation_act_24_cfr_part_8 (iter 683 —
+// federal disability nondiscrimination cross-reference).
+// ---------------------------------------------------------------------------
+
+async fn rental_minneapolis_renter_protections_ordinance_2020_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMinneapolisRenterProtectionsOrdinance2020Input>,
+) -> Result<Json<RentalMinneapolisRenterProtectionsOrdinance2020Result>, ApiError> {
+    Ok(Json(check_rental_minneapolis_renter_protections_ordinance_2020(&b)))
 }
 
 // ---------------------------------------------------------------------------
