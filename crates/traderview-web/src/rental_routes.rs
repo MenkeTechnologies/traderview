@@ -734,6 +734,11 @@ use traderview_expense::rental_hud_hotma_income_asset_compliance::{
     RentalHudHotmaIncomeAssetComplianceInput,
     RentalHudHotmaIncomeAssetComplianceResult,
 };
+use traderview_expense::rental_hud_section_504_rehabilitation_act_24_cfr_part_8::{
+    check as check_rental_hud_section_504_rehabilitation_act_24_cfr_part_8,
+    RentalHudSection504RehabilitationAct24CfrPart8Input,
+    RentalHudSection504RehabilitationAct24CfrPart8Result,
+};
 use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
@@ -1633,6 +1638,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-housing-for-older-persons-act-hopa-1995", axum::routing::post(rental_housing_for_older_persons_act_hopa_1995_route))
         .route("/rental-hud-hotma-income-asset-compliance", axum::routing::post(rental_hud_hotma_income_asset_compliance_route))
+        .route("/rental-hud-section-504-rehabilitation-act-24-cfr-part-8", axum::routing::post(rental_hud_section_504_rehabilitation_act_24_cfr_part_8_route))
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-just-cause-eviction", axum::routing::post(rental_just_cause_eviction_route))
@@ -9058,6 +9064,50 @@ async fn rental_hud_hotma_income_asset_compliance_route(
     Json(b): Json<RentalHudHotmaIncomeAssetComplianceInput>,
 ) -> Result<Json<RentalHudHotmaIncomeAssetComplianceResult>, ApiError> {
     Ok(Json(check_rental_hud_hotma_income_asset_compliance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_hud_section_504_rehabilitation_act_24_cfr_part_8: HUD
+// Section 504 of the Rehabilitation Act of 1973 (29 USC § 794) and
+// 24 CFR Part 8 implementing regulations — federal nondiscrimination
+// on the basis of disability in federally assisted housing programs
+// and activities. Substantially updated by HUD final rule published
+// in the Federal Register on April 25, 2023. Applies to Section 8
+// Housing Choice Voucher operators, Section 8 PBRA owners, PHAs,
+// HOPWA, Section 202 elderly housing, Section 811 disabled housing,
+// and certain LIHTC properties with HUD-administered financing
+// layers. 24 CFR § 8.22 new construction: 5% of units (or at least
+// one) mobility-accessible + additional 2% (or at least one) sensory-
+// accessible. 24 CFR § 8.23 substantial alteration: must meet § 8.22
+// standards. 24 CFR § 8.24 existing facility: must be readily
+// accessible when viewed in its entirety. 24 CFR § 8.32 accessibility
+// standards: UFAS (default) or 2010 ADA Standards (alternative since
+// March 2011 DOJ guidance). 24 CFR § 8.20 reasonable accommodation
+// requirement: structural modifications + policy adjustments to
+// enable disabled persons to participate. Procedural obligations for
+// recipients with 15+ employees: § 8.53 designated responsible
+// employee + § 8.51 self-evaluation (3-year retention) + § 8.53
+// grievance procedures + § 8.54 notice of nondiscrimination.
+// Twenty-two-mode severity ladder × 2 federally-assisted statuses ×
+// 4 project statuses × 8 compliance aspects × 3 accessibility
+// standards × 3 reasonable-accommodation statuses × variable
+// employee count + accessible unit counts + procedural flags.
+// Sibling cluster: rental_housing_for_older_persons_act_hopa_1995
+// (iter 675 — HOPA FHA familial-status carve-out), rental_vawa_2022_
+// federal_housing_protections (FHA VAWA cross-reference), rental_
+// hud_hotma_income_asset_compliance (iter 653 — HOTMA HUD income/
+// asset compliance), rental_application_denial_disclosure (FCRA-
+// adjacent application denial), rental_just_cause_eviction (just-
+// cause regimes overlay), rental_source_of_income_discrimination
+// (parallel FHA-adjacent income protection).
+// ---------------------------------------------------------------------------
+
+async fn rental_hud_section_504_rehabilitation_act_24_cfr_part_8_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHudSection504RehabilitationAct24CfrPart8Input>,
+) -> Result<Json<RentalHudSection504RehabilitationAct24CfrPart8Result>, ApiError> {
+    Ok(Json(check_rental_hud_section_504_rehabilitation_act_24_cfr_part_8(&b)))
 }
 
 // ---------------------------------------------------------------------------

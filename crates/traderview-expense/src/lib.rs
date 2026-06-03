@@ -214,6 +214,7 @@ pub mod rental_hoa_disclosure_at_lease;
 pub mod rental_hot_water_temperature;
 pub mod rental_housing_for_older_persons_act_hopa_1995;
 pub mod rental_hud_hotma_income_asset_compliance;
+pub mod rental_hud_section_504_rehabilitation_act_24_cfr_part_8;
 pub mod rental_illegal_lockout_self_help_eviction;
 pub mod rental_in_unit_laundry_appliance_provision;
 pub mod rental_junk_fee_transparency;
