@@ -214,6 +214,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-280b",          post(section_280b_route))
         .route("/calc/section-280e",          post(section_280e_route))
         .route("/calc/section-280g",          post(section_280g_route))
+        .route("/calc/section-280h",          post(section_280h_route))
         .route("/calc/section-163d",          post(section_163d_route))
         .route("/calc/section-163h",          post(section_163h_route))
         .route("/calc/section-864b2",         post(section_864b2_route))
@@ -3751,6 +3752,51 @@ async fn section_280g_route(
     Json(b): Json<traderview_expense::section_280g::Section280gInput>,
 ) -> Result<Json<traderview_expense::section_280g::Section280gResult>, ApiError> {
     Ok(Json(traderview_expense::section_280g::check(&b)))
+}
+
+// ── § 280H PSC Fiscal-Year Minimum Distribution Requirement ─────────
+// Mounted at /api/calc/section-280h (iter 546). Pure compute. § 280H
+// disallows a portion of the PSC's employee-owner compensation
+// deduction when the PSC has a § 444 fiscal-year election in effect
+// AND fails the § 280H(c) minimum distribution requirement. Closes
+// the income-deferral loophole that a non-calendar fiscal-year PSC
+// would otherwise enjoy.
+//
+// § 280H(a) general rule: deduction otherwise allowed for "applicable
+// amounts" paid or incurred to employee-owners is limited to the
+// "maximum deductible amount" when PSC has § 444 election AND fails
+// minimum distribution requirement.
+//
+// § 280H(c) minimum distribution: applicable amounts paid during
+// deferral period must equal or exceed LESSER OF: (A) prior-year
+// applicable amounts × (deferral months / preceding-year months),
+// or (B) applicable percentage × adjusted taxable income for the
+// deferral period.
+//
+// § 280H(d) applicable percentage: capped at 95%; computed from
+// prior-3-year applicable amounts / prior-3-year adjusted taxable
+// income.
+//
+// § 280H(f) carryover: nondeductible amounts treated as paid or
+// incurred in the succeeding taxable year. § 280H(g) NOL carryback
+// bar: no NOL carryback to/from any year of PSC with § 444 election.
+//
+// Five-mode severity ladder: NotApplicable,
+// NotPersonalServiceCorporationSection280HInapplicable,
+// CalendarYearNoSection280HApplied,
+// MinimumDistributionRequirementSatisfiedNoDisallowance,
+// Section280HDisallowanceAppliedCarryoverToNextYear.
+//
+// Coordinates with § 444 PSC fiscal-year election (Form 8716),
+// § 269A (iter 544 — PSC tax-avoidance allocation), § 269 (iter 536),
+// § 162 reasonable compensation, Schedule H (Form 1120) § 280H
+// computation.
+
+async fn section_280h_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_280h::Section280HPscMinimumDistributionInput>,
+) -> Result<Json<traderview_expense::section_280h::Section280HPscMinimumDistributionOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_280h::check(&b)))
 }
 
 // ── §481(a) accounting method change adjustment ──────────────────────
