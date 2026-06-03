@@ -254,6 +254,7 @@ pub mod rental_tenant_criminal_background_screening;
 pub mod rental_tenant_data_privacy_compliance;
 pub mod rental_tenant_relocation_assistance;
 pub mod rental_tenant_rent_escrow_habitability_dispute;
+pub mod rental_tenant_right_to_counsel_eviction;
 pub mod rental_underground_storage_tank_disclosure;
 pub mod rental_unpermitted_unit_disclosure;
 pub mod rental_video_surveillance_retention;

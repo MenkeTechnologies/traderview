@@ -950,6 +950,11 @@ use traderview_expense::rental_tenant_rent_escrow_habitability_dispute::{
     RentalTenantRentEscrowHabitabilityDisputeInput,
     RentalTenantRentEscrowHabitabilityDisputeResult,
 };
+use traderview_expense::rental_tenant_right_to_counsel_eviction::{
+    check as check_rental_tenant_right_to_counsel_eviction,
+    RentalTenantRightToCounselEvictionInput,
+    RentalTenantRightToCounselEvictionResult,
+};
 use traderview_expense::rental_ada_accessible_parking_compliance::{
     check as check_rental_ada_accessible_parking_compliance,
     RentalAdaAccessibleParkingComplianceInput,
@@ -1496,6 +1501,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-facade-inspection-fisp-local-law-11", axum::routing::post(rental_facade_inspection_fisp_local_law_11_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
+        .route("/rental-tenant-right-to-counsel-eviction", axum::routing::post(rental_tenant_right_to_counsel_eviction_route))
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
@@ -12308,6 +12314,32 @@ async fn rental_tenant_rent_escrow_habitability_dispute_route(
     Json(b): Json<RentalTenantRentEscrowHabitabilityDisputeInput>,
 ) -> Result<Json<RentalTenantRentEscrowHabitabilityDisputeResult>, ApiError> {
     Ok(Json(check_rental_tenant_rent_escrow_habitability_dispute(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_tenant_right_to_counsel_eviction: multi-jurisdictional tenant
+// Right to Counsel in eviction proceedings. NYC (Local Law 136 of
+// 2017, NYC Admin Code § 26-1301 et seq.) was first U.S. jurisdiction;
+// ≤ 200 % FPL threshold. Newark 2018, SF Prop F 2018 (UNIVERSAL no
+// income test), Cleveland 2019 (≤ 100 % FPL with minor child),
+// Philadelphia 2019, Boulder 2020, KC MO 2022. Washington RCW
+// 59.18.640 (Senate Bill 5160 of 2021) was FIRST STATEWIDE RTC; ≤
+// 200 % FPL or categorically indigent (public assistance). Maryland
+// Access to Counsel in Evictions Act 2021 (≤ 50 % AMI). Connecticut
+// Public Act 21-34 2021 (≤ 80 % AMI). Nine-mode severity ladder ×
+// eleven jurisdictions × four income bands × six representation
+// statuses × five proceeding types. Trader-landlord critical because
+// RTC programs dramatically increase tenant defense rates and case
+// duration; failure to honor RTC procedure (notice + appointment +
+// continuance for attorney) can invalidate eviction judgment.
+// ---------------------------------------------------------------------------
+
+async fn rental_tenant_right_to_counsel_eviction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantRightToCounselEvictionInput>,
+) -> Result<Json<RentalTenantRightToCounselEvictionResult>, ApiError> {
+    Ok(Json(check_rental_tenant_right_to_counsel_eviction(&b)))
 }
 
 // ── /rental-ada-accessible-parking-compliance (iter 553) ────────────────────
