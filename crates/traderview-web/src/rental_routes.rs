@@ -650,6 +650,11 @@ use traderview_expense::rental_climate_mobilization_act_ll97_emissions::{
     ClimateMobilizationActLl97EmissionsInput as RentalClimateMobilizationActLl97EmissionsInput,
     ClimateMobilizationActLl97EmissionsResult as RentalClimateMobilizationActLl97EmissionsResult,
 };
+use traderview_expense::rental_colorado_hb_24_1098_just_cause_eviction::{
+    check as check_rental_colorado_hb_24_1098_just_cause_eviction,
+    RentalColoradoHb241098JustCauseEvictionInput,
+    RentalColoradoHb241098JustCauseEvictionResult,
+};
 use traderview_expense::rental_cooling_tower_inspection_local_law_77::{
     check as check_rental_cooling_tower_inspection_local_law_77,
     CoolingTowerInspectionLocalLaw77Input as RentalCoolingTowerInspectionLocalLaw77Input,
@@ -1527,6 +1532,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-california-ab-12-security-deposit-cap", axum::routing::post(rental_california_ab_12_security_deposit_cap_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
+        .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
         .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
@@ -7886,6 +7892,53 @@ async fn rental_climate_mobilization_act_ll97_emissions_route(
     Json(b): Json<RentalClimateMobilizationActLl97EmissionsInput>,
 ) -> Result<Json<RentalClimateMobilizationActLl97EmissionsResult>, ApiError> {
     Ok(Json(check_rental_climate_mobilization_act_ll97_emissions(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_colorado_hb_24_1098_just_cause_eviction: Colorado HB 24-1098
+// of 2024 — first-ever statewide just-cause eviction law in Colorado
+// history. Signed by Governor Jared Polis on April 19, 2024;
+// effective immediately due to legislative safety clause. Codified
+// at Colo. Rev. Stat. § 38-12-1301 et seq. For-cause eviction
+// grounds (no notice/relocation): non-payment of rent, material
+// lease violations, substantial property damage, criminal activity,
+// non-curable lease violations. No-fault eviction grounds (90-day
+// notice + relocation assistance): demolition or conversion;
+// substantial repairs or renovations; owner or family-member
+// occupancy assumption; withdrawal from rental market for sale;
+// tenant refused new lease with reasonable terms; tenant history
+// of nonpayment of rent. 90-day written notice required for any
+// no-fault eviction. Relocation assistance: 2 months' rent baseline
+// + 1 additional month (3 months total) if any resident is under
+// 18, at least 60, household income ≤ 80 % AMI, or disabled
+// individual. Exemptions: short-term rental properties; owner-
+// occupied units (typically 4 or fewer with owner-occupied);
+// employer-provided housing; tenants residing < 12 months AND
+// unknown to landlord. Tenant remedies: existing unlawful-removal
+// statutes + affirmative defense to eviction proceeding. Twelve-
+// mode severity ladder × twelve eviction grounds × six property
+// exemption statuses × five vulnerable resident statuses × four
+// notice categories. Trader-landlord critical because Colorado is
+// the SECOND state to enact statewide just-cause eviction (after
+// California AB 1482); HB 24-1098 imposes substantial relocation-
+// assistance exposure for no-fault evictions ($5,000-$15,000 per
+// unit at typical Colorado rents). Sibling cluster: rental_just_
+// cause_eviction (multi-state base regime — Colorado = newest
+// entry), rental_owner_move_in_eviction (owner move-in cross-
+// reference), rental_tenant_relocation_assistance (general state-
+// level relocation assistance regime), rental_demolition_tenant_
+// notice (demolition cross-reference), rental_oregon_sb_608_sb_611_
+// rent_stabilization (Oregon companion just-cause framework — iter
+// 647), rental_eviction_diversion_program (parallel eviction
+// regulation regime).
+// ---------------------------------------------------------------------------
+
+async fn rental_colorado_hb_24_1098_just_cause_eviction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalColoradoHb241098JustCauseEvictionInput>,
+) -> Result<Json<RentalColoradoHb241098JustCauseEvictionResult>, ApiError> {
+    Ok(Json(check_rental_colorado_hb_24_1098_just_cause_eviction(&b)))
 }
 
 // ---------------------------------------------------------------------------
