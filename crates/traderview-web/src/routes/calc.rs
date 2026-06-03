@@ -209,6 +209,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-336",           post(section_336_route))
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-354",           post(section_354_route))
+        .route("/calc/section-357",           post(section_357_route))
         .route("/calc/section-358",           post(section_358_route))
         .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
@@ -2769,6 +2770,51 @@ async fn section_354_route(
     Json(b): Json<traderview_expense::section_354::Section354Input>,
 ) -> Result<Json<traderview_expense::section_354::Section354Result>, ApiError> {
     Ok(Json(traderview_expense::section_354::check(&b)))
+}
+
+// ── § 357 Assumption of Liability in Tax-Free Transfers ─────────────
+// Mounted at /api/calc/section-357 (iter 564). Pure compute. § 357
+// governs how the assumption of liabilities by a transferee corporation
+// affects gain recognition by the transferor in § 351 transfers and
+// § 368 reorganizations. Companion to § 358 (iter 560 — shareholder
+// basis) and § 362 (iter 562 — corporation basis).
+//
+// § 357(a) general rule: liability assumption does NOT cause boot
+// treatment; preserves non-recognition.
+//
+// § 357(b) tax-avoidance exception: if principal purpose is tax
+// avoidance OR no bona-fide business purpose, ALL liabilities assumed
+// treated as money received (full boot). Taxpayer bears burden of
+// proof by clear preponderance of evidence per Treas. Reg. § 1.357-1(c).
+//
+// § 357(c)(1) excess-liability gain: gain recognized to extent
+// liabilities assumed exceed adjusted basis of property transferred,
+// even with bona-fide business purpose. Treas. Reg. § 1.357-2 classic
+// example: $20K basis + $30K mortgage → $10K gain.
+//
+// § 357(c)(2) exceptions: (A) liability whose discharge would give
+// rise to deduction (accounts payable from cash-basis trade or
+// business), (B) § 736(a) retiring-partner liability.
+//
+// § 357(d) determination of liability assumed: liability treated as
+// assumed only to extent transferor is RELIEVED of it.
+//
+// Five-mode severity ladder: NotApplicable,
+// Section357ANonRecognitionPreservedNoGain,
+// Section357BTaxAvoidanceExceptionFullLiabilityTreatedAsBoot,
+// Section357C1ExcessLiabilityGainRecognition,
+// Section357C2ExceptionAppliesNoExcessLiabilityGain.
+//
+// Coordinates with § 351 (transfer parent regime), § 358 + § 362
+// (basis-preservation companions), § 736(a) (retiring-partner
+// payments), § 1245 + § 1250 (depreciation recapture as ordinary
+// income on § 357(c)(1) excess gain), § 368(c) 80% control.
+
+async fn section_357_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_357::Section357LiabilityAssumptionInput>,
+) -> Result<Json<traderview_expense::section_357::Section357LiabilityAssumptionOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_357::check(&b)))
 }
 
 // ── § 358 Basis to Distributees (Shareholder Basis in Stock Received) ─
