@@ -880,6 +880,11 @@ use traderview_expense::rental_late_fee_cap::{
     RentalLateFeeCapInput,
     RentalLateFeeCapResult,
 };
+use traderview_expense::rental_local_law_87_energy_audit_retro_commissioning::{
+    check as check_rental_local_law_87_energy_audit_retro_commissioning,
+    LocalLaw87EnergyAuditRetroCommissioningInput as RentalLocalLaw87EnergyAuditRetroCommissioningInput,
+    LocalLaw87EnergyAuditRetroCommissioningResult as RentalLocalLaw87EnergyAuditRetroCommissioningResult,
+};
 use traderview_expense::rental_tenant_criminal_background_screening::{
     check as check_rental_tenant_criminal_background_screening,
     RentalTenantCriminalBackgroundScreeningInput,
@@ -1418,6 +1423,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-just-cause-eviction", axum::routing::post(rental_just_cause_eviction_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-paint-disclosure", axum::routing::post(rental_lead_paint_disclosure_route))
+        .route("/rental-local-law-87-energy-audit-retro-commissioning", axum::routing::post(rental_local_law_87_energy_audit_retro_commissioning_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
@@ -11729,6 +11735,35 @@ async fn rental_late_fee_cap_route(
     Json(b): Json<RentalLateFeeCapInput>,
 ) -> Result<Json<RentalLateFeeCapResult>, ApiError> {
     Ok(Json(check_rental_late_fee_cap(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_local_law_87_energy_audit_retro_commissioning: NYC Local
+// Law 87 of 2009 — Energy Audits & Retro-Commissioning. Part of
+// Greener, Greater Buildings Plan (GGBP) with LL 84 (benchmarking)
+// and LL 97 (emissions). NYC Admin Code § 28-308 + § 28-308.7
+// (penalty schedule $3K first / $5K subsequent year). Covers
+// buildings > 50,000 gross sqft. Filing schedule based on tax
+// block last digit (e.g., tax block ending in 5 → file 2015/2025/
+// 2035). Energy Efficiency Report (EER) every 10 years: ASHRAE
+// Level II energy audit + retro-commissioning study of base
+// building systems. Qualified Professional must be NY-licensed PE
+// or RA + NOT building staff. 2025 EER filing extended to March 31,
+// 2026 (one-time extension). NYC DOB will not accept outstanding
+// EER submission if outstanding penalties not paid. Sibling cluster:
+// rental_energy_benchmarking (NYC LL 84 annual), rental_climate_
+// mobilization_act_ll97_emissions (iter 587 NYC LL 97 emissions),
+// rental_facade_inspection_fisp_local_law_11 (iter 583 NYC LL 11),
+// rental_gas_piping_inspection_local_law_152 (iter 585 NYC LL 152),
+// rental_cooling_tower_inspection_local_law_77 (iter 589 NYC LL 77).
+// ---------------------------------------------------------------------------
+
+async fn rental_local_law_87_energy_audit_retro_commissioning_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalLocalLaw87EnergyAuditRetroCommissioningInput>,
+) -> Result<Json<RentalLocalLaw87EnergyAuditRetroCommissioningResult>, ApiError> {
+    Ok(Json(check_rental_local_law_87_energy_audit_retro_commissioning(&b)))
 }
 
 // ── /rental-tenant-criminal-background-screening (iter 539) ─────────────────
