@@ -705,6 +705,11 @@ use traderview_expense::rental_window_guard_installation::{
     check as check_rental_window_guard_installation,
     RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
 };
+use traderview_expense::rental_vacant_property_registration::{
+    check as check_rental_vacant_property_registration,
+    RentalVacantPropertyRegistrationInput,
+    RentalVacantPropertyRegistrationResult,
+};
 use traderview_expense::rental_unpermitted_unit_disclosure::{
     check as check_rental_unpermitted_unit_disclosure,
     RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
@@ -1544,6 +1549,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
+        .route("/rental-vacant-property-registration", axum::routing::post(rental_vacant_property_registration_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
         .route("/rental-window-blind-cord-safety", axum::routing::post(rental_window_blind_cord_safety_route))
@@ -8639,6 +8645,32 @@ async fn rental_unpermitted_unit_disclosure_route(
     Json(b): Json<RentalUnpermittedUnitDisclosureInput>,
 ) -> Result<Json<RentalUnpermittedUnitDisclosureResult>, ApiError> {
     Ok(Json(check_rental_unpermitted_unit_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_vacant_property_registration: multi-jurisdictional vacant
+// property registration compliance. Chicago Municipal Code
+// § 13-12-125 (owner): 30-day registration; $300 fee per registered
+// building; renewal every 6 months; DOUBLED fee for City-identified
+// non-compliance; inspector + attorney fees recoverable as lien.
+// Chicago § 13-12-126 (mortgagee): later of 30 days after vacancy +
+// unregistered status OR 10 days after default; $700 initial;
+// $300 every-6-month renewal. Detroit BSEED 30-day registration +
+// exterior maintenance. Cleveland OMC § 367.131. Baltimore Building
+// Code § 102.5. Philadelphia L&I Vacant Property Strategy. Twelve-
+// mode severity ladder × six jurisdictions × three actor roles ×
+// two discovery modes. Trader-landlord critical because vacant-
+// property registration failures trigger doubled fees, code-
+// enforcement liens, daily penalties, and reputational exposure
+// for portfolio operators.
+// ---------------------------------------------------------------------------
+
+async fn rental_vacant_property_registration_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalVacantPropertyRegistrationInput>,
+) -> Result<Json<RentalVacantPropertyRegistrationResult>, ApiError> {
+    Ok(Json(check_rental_vacant_property_registration(&b)))
 }
 
 // ---------------------------------------------------------------------------
