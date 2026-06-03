@@ -209,6 +209,7 @@ pub mod rental_late_fee_cap;
 pub mod rental_lead_paint_disclosure;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
+pub mod rental_massachusetts_security_deposit_statute;
 pub mod rental_mold_disclosure_remediation;
 pub mod rental_multilingual_lease_translation;
 pub mod rental_natural_gas_leak_response;

@@ -820,6 +820,11 @@ use traderview_expense::rental_marijuana_cultivation_restriction::{
     RentalMarijuanaCultivationRestrictionInput,
     RentalMarijuanaCultivationRestrictionResult,
 };
+use traderview_expense::rental_massachusetts_security_deposit_statute::{
+    check as check_rental_massachusetts_security_deposit_statute,
+    MassachusettsSecurityDepositInput as RentalMassachusettsSecurityDepositStatuteInput,
+    MassachusettsSecurityDepositResult as RentalMassachusettsSecurityDepositStatuteResult,
+};
 use traderview_expense::rental_attached_garage_carbon_monoxide_disclosure::{
     check as check_rental_attached_garage_carbon_monoxide_disclosure,
     RentalAttachedGarageCarbonMonoxideDisclosureInput,
@@ -1430,6 +1435,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-radiator-steam-heat-safety", axum::routing::post(rental_radiator_steam_heat_safety_route))
         .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
+        .route("/rental-massachusetts-security-deposit-statute", axum::routing::post(rental_massachusetts_security_deposit_statute_route))
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
@@ -11209,6 +11215,32 @@ async fn rental_marijuana_cultivation_restriction_route(
     Json(b): Json<RentalMarijuanaCultivationRestrictionInput>,
 ) -> Result<Json<RentalMarijuanaCultivationRestrictionResult>, ApiError> {
     Ok(Json(check_rental_marijuana_cultivation_restriction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_massachusetts_security_deposit_statute: MGL c. 186, § 15B
+// (Massachusetts Security Deposit Statute). Most stringent security
+// deposit statute in the US. Requires (1) one-month-rent maximum
+// deposit, (2) written receipt within 30 days, (3) separate interest-
+// bearing MA bank account, (4) Statement of Condition within 10 days
+// with 12-pt bold-face notice, (5) 5% annual interest payment (or
+// lesser actual bank interest), (6) 30-day return after termination,
+// (7) itemized damages signed under penalty of perjury if retaining.
+// Triple damages under § 15B(7) for ANY procedural violation plus
+// court costs + reasonable attorney fees + MGL c. 93A consumer-
+// protection action. Sibling cluster: rental_security_deposit_interest
+// (NY/CA equivalent regimes), rental_security_deposit_return_notice,
+// rental_just_cause_eviction (iter 573 — different tenant-protection
+// vector), rental_application_denial_disclosure (state-specific
+// regimes).
+// ---------------------------------------------------------------------------
+
+async fn rental_massachusetts_security_deposit_statute_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMassachusettsSecurityDepositStatuteInput>,
+) -> Result<Json<RentalMassachusettsSecurityDepositStatuteResult>, ApiError> {
+    Ok(Json(check_rental_massachusetts_security_deposit_statute(&b)))
 }
 
 // ---------------------------------------------------------------------------
