@@ -210,6 +210,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1283",          post(section_1283_route))
         .route("/calc/section-1286",          post(section_1286_route))
         .route("/calc/section-1287",          post(section_1287_route))
+        .route("/calc/section-1288",          post(section_1288_route))
         .route("/calc/section-1282",          post(section_1282_route))
         .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-6045b",         post(section_6045b_route))
@@ -8812,6 +8813,61 @@ async fn section_1287_route(
     Json(b): Json<traderview_expense::section_1287::Section1287Input>,
 ) -> Result<Json<traderview_expense::section_1287::Section1287Result>, ApiError> {
     Ok(Json(traderview_expense::section_1287::compute(&b)))
+}
+
+// ── §1288 treatment of OID on tax-exempt obligations (muni OID) ──
+// Mounted at /api/calc/section-1288. § 1288 is the closing companion
+// to the OID statutory cluster (§§ 1271-1275 + § 1286 + § 1287) — the
+// muni-bond rule ensuring OID on tax-exempt obligations (state and
+// local bonds + other § 103-exempt instruments) accrues into the
+// holder's adjusted basis WITHOUT being included in gross income.
+// § 1288(a) general rule: OID treated as accruing in manner provided
+// by § 1272(a) FOR PURPOSES OF DETERMINING ADJUSTED BASIS (with
+// § 1272(a)(7) adjustments); same accrual method applies for
+// interest-deduction purposes BUT without § 1272(a)(7) adjustments.
+// § 1288(b)(1) NO DE MINIMIS RULE: OID on tax-exempt obligation
+// determined under § 1273(a) WITHOUT § 1273(a)(3) — the § 1273(a)(3)
+// de minimis OID rule (0.25 % × SRPM × years to maturity) DOES NOT
+// APPLY to tax-exempt obligations; every dollar of OID accrues into
+// adjusted basis no matter how small. § 1288(b)(2) AFR adjustments:
+// Secretary prescribes regulations adjusting AFRs under § 483 and
+// § 1274 to take into account tax-exemption benefit; tax-exempt AFR
+// is typically lower than standard taxable AFR. § 1288(b)(3) tax-
+// exempt obligation = § 1275(a)(3) cross-references § 103.
+// § 1288(b)(4) short-term obligations (≤ 1 year): rules similar to
+// § 1283(b). Effect: § 1288 RECONCILES § 103 gross-income exclusion
+// with basis adjustment so disposition gain/loss properly computed;
+// without § 1288, holders could claim basis step-up without OID
+// accrual, generating artificial losses. Effective: Public Law 98-369
+// § 41(c) (Deficit Reduction Act of 1984) on July 18, 1984; applies
+// to obligations ISSUED AFTER September 3, 1982 AND ACQUIRED AFTER
+// March 1, 1984. Eleven-mode severity ladder × 3 obligation
+// classifications × 2 issuance-date statuses × 2 acquisition-date
+// statuses × 4 compliance aspects × 3 de minimis application
+// statuses × 4 gross-income / basis statuses. Sibling cluster:
+// section_1271 (retirement of debt instrument), section_1272 (current
+// OID inclusion; § 1272(a)(7) basis adjustment cross-reference),
+// section_1273 (general OID determination; § 1288(b)(1) excludes
+// § 1273(a)(3) de minimis rule), section_1274 (built iter 678 —
+// issue price for debt-for-property; § 1288(b)(2) AFR adjustment),
+// section_1275 (built iter 680 — other definitions; § 1288(b)(3)
+// tax-exempt obligation definition cross-reference), section_1276
+// (market discount accrual), section_1277 / section_1278 (market
+// discount deferred deductions), section_1281 (current inclusion on
+// short-term obligations), section_1282 (deferred deductions on
+// short-term obligation holding costs), section_1283 (short-term
+// obligation definitions; § 1288(b)(4) cross-reference), section_
+// 1286 (built iter 672 — stripped bonds; § 1286(c)/(d) tax-exempt-
+// stripped-obligation rules), section_1287 (anti-bearer-bond rule),
+// section_103 (interest on certain state and local bonds — tax
+// exemption foundation), section_6049 (information reporting on
+// Form 1099-OID).
+
+async fn section_1288_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1288::Section1288Input>,
+) -> Result<Json<traderview_expense::section_1288::Section1288Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1288::compute(&b)))
 }
 
 // ── §1282 short-term obligation interest-deduction deferral ──────
