@@ -197,6 +197,7 @@ pub mod rental_in_unit_laundry_appliance_provision;
 pub mod rental_junk_fee_transparency;
 pub mod rental_landlord_notice_to_enter;
 pub mod rental_late_fee_cap;
+pub mod rental_lead_paint_disclosure;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
 pub mod rental_mold_disclosure_remediation;

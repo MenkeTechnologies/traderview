@@ -729,6 +729,10 @@ use traderview_expense::rental_organic_waste_collection_disclosure::{
     check as check_rental_organic_waste_collection_disclosure,
     RentalOrganicWasteCollectionDisclosureInput, RentalOrganicWasteCollectionDisclosureResult,
 };
+use traderview_expense::rental_lead_paint_disclosure::{
+    check as check_rental_lead_paint_disclosure, LeadPaintDisclosureInput,
+    LeadPaintDisclosureResult,
+};
 use traderview_expense::rental_lead_pipe_disclosure::{
     check as check_rental_lead_pipe_disclosure, RentalLeadPipeDisclosureInput,
     RentalLeadPipeDisclosureResult,
@@ -1337,6 +1341,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
+        .route("/rental-lead-paint-disclosure", axum::routing::post(rental_lead_paint_disclosure_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
@@ -8782,6 +8787,36 @@ async fn rental_lead_pipe_disclosure_route(
     Json(b): Json<RentalLeadPipeDisclosureInput>,
 ) -> Result<Json<RentalLeadPipeDisclosureResult>, ApiError> {
     Ok(Json(check_rental_lead_pipe_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_lead_paint_disclosure: federal Title X § 1018 / 42 U.S.C.
+// § 4852d / 24 C.F.R. Part 35 Subpart A / 40 C.F.R. Part 745 Subpart F
+// pre-lease lead-based paint disclosure compliance for any pre-1978
+// target housing. Universal federal landlord obligation: five disclosure
+// elements (Lead Warning Statement verbatim in lease, known LBP
+// disclosed or no-knowledge stated, available reports provided, EPA
+// "Protect Your Family From Lead in Your Home" pamphlet EPA-747-K-12-001
+// delivered, tenant signed acknowledgment). Exemptions per 24 C.F.R.
+// § 35.82(b): zero-bedroom dwellings (efficiencies/lofts/dorms) unless
+// child under 6 expected; short-term leases ≤ 100 days with no
+// renewal/extension; elderly-only or disabled-only housing unless child
+// under 6 expected; post-1977 housing. Civil penalty up to $22,263 per
+// violation under 42 U.S.C. § 4852d(b)(5) (2025 inflation-adjusted) +
+// joint-and-several liability for treble actual damages under
+// § 4852d(b)(3). Sibling to rental_lead_pipe_disclosure (lead service
+// line water), rental_post_construction_lead_dust_clearance (post-
+// renovation dust-wipe clearance), rental_natural_gas_leak_response
+// (pre-1978 housing often has gas appliances), rental_radon_mitigation_
+// disclosure (other federal toxic-exposure disclosure).
+// ---------------------------------------------------------------------------
+
+async fn rental_lead_paint_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<LeadPaintDisclosureInput>,
+) -> Result<Json<LeadPaintDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_lead_paint_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
