@@ -861,6 +861,11 @@ use traderview_expense::rental_smoke_free_cannabis_restriction::{
     RentalSmokeFreeCannabisRestrictionInput,
     RentalSmokeFreeCannabisRestrictionResult,
 };
+use traderview_expense::rental_rent_control_stabilization::{
+    check as check_rental_rent_control_stabilization,
+    RentalRentControlStabilizationInput,
+    RentalRentControlStabilizationResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1350,6 +1355,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
+        .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11712,4 +11718,46 @@ async fn rental_smoke_free_cannabis_restriction_route(
     Json(b): Json<RentalSmokeFreeCannabisRestrictionInput>,
 ) -> Result<Json<RentalSmokeFreeCannabisRestrictionResult>, ApiError> {
     Ok(Json(check_rental_smoke_free_cannabis_restriction(&b)))
+}
+
+// ── /rental-rent-control-stabilization (iter 557) ───────────────────────────
+// POST endpoint for rent control + rent stabilization compliance across
+// eight jurisdictions. Two states (CA + OR) enacted first statewide rent
+// caps in 2019; NY + NJ + DC + several MN cities operate strong rent-
+// stabilization frameworks.
+//
+// CA AB 1482 (Cal. Civ. Code § 1947.12 + § 1946.2) Tenant Protection Act
+// of 2019 (effective Jan 1, 2020 - Jan 1, 2030): annual rent cap = LESSER
+// OF 5% + local CPI OR 10%. Applies to units 15+ years old (rolling
+// exception). § 1946.2 just-cause eviction protection.
+//
+// OR SB 608 (ORS 90.323 + ORS 90.427): 7% + CPI capped at 10% under
+// SB 611 effective Jul 6, 2023.
+//
+// NY State HSTPA 2019 + NYC RSL § 26-501: 6+ unit pre-1974 buildings;
+// Rent Guidelines Board annual % cap.
+//
+// NJ Anti-Eviction Act N.J.S.A. 2A:18-61.1 + municipal rent-control
+// ordinances in 100+ NJ municipalities.
+//
+// DC Rental Housing Act of 1985 D.C. Code § 42-3501: pre-1976 + 5+
+// units; CPI + 2% capped at 10% (5% for elderly/disabled).
+//
+// MN St. Paul Charter Amendment (Nov 2021): 3% annual cap.
+//
+// Default: most states (TX, FL, TN, AZ, MI, IL outside Chicago)
+// PREEMPT local rent control via state statute.
+//
+// Five-mode severity ladder: NotApplicable,
+// NoRentControlInJurisdiction,
+// PropertyExemptFromRentCap,
+// CompliantRentIncreaseWithinStatutoryCap,
+// RentIncreaseExceedsStatutoryCapViolation.
+
+async fn rental_rent_control_stabilization_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRentControlStabilizationInput>,
+) -> Result<Json<RentalRentControlStabilizationResult>, ApiError> {
+    Ok(Json(check_rental_rent_control_stabilization(&b)))
 }
