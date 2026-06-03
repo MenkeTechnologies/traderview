@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-671",           post(section_671_route))
+        .route("/calc/section-678",           post(section_678_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
         .route("/calc/section-6042",          post(section_6042_route))
@@ -5589,6 +5590,36 @@ async fn section_671_route(
     Json(b): Json<traderview_expense::section_671::Section671Input>,
 ) -> Result<Json<traderview_expense::section_671::Section671Result>, ApiError> {
     Ok(Json(traderview_expense::section_671::compute(&b)))
+}
+
+// ── §678 person other than grantor as owner / BDIT foundation ─────────
+// Mounted at /api/calc/section-678. § 678(a)(1) person other than
+// grantor treated as owner with respect to portion over which
+// person has power exercisable solely by self to vest corpus or
+// income in self (Crummey/withdrawal power). § 678(a)(2) post-
+// release/modification attribution if retained control matches
+// §§ 671-677 grantor criteria. § 678(b) exception when grantor
+// otherwise treated as owner under §§ 671-679 (grantor's grantor
+// trust status preempts). § 678(c) HEMS ascertainable standard
+// (Health, Education, Maintenance, Support) safe from § 678(a)(1).
+// § 678(d) timely renunciation/disclaimer escape. § 678(e) cross-
+// reference to § 2514(e) 5x5 lapse safe harbor — lapse treated as
+// gift only to extent exceeds GREATER of $5,000 or 5 % of trust
+// corpus. BDIT (Beneficiary Defective Inheritor Trust): 3rd-party
+// irrevocable trust funded with initial $5,000; beneficiary holds
+// Crummey power lapsing within 5x5 → beneficiary as § 678 owner
+// for income tax; trust assets escape beneficiary's estate. BDOT
+// (Beneficiary Deemed Owner Trust): income-only variant. PLR
+// 200949012 (Dec 4, 2009) confirms BDIT structure under § 678.
+// Oshins NAEPC Journal foundational article; ACTEC Foundation
+// podcast on § 678 mysteries; Griffin Bridgers HEMS safety
+// analysis.
+
+async fn section_678_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_678::Section678Input>,
+) -> Result<Json<traderview_expense::section_678::Section678Result>, ApiError> {
+    Ok(Json(traderview_expense::section_678::compute(&b)))
 }
 
 // ── §67(g) TCJA misc itemized deduction suspension ────────────────────
