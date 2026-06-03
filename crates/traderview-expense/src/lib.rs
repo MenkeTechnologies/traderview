@@ -184,6 +184,7 @@ pub mod rental_ev_charging_accommodation;
 pub mod rental_fair_housing_reasonable_accommodation;
 pub mod rental_fire_extinguisher_requirement;
 pub mod rental_flood_hazard_disclosure;
+pub mod rental_foreclosure_tenant_protection_ptfa;
 pub mod rental_broadband_mte_rules;
 pub mod rental_energy_benchmarking;
 pub mod rental_garage_door_safety_compliance;

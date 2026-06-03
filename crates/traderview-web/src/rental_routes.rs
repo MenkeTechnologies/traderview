@@ -616,6 +616,11 @@ use traderview_expense::rental_flood_hazard_disclosure::{
     FloodHazardDisclosureInput as RentalFloodHazardDisclosureInput,
     FloodHazardDisclosureResult as RentalFloodHazardDisclosureResult,
 };
+use traderview_expense::rental_foreclosure_tenant_protection_ptfa::{
+    check as check_rental_foreclosure_tenant_protection_ptfa,
+    PtfaInput as RentalForeclosureTenantProtectionPtfaInput,
+    PtfaResult as RentalForeclosureTenantProtectionPtfaResult,
+};
 use traderview_expense::rental_carbon_monoxide_detector::{
     check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
     RentalCarbonMonoxideDetectorResult,
@@ -1332,6 +1337,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
+        .route("/rental-foreclosure-tenant-protection-ptfa", axum::routing::post(rental_foreclosure_tenant_protection_ptfa_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-garage-door-safety-compliance", axum::routing::post(rental_garage_door_safety_compliance_route))
@@ -7673,6 +7679,31 @@ async fn rental_flood_hazard_disclosure_route(
     Json(b): Json<RentalFloodHazardDisclosureInput>,
 ) -> Result<Json<RentalFloodHazardDisclosureResult>, ApiError> {
     Ok(Json(check_rental_flood_hazard_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_foreclosure_tenant_protection_ptfa: Federal Protecting Tenants
+// at Foreclosure Act (PTFA) compliance for trader-landlords acquiring
+// foreclosed rental property as immediate successor in interest.
+// Originally Pub. L. 111-22 Title VII §§ 701-704 (2009) with December
+// 31, 2014 sunset; reinstated PERMANENTLY by Pub. L. 115-174 § 304
+// (Economic Growth, Regulatory Relief, and Consumer Protection Act of
+// 2018, effective June 23, 2018). Three bona fide tenant prongs per
+// § 702(b): not mortgagor/spouse/parent/child + arm's-length lease
+// + rent not substantially less than fair market rent (or subsidized).
+// 90-day minimum vacate notice for month-to-month bona fide tenants;
+// full lease term remaining for bona fide written-lease tenants; only
+// carveout is sale to primary-residence purchaser (owner-occupy
+// exception) which still requires 90-day notice. Sibling: existing
+// foreclosure-protection comments referenced in flood-hazard module.
+// ---------------------------------------------------------------------------
+
+async fn rental_foreclosure_tenant_protection_ptfa_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalForeclosureTenantProtectionPtfaInput>,
+) -> Result<Json<RentalForeclosureTenantProtectionPtfaResult>, ApiError> {
+    Ok(Json(check_rental_foreclosure_tenant_protection_ptfa(&b)))
 }
 
 // ---------------------------------------------------------------------------
