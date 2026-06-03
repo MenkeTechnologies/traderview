@@ -281,6 +281,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
         .route("/calc/section-734",           post(section_734_route))
+        .route("/calc/section-736",           post(section_736_route))
         .route("/calc/section-737",           post(section_737_route))
         .route("/calc/section-743",           post(section_743_route))
         .route("/calc/section-751",           post(section_751_route))
@@ -2777,6 +2778,36 @@ async fn section_737_route(
     Json(b): Json<traderview_expense::section_737::Section737Input>,
 ) -> Result<Json<traderview_expense::section_737::Section737Output>, ApiError> {
     Ok(Json(traderview_expense::section_737::check(&b)))
+}
+
+// ── § 736 retiring/deceased partner payment characterization ─────
+// Mounted at /api/calc/section-736. § 736(a) payments NOT in
+// exchange for partnership property: subdivides into § 736(a)(1)
+// distributive share (payment determined with regard to partnership
+// income — ordinary, reduces other partners' shares) and
+// § 736(a)(2) guaranteed payment under § 707(c) (payment determined
+// without regard to income — ordinary, § 162 partnership deduction).
+// § 736(b) payments in exchange for partnership PROPERTY: capital
+// character, § 731 / § 732 distribution rules, no partnership
+// deduction. § 736(b)(2) special rule for service partnerships
+// (capital not material income-producing factor per § 736(b)(3))
+// where general partner is retiring/dying: unrealized receivables
+// (§ 751(c)) + goodwill (except as partnership agreement provides)
+// fall back into § 736(a) ordinary treatment. DRA 1993 § 13262
+// (Pub. L. 103-66) effective for partners retiring/dying on or
+// after Jan. 5, 1993 limits the § 736(b)(2) special rule to
+// service partnerships + general partners. Sibling: § 707(c)
+// (guaranteed payment definition that § 736(a)(2) cross-references),
+// § 731 (distribution recognition that § 736(b) invokes), § 732
+// (distributee basis that § 736(b) invokes), § 751 (hot assets
+// recharacterization for retiring partner sale-of-interest), § 1402
+// (a)(13) (limited-partner SECA exclusion analysis).
+
+async fn section_736_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_736::Section736Input>,
+) -> Result<Json<traderview_expense::section_736::Section736Output>, ApiError> {
+    Ok(Json(traderview_expense::section_736::check(&b)))
 }
 
 async fn section_754_route(
