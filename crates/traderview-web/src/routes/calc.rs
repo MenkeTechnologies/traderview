@@ -281,6 +281,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
         .route("/calc/section-734",           post(section_734_route))
+        .route("/calc/section-737",           post(section_737_route))
         .route("/calc/section-743",           post(section_743_route))
         .route("/calc/section-751",           post(section_751_route))
         .route("/calc/section-752",           post(section_752_route))
@@ -2750,6 +2751,32 @@ async fn section_734_route(
     Json(b): Json<traderview_expense::section_734::Section734Input>,
 ) -> Result<Json<traderview_expense::section_734::Section734Output>, ApiError> {
     Ok(Json(traderview_expense::section_734::check(&b)))
+}
+
+// ── § 737 mixing-bowl recognition for contributing partner ───────
+// Mounted at /api/calc/section-737. One half of the Subchapter K
+// "anti-mixing-bowl" anti-abuse regime — contributing-partner-side
+// recognition when a partner who contributed appreciated § 704(c)
+// property receives a distribution of OTHER property (not money)
+// within 7 years of contribution. Other half is § 704(c)(1)(B) —
+// noncontributing-partner-side recognition. § 737(a)(1) lesser-of
+// test: (1) net precontribution gain under § 737(b) (7-year
+// lookback); or (2) excess of distributed property FMV over
+// partner's outside basis. Money-only distributions carved out
+// (§ 731(a)(1) governs). § 737(c) basis adjustments prevent double-
+// counting. Original 5-year window enacted by Energy Policy Act of
+// 1992 (Pub. L. 102-486); extended to 7 years by Taxpayer Relief
+// Act of 1997 (Pub. L. 105-34). Sibling cluster: § 704(c)(1)(B)
+// (paired recognition rule), § 704(c) (built-in gain allocation),
+// § 731 (distribution gain/loss), § 732 (distributee basis),
+// § 751 (hot assets — applies before § 737), § 707(a)(2)(B)
+// (disguised sales — alternative anti-abuse path).
+
+async fn section_737_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_737::Section737Input>,
+) -> Result<Json<traderview_expense::section_737::Section737Output>, ApiError> {
+    Ok(Json(traderview_expense::section_737::check(&b)))
 }
 
 async fn section_754_route(
