@@ -78,6 +78,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-1375",          post(section_1375_route))
         .route("/calc/section-1411",          post(section_1411_route))
+        .route("/calc/section-1445",          post(section_1445_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-475f",          post(section_475f_route))
         .route("/calc/section-213",           post(section_213_route))
@@ -4754,6 +4755,30 @@ async fn section_1411_route(
     Json(b): Json<traderview_expense::section_1411::Section1411Input>,
 ) -> Result<Json<traderview_expense::section_1411::Section1411Result>, ApiError> {
     Ok(Json(traderview_expense::section_1411::check(&b)))
+}
+
+// ── §1445 FIRPTA withholding on USRPI dispositions by foreign person ──
+// Mounted at /api/calc/section-1445. § 1445(a) default 15 % withholding
+// on amount realized on USRPI disposition by foreign person; buyer
+// (transferee) is statutory withholding agent and personally liable
+// for unwithheld tax. § 1445(b)(2) non-foreign affidavit exception
+// (transferor TIN + under penalty of perjury). § 1445(b)(4) publicly
+// traded stock exception. § 1445(b)(5) domestically controlled REIT
+// exception. § 1445(b)(6) buyer-residence exception: amount realized
+// ≤ $300,000 + buyer 50 % residence affidavit = 0 % withholding.
+// PATH Act of 2015 (P.L. 114-113) § 324: raised statutory rate from
+// 10 % to 15 %; created tiered residence rate ($300K = 0 %, $300K-$1M
+// + residence = 10 %, > $1M = 15 %). § 1445(c)(4) IRS withholding
+// certificate (Form 8288-B) reduces/eliminates withholding. Form 8288
+// + Form 8288-A due within 20 days of closing. Trader-landlord
+// critical for any cross-border USRPI transaction; commercial
+// brokers; trader entities with foreign-investor LP/LLC members.
+
+async fn section_1445_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1445::Section1445Input>,
+) -> Result<Json<traderview_expense::section_1445::Section1445Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1445::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────
