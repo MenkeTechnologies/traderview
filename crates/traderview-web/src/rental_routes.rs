@@ -836,6 +836,11 @@ use traderview_expense::rental_mold_disclosure_remediation::{
     RentalMoldDisclosureRemediationInput,
     RentalMoldDisclosureRemediationResult,
 };
+use traderview_expense::rental_fair_housing_reasonable_accommodation::{
+    check as check_rental_fair_housing_reasonable_accommodation,
+    RentalFairHousingReasonableAccommodationInput,
+    RentalFairHousingReasonableAccommodationResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1320,6 +1325,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
+        .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11447,4 +11453,54 @@ async fn rental_mold_disclosure_remediation_route(
     Json(b): Json<RentalMoldDisclosureRemediationInput>,
 ) -> Result<Json<RentalMoldDisclosureRemediationResult>, ApiError> {
     Ok(Json(check_rental_mold_disclosure_remediation(&b)))
+}
+
+// ── /rental-fair-housing-reasonable-accommodation (iter 547) ────────────────
+// POST endpoint for FHA reasonable-accommodation / reasonable-modification
+// compliance across six jurisdictions. Fair Housing Act 42 U.S.C.
+// § 3604(f)(3)(B) makes it unlawful to refuse to make reasonable
+// accommodations in rules, policies, practices, or services when such
+// accommodations are necessary to afford a person with a disability equal
+// opportunity to use and enjoy a dwelling. § 3604(f)(3)(A) parallel
+// reasonable-modification provision (tenant expense, no restoration for
+// normal wear). HUD/DOJ Joint Statement on Reasonable Accommodations
+// (May 17, 2004) + Joint Statement on Reasonable Modifications (March 5,
+// 2008) establish the federal framework.
+//
+// 2026 federal-policy reversal: HUD's May 22, 2026 internal memorandum
+// permanently cancelled prior HUD guidance and instructed agency staff
+// to stop pursuing complaints involving ESAs that have not been
+// individually trained for disability-related work or tasks. State laws
+// continue to apply at higher floor.
+//
+// CA FEHA (Cal. Gov. Code §§ 12927(c)(1) + 12955) — state protection
+// survives 2026 federal reversal; CA AB-468 (eff. Jan 1, 2022) requires
+// 30-day LMHP relationship before ESA letter.
+//
+// NY State HRL (NY Exec. Law § 296(5)(c)) + NYC HRL (NYC Admin. Code
+// § 8-107(5)) codify interactive-dialogue duty explicitly.
+//
+// NJ LAD (N.J.S.A. 10:5-12.4) reasonable accommodation duty.
+//
+// MA Gen. L. ch. 151B § 4(7A) reasonable accommodation duty.
+//
+// Per se violations: imposing pet fee or deposit on assistance animal;
+// requiring restoration of normal-wear modification; outright denial
+// without interactive dialogue.
+//
+// Eight-mode severity ladder: NotApplicable,
+// NoClaimOfDisabilityNoAccommodationDuty,
+// CompliantAccommodationGranted,
+// CompliantInteractiveDialogueAlternativeOffered,
+// EsaPost2026FederalReversalStateLawFloorMayStillApply,
+// PetFeeOnAssistanceAnimalPerSeFhaViolation,
+// RestorationDemandedForNormalWearModificationViolation,
+// OutrightDenialFailureToEngageInteractiveDialogue.
+
+async fn rental_fair_housing_reasonable_accommodation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFairHousingReasonableAccommodationInput>,
+) -> Result<Json<RentalFairHousingReasonableAccommodationResult>, ApiError> {
+    Ok(Json(check_rental_fair_housing_reasonable_accommodation(&b)))
 }
