@@ -781,6 +781,11 @@ use traderview_expense::rental_natural_gas_leak_response::{
     check as check_rental_natural_gas_leak_response,
     RentalNaturalGasLeakResponseInput, RentalNaturalGasLeakResponseResult,
 };
+use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
+    check as check_rental_ny_rent_receipt_late_notice_requirements,
+    NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
+    NyRentReceiptLateNoticeRequirementsResult as RentalNyRentReceiptLateNoticeRequirementsResult,
+};
 use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
@@ -1432,6 +1437,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-local-law-88-lighting-upgrades-sub-metering", axum::routing::post(rental_local_law_88_lighting_upgrades_sub_metering_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
+        .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
@@ -9159,6 +9165,33 @@ async fn rental_natural_gas_leak_response_route(
     Json(b): Json<RentalNaturalGasLeakResponseInput>,
 ) -> Result<Json<RentalNaturalGasLeakResponseResult>, ApiError> {
     Ok(Json(check_rental_natural_gas_leak_response(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_ny_rent_receipt_late_notice_requirements: NY Real Property
+// Law § 235-e Duty to Provide Written Receipt + Five-Day Late Rent
+// Notice. Three obligations: (1) § 235-e(a) written receipt for cash
+// or non-personal-check payments with 5 required elements (date +
+// amount + premises + period + signature) — IMMEDIATE if personal,
+// 15 days if indirect; (2) § 235-e(b) cash payment records retained
+// 3 years; (3) § 235-e(d) HSTPA 2019 amendment — 5-day late rent
+// notice by CERTIFIED MAIL (email/text not sufficient) — applies to
+// both residential and commercial tenancies; failure = tenant
+// affirmative defense in nonpayment proceeding. HSTPA 2019 (Laws of
+// 2019, c. 36) overhauled NY landlord-tenant law. NY RPAPL § 711
+// nonpayment proceeding cross-reference. Sibling cluster: rental_
+// late_fee_cap (cap on late fees), rental_just_cause_eviction (iter
+// 573 — Good Cause Eviction NY portion), rental_security_deposit_
+// interest (NY 1.5% interest requirement), rental_landlord_notice_
+// to_enter (HSTPA-related notice rule).
+// ---------------------------------------------------------------------------
+
+async fn rental_ny_rent_receipt_late_notice_requirements_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNyRentReceiptLateNoticeRequirementsInput>,
+) -> Result<Json<RentalNyRentReceiptLateNoticeRequirementsResult>, ApiError> {
+    Ok(Json(check_rental_ny_rent_receipt_late_notice_requirements(&b)))
 }
 
 // ---------------------------------------------------------------------------
