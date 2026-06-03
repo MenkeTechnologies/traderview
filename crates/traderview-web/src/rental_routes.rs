@@ -1023,6 +1023,11 @@ use traderview_expense::rental_property_registration::{
     check as check_rental_property_registration, RentalPropertyRegistrationInput,
     RentalPropertyRegistrationResult,
 };
+use traderview_expense::rental_renters_insurance_requirement::{
+    check as check_rental_renters_insurance_requirement,
+    RentalRentersInsuranceRequirementInput,
+    RentalRentersInsuranceRequirementResult,
+};
 use traderview_expense::rental_radon_mitigation_disclosure::{
     check as check_rental_radon_mitigation_disclosure,
     RentalRadonMitigationDisclosureInput, RentalRadonMitigationDisclosureResult,
@@ -1466,6 +1471,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
+        .route("/rental-renters-insurance-requirement", axum::routing::post(rental_renters_insurance_requirement_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
         .route("/rental-septic-system-disclosure", axum::routing::post(rental_septic_system_disclosure_route))
@@ -8379,6 +8385,30 @@ async fn rental_radon_mitigation_disclosure_route(
     Json(b): Json<RentalRadonMitigationDisclosureInput>,
 ) -> Result<Json<RentalRadonMitigationDisclosureResult>, ApiError> {
     Ok(Json(check_rental_radon_mitigation_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_renters_insurance_requirement: lease-imposed renter's
+// insurance requirement enforceability across CA / TX / FL / NY /
+// OH / other states. All 50 states permit contractual requirement;
+// California requires CLEARLY STATED IN WRITING before lease
+// signed or renewed; courts uphold standard $100K liability + $10K
+// personal property; excessive amounts (≥ $1M liability)
+// effectively prohibitive and unenforceable. Verbal requirements
+// not enforceable; mid-lease imposition requires signed amendment.
+// HUD does not require renter's insurance for Section 8.
+// Ten-mode severity ladder × six jurisdictions × six lease
+// formality states × four additional-insured statuses. Trader-
+// landlord critical: most form leases include renter's insurance
+// requirement but many are unenforceable due to formality defects.
+// ---------------------------------------------------------------------------
+
+async fn rental_renters_insurance_requirement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRentersInsuranceRequirementInput>,
+) -> Result<Json<RentalRentersInsuranceRequirementResult>, ApiError> {
+    Ok(Json(check_rental_renters_insurance_requirement(&b)))
 }
 
 // ---------------------------------------------------------------------------

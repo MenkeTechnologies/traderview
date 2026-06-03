@@ -232,6 +232,7 @@ pub mod rental_property_registration;
 pub mod rental_property_tax_pass_through_disclosure;
 pub mod rental_radiator_steam_heat_safety;
 pub mod rental_radon_mitigation_disclosure;
+pub mod rental_renters_insurance_requirement;
 pub mod rental_rent_control_stabilization;
 pub mod rental_retaliation_prohibition;
 pub mod rental_satellite_dish_installation_right;
