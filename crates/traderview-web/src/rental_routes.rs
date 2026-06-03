@@ -1203,6 +1203,11 @@ use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
 };
+use traderview_expense::rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101::{
+    check as check_rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101,
+    RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Input,
+    RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Result,
+};
 use traderview_expense::rental_in_unit_laundry_appliance_provision::{
     check as check_rental_in_unit_laundry_appliance_provision,
     RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
@@ -1695,6 +1700,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
+        .route("/rental-pennsylvania-landlord-tenant-act-1951-68-ps-250-101", axum::routing::post(rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-post-construction-lead-dust-clearance", axum::routing::post(rental_post_construction_lead_dust_clearance_route))
@@ -12517,6 +12523,33 @@ async fn rental_pellet_stove_disclosure_route(
     Json(b): Json<RentalPelletStoveDisclosureInput>,
 ) -> Result<Json<RentalPelletStoveDisclosureResult>, ApiError> {
     Ok(Json(check_rental_pellet_stove_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101:
+// Pennsylvania Landlord-Tenant Act of 1951, codified at 68 P.S.
+// §§ 250.101 through 250.602. Enacted as Act 20 of April 6, 1951,
+// P.L. 69. Notice to quit: 10-day for nonpayment of rent
+// (§ 250.501); 15-day for month-to-month or fixed-term under 1 year
+// (§ 250.501(b)); 30-day for fixed-term 1 year or more
+// (§ 250.501(b)). Security deposit cap: 2 months' rent first year
+// (§ 250.511a); 1 month's rent second year+ (§ 250.511b). Security
+// deposit return + damages list within 30 days (§ 250.512); failure
+// to provide damages list within 30 days waives right to withhold;
+// failure to remit balance within 30 days = double damages. Implied
+// warranty of habitability under Pugh v. Holmes, 486 Pa. 272 (1979)
+// and Beasley v. Freedman, 256 Pa. Super. 184 (1978) — cannot be
+// waived. Unfit premises rent withholding (§ 250.205). Real estate
+// broker licensure required for property managers under 63 P.S.
+// § 455.101 et seq.; owner-managers exempt.
+// ---------------------------------------------------------------------------
+
+async fn rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Input>,
+) -> Result<Json<RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Result>, ApiError> {
+    Ok(Json(check_rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101(&b)))
 }
 
 // ---------------------------------------------------------------------------

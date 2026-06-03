@@ -249,6 +249,7 @@ pub mod rental_oil_tank_replacement_disclosure;
 pub mod rental_oregon_sb_608_sb_611_rent_stabilization;
 pub mod rental_organic_waste_collection_disclosure;
 pub mod rental_pellet_stove_disclosure;
+pub mod rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101;
 pub mod rental_pesticide_application_notification;
 pub mod rental_pet_breed_restriction_disclosure;
 pub mod rental_pet_deposit_separate_security;
