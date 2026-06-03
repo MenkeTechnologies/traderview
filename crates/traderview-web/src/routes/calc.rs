@@ -280,6 +280,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-707",           post(section_707_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
+        .route("/calc/section-734",           post(section_734_route))
         .route("/calc/section-743",           post(section_743_route))
         .route("/calc/section-751",           post(section_751_route))
         .route("/calc/section-752",           post(section_752_route))
@@ -2727,6 +2728,29 @@ async fn section_1235_route(
 // BIL > $250k OR §743(d)(1)(B) (TCJA addition) transferee
 // hypothetical loss > $250k. Sale/exchange + death-of-partner
 // transfer types covered (death takes §1014 FMV outside basis).
+
+// ── § 734 distributee basis adjustment ───────────────────────────
+// Mounted at /api/calc/section-734. § 734(a) default: no basis
+// adjustment to remaining partnership property on distribution.
+// § 734(b) exception: adjustment REQUIRED if § 754 election in
+// effect OR substantial basis reduction. § 734(b)(1) increase:
+// distributee gain under § 731(a)(1) + excess of partnership basis
+// in distributed property over distributee § 732 basis. § 734(b)(2)
+// decrease: distributee loss under § 731(a)(2) + excess of
+// distributee § 732 basis in property over partnership basis.
+// § 734(d) substantial basis reduction: sum of § 734(b)(2)(A)+(B)
+// > $250K (AJCA 2004 § 833 added this prong, made mandatory even
+// without § 754). Companion to § 743 (transfer-side basis adjustment
+// — § 734 is distribution-side). Sibling: § 754 (election), § 743
+// (transferee basis), § 755 (allocation), § 731 (distribution
+// recognition), § 732 (distributee basis in distributed property).
+
+async fn section_734_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_734::Section734Input>,
+) -> Result<Json<traderview_expense::section_734::Section734Output>, ApiError> {
+    Ok(Json(traderview_expense::section_734::check(&b)))
+}
 
 async fn section_754_route(
     _u: AuthUser,
