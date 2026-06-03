@@ -875,6 +875,11 @@ use traderview_expense::rental_fair_housing_reasonable_accommodation::{
     RentalFairHousingReasonableAccommodationInput,
     RentalFairHousingReasonableAccommodationResult,
 };
+use traderview_expense::rental_facade_inspection_fisp_local_law_11::{
+    check as check_rental_facade_inspection_fisp_local_law_11,
+    FacadeInspectionFispInput as RentalFacadeInspectionFispLocalLaw11Input,
+    FacadeInspectionFispResult as RentalFacadeInspectionFispLocalLaw11Result,
+};
 use traderview_expense::rental_boiler_inspection_compliance::{
     check as check_rental_boiler_inspection_compliance,
     RentalBoilerInspectionComplianceInput,
@@ -1417,6 +1422,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
+        .route("/rental-facade-inspection-fisp-local-law-11", axum::routing::post(rental_facade_inspection_fisp_local_law_11_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
@@ -11791,6 +11797,36 @@ async fn rental_fair_housing_reasonable_accommodation_route(
     Json(b): Json<RentalFairHousingReasonableAccommodationInput>,
 ) -> Result<Json<RentalFairHousingReasonableAccommodationResult>, ApiError> {
     Ok(Json(check_rental_fair_housing_reasonable_accommodation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_facade_inspection_fisp_local_law_11: NYC Facade Inspection
+// Safety Program (FISP) / Local Law 11 of 1998 (originally LL 10 of
+// 1980 after Grace Gold facade-collapse fatality May 16, 1979 at 115
+// Madison Avenue; LL 38 of 2007 instituted 5-year cycle; current
+// regulation at 1 RCNY § 103-04). Buildings > 6 stories (7+) must
+// have exterior walls inspected by Qualified Exterior Wall Inspector
+// (QEWI — NY State PE/RA with 7+ years experience + separate DOB
+// approval) every 5 years. Three classifications: SAFE (clean),
+// SWARMP (Safe With a Repair and Maintenance Program — repairs
+// required before next cycle), UNSAFE (90-day repair window +
+// mandatory sidewalk shed pending repair). Penalties: $1,000/month
+// late initial filing, $5,000/year failure to file, $2,000 per
+// uncorrected SWARMP condition. Cycle 10 (Feb 21, 2025 - Feb 21,
+// 2030) currently active. Enforcement intensified after Erica
+// Tishman fatality Dec 17, 2019 at 729 7th Avenue. Sibling cluster:
+// rental_soft_story_seismic_retrofit (iter 581 LA/SF wood-frame
+// retrofit), rental_emergency_action_plan_high_rise (NYC LL 26
+// FDNY EAP), rental_balcony_inspection_seismic_safety (CA SB 721
+// EEE inspection), rental_elevator_safety_inspection.
+// ---------------------------------------------------------------------------
+
+async fn rental_facade_inspection_fisp_local_law_11_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFacadeInspectionFispLocalLaw11Input>,
+) -> Result<Json<RentalFacadeInspectionFispLocalLaw11Result>, ApiError> {
+    Ok(Json(check_rental_facade_inspection_fisp_local_law_11(&b)))
 }
 
 // ── /rental-boiler-inspection-compliance (iter 549) ─────────────────────────

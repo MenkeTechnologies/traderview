@@ -182,6 +182,7 @@ pub mod rental_elevator_safety_inspection;
 pub mod rental_emergency_action_plan_high_rise;
 pub mod rental_eviction_record_sealing_screening;
 pub mod rental_ev_charging_accommodation;
+pub mod rental_facade_inspection_fisp_local_law_11;
 pub mod rental_fair_housing_reasonable_accommodation;
 pub mod rental_fire_extinguisher_requirement;
 pub mod rental_flood_hazard_disclosure;
