@@ -155,6 +155,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
         .route("/calc/section-305",           post(section_305_route))
+        .route("/calc/section-311",           post(section_311_route))
         .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-332",           post(section_332_route))
         .route("/calc/section-1234a",         post(section_1234a_route))
@@ -6249,6 +6250,57 @@ async fn section_305_route(
     Json(b): Json<traderview_expense::section_305::Section305Input>,
 ) -> Result<Json<traderview_expense::section_305::Section305Result>, ApiError> {
     Ok(Json(traderview_expense::section_305::compute(&b)))
+}
+
+// ── § 311 Taxability of Corporation on Distribution in Kind ─────────
+// Mounted at /api/calc/section-311 (iter 550). Pure compute. § 311
+// governs gain/loss recognition by the DISTRIBUTING corporation on
+// distributions of property in kind to shareholders. The Tax Reform
+// Act of 1986 repealed the General Utilities doctrine and added
+// § 311(b), which requires the distributing corporation to recognize
+// gain on appreciated-property distributions as if the property had
+// been sold at fair market value. § 311(a) continues to deny LOSS
+// recognition on depreciated-property distributions — losses are
+// preserved only through § 336 liquidation distributions, sales, or
+// worthlessness under § 165(g).
+//
+// § 311(a) general rule: no gain or loss to distributing corporation
+// on distribution of property with respect to its stock (subject to
+// § 311(b)).
+//
+// § 311(b)(1) appreciated property: gain recognized as if sold at FMV.
+// § 311(b)(2) liability floor (cross-reference to § 336(b)): FMV deemed
+// not less than the amount of liability assumed by shareholder OR to
+// which the property is subject. § 311(b)(3) partnership/trust
+// anti-loss rule: gain computed without regard to losses attributable
+// to property contributed for principal purpose of recognizing loss
+// on the distribution.
+//
+// § 311 INAPPLICABLE to (a) § 332 parent-subsidiary liquidations,
+// (b) § 336 corporate liquidations, (c) § 355 corporate-division
+// distributions — each governed by its own gain/loss-recognition regime.
+//
+// Seven-mode severity ladder: NotApplicable,
+// Section311InapplicableOtherDistributionRegime,
+// Section311ANoGainOrLossNeutralDistribution,
+// Section311ANoLossOnDepreciatedPropertyDistribution,
+// Section311BGainRecognitionAppreciatedProperty,
+// Section311BWithLiabilityAssumptionFmvFloorAdjustment,
+// Section311B3PartnershipTrustAntiLossDisallowance.
+//
+// Coordinates with § 312 E&P computation (recognized gain increases
+// E&P), § 301(b)/(c)/(d) distributee dividend / basis / capital-gain
+// treatment, § 332/337 parent-sub liquidation regime, § 336 general
+// liquidation, § 355 corporate-division non-recognition, § 1374 S-corp
+// built-in-gain tax (10-year window), § 1245/§ 1250 depreciation
+// recapture, § 165(g) worthless-security loss preservation, § 267
+// related-party loss deferral.
+
+async fn section_311_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionInput>,
+) -> Result<Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_311::check(&b)))
 }
 
 // ── §331 shareholder gain/loss in corporate complete liquidation ─
