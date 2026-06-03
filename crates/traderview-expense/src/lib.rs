@@ -211,6 +211,7 @@ pub mod rental_hardwired_smoke_alarm_responsibility;
 pub mod rental_heat_minimum_temperature_season;
 pub mod rental_hoa_disclosure_at_lease;
 pub mod rental_hot_water_temperature;
+pub mod rental_housing_for_older_persons_act_hopa_1995;
 pub mod rental_hud_hotma_income_asset_compliance;
 pub mod rental_illegal_lockout_self_help_eviction;
 pub mod rental_in_unit_laundry_appliance_provision;

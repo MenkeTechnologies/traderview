@@ -719,6 +719,11 @@ use traderview_expense::rental_hot_water_temperature::{
     check as check_rental_hot_water_temperature, RentalHotWaterTemperatureInput,
     RentalHotWaterTemperatureResult,
 };
+use traderview_expense::rental_housing_for_older_persons_act_hopa_1995::{
+    check as check_rental_housing_for_older_persons_act_hopa_1995,
+    RentalHousingForOlderPersonsActHopa1995Input,
+    RentalHousingForOlderPersonsActHopa1995Result,
+};
 use traderview_expense::rental_hud_hotma_income_asset_compliance::{
     check as check_rental_hud_hotma_income_asset_compliance,
     RentalHudHotmaIncomeAssetComplianceInput,
@@ -1610,6 +1615,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
         .route("/rental-heat-minimum-temperature-season", axum::routing::post(rental_heat_minimum_temperature_season_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
+        .route("/rental-housing-for-older-persons-act-hopa-1995", axum::routing::post(rental_housing_for_older_persons_act_hopa_1995_route))
         .route("/rental-hud-hotma-income-asset-compliance", axum::routing::post(rental_hud_hotma_income_asset_compliance_route))
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
@@ -8901,6 +8907,67 @@ async fn rental_hot_water_temperature_route(
 // rental_application_denial_disclosure (HOTMA documentation
 // requirements), rental_property_registration (PHA registration).
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_housing_for_older_persons_act_hopa_1995: Housing for Older
+// Persons Act of 1995 (Public Law 104-76; signed by President Bill
+// Clinton on December 28, 1995) — federal Fair Housing Act exemption
+// from the FHA's prohibition on familial-status discrimination
+// (42 USC § 3604(b)). Codified at 42 USC § 3607(b); implemented at
+// 24 CFR Part 100 Subpart E §§ 100.300-100.308. Three exemption
+// categories: (1) 62+ communities — 100 % occupancy at or above 62;
+// (2) 55+ communities — 80 % of occupied units with at least one
+// resident 55 or older + age verification at least once every 2
+// years via reliable documentation + published written policies and
+// procedures demonstrating intent to operate as housing for persons
+// 55 or older; (3) state or federally funded elderly housing
+// programs (HUD Section 202 Supportive Housing for the Elderly,
+// LIHTC age-targeted projects, etc.). HOPA eliminated the prior
+// 1988 FHA "significant facilities and services" requirement —
+// communities no longer need to demonstrate special amenities for
+// older persons to qualify. Good-faith-reliance immunity protects
+// persons who relied on a written statement that the property
+// qualifies for the 55+ exemption, even if later determined
+// ineligible. Without a valid HOPA exemption, the FHA familial-
+// status protection at 42 USC § 3604(b) applies: landlord may not
+// refuse to rent / sell / evict based on presence of children under
+// 18. Enforcement: HUD Office of Fair Housing and Equal Opportunity
+// (FHEO) administrative investigations; private right of action
+// under 42 USC § 3613 (statutory + actual damages + reasonable
+// attorney fees + injunctive relief); civil penalties under 42 USC
+// § 3614 for pattern-or-practice violations. Ten-mode severity
+// ladder × four claimed-exemption categories × two familial-status
+// action statuses × two good-faith-reliance statuses × variable
+// occupancy percentage (basis points) / age-verification cycle /
+// written-policies inputs. Trader-landlord critical for any
+// portfolio operator targeting active-adult / 55+ / 62+ retirement
+// markets; HOPA compliance failure converts a community advertised
+// as age-restricted into an FHA familial-status-protected
+// community, voiding existing no-children policies and triggering
+// civil liability for past refusals/evictions. The 80 % occupancy
+// boundary and the 2-year age-verification cycle are the most-
+// litigated requirements; the written-policies requirement traps
+// communities that operate informally without published age-
+// restriction documentation. Sibling cluster: rental_fair_housing_
+// act_familial_status (FHA familial-status base regime — HOPA is
+// the carve-out from this baseline), rental_hud_section_202_
+// supportive_housing_elderly (HUD Section 202 program — example
+// of state/federally funded elderly housing category), rental_
+// section_504_accessibility (FHA accessibility regime — parallel
+// FHA structural compliance), rental_vawa_2022 (FHA cross-reference
+// for VAWA tenant protections), rental_hud_hotma_income_asset_
+// compliance (iter 653 — HOTMA HUD income/asset compliance under
+// Section 8 and Section 202), rental_just_cause_eviction (just-
+// cause regimes that overlay HOPA-exempt communities).
+// ---------------------------------------------------------------------------
+
+async fn rental_housing_for_older_persons_act_hopa_1995_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHousingForOlderPersonsActHopa1995Input>,
+) -> Result<Json<RentalHousingForOlderPersonsActHopa1995Result>, ApiError> {
+    Ok(Json(check_rental_housing_for_older_persons_act_hopa_1995(&b)))
+}
 
 async fn rental_hud_hotma_income_asset_compliance_route(
     _s: State<AppState>,
