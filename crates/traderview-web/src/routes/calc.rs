@@ -176,6 +176,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6511",          post(section_6511_route))
         .route("/calc/section-6601",          post(section_6601_route))
         .route("/calc/section-6611",          post(section_6611_route))
+        .route("/calc/section-6621",          post(section_6621_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
@@ -7585,6 +7586,52 @@ async fn section_6611_route(
         ));
     }
     Ok(Json(traderview_expense::section_6611::compute(&b)))
+}
+
+// ── §6621 determination of interest rate / federal short-term rate ──
+// Mounted at /api/calc/section-6621. § 6621 is the master rate-
+// setting provision feeding every § 6601 underpayment-interest and
+// every § 6611 overpayment-interest computation, driven by the
+// § 6621(b) federal short-term rate (FSTR) determined quarterly
+// under § 1274(d) AFR methodology, rounded to nearest full percent
+// (or next highest if multiple of 0.5 percent). § 6621(a)(1)
+// overpayment rate = FSTR + 3 pp (individuals); FSTR + 2 pp
+// (corporations); FSTR + 0.5 pp for the portion of a corporate
+// overpayment exceeding $10,000 in any taxable period. § 6621(a)(2)
+// underpayment rate = FSTR + 3 pp (all taxpayers). § 6621(c) large
+// corporate underpayment rate = FSTR + 5 pp (substituting "5
+// percentage points" for "3 percentage points" in (a)(2)); applies
+// only to C corporations whose underpayment EXCEEDS $100,000 in a
+// taxable period (strict greater-than statutory boundary); rate
+// applies only to interest accruing AFTER the applicable date =
+// 30 DAYS following the earlier of proposed deficiency notice or
+// formal notice of deficiency. § 6621(d) net zero rate for
+// overlapping periods of equivalent overpayments and underpayments
+// by the SAME taxpayer of Title 26 tax. § 6622 cross-reference:
+// interest under § 6601 and § 6611 is COMPOUNDED DAILY; the
+// module's linear-rate computations are simplifications of the
+// actual daily-compounded interest. Eight-mode severity ladder ×
+// three taxpayer types (individual / C corp / other entity) × three
+// amount statuses (overpayment / underpayment / none) × three large-
+// corporate applicable-date statuses × two net-zero overlapping
+// statuses × variable FSTR / amount / years input. Sibling cluster:
+// section_6601 (interest on underpayments — primary consumer of the
+// § 6621 rate), section_6611 (interest on overpayments — primary
+// consumer of § 6621(a)(1) rate), section_6651 (failure to file /
+// failure to pay penalty — runs alongside § 6601 interest accrual),
+// section_6654 (individual estimated tax underpayment penalty —
+// uses § 6621 rate), section_1274 (AFR determination — defines
+// federal short-term rate methodology), section_1258 (conversion
+// transactions — uses § 6621(b) federal short-term rate compounded
+// daily for indefinite-term applicable rate), section_1260
+// (constructive ownership transactions — uses § 6601 + § 6621 for
+// interest charge on ordinary recharacterization).
+
+async fn section_6621_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6621::Section6621Input>,
+) -> Result<Json<traderview_expense::section_6621::Section6621Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6621::compute(&b)))
 }
 
 // Mounted at /api/calc/section-6651. §6651(a)(1) FTF 5%/month / 25%
