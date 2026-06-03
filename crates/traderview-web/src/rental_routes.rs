@@ -1005,6 +1005,11 @@ use traderview_expense::rental_tenant_abandoned_personal_property::{
     RentalTenantAbandonedPersonalPropertyInput,
     RentalTenantAbandonedPersonalPropertyResult,
 };
+use traderview_expense::rental_texas_hb_2127_state_preemption::{
+    check as check_rental_texas_hb_2127_state_preemption,
+    RentalTexasHb2127StatePreemptionInput,
+    RentalTexasHb2127StatePreemptionResult,
+};
 use traderview_expense::rental_mold_disclosure_remediation::{
     check as check_rental_mold_disclosure_remediation,
     RentalMoldDisclosureRemediationInput,
@@ -1640,6 +1645,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
+        .route("/rental-texas-hb-2127-state-preemption", axum::routing::post(rental_texas_hb_2127_state_preemption_route))
         .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
@@ -12887,6 +12893,54 @@ async fn rental_tenant_abandoned_personal_property_route(
     Json(b): Json<RentalTenantAbandonedPersonalPropertyInput>,
 ) -> Result<Json<RentalTenantAbandonedPersonalPropertyResult>, ApiError> {
     Ok(Json(check_rental_tenant_abandoned_personal_property(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_texas_hb_2127_state_preemption: Texas HB 2127 of 2023 (Texas
+// Regulatory Consistency Act; informally "Death Star Bill") state
+// preemption of local landlord-tenant ordinances. Passed by Texas
+// Legislature 88th Regular Session May 2023; effective September 1,
+// 2023. Bars cities and counties from passing ordinances in 8 broad
+// chapters of Texas state code: Agriculture, Business and Commerce,
+// Finance, Insurance, Labor, Local Government, Natural Resources,
+// Occupations, plus Property Code. Private right of action: HB 2127
+// authorizes individuals and trade associations (Texas Apartment
+// Association, real estate developer groups) to sue cities/counties
+// for violations. Landlord-tenant implications: preempts local
+// rules on rent notices, eviction notice provisions, source-of-
+// income protections, tenants' bill of rights ordinances, proactive
+// apartment inspections programs, late fee caps, security deposit
+// caps. Affected: San Antonio Tenant Bill of Rights, San Antonio
+// Proactive Apartment Inspections Program, Austin code enforcement
+// rules, Dallas tenant protections, Houston rental rules. Texas
+// Property Code Chapter 92 uniform statewide framework. Court
+// status: Travis County District Court Judge Maya Guerra Gamble
+// ruled UNCONSTITUTIONAL on August 30, 2023 in City of Houston v.
+// State of Texas (joined by San Antonio and El Paso) but did NOT
+// enjoin enforcement; State appealed; HB 2127 took effect September
+// 1, 2023 pending appellate review. Article XI, Section 5 of the
+// Texas Constitution home rule city challenge pending. Nine-mode
+// severity ladder × two property jurisdictions × ten local ordinance
+// categories × four enforcement actors × three home rule city
+// statuses. Trader-landlord critical for TX operators in Houston,
+// Dallas, San Antonio, Austin, Fort Worth, El Paso, Arlington who
+// may invoke HB 2127 private right of action to overturn local
+// landlord-tenant ordinances and reduce compliance burden. Sibling
+// cluster: rental_florida_hb_1417_state_preemption (iter 657 — FL
+// companion preemption regime), rental_just_cause_eviction (TX has
+// none post-preemption), rental_rent_control_stabilization (TX
+// ordinances preempted), rental_source_of_income_discrimination
+// (TX local protections preempted), rental_late_fee_caps (TX local
+// caps preempted), rental_eviction_notices, rental_tenant_bill_of_
+// rights_handout (preempted in TX).
+// ---------------------------------------------------------------------------
+
+async fn rental_texas_hb_2127_state_preemption_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTexasHb2127StatePreemptionInput>,
+) -> Result<Json<RentalTexasHb2127StatePreemptionResult>, ApiError> {
+    Ok(Json(check_rental_texas_hb_2127_state_preemption(&b)))
 }
 
 // ---------------------------------------------------------------------------
