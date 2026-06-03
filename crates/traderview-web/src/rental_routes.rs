@@ -965,6 +965,11 @@ use traderview_expense::rental_smoke_free_cannabis_restriction::{
     RentalSmokeFreeCannabisRestrictionInput,
     RentalSmokeFreeCannabisRestrictionResult,
 };
+use traderview_expense::rental_rent_increase_notice_requirement::{
+    check as check_rental_rent_increase_notice_requirement,
+    RentalRentIncreaseNoticeRequirementInput,
+    RentalRentIncreaseNoticeRequirementResult,
+};
 use traderview_expense::rental_rent_control_stabilization::{
     check as check_rental_rent_control_stabilization,
     RentalRentControlStabilizationInput,
@@ -1527,6 +1532,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
+        .route("/rental-rent-increase-notice-requirement", axum::routing::post(rental_rent_increase_notice_requirement_route))
         .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
         .route("/rental-tenant-estoppel-certificate", axum::routing::post(rental_tenant_estoppel_certificate_route))
@@ -12549,6 +12555,33 @@ async fn rental_rent_control_stabilization_route(
     Json(b): Json<RentalRentControlStabilizationInput>,
 ) -> Result<Json<RentalRentControlStabilizationResult>, ApiError> {
     Ok(Json(check_rental_rent_control_stabilization(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_rent_increase_notice_requirement: multi-state residential
+// rent-increase notice timing compliance. CA Civ Code § 827 (AB 1110
+// of 2019, effective Jan 1, 2020): 30 days for ≤ 10 % increase; 90
+// days for > 10 % increase. WA RCW 59.18.140 (amended effective May
+// 7, 2025): 60 days written notice before increase effective date.
+// OR ORS 90.323 / 90.600 (SB 608 of 2019): 90 days written notice
+// for any rent increase. NY RPL § 226-c (HSTPA 2019): notice
+// required when increase ≥ 5 % OR landlord declines renewal;
+// tiered notice by tenancy length — 30 days (< 1 year), 60 days
+// (1-2 years), 90 days (≥ 2 years). Failure consequence: tenant's
+// lawful tenancy continues under existing terms until notice
+// period expires. Thirteen-mode severity ladder × five
+// jurisdictions × three lease length tiers × multiple notice
+// outcomes. Trader-landlord critical: most cross-state operations
+// must apply 4 different rules; defective notice voids the
+// increase and continues tenancy at prior rate.
+// ---------------------------------------------------------------------------
+
+async fn rental_rent_increase_notice_requirement_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRentIncreaseNoticeRequirementInput>,
+) -> Result<Json<RentalRentIncreaseNoticeRequirementResult>, ApiError> {
+    Ok(Json(check_rental_rent_increase_notice_requirement(&b)))
 }
 
 // ── /rental-tenant-relocation-assistance (iter 559) ─────────────────────────
