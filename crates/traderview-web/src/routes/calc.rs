@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-165d",          post(section_165d_route))
         .route("/calc/section-165g",          post(section_165g_route))
         .route("/calc/section-267",           post(section_267_route))
+        .route("/calc/section-269",           post(section_269_route))
         .route("/calc/section-274",           post(section_274_route))
         .route("/calc/section-279",           post(section_279_route))
         .route("/calc/section-988",           post(section_988_route))
@@ -7843,6 +7844,57 @@ async fn section_267_route(
         ));
     }
     Ok(Json(traderview_expense::section_267::compute(&b)))
+}
+
+// ── § 269 Acquisitions Made to Evade or Avoid Income Tax ─────────────
+// Mounted at /api/calc/section-269 (iter 536). Pure compute. § 269 gives
+// Treasury authority to DISALLOW any deduction, credit, or other
+// allowance when (1) a person acquires CONTROL of a corporation OR a
+// corporation acquires the property of another corporation with
+// carry-over basis, AND (2) the principal purpose of the acquisition was
+// to evade or avoid federal income tax by securing a benefit the
+// acquirer would not otherwise enjoy. Primary anti-loss-trafficking
+// weapon operating ALONGSIDE the mechanical § 382 NOL cap (post-1986);
+// § 269 reaches non-NOL benefits (general business credits, accelerated
+// depreciation, foreign tax credits, charitable contribution carryovers)
+// that § 382 does not capture.
+//
+// § 269(a) CONTROL THRESHOLD: at least 50% combined voting power OR
+// at least 50% of total value of all classes of stock.
+//
+// § 269(a)(1): stock acquisition triggering control analysis.
+// § 269(a)(2): asset acquisition with carry-over basis transaction.
+// § 269(b): § 332 parent-subsidiary liquidation within 2-year window
+// after acquisition.
+// § 269(c): rebuttable presumption when purchase price substantially
+// disproportionate to asset value (excluding tax-benefit value). Strong
+// business-purpose evidence (≥ 75% in our framework) rebuts.
+//
+// § 382(l)(5) BANKRUPTCY COORDINATION: Treas. Reg. § 1.269-3(d)
+// per se presumption that ownership change is for tax-avoidance
+// principal purpose UNLESS corporation carries on more than an
+// insignificant amount of active trade or business during AND after
+// the title 11 case.
+//
+// Eight-mode severity ladder: NotApplicable,
+// NoControlAcquisitionSection269Inapplicable,
+// BonaFideBusinessPurposeNoDisallowance,
+// Section382L5BankruptcyActiveBusinessMaintainedNoDisallowance,
+// Section269ATaxBenefitDisallowanceApplied,
+// Section269BNolCarryoverDisallowanceApplied,
+// Section269CPriceDisproportionatePresumptionApplied,
+// Section382L5PerSePresumptionDisallowanceApplied.
+//
+// Coordinates with § 382 NOL annual cap, § 383 general-business-credit
+// cap, § 384 built-in-gain limit (5-year recognition period), § 332
+// parent-sub liquidation, § 368 reorganization framework, § 7874
+// anti-inversion.
+
+async fn section_269_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxInput>,
+) -> Result<Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_269::check(&b)))
 }
 
 // ── § 274 Meals, Entertainment, Gift, Travel deduction limits ────────
