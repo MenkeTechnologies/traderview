@@ -188,6 +188,7 @@ pub mod rental_chimney_fireplace_inspection_disclosure;
 pub mod rental_climate_mobilization_act_ll97_emissions;
 pub mod rental_colorado_hb_24_1098_just_cause_eviction;
 pub mod rental_connecticut_fair_rent_commission;
+pub mod rental_cook_county_rtlo;
 pub mod rental_cooling_tower_inspection_local_law_77;
 pub mod rental_elevator_safety_inspection;
 pub mod rental_emergency_action_plan_high_rise;

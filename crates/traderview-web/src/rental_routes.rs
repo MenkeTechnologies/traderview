@@ -670,6 +670,10 @@ use traderview_expense::rental_connecticut_fair_rent_commission::{
     RentalConnecticutFairRentCommissionInput,
     RentalConnecticutFairRentCommissionResult,
 };
+use traderview_expense::rental_cook_county_rtlo::{
+    check as check_rental_cook_county_rtlo,
+    RentalCookCountyRtloInput, RentalCookCountyRtloResult,
+};
 use traderview_expense::rental_cooling_tower_inspection_local_law_77::{
     check as check_rental_cooling_tower_inspection_local_law_77,
     CoolingTowerInspectionLocalLaw77Input as RentalCoolingTowerInspectionLocalLaw77Input,
@@ -1585,6 +1589,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
         .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
         .route("/rental-connecticut-fair-rent-commission", axum::routing::post(rental_connecticut_fair_rent_commission_route))
+        .route("/rental-cook-county-rtlo", axum::routing::post(rental_cook_county_rtlo_route))
         .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
@@ -8075,6 +8080,66 @@ async fn rental_connecticut_fair_rent_commission_route(
     Json(b): Json<RentalConnecticutFairRentCommissionInput>,
 ) -> Result<Json<RentalConnecticutFairRentCommissionResult>, ApiError> {
     Ok(Json(check_rental_connecticut_fair_rent_commission(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_cook_county_rtlo: Cook County (Illinois) Residential Tenant
+// and Landlord Ordinance (RTLO) compliance module. Adopted by the
+// Cook County Board of Commissioners on January 28, 2021; anti-
+// lockout provisions effective immediately January 2021; full
+// ordinance effective June 1, 2021. Codified at Cook County Code of
+// Ordinances Chapter 42 Article XII. Covers approximately 245,000
+// suburban Cook County rental units across 130+ municipalities. The
+// City of Chicago is EXCLUDED from RTLO scope — Chicago has its own
+// CRLTO codified at MCC Chapter 5-12 (1986). Exemptions (except
+// anti-lockout, which applies universally): (1) owner-occupied
+// buildings with 6 or fewer units; (2) single-family / condominium
+// where owner rents only that property AND lived there within past
+// 12 months; (3) SRO housing for vulnerable residents; (4) hotel /
+// motel monthly rental under 32 days; (5) school dormitories;
+// (6) shelters; (7) employee quarters; (8) non-residential
+// properties; (9) owner-occupied cooperatives. Security deposit
+// cap 1.5 × monthly rent + 30-day return + itemized deductions
+// requirement; statutory damages = greater of (2 × violation
+// amount) or one month's rent. Late fee cap = $10 for first $1000
+// of monthly rent + 5 % of any excess. 10-day material noncompliance
+// cure notice; 60-day lease renewal notice for material term changes
+// (reduced from 90 days during drafting); 2-day entry notice with
+// 8 a.m. to 8 p.m. window for repairs / showings within 60 days of
+// lease ending. Anti-lockout provision applies to ALL units
+// regardless of exemption status (universal coverage). Retaliation
+// prohibition with rebuttable presumption when adverse landlord
+// action follows tenant protected activity. Enforcement via Cook
+// County Commission on Human Rights administrative complaint
+// process + private right of action + attorney fees. Twenty-seven-
+// mode severity ladder × ten exemption statuses × seven compliance
+// aspects × two anti-lockout statuses × two retaliation statuses ×
+// variable monetary inputs. Trader-landlord critical because
+// suburban Cook County trader inventory (~245K units) had NO
+// county-level tenant protections prior to RTLO; many out-of-state
+// operators continue assuming Illinois landlord-tenant law alone
+// applies, missing the RTLO security deposit cap, late fee cap,
+// and cure-notice procedural requirements. The Chicago / suburban
+// Cook County boundary is the single most-misunderstood scope
+// question — many landlords incorrectly apply Chicago CRLTO rules
+// to suburban properties or vice versa. Sibling cluster:
+// rental_just_cause_eviction (multi-state base regime), rental_
+// security_deposit_interest (Illinois state-level interest
+// requirement under 765 ILCS 715), rental_late_fee_cap (multi-state
+// late-fee cap regime), rental_lockout_prohibition (anti-self-help
+// regime), rental_retaliation_prohibition (multi-state retaliation
+// regime), rental_landlord_notice_to_enter (general entry notice
+// regime — Cook County RTLO 2-day rule is one of stricter in US),
+// rental_eviction_notices (notice to quit regime — Illinois 5-day
+// pay-or-quit + 10-day cure under 735 ILCS 5/9-209/210/211).
+// ---------------------------------------------------------------------------
+
+async fn rental_cook_county_rtlo_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalCookCountyRtloInput>,
+) -> Result<Json<RentalCookCountyRtloResult>, ApiError> {
+    Ok(Json(check_rental_cook_county_rtlo(&b)))
 }
 
 // ---------------------------------------------------------------------------
