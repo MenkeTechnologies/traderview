@@ -280,6 +280,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-707",           post(section_707_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
+        .route("/calc/section-743",           post(section_743_route))
         .route("/calc/section-751",           post(section_751_route))
         .route("/calc/section-752",           post(section_752_route))
         .route("/calc/section-1235",          post(section_1235_route))
@@ -2631,6 +2632,29 @@ async fn section_751_route(
     Json(b): Json<traderview_expense::section_751::Section751Input>,
 ) -> Result<Json<traderview_expense::section_751::Section751Output>, ApiError> {
     Ok(Json(traderview_expense::section_751::check(&b)))
+}
+
+// ── § 743 transferee basis adjustment ────────────────────────────
+// Mounted at /api/calc/section-743. § 743(a) default rule: no basis
+// adjustment on transfer. § 743(b) exception: adjustment REQUIRED if
+// EITHER § 754 election is in effect OR partnership has substantial
+// built-in loss immediately after transfer. § 743(b) math: increase
+// inside basis by excess of transferee outside basis over their
+// proportionate share of inside basis; decrease by the reverse.
+// Partner-specific (transferee only). § 743(d) substantial built-in
+// loss two-prong test: (1) partnership inside basis > FMV by more
+// than $250K; or (2) (TCJA 2017, eff. transfers after Dec. 31, 2017)
+// transferee would be allocated loss > $250K if all assets sold at
+// FMV. Sibling cluster: § 754 (election mechanics), § 734
+// (distributee basis adjustment under § 754), § 755 (allocation
+// among partnership properties), § 751 (hot assets — interacts on
+// transfer), § 1014 (estate basis step-up on death).
+
+async fn section_743_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_743::Section743Input>,
+) -> Result<Json<traderview_expense::section_743::Section743Output>, ApiError> {
+    Ok(Json(traderview_expense::section_743::check(&b)))
 }
 
 async fn section_752_route(
