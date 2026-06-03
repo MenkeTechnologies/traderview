@@ -701,6 +701,11 @@ use traderview_expense::rental_smoke_free_housing_disclosure::{
     check as check_rental_smoke_free_housing_disclosure,
     RentalSmokeFreeHousingDisclosureInput, RentalSmokeFreeHousingDisclosureResult,
 };
+use traderview_expense::rental_soft_story_seismic_retrofit::{
+    check as check_rental_soft_story_seismic_retrofit,
+    SoftStorySeismicRetrofitInput as RentalSoftStorySeismicRetrofitInput,
+    SoftStorySeismicRetrofitResult as RentalSoftStorySeismicRetrofitResult,
+};
 use traderview_expense::rental_swimming_pool_drain_safety::{
     check as check_rental_swimming_pool_drain_safety,
     RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
@@ -1388,6 +1393,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
         .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
         .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
+        .route("/rental-soft-story-seismic-retrofit", axum::routing::post(rental_soft_story_seismic_retrofit_route))
         .route("/rental-solar-panel-disclosure", axum::routing::post(rental_solar_panel_disclosure_route))
         .route("/rental-storage-unit-lease-disclosure", axum::routing::post(rental_storage_unit_lease_disclosure_route))
         .route("/rental-balcony-inspection-seismic-safety", axum::routing::post(rental_balcony_inspection_seismic_safety_route))
@@ -8605,6 +8611,32 @@ async fn rental_smoke_free_housing_disclosure_route(
     Json(b): Json<RentalSmokeFreeHousingDisclosureInput>,
 ) -> Result<Json<RentalSmokeFreeHousingDisclosureResult>, ApiError> {
     Ok(Json(check_rental_smoke_free_housing_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_soft_story_seismic_retrofit: California wood-frame soft-
+// story mandatory seismic retrofit compliance. LA Ordinance 183893
+// (2015, "Earthquake Hazard Reduction in Existing Wood-Frame
+// Buildings with Soft, Weak, or Open-Front Walls") — most ambitious
+// US mandatory retrofit program covering ~13,500 buildings. Priority
+// 1 (3+ stories ground-floor commercial) deadline April 2024
+// (PASSED); Priority 2 (smaller wood-frame under 16 units) deadline
+// April 2026. SF Building Code Chapter 34B / 4D / 5E (operative Jun
+// 17, 2013) — wood-frame 3+ stories or 2 over basement, 5+ dwelling
+// units, built before Jan 1, 1978. Four tier deadlines all passed
+// by Sep 15, 2021 — no further extension available. Distinct from
+// sibling rental_balcony_inspection_seismic_safety (SB 721 EEE
+// inspection, AB 2579 deadline extension), rental_emergency_action_
+// plan_high_rise (NYC LL 26 / FDNY EAP). Endpoint at
+// /api/rental/rental-soft-story-seismic-retrofit.
+// ---------------------------------------------------------------------------
+
+async fn rental_soft_story_seismic_retrofit_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSoftStorySeismicRetrofitInput>,
+) -> Result<Json<RentalSoftStorySeismicRetrofitResult>, ApiError> {
+    Ok(Json(check_rental_soft_story_seismic_retrofit(&b)))
 }
 
 // ---------------------------------------------------------------------------
