@@ -1169,6 +1169,11 @@ use traderview_expense::rental_washington_hb_1217_rent_stabilization::{
     RentalWashingtonHb1217RentStabilizationInput,
     RentalWashingtonHb1217RentStabilizationResult,
 };
+use traderview_expense::rental_virginia_vrlta_va_code_55_1_1200::{
+    check as check_rental_virginia_vrlta_va_code_55_1_1200,
+    RentalVirginiaVrltaVaCode55_1_1200Input,
+    RentalVirginiaVrltaVaCode55_1_1200Result,
+};
 use traderview_expense::rental_domestic_violence_lock_change_lease_termination::{
     check as check_rental_domestic_violence_lock_change_lease_termination,
     RentalDomesticViolenceLockChangeLeaseTerminationInput,
@@ -1743,6 +1748,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
         .route("/rental-washington-hb-1217-rent-stabilization", axum::routing::post(rental_washington_hb_1217_rent_stabilization_route))
+        .route("/rental-virginia-vrlta-va-code-55-1-1200", axum::routing::post(rental_virginia_vrlta_va_code_55_1_1200_route))
         .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
         .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
         .route("/rental-drone-overflight-surveillance-privacy", axum::routing::post(rental_drone_overflight_surveillance_privacy_route))
@@ -14488,6 +14494,32 @@ async fn rental_washington_hb_1217_rent_stabilization_route(
     Json(b): Json<RentalWashingtonHb1217RentStabilizationInput>,
 ) -> Result<Json<RentalWashingtonHb1217RentStabilizationResult>, ApiError> {
     Ok(Json(check_rental_washington_hb_1217_rent_stabilization(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_virginia_vrlta_va_code_55_1_1200: Virginia Residential
+// Landlord and Tenant Act (VRLTA). Va. Code §§ 55.1-1200 through
+// 55.1-1262 (Title 55.1 Property and Conveyances, Chapter 12).
+// Originally enacted 1974; recodified into Title 55.1 effective
+// October 1, 2019; 2019 amendments eliminated pre-2019 small-
+// landlord (≤ 4 units) exemption — VRLTA now applies to ALL
+// residential rentals statewide. Security deposit cap 2 months'
+// rent + 45-day return deadline (§ 55.1-1226); late fee cap lesser
+// of 10 % periodic rent or 10 % remaining balance (§ 55.1-1204);
+// 5-day pay or quit notice (§ 55.1-1245(A)); 21-day cure + 30-day
+// termination notice for material noncompliance (§ 55.1-1245(B));
+// 24-hour landlord entry notice (§ 55.1-1229); 6-month retaliation
+// presumption window (§ 55.1-1244); 14-day casualty tenant
+// termination notice (§ 55.1-1250); essential services maintenance
+// (§ 55.1-1227); locality preemption (Va. Code § 36-93).
+// ---------------------------------------------------------------------------
+
+async fn rental_virginia_vrlta_va_code_55_1_1200_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalVirginiaVrltaVaCode55_1_1200Input>,
+) -> Result<Json<RentalVirginiaVrltaVaCode55_1_1200Result>, ApiError> {
+    Ok(Json(check_rental_virginia_vrlta_va_code_55_1_1200(&b)))
 }
 
 // ── /rental-dog-bite-liability (iter 567) ───────────────────────────────────
