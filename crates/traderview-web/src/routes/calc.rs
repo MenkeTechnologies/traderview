@@ -163,6 +163,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-7463",          post(section_7463_route))
         .route("/calc/section-7491",          post(section_7491_route))
         .route("/calc/section-162a",          post(section_162a_route))
+        .route("/calc/section-162e",          post(section_162e_route))
         .route("/calc/section-162f",          post(section_162f_route))
         .route("/calc/section-162l",          post(section_162l_route))
         .route("/calc/section-162m",          post(section_162m_route))
@@ -7420,6 +7421,25 @@ async fn section_162a_route(
     Json(b): Json<traderview_expense::section_162a::Section162aInput>,
 ) -> Result<Json<traderview_expense::section_162a::Section162aResult>, ApiError> {
     Ok(Json(traderview_expense::section_162a::check(&b)))
+}
+
+// ── §162(e) Lobbying and Political Expenditure Disallowance ────────
+// Mounted at /api/calc/section-162e. § 162(e)(1) four categories of
+// non-deductible expenditures: (A) influencing legislation; (B)
+// political campaign participation; (C) grassroots lobbying; (D)
+// direct communication with covered executive branch official.
+// § 162(e)(4) covered executive branch official definition. TCJA
+// 2017 § 13308 (Public Law 115-97, signed December 22, 2017)
+// STRUCK former § 162(e)(2) local-legislation exception and former
+// § 162(e)(7) Indian tribal government special rule; redesignated
+// (3)-(6) and (8) as (2)-(5) and (6). De minimis $2,000 in-house
+// lobbying exception under § 162(e)(5)(B) RETAINED — does NOT
+// apply to professional lobbyists or organizational dues.
+async fn section_162e_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_162e::Section162EInput>,
+) -> Result<Json<traderview_expense::section_162e::Section162EResult>, ApiError> {
+    Ok(Json(traderview_expense::section_162e::check(&b)))
 }
 
 async fn section_162f_route(
