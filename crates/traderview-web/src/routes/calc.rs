@@ -80,6 +80,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1411",          post(section_1411_route))
         .route("/calc/section-1445",          post(section_1445_route))
         .route("/calc/section-1446",          post(section_1446_route))
+        .route("/calc/section-1471",          post(section_1471_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-475f",          post(section_475f_route))
         .route("/calc/section-213",           post(section_213_route))
@@ -4830,6 +4831,34 @@ async fn section_1446_route(
     Json(b): Json<traderview_expense::section_1446::Section1446Input>,
 ) -> Result<Json<traderview_expense::section_1446::Section1446Result>, ApiError> {
     Ok(Json(traderview_expense::section_1446::compute(&b)))
+}
+
+// ── §1471 FATCA Chapter 4 withholding on payments to FFIs ────────────
+// Mounted at /api/calc/section-1471. § 1471(a) 30 % withholding on
+// withholdable payments to FFI not meeting § 1471(b) participating-
+// FFI requirements (FFI agreement with IRS + Form 8966 reporting +
+// recalcitrant-account withholding + due-diligence). § 1471(b)(2)
+// deemed-compliant FFI via Treas. Reg. § 1.1471-5(f). § 1471(c)
+// account-level information reporting (name + TIN + account number
+// + balance + gross receipts). § 1471(d) FFI = depository,
+// custodial, investment entity, certain insurance. § 1471(e) exempt
+// beneficial owners (foreign governments, international
+// organizations, foreign central banks). § 1471(f) pre-existing
+// obligations grandfathered to January 1, 2014. § 1472 30 %
+// withholding on NFFE unless certified no substantial US owners or
+// identifies substantial US owners. § 1473 withholdable payment =
+// US-source FDAP; gross proceeds rescinded by Treas. Reg.
+// § 1.1473-1(a) + Notice 2014-33. § 1474 special rules. Forms:
+// W-8BEN-E (foreign entity), W-8IMY (intermediary), W-8EXP (foreign
+// govt), W-9 (US person); Form 1042 annual + Form 1042-S per-payee
+// (due March 15) + Form 8966 FATCA report. GIIN identifies
+// Chapter 4 status. Trader-critical for any cross-border payment.
+
+async fn section_1471_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1471::Section1471Input>,
+) -> Result<Json<traderview_expense::section_1471::Section1471Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1471::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────
