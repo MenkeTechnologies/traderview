@@ -42,6 +42,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
         .route("/calc/section-1248",          post(section_1248_route))
+        .route("/calc/section-1254",          post(section_1254_route))
         .route("/calc/section-1245-1250",     post(section_1245_1250_route))
         .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/section-1045",          post(section_1045_route))
@@ -2906,6 +2907,33 @@ async fn section_1248_route(
     Json(b): Json<traderview_expense::section_1248::Section1248Input>,
 ) -> Result<Json<traderview_expense::section_1248::Section1248Result>, ApiError> {
     Ok(Json(traderview_expense::section_1248::compute(&b)))
+}
+
+// ── §1254 oil/gas/mineral property natural-resource recapture ────────
+// Mounted at /api/calc/section-1254. § 1254(a)(1) gain on
+// disposition of § 1254 property recharacterized as ordinary income
+// to extent of lesser of aggregate § 1254 costs OR gain. § 1254(a)
+// (1)(B) post-1986: aggregate IDC § 263(c) + mine development § 616
+// + mine exploration § 617 + § 611 depletion reducing basis. Pre-
+// Jan 1, 1987: IDC reduced by hypothetical capitalized depletion.
+// § 1254(a)(3) partnership/trust election with Treas. Reg.
+// § 1.1254-5 allocation. § 1254(b) carryover basis transferee
+// (§ 351/§ 721) tacks transferor periods. § 1254(c) definition:
+// § 1254 property = any § 614 property with § 611 depletion basis
+// adjustments. § 1254(d) partial disposition: entire § 1254 costs
+// allocable to disposed portion to extent of gain. Treas. Reg.
+// § 1.1254-2(b) nonproductive-well exception NOT recapturable
+// except limited-risk reimbursement situations. Trader-critical
+// for oil/gas LPs + MLPs, mining MLPs, mineral rights, working
+// interest, overriding royalty interest, net profits interest.
+// Sibling to § 1245 (personal property), § 1250 (real property),
+// § 1252 (farm land), § 1255 (§ 126 property) recapture.
+
+async fn section_1254_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1254::Section1254Input>,
+) -> Result<Json<traderview_expense::section_1254::Section1254Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1254::compute(&b)))
 }
 
 // ── §754 election + §743(b) inside basis adjustment ─────────────────
