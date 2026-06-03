@@ -222,6 +222,7 @@ pub mod rental_natural_gas_leak_response;
 pub mod rental_ny_rent_receipt_late_notice_requirements;
 pub mod rental_ny_rpl_235f_roommate_law;
 pub mod rental_nyc_childhood_lead_poisoning_prevention_act;
+pub mod rental_nyc_coop_conversion_eviction_protection;
 pub mod rental_nyc_local_law_55_ipm_pest_control;
 pub mod rental_nyc_loft_law_article_7c;
 pub mod rental_nyc_scrie_drie_rent_freeze;

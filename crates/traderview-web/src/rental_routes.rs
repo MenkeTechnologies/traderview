@@ -830,6 +830,11 @@ use traderview_expense::rental_nyc_local_law_55_ipm_pest_control::{
     RentalNycLocalLaw55IpmPestControlInput,
     RentalNycLocalLaw55IpmPestControlResult,
 };
+use traderview_expense::rental_nyc_coop_conversion_eviction_protection::{
+    check as check_rental_nyc_coop_conversion_eviction_protection,
+    RentalNycCoopConversionEvictionProtectionInput,
+    RentalNycCoopConversionEvictionProtectionResult,
+};
 use traderview_expense::rental_nyc_scrie_drie_rent_freeze::{
     check as check_rental_nyc_scrie_drie_rent_freeze,
     RentalNycScrieDrieRentFreezeInput,
@@ -1535,6 +1540,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-nyc-scrie-drie-rent-freeze", axum::routing::post(rental_nyc_scrie_drie_rent_freeze_route))
         .route("/rental-nyc-local-law-55-ipm-pest-control", axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route))
+        .route("/rental-nyc-coop-conversion-eviction-protection", axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
@@ -9643,6 +9649,48 @@ async fn rental_nyc_local_law_55_ipm_pest_control_route(
     Json(b): Json<RentalNycLocalLaw55IpmPestControlInput>,
 ) -> Result<Json<RentalNycLocalLaw55IpmPestControlResult>, ApiError> {
     Ok(Json(check_rental_nyc_local_law_55_ipm_pest_control(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_nyc_coop_conversion_eviction_protection: NYC GBL § 352-eeee
+// (Martin Act Article 23-A) Cooperative / Condominium Conversion
+// Eviction Protection. Governs conversion of NYC rental buildings to
+// cooperative or condominium ownership. Eviction Plan: cannot be
+// declared effective until 51% of bona fide tenants in occupancy
+// execute written purchase agreements; non-purchasing tenants
+// evictable at LATER of (a) lease expiration OR (b) 3 years after
+// plan declared effective. Non-Eviction Plan: 51% threshold for
+// large buildings (post-HSTPA 2019); 15% small-building exception
+// for 5-or-fewer-unit buildings where sponsor or immediate family
+// occupied a unit for 2+ years. Senior 62+/disabled permanent
+// eviction protection under GBL § 352-e(2-a) + § 352-eee + § 352-
+// eeee (holders of unsold shares + subsequent purchasers cannot
+// evict; owner-occupancy provisions inapplicable). Tenant rights:
+// 90-day exclusive purchase right after plan accepted for filing +
+// 6-month subsequent right of first refusal. Non-purchasing tenant
+// eviction PERMITTED ONLY for non-payment of rent, illegal use of
+// premises, or similar breaches; not for failure to purchase or
+// expiration of tenancy. Companion statute: GBL § 352-eeeee
+// (Westchester/Rockland/Nassau condominium conversions). NY S3758
+// + S4910 (2025-2026 session) pending amendments to expand
+// senior/disabled protections and adjust subscription thresholds.
+// Thirteen-mode severity ladder × four plan types × six tenant
+// categories × three building scenarios. Trader-landlord critical
+// because conversion plans involve per-unit purchase agreements,
+// permanent senior/disabled shields, 3-year grace period, and
+// 13 NYCRR Part 18 Attorney General Real Estate Finance Bureau
+// regulatory enforcement. Sibling cluster: condominium_conversion_
+// protection (multi-state pattern), rental_nyc_loft_law_article_7c
+// (iter 597 — IMD statutory tenant protection), rental_nyc_scrie_
+// drie_rent_freeze (NYC senior/disabled rent freeze).
+// ---------------------------------------------------------------------------
+
+async fn rental_nyc_coop_conversion_eviction_protection_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNycCoopConversionEvictionProtectionInput>,
+) -> Result<Json<RentalNycCoopConversionEvictionProtectionResult>, ApiError> {
+    Ok(Json(check_rental_nyc_coop_conversion_eviction_protection(&b)))
 }
 
 // ---------------------------------------------------------------------------
