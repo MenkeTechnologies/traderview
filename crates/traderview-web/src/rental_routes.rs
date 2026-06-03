@@ -735,6 +735,11 @@ use traderview_expense::rental_vacant_property_registration::{
     RentalVacantPropertyRegistrationInput,
     RentalVacantPropertyRegistrationResult,
 };
+use traderview_expense::rental_vawa_2022_federal_housing_protections::{
+    check as check_rental_vawa_2022_federal_housing_protections,
+    RentalVawa2022FederalHousingProtectionsInput,
+    RentalVawa2022FederalHousingProtectionsResult,
+};
 use traderview_expense::rental_unpermitted_unit_disclosure::{
     check as check_rental_unpermitted_unit_disclosure,
     RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
@@ -1645,6 +1650,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-vacant-property-registration", axum::routing::post(rental_vacant_property_registration_route))
+        .route("/rental-vawa-2022-federal-housing-protections", axum::routing::post(rental_vawa_2022_federal_housing_protections_route))
         .route("/rental-vehicle-towing-notice-sign-requirements", axum::routing::post(rental_vehicle_towing_notice_sign_requirements_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
@@ -8935,6 +8941,53 @@ async fn rental_vacant_property_registration_route(
     Json(b): Json<RentalVacantPropertyRegistrationInput>,
 ) -> Result<Json<RentalVacantPropertyRegistrationResult>, ApiError> {
     Ok(Json(check_rental_vacant_property_registration(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_vawa_2022_federal_housing_protections: Violence Against
+// Women Act Reauthorization Act of 2022 (Public Law 117-103; signed
+// by President Biden on March 15, 2022); housing rights subpart
+// effective October 1, 2022; codified at 34 U.S.C. § 12491. HUD
+// Federal Register Notice January 4, 2023 (88 FR 482). Applies to
+// 16+ federally-assisted housing programs: Public Housing; Section 8
+// HCV (tenant-based); Section 8 PBRA; Section 8 Moderate
+// Rehabilitation; Section 202 Supportive Housing Elderly; Section
+// 811 Supportive Housing Disabled; HOPWA; HOME; CoC; ESG; McKinney-
+// Vento Title IV; LIHTC (IRC § 42); USDA Rural Development; Section
+// 221(d)(3) BMIR; Section 236; Section 1437f. Anti-discrimination
+// (34 USC § 12491(b)(1)): applicant or tenant may not be denied
+// admission, denied assistance, terminated, or evicted because of
+// victim status of DV/dating violence/SA/stalking. Lease bifurcation
+// (34 USC § 12491(b)(3)): PHA/owner/manager may bifurcate lease to
+// evict perpetrator who engaged in criminal activity directly
+// relating to DV/DV/SA/stalking against affiliated individual or
+// other individual, without evicting victim who is also tenant or
+// lawful occupant. Documentation (34 USC § 12491(c)(3)): victim may
+// submit HUD Form 5382 self-certification, police/court record,
+// victim service provider/attorney/medical statement, or other
+// evidence. Confidentiality (34 USC § 12491(c)(4)). Emergency
+// transfer plan (34 USC § 12491(e)). HUD Form 5380 VAWA notice
+// required at admission, denial, or termination. HUD Form 5382
+// victim certification. Thirteen-mode severity ladder × seventeen
+// covered housing programs × five victim documentation types ×
+// seven landlord actions × three victim bifurcation statuses.
+// Trader-landlord critical for federally-assisted housing portfolio
+// operators across 16+ HUD/USDA/LIHTC programs; distinct federal
+// floor on top of state-law DV protections. Sibling cluster:
+// rental_domestic_violence_lock_change_lease_termination (state-law
+// DV companion), tenant_domestic_violence_lease_termination,
+// dv_termination, rental_hud_hotma_income_asset_compliance (iter
+// 653 — HUD program companion), rental_source_of_income_
+// discrimination (Section 8 voucher cross-reference), rental_just_
+// cause_eviction (Section 8 just-cause overlay).
+// ---------------------------------------------------------------------------
+
+async fn rental_vawa_2022_federal_housing_protections_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalVawa2022FederalHousingProtectionsInput>,
+) -> Result<Json<RentalVawa2022FederalHousingProtectionsResult>, ApiError> {
+    Ok(Json(check_rental_vawa_2022_federal_housing_protections(&b)))
 }
 
 // ---------------------------------------------------------------------------
