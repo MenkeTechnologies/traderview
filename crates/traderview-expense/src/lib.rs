@@ -218,6 +218,7 @@ pub mod rental_short_term_subletting_airbnb_restriction;
 pub mod rental_sinkhole_disclosure;
 pub mod rental_smoke_free_housing_disclosure;
 pub mod rental_solar_panel_disclosure;
+pub mod rental_source_of_income_discrimination;
 pub mod rental_storage_unit_lease_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_tenant_criminal_background_screening;

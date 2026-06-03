@@ -821,6 +821,11 @@ use traderview_expense::rental_tenant_criminal_background_screening::{
     RentalTenantCriminalBackgroundScreeningInput,
     RentalTenantCriminalBackgroundScreeningResult,
 };
+use traderview_expense::rental_source_of_income_discrimination::{
+    check as check_rental_source_of_income_discrimination,
+    RentalSourceOfIncomeDiscriminationInput,
+    RentalSourceOfIncomeDiscriminationResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1302,6 +1307,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-security-deposit-return-notice", axum::routing::post(rental_security_deposit_return_notice_route))
         .route("/rental-late-fee-cap", axum::routing::post(rental_late_fee_cap_route))
         .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
+        .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11270,4 +11276,58 @@ async fn rental_tenant_criminal_background_screening_route(
     Json(b): Json<RentalTenantCriminalBackgroundScreeningInput>,
 ) -> Result<Json<RentalTenantCriminalBackgroundScreeningResult>, ApiError> {
     Ok(Json(check_rental_tenant_criminal_background_screening(&b)))
+}
+
+// ── /rental-source-of-income-discrimination (iter 541) ──────────────────────
+// POST endpoint for source-of-income (SOI) discrimination compliance across
+// nine jurisdictions. SOI prohibitions make it unlawful for housing
+// providers to refuse to rent, set different terms, or otherwise
+// discriminate against applicants based on their lawful source of income
+// — including Section 8 Housing Choice Vouchers under 42 U.S.C. § 1437f,
+// VASH vouchers, SSI, TANF, Social Security, public assistance, and
+// similar federal/state/local rental subsidies. 23 states + DC + 100+
+// municipalities prohibit SOI discrimination by statute or ordinance,
+// but the federal Fair Housing Act (42 U.S.C. § 3601 et seq.) does NOT
+// explicitly include SOI as a protected class.
+//
+// CA SB 329 (Cal. Gov. Code §§ 12921 + 12955; eff. Jan 1, 2020): SOI
+// explicit protected class.
+//
+// NY State Human Rights Law (NY Exec. Law § 296(2-a)) + NYC HRL (NYC
+// Admin. Code § 8-107(5)): SOI explicit protected class; effective
+// April 12, 2019.
+//
+// NJ LAD (N.J.S.A. 10:5-12.5; 2026 amendments): SOI protected;
+// landlords prohibited from applying minimum-income requirements not
+// based exclusively on tenant's portion of rent.
+//
+// WA RCW 59.18.255 (HB 2578; eff. Sept 30, 2018): voucher-participation
+// protected class; landlord must deduct voucher amount from rent when
+// applying rent-to-income screening ratios.
+//
+// MA Gen. L. ch. 151B § 4(10) + 4(11): SOI protected including Section 8.
+//
+// IL statewide silent; Chicago Fair Housing Ordinance + Cook County
+// Human Rights Ordinance + Urbana prohibit SOI by ordinance.
+//
+// Federal Fair Housing Act floor: voluntary for landlords absent
+// state/local SOI law; racially-disparate refusal still creates 42
+// U.S.C. § 3604 disparate-impact liability per Texas Dept. of Housing
+// v. Inclusive Communities Project, 576 U.S. 519 (2015).
+//
+// Eight-mode severity ladder: NotApplicable,
+// EmploymentOnlyIncomeNoSoiAnalysisTriggered,
+// CompliantSoiAcceptanceWithTenantPortionScreening,
+// IllinoisStatewideNoStateCoverageNoSoiClaim,
+// FederalFhaDisparateImpactAvailable,
+// StateSoiStatuteViolationActualAndPunitiveDamages,
+// NjLadMinimumIncomeRuleViolationTenantPortionOnly,
+// WashingtonRcw59_18_255VoucherDeductionFailureViolation.
+
+async fn rental_source_of_income_discrimination_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSourceOfIncomeDiscriminationInput>,
+) -> Result<Json<RentalSourceOfIncomeDiscriminationResult>, ApiError> {
+    Ok(Json(check_rental_source_of_income_discrimination(&b)))
 }
