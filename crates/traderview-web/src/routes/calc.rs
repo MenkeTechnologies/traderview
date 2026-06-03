@@ -368,6 +368,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-108",           post(section_108_route))
         .route("/calc/section-104",           post(section_104_route))
+        .route("/calc/section-1012",          post(section_1012_route))
         .route("/calc/section-1014",          post(section_1014_route))
         .route("/calc/section-1014e",         post(section_1014e_route))
         .route("/calc/section-1015",          post(section_1015_route))
@@ -2486,6 +2487,60 @@ async fn section_104_route(
         ));
     }
     Ok(Json(traderview_expense::section_104::compute(&b)))
+}
+
+// ── §1012 cost basis general rule + identification methods ──────
+// Mounted at /api/calc/section-1012. § 1012 is the foundational
+// basis-tracking provision that every trader uses to compute gain
+// or loss on disposition of stock, mutual fund shares, debt
+// instruments, and options. § 1012(a) general rule: basis = cost
+// of property, except as overridden by subchapter C (corporate
+// distributions), K (partners and partnerships), or P (capital
+// gains and losses), or by § 1014 stepped-up basis at death,
+// § 1015 basis of gifts, § 1031 like-kind exchange, etc.
+// § 1012(b) real property taxes treated as imposed on taxpayer
+// under § 164(d) must be excluded from cost. § 1012(c)(1) account-
+// by-account basis tracking for specified securities sold after
+// applicable dates (multi-account aggregation prohibited).
+// § 1012(c)(2) average cost method for RIC mutual fund shares
+// (average cost single category ACSC = total cost / total shares).
+// § 1012(c)(3) pre-2012 / post-2012 RIC stock treated as separate
+// accounts (bifurcation prevents post-2012 basis-method election
+// from affecting pre-2012 non-covered shares). § 1012(d) dividend
+// reinvestment plan stock acquired after December 31, 2011 uses
+// one of the RIC basis methods (typically average cost). Treas.
+// Reg. § 1.1012-1(c) specific identification requires (1) at-time-
+// of-sale designation to broker / transfer agent AND (2) written
+// confirmation within reasonable time; failure causes FIFO default
+// per Treas. Reg. § 1.1012-1(c)(1). LIFO NOT permitted for stock
+// or securities under § 1012; LIFO allowed only for inventory under
+// § 471 / § 472. Cost basis reporting reform (Energy Improvement
+// and Extension Act of 2008; Public Law 110-343): phased-in broker
+// 1099-B reporting — stock acquired on or after January 1, 2011;
+// mutual fund / DRIP stock acquired on or after January 1, 2012;
+// debt instruments and options acquired on or after January 1,
+// 2014; pre-effective-date holdings are "non-covered" and taxpayer
+// bears basis-tracking burden. Treas. Reg. § 1.1012-1(e) wash sale
+// basis adjustment: § 1091(d) disallowed loss added to replacement
+// security basis; holding period of replacement tacks onto
+// original. 15-mode severity ladder × 9 property types × 5 basis
+// method elections × 6 acquisition date statuses × 8 compliance
+// aspects × variable specific-identification / written-confirmation
+// / pre/post-2012 separation / wash-sale flags. Sibling cluster:
+// section_1001 (gain or loss = amount realized − adjusted basis),
+// section_1011 (adjusted basis for determining gain or loss),
+// section_1014 (stepped-up basis at death), section_1015 (basis of
+// gifts), section_1031 (like-kind exchange basis carryover),
+// section_1091 (wash sale basis adjustment under § 1091(d)),
+// section_1295 (PFIC qualified electing fund), section_164 (real
+// property tax allocation under § 164(d)), section_471 / section_
+// 472 (inventory methods including LIFO).
+
+async fn section_1012_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1012::Section1012Input>,
+) -> Result<Json<traderview_expense::section_1012::Section1012Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1012::compute(&b)))
 }
 
 // ── §1014 stepped-up basis at death ──────────────────────────────────
