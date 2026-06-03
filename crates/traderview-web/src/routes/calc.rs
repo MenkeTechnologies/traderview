@@ -285,6 +285,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-734",           post(section_734_route))
         .route("/calc/section-736",           post(section_736_route))
         .route("/calc/section-737",           post(section_737_route))
+        .route("/calc/section-741",           post(section_741_route))
         .route("/calc/section-743",           post(section_743_route))
         .route("/calc/section-751",           post(section_751_route))
         .route("/calc/section-752",           post(section_752_route))
@@ -2863,6 +2864,30 @@ async fn section_737_route(
     Json(b): Json<traderview_expense::section_737::Section737Input>,
 ) -> Result<Json<traderview_expense::section_737::Section737Output>, ApiError> {
     Ok(Json(traderview_expense::section_737::check(&b)))
+}
+
+// ── § 741 sale or exchange of partnership interest ───────────────
+// Mounted at /api/calc/section-741. Capital character default for
+// partnership-interest sales. Three-step computation: (1) amount
+// realized = cash + FMV property + liability relief (§ 752(d)
+// deemed distribution); (2) adjusted basis = outside basis under
+// § 705; (3) gain/loss = amount realized − adjusted basis. Holding
+// period > 1 year (366+ days) qualifies for § 1(h) preferred 0/15/
+// 20% long-term rates; ≤ 1 year is short-term at ordinary rates up
+// to 37%. § 751(a) override: portion attributable to unrealized
+// receivables (§ 751(c)) + inventory items (§ 751(d)) is ordinary
+// character; remainder is § 741 capital. Sibling cluster: § 705
+// (outside basis), § 706(c)(2) (partnership year closes on entire-
+// interest sale triggering § 741), § 736 (distinguish redemption
+// from sale), § 743 (transferee basis adjustment downstream),
+// § 751 (hot assets carve-out), § 752(d) (liability relief deemed
+// distribution), § 1223 (holding period), § 1(h) (LTCG rates).
+
+async fn section_741_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_741::Section741Input>,
+) -> Result<Json<traderview_expense::section_741::Section741Output>, ApiError> {
+    Ok(Json(traderview_expense::section_741::check(&b)))
 }
 
 // ── § 736 retiring/deceased partner payment characterization ─────
