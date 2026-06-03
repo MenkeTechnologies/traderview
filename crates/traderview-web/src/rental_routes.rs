@@ -591,6 +591,11 @@ use traderview_expense::landlord_post_eviction_tenant_property_storage_disposal:
     LandlordPostEvictionTenantPropertyStorageDisposalInput,
     LandlordPostEvictionTenantPropertyStorageDisposalResult,
 };
+use traderview_expense::rental_asbestos_disclosure::{
+    check as check_rental_asbestos_disclosure,
+    RentalAsbestosDisclosureInput,
+    RentalAsbestosDisclosureResult,
+};
 use traderview_expense::rental_application_denial_disclosure::{
     check as check_rental_application_denial_disclosure,
     RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
@@ -1494,6 +1499,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-post-eviction-tenant-property-storage-disposal", axum::routing::post(landlord_post_eviction_tenant_property_storage_disposal_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
+        .route("/rental-asbestos-disclosure", axum::routing::post(rental_asbestos_disclosure_route))
         .route("/rental-basement-water-intrusion-disclosure", axum::routing::post(rental_basement_water_intrusion_disclosure_route))
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
@@ -8071,6 +8077,37 @@ async fn rental_application_denial_disclosure_route(
     Json(b): Json<RentalApplicationDenialDisclosureInput>,
 ) -> Result<Json<RentalApplicationDenialDisclosureResult>, ApiError> {
     Ok(Json(check_rental_application_denial_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_asbestos_disclosure: multi-state residential asbestos
+// disclosure compliance. California Connelly Act (AB 3713 of 1988;
+// Cal H&S Code §§ 25915-25919.7) requires owner of pre-1979
+// building with KNOWN asbestos-containing materials and > 10
+// employees to provide notice to employees AND occupants (AB 1992
+// of 1990 extension); notice must include ACM survey + specific
+// locations + handling procedures. Federal AHERA (15 USC
+// §§ 2641-2656, 1986) applies only to K-12 schools — NOT
+// residential. Federal NESHAP (40 CFR Part 61 Subpart M) demolition/
+// renovation friable asbestos. Federal OSHA 29 CFR 1910.1001
+// (general industry) + 29 CFR 1926.1101 (construction) worker
+// protection. Cal/OSHA Title 8 § 1529. Massachusetts G.L. c. 149
+// § 6F + § 6F-1/2. New York Industrial Code Rule 56. Common law
+// landlord disclosure duty + warranty of habitability requires
+// disclosure of known material defects including asbestos.
+// Eleven-mode severity ladder × four jurisdictions × three
+// building age categories × four owner knowledge states. Trader-
+// landlord critical for pre-1981 housing stock common across
+// portfolios; non-disclosure exposure under fraud +
+// misrepresentation framework substantial.
+// ---------------------------------------------------------------------------
+
+async fn rental_asbestos_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalAsbestosDisclosureInput>,
+) -> Result<Json<RentalAsbestosDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_asbestos_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
