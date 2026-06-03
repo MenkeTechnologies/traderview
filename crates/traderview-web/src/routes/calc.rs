@@ -218,6 +218,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-451b",          post(section_451b_route))
+        .route("/calc/section-1031",          post(section_1031_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-1033",          post(section_1033_route))
         .route("/calc/section-481",           post(section_481_route))
@@ -4480,6 +4481,29 @@ async fn section_530_route(
 // Mounted at /api/calc/section-1031-f. Pure compute; evaluates whether
 // a subsequent disposition of property received in a related-party
 // §1031 exchange triggers retroactive gain recognition.
+
+// ── § 1031 like-kind exchanges of real property ─────────────────
+// Mounted at /api/calc/section-1031. § 1031(a)(1) general nonrecognition
+// rule for real property held for productive use in trade/business or
+// investment. § 1031(a)(2) post-TCJA exclusions: personal property,
+// stocks/bonds/notes, partnership interests, certificates of trust,
+// choses in action, inventory, foreign real property. § 1031(a)(3)
+// deferred exchange — 45-day identification + 180-day exchange period.
+// § 1031(b) boot gain recognition. § 1031(c) loss not recognized.
+// § 1031(d) basis in replacement. § 1031(f) related party 2-year hold
+// (separate iter 1031f module). Treas. Reg. § 1.1031(k)-1(c)(4)
+// identification rules (3-property + 200% + 95% acquired). Treas. Reg.
+// § 1.1031(k)-1(g)(4) qualified intermediary safe harbor. Treas. Reg.
+// § 1.1031(k)-1(c)(5) 15% incidental personal property test. T.D.
+// 9935 (Nov 2020) defines real property post-TCJA. TCJA 2017
+// (Pub. L. 115-97 § 13303) limited § 1031 to real property only.
+
+async fn section_1031_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1031::Section1031Input>,
+) -> Result<Json<traderview_expense::section_1031::Section1031Output>, ApiError> {
+    Ok(Json(traderview_expense::section_1031::check(&b)))
+}
 
 async fn section_1031_f_route(
     _u: AuthUser,
