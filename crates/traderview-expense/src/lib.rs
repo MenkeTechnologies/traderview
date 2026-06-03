@@ -209,6 +209,7 @@ pub mod rental_radon_mitigation_disclosure;
 pub mod rental_retaliation_prohibition;
 pub mod rental_satellite_dish_installation_right;
 pub mod rental_security_deposit_interest;
+pub mod rental_security_deposit_return_notice;
 pub mod rental_septic_system_disclosure;
 pub mod rental_sewer_lateral_responsibility;
 pub mod rental_sex_offender_registry_notice;

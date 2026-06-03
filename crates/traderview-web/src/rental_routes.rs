@@ -806,6 +806,11 @@ use traderview_expense::rental_landlord_notice_to_enter::{
     RentalLandlordNoticeToEnterInput,
     RentalLandlordNoticeToEnterResult,
 };
+use traderview_expense::rental_security_deposit_return_notice::{
+    check as check_rental_security_deposit_return_notice,
+    RentalSecurityDepositReturnNoticeInput,
+    RentalSecurityDepositReturnNoticeResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1284,6 +1289,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-illegal-lockout-self-help-eviction", axum::routing::post(rental_illegal_lockout_self_help_eviction_route))
         .route("/rental-retaliation-prohibition", axum::routing::post(rental_retaliation_prohibition_route))
         .route("/rental-landlord-notice-to-enter", axum::routing::post(rental_landlord_notice_to_enter_route))
+        .route("/rental-security-deposit-return-notice", axum::routing::post(rental_security_deposit_return_notice_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11103,4 +11109,53 @@ async fn rental_landlord_notice_to_enter_route(
     Json(b): Json<RentalLandlordNoticeToEnterInput>,
 ) -> Result<Json<RentalLandlordNoticeToEnterResult>, ApiError> {
     Ok(Json(check_rental_landlord_notice_to_enter(&b)))
+}
+
+// ── /rental-security-deposit-return-notice (iter 535) ───────────────────────
+// POST endpoint for security-deposit return notice + itemized-deduction
+// compliance framework across nine jurisdictions. Every US state with a
+// residential tenancy code imposes a statutory deadline for returning a
+// tenant's security deposit after move-out and requires an itemized
+// written statement of any deductions claimed. Failure to comply forfeits
+// the landlord's right to retain any portion of the deposit and exposes
+// the landlord to multiplied damages (2× to 3× the deposit) plus attorney
+// fees in many jurisdictions.
+//
+// CA Civ. Code § 1950.5(g): 21 calendar days + itemized statement +
+// receipts for deductions ≥ $125; § 1950.5(l) bad-faith retention 2×
+// deposit + actual damages + attorney fees.
+//
+// NY Gen. Oblig. Law § 7-108(1-a)(e): 14 days + itemized deduction list;
+// failure forfeits retention right + 2× damages.
+//
+// WA RCW 59.18.280: 30 days (extended from 21 days) + full itemized
+// statement + documentation.
+//
+// TX Prop. Code § 92.103: 30 days + itemized written description; § 92.109
+// bad-faith retention = $100 + 3× wrongfully withheld + attorney fees.
+//
+// FL Stat. § 83.49(3)(a): 15 days (no claim) or 30 days (with claim by
+// CERTIFIED-MAIL notice + itemized statement). First-class mail of
+// deduction claim fails Florida's specific method requirement.
+//
+// IL Chicago RLTO § 5-12-080: 45 days + 2× deposit + attorney fees for
+// violation. IL statewide (765 ILCS 710/1): 30 days for buildings with 5+
+// units.
+//
+// MA Gen. L. ch. 186 § 15B(4)(iii): 30 days + sworn statement + interest;
+// § 15B(7) bad-faith retention = 3× deposit + interest + attorney fees.
+//
+// Seven-mode severity ladder: NotApplicable,
+// CompliantWithinStatutoryWindow, CompliantNoDeductionsFullReturn,
+// LateButReturnedRiskOfForfeitureOnly,
+// DeductionsWithoutItemizedStatementForfeitsRetentionRight,
+// BadFaithRetentionDoubleOrTripleDamages,
+// NoDeliveryFullForfeitureAndStatutoryDamages.
+
+async fn rental_security_deposit_return_notice_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSecurityDepositReturnNoticeInput>,
+) -> Result<Json<RentalSecurityDepositReturnNoticeResult>, ApiError> {
+    Ok(Json(check_rental_security_deposit_return_notice(&b)))
 }
