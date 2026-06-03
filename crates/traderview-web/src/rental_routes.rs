@@ -820,6 +820,11 @@ use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
     NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
     NycChildhoodLeadPoisoningPreventionActResult as RentalNycChildhoodLeadPoisoningPreventionActResult,
 };
+use traderview_expense::rental_nyc_scrie_drie_rent_freeze::{
+    check as check_rental_nyc_scrie_drie_rent_freeze,
+    RentalNycScrieDrieRentFreezeInput,
+    RentalNycScrieDrieRentFreezeResult,
+};
 use traderview_expense::rental_nyc_loft_law_article_7c::{
     check as check_rental_nyc_loft_law_article_7c,
     NycLoftLawArticle7CInput as RentalNycLoftLawArticle7CInput,
@@ -1502,6 +1507,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-attorney-fee-clause-reciprocity", axum::routing::post(rental_attorney_fee_clause_reciprocity_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
+        .route("/rental-nyc-scrie-drie-rent-freeze", axum::routing::post(rental_nyc_scrie_drie_rent_freeze_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
@@ -9518,6 +9524,37 @@ async fn rental_nyc_loft_law_article_7c_route(
     Json(b): Json<RentalNycLoftLawArticle7CInput>,
 ) -> Result<Json<RentalNycLoftLawArticle7CResult>, ApiError> {
     Ok(Json(check_rental_nyc_loft_law_article_7c(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_nyc_scrie_drie_rent_freeze: NYC Senior Citizen Rent
+// Increase Exemption (SCRIE; NYC Admin Code § 26-509 / Local Law 6
+// of 1986) + Disability Rent Increase Exemption (DRIE; NYC Admin
+// Code § 26-509.1 / Local Law 76 of 2005). Both programs
+// PERMANENTLY FREEZE tenant rent at prior level; every future RGB
+// increase credited back to landlord as property tax abatement on
+// DOF Form RP-467-C. SCRIE: tenant 62+; rent-regulated unit (rent-
+// stabilized / rent-controlled / Mitchell-Lama / HDFC co-op);
+// household income ≤ $50,000 (2025); rent burden > 1/3 monthly
+// income. DRIE: tenant 18+ with SSI / SSDI / VA disability
+// compensation / Medicaid-based-on-disability determination; same
+// $50,000 income cap; same > 1/3 rent burden. Renewal every 24
+// months; DOF mails 60-day notice. NY Senate S01457 (2025-2026)
+// proposes raising income limit to $75,000 for 2026. Fourteen-
+// mode severity ladder × two programs × five regulated unit types
+// × five federal disability benefits. Trader-landlord critical
+// because SCRIE/DRIE-frozen units create NYC-only property-tax-
+// abatement revenue stream that must be properly applied and
+// reported; failure to honor freeze creates statutory violations
+// and clawback exposure.
+// ---------------------------------------------------------------------------
+
+async fn rental_nyc_scrie_drie_rent_freeze_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNycScrieDrieRentFreezeInput>,
+) -> Result<Json<RentalNycScrieDrieRentFreezeResult>, ApiError> {
+    Ok(Json(check_rental_nyc_scrie_drie_rent_freeze(&b)))
 }
 
 // ---------------------------------------------------------------------------
