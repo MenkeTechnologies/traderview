@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-671",           post(section_671_route))
+        .route("/calc/section-677",           post(section_677_route))
         .route("/calc/section-678",           post(section_678_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
@@ -5590,6 +5591,39 @@ async fn section_671_route(
     Json(b): Json<traderview_expense::section_671::Section671Input>,
 ) -> Result<Json<traderview_expense::section_671::Section671Result>, ApiError> {
     Ok(Json(traderview_expense::section_671::compute(&b)))
+}
+
+// ── §677 income for benefit of grantor / spouse ───────────────────────
+// Mounted at /api/calc/section-677. § 677(a) third grantor-trust rule
+// after § 673 (reversionary), § 674 (beneficial enjoyment), § 675
+// (administrative powers), and § 676 (power to revoke); precedes § 678
+// (person other than grantor; built in iter 640). § 677(a)(1) grantor
+// treated as owner if income is or may be distributed to grantor or
+// grantor's spouse; § 677(a)(2) same for income held or accumulated
+// for future distribution to grantor or spouse; § 677(a)(3) same for
+// income applied to payment of premiums on policies of insurance on
+// life of grantor or spouse — except policies irrevocably payable for
+// charitable purposes under § 170(c). § 677(a) spouse rule applies
+// only to property transferred in trust after October 9, 1969 and
+// only during period of marriage of grantor to beneficiary spouse —
+// "§ 677 The Ghost That Haunts the Divorced Grantor" (Higgs Fletcher
+// & Mack ABA 2021-09-23 presentation). § 677(b) discharge of legal
+// obligation — grantor treated as owner whose income may be applied
+// in discharge of legal obligation of grantor or spouse (includes
+// state-law support obligations for minor children). § 672(e)
+// (enacted 1986) — grantor treated as holding any power or interest
+// held by spouse at time of creation; spouse is NEVER adverse for
+// § 677 purposes. ILIT (Irrevocable Life Insurance Trust) discretion
+// to pay premium alone creates § 677(a)(3) trigger under "may be"
+// standard. 26 CFR § 1.677(a)-1 + § 1.677(b)-1 implementing regs.
+// Grantor reports trust income on Form 1040 via § 671 flow-through;
+// trust files Form 1041 with grantor-trust statement attached.
+
+async fn section_677_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_677::Section677Input>,
+) -> Result<Json<traderview_expense::section_677::Section677Result>, ApiError> {
+    Ok(Json(traderview_expense::section_677::compute(&b)))
 }
 
 // ── §678 person other than grantor as owner / BDIT foundation ─────────
