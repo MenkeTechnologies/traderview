@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-245a",          post(section_245a_route))
+        .route("/calc/section-246",           post(section_246_route))
         .route("/calc/section-246a",          post(section_246a_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-56a",           post(section_56a_route))
@@ -4344,6 +4345,52 @@ async fn section_245a_route(
     Json(b): Json<traderview_expense::section_245a::Section245aInput>,
 ) -> Result<Json<traderview_expense::section_245a::Section245aResult>, ApiError> {
     Ok(Json(traderview_expense::section_245a::check(&b)))
+}
+
+// ── § 246 General Rules for DRD ──────────────────────────────────────
+// Mounted at /api/calc/section-246 (iter 548). Pure compute. § 246 sets
+// out the general limitations on the dividends-received deduction (DRD)
+// claimable under § 243 + § 245(a) + § 245A + (indirectly) § 246A.
+// Three core limitations:
+//
+// § 246(c) HOLDING PERIOD: common stock must be held for MORE THAN 45
+// days during the 91-day testing window beginning 45 days before the
+// ex-dividend date. Preferred stock with dividends for periods
+// EXCEEDING 366 days must be held for MORE THAN 90 days during the
+// 181-day testing window. § 246(c)(4) tolling: days with substantially
+// diminished risk of loss (short sale, equity put, contractual hedge)
+// do NOT count toward the holding period.
+//
+// § 246(b) TAXABLE-INCOME CAP: DRD limited to 50% / 65% / 100% of
+// taxable income before DRD, matching the § 243 ownership-tier DRD
+// percentage. § 246(b)(2) NOL exception: cap inapplicable if it would
+// create or increase a net operating loss; resulting NOL becomes
+// subject to § 172 carryforward rules.
+//
+// § 246(a) DRD EXCLUSIONS: no DRD for dividends from (1) § 501 / § 521
+// tax-exempt corps, (2) non-qualified RIC distributions (not § 854
+// pass-through), (3) non-capital-gain REIT distributions, (4) § 901(j)
+// sanctioned-country foreign corps, (5) debt-financed portfolio stock
+// under § 246A.
+//
+// Six-mode severity ladder: NotApplicable,
+// Section246AHoldingPeriodFailedDrdFullyDisallowed,
+// Section246AExcludedIssuerDrdDenied,
+// Section246BTaxableIncomeCapAppliedReducedDrd,
+// Section246BTwoNolExceptionFullDrdPreserved,
+// FullDrdAllowedHoldingPeriodAndCapsMet.
+//
+// Coordinates with § 243 (50% / 65% / 100% DRD by ownership tier),
+// § 245(a) US-source-portion DRD on foreign-corp dividends, § 245A
+// 100% participation DRD, § 246A (iter 530) debt-financed portfolio
+// stock DRD reduction, § 854 RIC pass-through framework, § 172 NOL
+// carryover, § 901(j) sanctioned-country denial.
+
+async fn section_246_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_246::Section246DividendsReceivedDeductionLimitsInput>,
+) -> Result<Json<traderview_expense::section_246::Section246DividendsReceivedDeductionLimitsOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_246::check(&b)))
 }
 
 // ── § 246A DRD Reduction for Debt-Financed Portfolio Stock ──────────
