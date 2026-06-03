@@ -154,6 +154,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
+        .route("/calc/section-302",           post(section_302_route))
         .route("/calc/section-304",           post(section_304_route))
         .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-311",           post(section_311_route))
@@ -6252,6 +6253,55 @@ async fn section_305_route(
     Json(b): Json<traderview_expense::section_305::Section305Input>,
 ) -> Result<Json<traderview_expense::section_305::Section305Result>, ApiError> {
     Ok(Json(traderview_expense::section_305::compute(&b)))
+}
+
+// ── § 302 Distributions in Redemption of Stock ──────────────────────
+// Mounted at /api/calc/section-302 (iter 556). Pure compute. § 302
+// determines whether a corporation's redemption of its own stock is
+// treated as a § 1001 SALE OR EXCHANGE (capital gain or loss) or as a
+// § 301 DISTRIBUTION (ordinary dividend up to E&P + basis recovery
+// + capital gain on excess). Four § 302(b) tests:
+//
+// § 302(b)(1) not essentially equivalent to a dividend (Davis NEED-test):
+// facts-and-circumstances meaningful-reduction analysis.
+//
+// § 302(b)(2) substantially disproportionate (mechanical 50/80): post-
+// redemption voting < 50% AND post-redemption interest < 80% of
+// pre-redemption interest (both voting and combined voting/non-voting).
+//
+// § 302(b)(3) complete termination: redemption terminates ALL
+// shareholder interest. § 302(c)(2) family-attribution WAIVER available
+// if (A) no interest other than creditor immediately after, (B) no
+// reacquisition within 10 years (other than bequest/inheritance), and
+// (C) signed IRS notification agreement filed.
+//
+// § 302(b)(4) partial liquidation (non-corporate shareholder): § 302(e)
+// requires 5+ years of active trade or business + distribution of
+// discontinued segment proceeds.
+//
+// § 302(c)(1): § 318(a) attribution rules apply to determine ownership.
+// § 302(d): redemption defaults to § 301 distribution if all § 302(b)
+// tests fail.
+//
+// Six-mode severity ladder: NotApplicable,
+// Section302BTestSatisfiedSaleOrExchangeTreatment,
+// Section302B2SubstantiallyDisproportionate50_80TestFailed,
+// Section302B3CompleteTerminationWithAttributionWaiver,
+// Section302B3CompleteTerminationAttributionDefeatsFailedWaiver,
+// Section302DDefaultDistributionTreatmentSection301.
+//
+// Coordinates with § 318 (iter 552 — constructive ownership engine),
+// § 304 (iter 554 — related-corp redemption recharacterization),
+// § 311 (iter 550 — corp-level recognition on distribution), § 312
+// E&P computation, § 1001 + § 1222 capital-gain treatment, § 1(h)(11)
+// qualified-dividend rate, § 331 corporate-liquidation regime, § 332
+// parent-sub liquidation.
+
+async fn section_302_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_302::Section302RedemptionTestInput>,
+) -> Result<Json<traderview_expense::section_302::Section302RedemptionTestOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_302::check(&b)))
 }
 
 // ── § 304 Redemption Through Use of Related Corporations ────────────
