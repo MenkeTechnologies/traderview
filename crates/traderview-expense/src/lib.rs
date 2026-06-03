@@ -482,6 +482,7 @@ pub mod section_704c;
 pub mod section_709;
 pub mod section_721;
 pub mod section_731;
+pub mod section_751;
 pub mod section_752;
 pub mod section_704d;
 pub mod section_754;

@@ -279,6 +279,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-704c",          post(section_704c_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
+        .route("/calc/section-751",           post(section_751_route))
         .route("/calc/section-752",           post(section_752_route))
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
@@ -2571,6 +2572,32 @@ async fn section_731_route(
 // nonrecourse profit share. TD 10014 (December 2, 2024) final
 // recourse regulations. Sibling cluster: § 721 + § 731 + § 704(b)
 // + § 704(c) + § 704(d) + § 705.
+
+// ── § 751 hot assets recharacterization ──────────────────────────
+// Mounted at /api/calc/section-751. § 751 overrides Subchapter K
+// capital-character default in two scenarios: (1) § 751(a) sale or
+// exchange of partnership interest — bifurcate amount realized into
+// ordinary income (partner's share of unrealized receivables +
+// inventory items) + § 741 capital remainder; ALL inventory is hot
+// regardless of appreciation. (2) § 751(b) disproportionate
+// distribution — recast as deemed sale/exchange between distributee
+// and partnership when distribution alters partner's share of
+// unrealized receivables or SUBSTANTIALLY APPRECIATED inventory items
+// (FMV > 120% of adjusted basis per § 751(b)(3)(A)). Unrealized
+// receivables (§ 751(c)) include § 1245/§ 1250/§ 1252/§ 1254
+// recapture potential. Inventory items (§ 751(d)) include partnership
+// inventory + property held primarily for sale to customers. Sibling
+// cluster: § 741 (capital character default), § 731 (distribution
+// nonrecognition), § 752 (liabilities), § 754 (basis adjustment
+// election), § 743 (transferee basis adjustment under § 754),
+// § 734 (transferor basis adjustment under § 754).
+
+async fn section_751_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_751::Section751Input>,
+) -> Result<Json<traderview_expense::section_751::Section751Output>, ApiError> {
+    Ok(Json(traderview_expense::section_751::check(&b)))
+}
 
 async fn section_752_route(
     _u: AuthUser,
