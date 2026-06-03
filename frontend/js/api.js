@@ -120,6 +120,18 @@ const qs = (obj) => {
     return parts.length ? '?' + parts.join('&') : '';
 };
 
+/**
+ * Normalize report-query args. Each report endpoint accepts the same
+ * filter shape; we want callers to pass either a numeric days value
+ * (legacy 30/60/90 toggle) or a filter object. Returns a plain object
+ * ready to feed into qs().
+ */
+const rq = (account_id, f) => {
+    if (f == null) return { account_id };
+    if (typeof f === 'number') return { account_id, days: f };
+    return { account_id, ...f };
+};
+
 export class ApiError extends Error {
     constructor(status, msg) { super(msg); this.status = status; }
 }
@@ -215,32 +227,39 @@ export const api = {
         request(`/accounts/${account_id}/rebuild-trades`, { method: 'POST' }),
 
     // reports
-    overview: (account_id) => request(`/reports/overview?account_id=${account_id}`),
-    bySymbol: (account_id) => request(`/reports/by-symbol?account_id=${account_id}`),
-    bySide: (account_id) => request(`/reports/by-side?account_id=${account_id}`),
-    byAssetClass: (account_id) => request(`/reports/by-asset-class?account_id=${account_id}`),
-    byDow: (account_id, days) => request(`/reports/by-day-of-week${qs({ account_id, days })}`),
-    byHour: (account_id, days) => request(`/reports/by-hour${qs({ account_id, days })}`),
-    byHold: (account_id, days) => request(`/reports/by-hold${qs({ account_id, days })}`),
-    byMonth: (account_id, days) => request(`/reports/by-month${qs({ account_id, days })}`),
-    byPrice: (account_id, days) => request(`/reports/by-price${qs({ account_id, days })}`),
-    dailySeries: (account_id, days) => request(`/reports/daily-series${qs({ account_id, days })}`),
-    winLossDays: (account_id, days) => request(`/reports/win-loss-days${qs({ account_id, days })}`),
-    rDist: (account_id, days) => request(`/reports/r-distribution${qs({ account_id, days })}`),
-    streaks: (account_id, days) => request(`/reports/streaks${qs({ account_id, days })}`),
-    comparison: (account_id, days) => request(`/reports/comparison${qs({ account_id, days })}`),
-    exitEff: (account_id, days) => request(`/reports/exit-efficiency${qs({ account_id, days })}`),
-    commissions: (account_id, days) => request(`/reports/commissions${qs({ account_id, days })}`),
+    // Each method accepts either a numeric `days` arg (legacy 30/60/90 toggle)
+    // or a filter object: { days, symbol, side, asset_class, duration,
+    // date_from, date_to, tag_id, starting_cash }. The same object is used by
+    // the new global filter bar on /reports.
+    overview: (account_id, f) => request(`/reports/overview${qs(rq(account_id, f))}`),
+    bySymbol: (account_id, f) => request(`/reports/by-symbol${qs(rq(account_id, f))}`),
+    bySide: (account_id, f) => request(`/reports/by-side${qs(rq(account_id, f))}`),
+    byAssetClass: (account_id, f) => request(`/reports/by-asset-class${qs(rq(account_id, f))}`),
+    byDow: (account_id, f) => request(`/reports/by-day-of-week${qs(rq(account_id, f))}`),
+    byHour: (account_id, f) => request(`/reports/by-hour${qs(rq(account_id, f))}`),
+    byHold: (account_id, f) => request(`/reports/by-hold${qs(rq(account_id, f))}`),
+    byMonth: (account_id, f) => request(`/reports/by-month${qs(rq(account_id, f))}`),
+    byPrice: (account_id, f) => request(`/reports/by-price${qs(rq(account_id, f))}`),
+    byTag: (account_id, f) => request(`/reports/by-tag${qs(rq(account_id, f))}`),
+    dailySeries: (account_id, f) => request(`/reports/daily-series${qs(rq(account_id, f))}`),
+    winLossDays: (account_id, f) => request(`/reports/win-loss-days${qs(rq(account_id, f))}`),
+    rDist: (account_id, f) => request(`/reports/r-distribution${qs(rq(account_id, f))}`),
+    streaks: (account_id, f) => request(`/reports/streaks${qs(rq(account_id, f))}`),
+    comparison: (account_id, f) => request(`/reports/comparison${qs(rq(account_id, f))}`),
+    exitEff: (account_id, f) => request(`/reports/exit-efficiency${qs(rq(account_id, f))}`),
+    commissions: (account_id, f) => request(`/reports/commissions${qs(rq(account_id, f))}`),
     liquidity: (account_id, adv = '') => request(`/reports/liquidity${qs({ account_id, adv })}`),
-    risk: (account_id, days) => request(`/reports/risk${qs({ account_id, days })}`),
-    drawdown: (account_id, starting_cash, days) =>
-        request(`/reports/drawdown${qs({ account_id, starting_cash, days })}`),
-    riskAdjusted: (account_id, starting_cash, days) =>
-        request(`/reports/risk-adjusted${qs({ account_id, starting_cash, days })}`),
-    calendar: (account_id, days) => request(`/reports/calendar${qs({ account_id, days })}`),
-    summary: (account_id, days) => request(`/stats/summary${qs({ account_id, days })}`),
-    equity: (account_id, starting_cash, days) =>
-        request(`/stats/equity${qs({ account_id, starting_cash, days })}`),
+    risk: (account_id, f) => request(`/reports/risk${qs(rq(account_id, f))}`),
+    drawdown: (account_id, starting_cash, f) =>
+        request(`/reports/drawdown${qs({ ...rq(account_id, f), starting_cash })}`),
+    riskAdjusted: (account_id, starting_cash, f) =>
+        request(`/reports/risk-adjusted${qs({ ...rq(account_id, f), starting_cash })}`),
+    calendar: (account_id, f) => request(`/reports/calendar${qs(rq(account_id, f))}`),
+    advanced: (account_id, starting_cash, f) =>
+        request(`/reports/advanced${qs({ ...rq(account_id, f), starting_cash })}`),
+    summary: (account_id, f) => request(`/stats/summary${qs(rq(account_id, f))}`),
+    equity: (account_id, starting_cash, f) =>
+        request(`/stats/equity${qs({ ...rq(account_id, f), starting_cash })}`),
 
     // --- expenses -------------------------------------------------------
     expenseAccounts: () => request('/expense/accounts'),
@@ -833,6 +852,18 @@ export const api = {
     saveFilter: (name, payload, is_default = false) =>
         request('/filter-sets', { method: 'POST', body: JSON.stringify({ name, payload, is_default }) }),
     deleteFilter: (id) => request(`/filter-sets/${id}`, { method: 'DELETE' }),
+
+    // Direct URL for CSV/HTML downloads. Browser navigates here for file
+    // download — Authorization header isn't sent on <a download> by default,
+    // so a query-param token is appended when present.
+    exportTradesUrl: (account_id) => {
+        const base = `${baseUrl}/api/export/trades/${account_id}.csv`;
+        return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+    },
+    exportExecutionsUrl: (account_id) => {
+        const base = `${baseUrl}/api/export/executions/${account_id}.csv`;
+        return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+    },
 
     // search
     search: (q, scope = 'all', limit = 50) => request(`/search${qs({ q, scope, limit })}`),

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
+import { applyBarWidths, esc, fmt, fmtMoney, fmtDateTime, md, pnlClass } from '../util.js';
 import { ohlcChart } from '../charts.js';
 import { renderAiAnalyze } from './journal_ai.js';
 import { t } from '../i18n.js';
@@ -96,14 +96,24 @@ function renderExecChart(executions) {
 export async function renderTradeDetail(mount, state, tradeId) {
     const tok = currentViewToken();
     if (!tradeId) { mount.innerHTML = '<p data-i18n="view.trade_detail.hint.no_trade_id" class="boot">No trade id</p>'; return; }
-    const [trade, executions, tags, journal, screenshots, share] = await Promise.all([
+    const [trade, executions, tags, journal, screenshots, share, review] = await Promise.all([
         api.trade(tradeId),
         api.executionsForTrade(tradeId),
         api.tagsForTrade(tradeId),
         api.journalForTrade(tradeId),
         api.screenshotsForTrade(tradeId),
         Promise.resolve(null),
+        api.reviewForTrade(tradeId).catch(() => null),
     ]);
+    // Related trades: prior closed trades on the same symbol/account, useful
+    // for context ("how did the last 5 AAPL plays go?"). Independent fetch
+    // — failure here shouldn't block the page.
+    const related = trade?.account_id
+        ? await api.trades(trade.account_id, {
+              symbol: trade.symbol, limit: 10,
+          }).then(rows => (rows || []).filter(r => r.id !== tradeId).slice(0, 10))
+            .catch(() => [])
+        : [];
     if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
@@ -133,12 +143,12 @@ export async function renderTradeDetail(mount, state, tradeId) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.trade_detail.h2.exec_chart">Execution prices (chronological)</h2>
-            <div id="td-exec-chart" style="width:100%;height:220px"></div>
+            <div id="td-exec-chart" class="chart-h-220"></div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.trade_detail.h2.excursion_chart">MFE vs MAE vs Net P&L</h2>
-            <div id="td-exc-chart" style="width:100%;height:200px"></div>
+            <div id="td-exc-chart" class="chart-h-200"></div>
         </div>
 
         <div class="panel-grid">
@@ -167,7 +177,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
             `).join('')}</tbody></table>
             <details class="ex-add">
               <summary data-i18n="view.trade_detail.summary.add_execution">+ Add execution</summary>
-              <form id="ex-add-form" class="inline-form" style="margin-top:8px">
+              <form id="ex-add-form" class="inline-form td-form-mt-8">
                 <select name="side">
                   <option data-i18n="view.trade_detail.opt.buy" value="buy">buy</option><option data-i18n="view.trade_detail.opt.sell" value="sell">sell</option>
                   <option data-i18n="view.trade_detail.opt.short" value="short">short</option><option data-i18n="view.trade_detail.opt.cover" value="cover">cover</option>
@@ -188,7 +198,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                     data-context-scope="tag-chip"
                     data-id="${esc(t.id)}"
                     data-name="${esc(t.name)}"
-                    style="border-color:${esc(t.color)}">${esc(t.name)}</span>`).join('')}
+                    data-border-color="${esc(t.color)}">${esc(t.name)}</span>`).join('')}
             </div>
             <div class="tag-add">
               <select id="tag-add-select"></select>
@@ -225,7 +235,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
             <button data-i18n="view.trade_detail.btn.upload" class="primary" id="shot-upload">Upload</button>
           </div>
 
-          <div class="chart-panel" style="grid-column: 1 / -1;">
+          <div class="chart-panel td-span-all">
             <h2 data-i18n="view.trade_detail.h2.journal_per_trade">Journal — per-trade</h2>
             <div id="journal-list">${journal.map(j => `
               <div class="journal-entry"
@@ -241,7 +251,7 @@ export async function renderTradeDetail(mount, state, tradeId) {
                       data-i18n-placeholder="view.trade_detail.placeholder.journal"></textarea>
             <div class="inline-form">
               <button data-i18n="view.trade_detail.btn.save_note" class="primary" id="journal-save">Save note</button>
-              <button data-i18n="view.trade_detail.btn.insert_template" class="primary" id="journal-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
+              <button data-i18n="view.trade_detail.btn.insert_template" class="primary btn-magenta-gradient" id="journal-template">Insert template</button>
             </div>
           </div>
 
@@ -249,6 +259,56 @@ export async function renderTradeDetail(mount, state, tradeId) {
             <h2 data-i18n="view.trade_detail.h2.share_publicly">Share publicly</h2>
             <button data-i18n="view.trade_detail.btn.create_share_link" class="primary" id="share-btn">Create share link</button>
             <div id="share-result"></div>
+            <a href="#tape-replay/${esc(tradeId)}" class="btn btn-secondary td-margin-top-8"
+               data-i18n="view.trade_detail.btn.tape_replay">▶ Tape Replay</a>
+          </div>
+
+          <div class="chart-panel td-span-all">
+            <h2 data-i18n="view.trade_detail.h2.review">Setup &amp; Mistakes</h2>
+            <form id="review-form" class="review-form">
+              <label><span data-i18n="view.trade_detail.setup.label">Setup</span>
+                <input name="setup_tag" type="text" placeholder="${esc(t('view.trade_detail.setup.placeholder'))}"
+                       value="${esc(review?.setup_tag || '')}" /></label>
+              <label><span data-i18n="view.trade_detail.mistakes.label">Mistakes</span>
+                <textarea name="would_change" rows="3"
+                          placeholder="${esc(t('view.trade_detail.mistakes.placeholder'))}">${esc(review?.would_change || '')}</textarea></label>
+              <div class="review-row">
+                <label class="review-check"><input type="checkbox" name="entry_per_plan" ${review?.entry_per_plan ? 'checked' : ''}/>
+                  <span data-i18n="view.trade_detail.review.entry_per_plan">Entry per plan</span></label>
+                <label class="review-check"><input type="checkbox" name="exit_per_plan" ${review?.exit_per_plan ? 'checked' : ''}/>
+                  <span data-i18n="view.trade_detail.review.exit_per_plan">Exit per plan</span></label>
+                <label class="review-mood"><span data-i18n="view.trade_detail.review.mood">Mood at exit</span>
+                  <select name="mood_at_exit">
+                    <option value="" ${review?.mood_at_exit == null ? 'selected' : ''}>—</option>
+                    <option value="-2" ${review?.mood_at_exit === -2 ? 'selected' : ''}>-2 frustrated</option>
+                    <option value="-1" ${review?.mood_at_exit === -1 ? 'selected' : ''}>-1 off</option>
+                    <option value="0"  ${review?.mood_at_exit === 0  ? 'selected' : ''}>0 neutral</option>
+                    <option value="1"  ${review?.mood_at_exit === 1  ? 'selected' : ''}>+1 focused</option>
+                    <option value="2"  ${review?.mood_at_exit === 2  ? 'selected' : ''}>+2 confident</option>
+                  </select>
+                </label>
+              </div>
+              <button class="primary" type="submit" data-i18n="view.trade_detail.save_review">Save Review</button>
+              ${review ? `<span class="muted small">${esc(t('view.trade_detail.review_saved'))} ${fmtDateTime(review.completed_at)}</span>` : ''}
+            </form>
+          </div>
+
+          <div class="chart-panel trade-related-trades td-span-all">
+            <h2>${esc(t('view.trade_detail.related.h2', { symbol: trade.symbol }))}</h2>
+            ${related.length ? `
+              <table class="trades"><thead><tr>
+                <th data-i18n="view.search.th.opened">Opened</th>
+                <th data-i18n="view.search.th.side">Side</th>
+                <th data-i18n="view.trade_detail.th.qty">Qty</th>
+                <th data-i18n="view.trade_detail.card.entry_exit">Entry / Exit</th>
+                <th data-i18n="view.search.th.net_p_l">Net P&L</th>
+              </tr></thead><tbody>${related.map(r => `
+                <tr><td><a href="#trade/${r.id}">${fmtDateTime(r.opened_at)}</a></td>
+                    <td>${r.side}</td><td>${fmt(r.qty, 0)}</td>
+                    <td>${fmt(r.entry_avg)} → ${r.exit_avg !== null ? fmt(r.exit_avg) : '—'}</td>
+                    <td class="${pnlClass(r.net_pnl)}">${r.net_pnl !== null ? fmtMoney(r.net_pnl) : '—'}</td>
+                </tr>`).join('')}</tbody></table>
+            ` : `<p class="muted">${esc(t('view.trade_detail.related.empty'))}</p>`}
           </div>
         </div>
     `;
@@ -268,6 +328,11 @@ export async function renderTradeDetail(mount, state, tradeId) {
         y: Number(e.price),
         side: e.side === 'buy' || e.side === 'cover' ? 'buy' : 'sell',
     }));
+    // Tag chip border colors are dynamic per-tag and arrive as
+    // data-border-color on chips inside innerHTML. Apply via rAF so release
+    // WebKit doesn't strip them.
+    applyBarWidths(mount);
+
     const chartWrap = mount.querySelector('#chart-wrap');
     if (chartWrap) ohlcChart(chartWrap, bars.bars || [], marks, { height: 360 });
     renderExecChart(executions);
@@ -402,6 +467,29 @@ export async function renderTradeDetail(mount, state, tradeId) {
             } catch (err) { showToast(t('view.trade_detail.alert.add_failed', { msg: err.message }), { level: 'error' }); }
         });
     }
+
+    // Setup + Mistakes review form
+    const reviewForm = mount.querySelector('#review-form');
+    if (reviewForm) reviewForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const mood = fd.get('mood_at_exit');
+        try {
+            await api.saveReview({
+                trade_id: tradeId,
+                setup_tag:     (fd.get('setup_tag')    || '').toString().trim() || null,
+                would_change:  (fd.get('would_change') || '').toString().trim() || null,
+                entry_per_plan: fd.get('entry_per_plan') === 'on',
+                exit_per_plan:  fd.get('exit_per_plan')  === 'on',
+                mood_at_exit:  mood === '' || mood == null ? null : Number(mood),
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.trade_detail.review_saved'), { level: 'success' });
+            renderTradeDetail(mount, state, tradeId);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
+        }
+    });
 
     // Share
     mount.querySelector('#share-btn').addEventListener('click', async () => {

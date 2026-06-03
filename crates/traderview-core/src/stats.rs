@@ -965,6 +965,120 @@ pub fn commissions(trades: &[Trade]) -> CommissionReport {
 }
 
 // ===========================================================================
+// By-tag (callers supply trade_id → tag_names mapping)
+// ===========================================================================
+
+/// Group closed trades by attached tag. Trades with multiple tags contribute
+/// to each tag's bucket (so totals across all buckets can exceed total trade
+/// count). Untagged trades are dropped — that's intentional; the "no tag"
+/// case is shown as a separate stat in the UI.
+pub fn by_tag(
+    trades: &[Trade],
+    tags_by_trade: &std::collections::HashMap<uuid::Uuid, Vec<String>>,
+) -> Vec<Bucket> {
+    let mut map: BTreeMap<String, Bucket> = BTreeMap::new();
+    for t in trades {
+        if t.status != TradeStatus::Closed {
+            continue;
+        }
+        let Some(names) = tags_by_trade.get(&t.id) else {
+            continue;
+        };
+        let net = t.net_pnl.unwrap_or(Decimal::ZERO);
+        let gross = t.gross_pnl.unwrap_or(Decimal::ZERO);
+        for name in names {
+            let b = map.entry(name.clone()).or_insert_with(|| Bucket {
+                key: name.clone(),
+                ..Default::default()
+            });
+            b.trades += 1;
+            if net > Decimal::ZERO {
+                b.wins += 1;
+            } else if net < Decimal::ZERO {
+                b.losses += 1;
+            }
+            b.gross_pnl += gross;
+            b.net_pnl += net;
+        }
+    }
+    for b in map.values_mut() {
+        b.win_rate = b.wins as f64 / b.trades.max(1) as f64;
+        b.avg_pnl = b.net_pnl / Decimal::from(b.trades.max(1) as u64);
+        b.expectancy = b.avg_pnl;
+    }
+    map.into_values().collect()
+}
+
+// ===========================================================================
+// Advanced report — per-trade scatter + cumulative curve
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScatterPoint {
+    pub trade_id: uuid::Uuid,
+    pub symbol: String,
+    /// closed_at as ISO date (YYYY-MM-DD); for open trades, opened_at.
+    pub day: String,
+    pub net_pnl: Decimal,
+    pub r: Option<f64>,
+    pub hold_seconds: Option<i64>,
+    pub qty: Decimal,
+    pub win: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Advanced {
+    pub cum_curve: Vec<EquityPoint>,
+    pub scatter: Vec<ScatterPoint>,
+}
+
+pub fn advanced(trades: &[Trade], starting_cash: Decimal) -> Advanced {
+    let cum_curve = equity_curve(trades, starting_cash);
+    let mut scatter: Vec<ScatterPoint> = trades
+        .iter()
+        .filter(|t| t.status == TradeStatus::Closed)
+        .map(|t| {
+            let net = t.net_pnl.unwrap_or(Decimal::ZERO);
+            let day = t
+                .closed_at
+                .map(|d| d.date_naive())
+                .unwrap_or_else(|| t.opened_at.date_naive())
+                .format("%Y-%m-%d")
+                .to_string();
+            let hold = t
+                .closed_at
+                .map(|c| (c - t.opened_at).num_seconds());
+            let r = t.risk_amount.and_then(|risk| {
+                if risk.is_zero() {
+                    None
+                } else {
+                    Some(decimal_to_f64(net / risk))
+                }
+            });
+            let win = if net > Decimal::ZERO {
+                Some(true)
+            } else if net < Decimal::ZERO {
+                Some(false)
+            } else {
+                None
+            };
+            ScatterPoint {
+                trade_id: t.id,
+                symbol: t.symbol.clone(),
+                day,
+                net_pnl: net,
+                r,
+                hold_seconds: hold,
+                qty: t.qty,
+                win,
+            }
+        })
+        .collect();
+    scatter.sort_by(|a, b| a.day.cmp(&b.day));
+    Advanced { cum_curve, scatter }
+}
+
+// ===========================================================================
 // Helpers
 // ===========================================================================
 
@@ -1259,5 +1373,50 @@ mod tests {
         let short = buckets.iter().find(|b| b.key == "short").unwrap();
         assert_eq!(long.net_pnl, dec("100"));
         assert_eq!(short.net_pnl, dec("50"));
+    }
+
+    #[test]
+    fn by_tag_buckets_only_tagged_trades_and_sums_per_tag() {
+        // Three closed trades. tA is tagged "breakout" + "morning";
+        // tB only "breakout"; tC untagged. Expect "breakout" bucket
+        // to aggregate both A+B, "morning" only A, and tC to be skipped.
+        let t1 = t("AAA", TradeSide::Long, dec("100"), 1);
+        let t2 = t("BBB", TradeSide::Long, dec("-50"), 2);
+        let t3 = t("CCC", TradeSide::Long, dec("999"), 3); // untagged
+        let trades = vec![t1.clone(), t2.clone(), t3.clone()];
+        let mut tags = std::collections::HashMap::new();
+        tags.insert(t1.id, vec!["breakout".to_string(), "morning".to_string()]);
+        tags.insert(t2.id, vec!["breakout".to_string()]);
+
+        let buckets = by_tag(&trades, &tags);
+        // Untagged trade contributes nothing.
+        let breakout = buckets.iter().find(|b| b.key == "breakout").unwrap();
+        assert_eq!(breakout.trades, 2);
+        assert_eq!(breakout.wins, 1);
+        assert_eq!(breakout.losses, 1);
+        assert_eq!(breakout.net_pnl, dec("50"));
+
+        let morning = buckets.iter().find(|b| b.key == "morning").unwrap();
+        assert_eq!(morning.trades, 1);
+        assert_eq!(morning.net_pnl, dec("100"));
+        assert!((morning.win_rate - 1.0).abs() < 1e-9);
+
+        assert!(buckets.iter().all(|b| b.key != "untagged"));
+    }
+
+    #[test]
+    fn advanced_returns_curve_and_scatter_sorted_by_day() {
+        // Two closed trades on day 1 and day 3. Scatter sorted by day.
+        let trades = vec![
+            t("AAA", TradeSide::Long, dec("100"), 3),
+            t("BBB", TradeSide::Long, dec("-50"), 1),
+        ];
+        let adv = advanced(&trades, Decimal::ZERO);
+        assert!(!adv.cum_curve.is_empty());
+        assert_eq!(adv.scatter.len(), 2);
+        assert!(adv.scatter[0].day < adv.scatter[1].day);
+        assert_eq!(adv.scatter[0].net_pnl, dec("-50"));
+        assert_eq!(adv.scatter[0].win, Some(false));
+        assert_eq!(adv.scatter[1].win, Some(true));
     }
 }

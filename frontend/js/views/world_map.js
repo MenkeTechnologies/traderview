@@ -1,18 +1,38 @@
-// World markets map — SVG silhouette + lat/lng-pinned index tiles + commodity
-// strip. Polls /api/markets/snapshot (in-process cache on server).
+// World markets map — Natural Earth 110m country outlines + lat/lng-pinned
+// index dots + commodity strip. Polls /api/markets/snapshot (server cache).
+//
+// The SVG path data lives in `frontend/lib/world-110m.svg`, generated from
+// the Natural Earth public-domain dataset (admin-0 countries, 287 outlines).
+// Equirectangular projection, viewport 960×480, matches the project() helper
+// below so dots position correctly on top of the country layer.
 
 import { api } from '../api.js';
 import { fmt, esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 
-// Simplified low-poly world continents in equirectangular projection.
-// Viewport is the rectangle: lng [-180,180], lat [85,-85].
-// Path data is hand-built to silhouette North/South America, Eurasia, Africa,
-// Oceania at low resolution — enough to anchor pins visually.
-// Equirectangular (plate carrée) projection, viewport 960×480.
-// Polygons are simplified Natural Earth coastlines — ~40-90 vertices each so
-// the continents are visibly recognizable rather than hand-drawn blobs.
+// Fetched and cached on first render — embedded inline so we can recolor the
+// land via CSS `currentColor` and stack pins on top in the same SVG layer.
+let WORLD_SVG_CACHE = null;
+async function loadWorldSvg() {
+    if (WORLD_SVG_CACHE !== null) return WORLD_SVG_CACHE;
+    try {
+        const res = await fetch('lib/world-110m.svg');
+        if (!res.ok) throw new Error('fetch failed');
+        const text = await res.text();
+        // Extract just the inner path d= — we wrap it in our own <svg> so we
+        // control gradients, pin layer, viewBox alignment.
+        const m = text.match(/<path[^>]+d="([^"]+)"/);
+        WORLD_SVG_CACHE = m ? m[1] : '';
+    } catch (_) {
+        WORLD_SVG_CACHE = '';  // gracefully degrade to no continents
+    }
+    return WORLD_SVG_CACHE;
+}
+
+// Legacy hand-drawn polygon constant kept only so the equirectangular
+// project() helper below still anchors at (W,H) = (960,480). The actual
+// path data is no longer used — see loadWorldSvg() above.
 const WORLD_SVG_PATHS = [
     // North America (Canada + USA + Mexico + Central America)
     'M120,90 L180,82 L215,78 L245,80 L270,86 L285,95 L298,105 L305,118 L308,130 L302,142 L295,148 L288,142 L282,135 L275,140 L272,150 L268,158 L265,166 L260,172 L252,176 L243,180 L233,185 L224,191 L215,198 L208,206 L202,213 L196,218 L188,224 L182,232 L175,238 L168,244 L162,250 L155,256 L150,255 L148,247 L150,238 L155,228 L160,218 L162,208 L160,198 L155,190 L150,184 L142,180 L132,178 L122,178 L114,180 L108,178 L104,172 L100,164 L96,156 L92,148 L88,140 L86,132 L84,124 L84,116 L86,108 L90,100 L100,94 L110,92 Z',
@@ -70,6 +90,9 @@ const fmtPct = (n) => {
 export async function renderWorldMarkets(mount) {
     if (!mount) return;
     const tok = currentViewToken();
+    // Kick off world-svg fetch in parallel with the markets snapshot so we
+    // don't pay sequential latency on first render.
+    const worldPromise = loadWorldSvg();
     mount.innerHTML = `
         <div class="markets-panel">
             <div class="markets-header">
@@ -77,23 +100,23 @@ export async function renderWorldMarkets(mount) {
                 <span class="market-status" id="market-status"><span data-i18n="common.loading">loading…</span></span>
             </div>
             <div class="world-map-wrap" id="world-map-wrap">
-                ${renderSvg([])}
+                ${renderSvg([], '')}
             </div>
             <div class="commodities-strip" id="commodities-strip"></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.world_map.h2.change_chart">Change % per index</h2>
-            <div id="wm-chart" style="width:100%;height:220px"></div>
+            <div id="wm-chart" class="chart-h-220"></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.world_map.h2.com_chart">Change % per commodity</h2>
-            <div id="wm-com-chart" style="width:100%;height:200px"></div>
+            <div id="wm-com-chart" class="chart-h-200"></div>
         </div>
     `;
     try {
-        const snap = await api.marketsSnapshot();
+        const [snap, worldPath] = await Promise.all([api.marketsSnapshot(), worldPromise]);
         if (!viewIsCurrent(tok)) return;  // user navigated away mid-fetch
-        renderSnapshot(snap, mount);
+        renderSnapshot(snap, mount, worldPath);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         const wrap = mount.querySelector('#world-map-wrap');
@@ -103,11 +126,11 @@ export async function renderWorldMarkets(mount) {
     }
 }
 
-function renderSnapshot(snap, mount) {
+function renderSnapshot(snap, mount, worldPath) {
     if (!mount) return;
     const wrap = mount.querySelector('#world-map-wrap');
     if (!wrap) return;
-    wrap.innerHTML = renderSvg(snap.indices);
+    wrap.innerHTML = renderSvg(snap.indices, worldPath || '');
     renderChangeChart(snap.indices);
     renderCommodityChart(snap.commodities);
 
@@ -212,14 +235,61 @@ function renderChangeChart(indices) {
     }, [xs, upY, downY, zero], el);
 }
 
-function renderSvg(pins) {
-    const continents = WORLD_SVG_PATHS
-        .map(d => `<path d="${d}" />`).join('');
-    const pinMarkers = pins.map(p => {
-        const [x, y] = project(p.lat, p.lng);
-        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"
-                  fill="${p.change_pct >= 0 ? '#23d160' : '#ff3860'}"
-                  stroke="#0a0a12" stroke-width="2"/>`;
+function renderSvg(pins, worldPath) {
+    // Per-pin label boxes — start at default position above-right of pin,
+    // then run collision resolution + leader-line layout. Everything renders
+    // inside the SVG so positions are in the same coordinate system as the
+    // map, no HTML overlay math, and labels scale with the viewport.
+    const CHAR_PX  = 6.0;   // approx mono char width @ 12px font in SVG
+    const PAD_X    = 12;
+    const BOX_H    = 22;
+    const DOT_R    = 4;
+    const LEAD_GAP = 6;     // gap between dot and leader line start
+
+    const boxes = pins.map(p => {
+        const [px, py] = project(p.lat, p.lng);
+        // Text content drives label width — flag + label + pct.
+        const text  = `${p.flag} ${p.label} ${fmtPct(p.change_pct)}`;
+        // Flag emoji counts as ~2 chars visually; approximate.
+        const w = Math.ceil(text.length * CHAR_PX) + PAD_X + 6;
+        const h = BOX_H;
+        // Default anchor: just above and right of pin.
+        let lx = px + 12;
+        let ly = py - h - 6;
+        // Clamp to viewport so labels don't get pushed off the map.
+        lx = Math.max(2, Math.min(WIDTH - w - 2, lx));
+        ly = Math.max(2, Math.min(HEIGHT - h - 2, ly));
+        return { p, px, py, lx, ly, w, h, text };
+    });
+
+    resolveLabelCollisions(boxes);
+
+    const dots = boxes.map(b =>
+        `<circle cx="${b.px.toFixed(1)}" cy="${b.py.toFixed(1)}" r="${DOT_R}"
+                 fill="${b.p.change_pct >= 0 ? '#23d160' : '#ff3860'}"
+                 stroke="#0a0a12" stroke-width="2"/>`
+    ).join('');
+
+    // Leader line: from dot edge to nearest corner/edge of label box.
+    // Computed per box so the arrow always lands on the right side of the
+    // label closest to the pin.
+    const leaders = boxes.map(b => leaderPath(b, LEAD_GAP)).join('');
+
+    const labelMarkup = boxes.map((b) => {
+        const cls = b.p.change_pct >= 0 ? 'wm-pct-pos' : 'wm-pct-neg';
+        const cxText = (b.lx + 6).toFixed(1);
+        const cyText = (b.ly + b.h / 2 + 4).toFixed(1);  // +4 for baseline
+        return `
+            <g class="wm-label" pointer-events="auto">
+                <rect x="${b.lx.toFixed(1)}" y="${b.ly.toFixed(1)}"
+                      width="${b.w}" height="${b.h}" rx="3"
+                      fill="rgba(8,12,20,0.92)"
+                      stroke="rgba(0,229,255,0.35)" stroke-width="0.6"/>
+                <text x="${cxText}" y="${cyText}"
+                      class="wm-text"
+                      font-family="'JetBrains Mono', monospace"
+                      font-size="11">${esc(b.p.flag)} ${esc(b.p.label)}<tspan class="${cls}"> ${esc(fmtPct(b.p.change_pct))}</tspan></text>
+            </g>`;
     }).join('');
 
     return `
@@ -235,31 +305,95 @@ function renderSvg(pins) {
                     <stop offset="0%"  stop-color="#ff7a18"/>
                     <stop offset="100%" stop-color="#ff2a6d"/>
                 </linearGradient>
+                <marker id="wm-arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                        markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="rgba(0,229,255,0.7)"/>
+                </marker>
             </defs>
             <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#map-glow)"/>
-            <g fill="url(#landmass)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5">
-                ${continents}
-            </g>
-            ${pinMarkers}
+            ${worldPath ? `<path d="${worldPath}" fill="url(#landmass)"
+                                  stroke="rgba(255,255,255,0.12)"
+                                  stroke-width="0.3"
+                                  fill-rule="evenodd"/>` : ''}
+            <g class="wm-leaders">${leaders}</g>
+            <g class="wm-dots">${dots}</g>
+            <g class="wm-labels">${labelMarkup}</g>
         </svg>
-        <div class="pin-overlay" style="position:relative">
-            ${pins.map(p => pinLabel(p)).join('')}
-        </div>
     `;
 }
 
-function pinLabel(p) {
-    // Convert projected [x,y] to % of SVG viewport so absolute positioning works
-    // regardless of how the SVG is scaled.
-    const [x, y] = project(p.lat, p.lng);
-    const left = (x / WIDTH) * 100;
-    const top  = (y / HEIGHT) * 100;
-    const cls = p.change_pct >= 0 ? 'pos' : 'neg';
-    return `
-        <div class="pin" style="left:${left.toFixed(2)}%;top:${top.toFixed(2)}%">
-            <span class="pin-flag">${p.flag}</span>
-            <span class="pin-label">${esc(p.label)}</span>
-            <span class="pin-pct ${cls}">${fmtPct(p.change_pct)}</span>
-        </div>
-    `;
+/**
+ * Iterative box-push collision resolution. Each pass: detect overlapping
+ * label pairs and shove them apart in the axis of largest overlap. Repeats
+ * until no overlaps or the iteration cap is hit. Cheap O(N² × iters) for
+ * the ~12 index pins we render — well under a millisecond.
+ */
+function resolveLabelCollisions(boxes) {
+    const PAD = 2;
+    const MAX_ITERS = 80;
+    for (let iter = 0; iter < MAX_ITERS; iter++) {
+        let moved = false;
+        for (let i = 0; i < boxes.length; i++) {
+            for (let j = i + 1; j < boxes.length; j++) {
+                const a = boxes[i], b = boxes[j];
+                const overlapX = Math.min(a.lx + a.w, b.lx + b.w) - Math.max(a.lx, b.lx);
+                const overlapY = Math.min(a.ly + a.h, b.ly + b.h) - Math.max(a.ly, b.ly);
+                if (overlapX > 0 && overlapY > 0) {
+                    // Push apart along axis of smallest overlap so labels
+                    // separate by the minimum distance needed.
+                    if (overlapX < overlapY) {
+                        const push = (overlapX + PAD) / 2;
+                        if (a.lx < b.lx) { a.lx -= push; b.lx += push; }
+                        else             { a.lx += push; b.lx -= push; }
+                    } else {
+                        const push = (overlapY + PAD) / 2;
+                        if (a.ly < b.ly) { a.ly -= push; b.ly += push; }
+                        else             { a.ly += push; b.ly -= push; }
+                    }
+                    // Re-clamp to viewport.
+                    a.lx = Math.max(2, Math.min(WIDTH - a.w - 2, a.lx));
+                    a.ly = Math.max(2, Math.min(HEIGHT - a.h - 2, a.ly));
+                    b.lx = Math.max(2, Math.min(WIDTH - b.w - 2, b.lx));
+                    b.ly = Math.max(2, Math.min(HEIGHT - b.h - 2, b.ly));
+                    moved = true;
+                }
+            }
+        }
+        if (!moved) return;
+    }
+}
+
+/**
+ * Leader-line path from the pin dot to the label edge nearest to it.
+ * Anchors on the label's closest side (left/right/top/bottom) so the arrow
+ * lands cleanly instead of cutting through the box.
+ */
+function leaderPath(b, gap) {
+    // Label center
+    const cx = b.lx + b.w / 2;
+    const cy = b.ly + b.h / 2;
+    // Vector from label center to pin
+    const dx = b.px - cx;
+    const dy = b.py - cy;
+    // Which edge of the label is closest to the pin?
+    let ax, ay;
+    if (Math.abs(dx) * b.h > Math.abs(dy) * b.w) {
+        // Horizontal edge intersection
+        ax = dx > 0 ? b.lx + b.w : b.lx;
+        ay = cy + dy * ((ax - cx) / dx);
+    } else {
+        // Vertical edge intersection
+        ay = dy > 0 ? b.ly + b.h : b.ly;
+        ax = cx + dx * ((ay - cy) / dy);
+    }
+    // Shorten line on the pin side so the arrow tip lands just outside the dot.
+    const len = Math.hypot(b.px - ax, b.py - ay) || 1;
+    const ux = (b.px - ax) / len;
+    const uy = (b.py - ay) / len;
+    const tipX = (b.px - ux * gap).toFixed(1);
+    const tipY = (b.py - uy * gap).toFixed(1);
+    return `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}"
+                  x2="${tipX}" y2="${tipY}"
+                  stroke="rgba(0,229,255,0.6)" stroke-width="0.8"
+                  marker-end="url(#wm-arrow)"/>`;
 }

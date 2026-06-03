@@ -1,100 +1,376 @@
 import { api } from '../api.js';
-import { fmt, fmtMoney, fmtPct, fmtDate, fmtSecs, pnlClass, esc, statCard } from '../util.js';
+import { fmt, fmtMoney, fmtPct, fmtDate, fmtSecs, pnlClass, esc, statCard, applyBarWidths } from '../util.js';
 import { barChart, equityChart } from '../charts.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
 
-const TABS = [
+// Tradervue-style primary tabs (top-level reports). Each maps to a render
+// function below. Detailed and Drawdown delegate to the original detailed
+// section so we don't lose access to per-dimension bar reports.
+const PRIMARY_TABS = [
     ['overview',       'Overview'],
-    ['year-month-day', 'Year / Month / Day'],
+    ['detailed',       'Detailed'],
     ['win-loss-days',  'Win vs Loss Days'],
-    ['by-symbol',      'By Symbol'],
-    ['by-side',        'By Side'],
-    ['by-asset',       'By Asset'],
-    ['by-dow',         'By Day of Week'],
-    ['by-hour',        'By Hour'],
-    ['by-hold',        'By Hold Time'],
-    ['by-month',       'By Month'],
-    ['r-dist',         'R-Multiple'],
-    ['streaks',        'Streaks'],
-    ['comparison',     'Comparison'],
-    ['exit-eff',       'Exit Efficiency'],
-    ['commissions',    'Commissions'],
-    ['liquidity',      'Liquidity'],
-    ['risk',           'Risk'],
     ['drawdown',       'Drawdown'],
-    ['risk-adjusted',  'Sharpe / Sortino'],
+    ['compare',        'Compare'],
+    ['tag-breakdown',  'Tag Breakdown'],
+    ['advanced',       'Advanced'],
+    ['year-month-day', 'Year / Month / Day'],
+    ['calendar',       'Calendar'],
 ];
 
+// Legacy single-dimension reports live under the Detailed tab as a sub-strip.
+const DETAILED_SUBS = [
+    ['by-symbol',   'By Symbol'],
+    ['by-side',     'By Side'],
+    ['by-asset',    'By Asset'],
+    ['by-dow',      'By Day of Week'],
+    ['by-hour',     'By Hour'],
+    ['by-hold',     'By Hold Time'],
+    ['by-month',    'By Month'],
+    ['by-price',    'By Price'],
+    ['r-dist',      'R-Multiple'],
+    ['streaks',     'Streaks'],
+    ['comparison',  'Long vs Short'],
+    ['exit-eff',    'Exit Efficiency'],
+    ['commissions', 'Commissions'],
+    ['liquidity',   'Liquidity'],
+    ['risk',        'Risk'],
+    ['risk-adjusted', 'Sharpe / Sortino'],
+];
+
+// ----------------------------------------------------------------------------
+// Filter + display-style state (persisted in sessionStorage so navigation
+// between tabs preserves the user's filters; matches Tradervue's behavior).
+// ----------------------------------------------------------------------------
+const FILTER_KEY = 'reports_filter_v1';
+const STYLE_KEY  = 'reports_style_v1';
+const FILTER_DEFAULTS = {
+    symbol: '',
+    side: '',          // '' | 'long' | 'short'
+    asset_class: '',   // '' | 'stock' | 'option' | 'future' | 'forex'
+    duration: '',      // '' | 'intraday' | 'multiday'
+    date_from: '',
+    date_to: '',
+    tag_id: '',
+    days: '',          // '' | 30 | 60 | 90
+};
+const STYLE_DEFAULTS = {
+    pnl_type: 'net',     // 'net' | 'gross'
+    view_mode: 'value',  // 'value' ($) | 'pct' (% of total)
+    style:     'aggregate', // 'aggregate' | 'per_trade'
+};
+
+function loadFilter() {
+    try { return { ...FILTER_DEFAULTS, ...JSON.parse(sessionStorage.getItem(FILTER_KEY) || '{}') }; }
+    catch (_) { return { ...FILTER_DEFAULTS }; }
+}
+function saveFilter(f) { sessionStorage.setItem(FILTER_KEY, JSON.stringify(f)); }
+function loadStyle()  {
+    try { return { ...STYLE_DEFAULTS, ...JSON.parse(sessionStorage.getItem(STYLE_KEY) || '{}') }; }
+    catch (_) { return { ...STYLE_DEFAULTS }; }
+}
+function saveStyle(s)  { sessionStorage.setItem(STYLE_KEY,  JSON.stringify(s)); }
+
+// Drop empty values when shipping to the server (qs() already skips them but
+// being explicit here makes the wire shape obvious in DevTools).
+function filterForApi(f) {
+    const out = {};
+    for (const [k, v] of Object.entries(f)) {
+        if (v === '' || v === null || v === undefined) continue;
+        out[k] = v;
+    }
+    return out;
+}
+
+// ----------------------------------------------------------------------------
+// Main entry point. `sub` is the primary tab (overview, detailed, etc).
+// When sub === 'detailed' we read the secondary tab from location.hash.
+// ----------------------------------------------------------------------------
 export async function renderReports(mount, state, sub) {
     const tok = currentViewToken();
-    if (!state.accountId) { mount.innerHTML = '<p data-i18n="view.reports.hint.no_account" class="boot">No account.</p>'; return; }
-    if (!TABS.find(t => t[0] === sub)) sub = 'overview';
+    if (!state.accountId) {
+        mount.innerHTML = '<p data-i18n="view.reports.hint.no_account" class="boot">No account.</p>';
+        return;
+    }
+
+    // Resolve primary tab + (optional) sub-tab for the Detailed section.
+    let primary = sub || 'overview';
+    let detailedSub = null;
+    const isLegacyDetailed = DETAILED_SUBS.find(s => s[0] === primary);
+    if (isLegacyDetailed) {
+        detailedSub = primary;
+        primary = 'detailed';
+    }
+    if (!PRIMARY_TABS.find(p => p[0] === primary)) primary = 'overview';
+
+    const filter = loadFilter();
+    const style  = loadStyle();
+
     mount.innerHTML = `
         <h1 data-i18n="view.reports.h1.reports" class="view-title">// REPORTS</h1>
-        <div class="report-tabs">
-            ${TABS.map(([k, l]) => `<a class="report-tab ${k === sub ? 'active' : ''}" href="#reports/${k}" data-i18n="view.reports.tab.${k}">${l}</a>`).join('')}
+        ${filterBarHtml(filter)}
+        <div class="report-tabs report-primary-tabs">
+            ${PRIMARY_TABS.map(([k, l]) => `
+                <a class="report-tab ${k === primary ? 'active' : ''}"
+                   href="#reports/${k}" data-i18n="view.reports.tab.${k}">${l}</a>
+            `).join('')}
         </div>
-        <div id="report-body"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="common.loading">loading…</div></div></div>
+        ${styleBarHtml(style)}
+        ${primary === 'detailed' ? `
+            <div class="report-tabs report-secondary-tabs">
+                ${DETAILED_SUBS.map(([k, l]) => `
+                    <a class="report-tab ${k === detailedSub ? 'active' : ''}"
+                       href="#reports/${k}" data-i18n="view.reports.tab.${k}">${l}</a>
+                `).join('')}
+            </div>
+        ` : ''}
+        <div id="report-body">
+            <div class="tv-spinner-wrap"><div class="tv-spinner"></div>
+                <div class="tv-spinner-text" data-i18n="common.loading">loading…</div>
+            </div>
+        </div>
     `;
+
+    wireFilterBar(mount, state, filter);
+    wireStyleBar(mount, state, style);
+
+    // Trello-style reorder on the primary tab strip. Persists order to
+    // localStorage so the user's preferred tab arrangement sticks across
+    // sessions. Routing still works because each tab keeps its href.
+    const primaryTabs = mount.querySelector('.report-primary-tabs');
+    if (primaryTabs) {
+        resetDragReorder(primaryTabs);
+        initDragReorder(primaryTabs, '.report-tab', 'reports_primary_tab_order', {
+            direction: 'horizontal',
+            getKey: (el) => (el.getAttribute('href') || '').replace('#reports/', '') || el.textContent.trim(),
+            toastMessage: t('toast.reordered_tabs'),
+        });
+    }
+    const secondaryTabs = mount.querySelector('.report-secondary-tabs');
+    if (secondaryTabs) {
+        resetDragReorder(secondaryTabs);
+        initDragReorder(secondaryTabs, '.report-tab', 'reports_secondary_tab_order', {
+            direction: 'horizontal',
+            getKey: (el) => (el.getAttribute('href') || '').replace('#reports/', '') || el.textContent.trim(),
+            toastMessage: t('toast.reordered_tabs'),
+        });
+    }
+
     const acct = state.accountId;
-    // After each await, re-fetch the body element (caller may have replaced it).
+    const apiF = filterForApi(filter);
+    const body = mount.querySelector('#report-body');
     const setBody = (html) => {
         if (!viewIsCurrent(tok)) return null;
         const el = mount.querySelector('#report-body');
         if (el) el.innerHTML = html;
         return el;
     };
+
     try {
-        if (sub === 'overview') {
-            const s = await api.overview(acct); setBody(overviewHtml(s));
-        } else if (sub === 'by-symbol')  setBody(bucketTable(await api.bySymbol(acct), t('view.reports.col.symbol')));
-        else if (sub === 'by-side')      setBody(bucketTable(await api.bySide(acct), t('view.reports.col.side')));
-        else if (sub === 'by-asset')     setBody(bucketTable(await api.byAssetClass(acct), t('view.reports.col.asset')));
-        else if (sub === 'by-dow')       setBody(bucketTable(await api.byDow(acct), t('view.reports.col.dow')));
-        else if (sub === 'by-hour')      setBody(bucketTable(await api.byHour(acct), t('view.reports.col.hour')));
-        else if (sub === 'by-hold')      setBody(bucketTable(await api.byHold(acct), t('view.reports.col.hold')));
-        else if (sub === 'by-month')     setBody(bucketTable(await api.byMonth(acct), t('view.reports.col.month')));
-        else if (sub === 'year-month-day') {
-            const [monthly, cal] = await Promise.all([api.byMonth(acct), api.calendar(acct)]);
+        if (primary === 'overview') {
+            const s = await api.overview(acct, apiF);
+            setBody(overviewHtml(s, style));
+        } else if (primary === 'detailed') {
+            await renderDetailedTab(mount, state, detailedSub || 'by-symbol', apiF, style, tok);
+        } else if (primary === 'win-loss-days') {
+            const wld = await api.winLossDays(acct, apiF);
             if (!viewIsCurrent(tok)) return;
-            const body = mount.querySelector('#report-body');
-            if (body) renderYearMonthDay(body, monthly, cal);
-        }
-        else if (sub === 'win-loss-days') {
-            const wld = await api.winLossDays(acct);
-            if (!viewIsCurrent(tok)) return;
-            const body = mount.querySelector('#report-body');
-            if (body) renderWinLossDays(body, wld);
-        }
-        else if (sub === 'r-dist') {
-            const dist = await api.rDist(acct);
-            if (!viewIsCurrent(tok)) return;
-            const body = mount.querySelector('#report-body');
-            if (body) renderRDist(body, dist, mount);
-        }
-        else if (sub === 'streaks')      setBody(streaksHtml(await api.streaks(acct)));
-        else if (sub === 'comparison')   setBody(comparisonHtml(await api.comparison(acct)));
-        else if (sub === 'exit-eff')     setBody(exitEffHtml(await api.exitEff(acct)));
-        else if (sub === 'commissions')  setBody(commissionsHtml(await api.commissions(acct)));
-        else if (sub === 'liquidity')    setBody(liquidityHtml(await api.liquidity(acct)));
-        else if (sub === 'risk')         setBody(riskHtml(await api.risk(acct)));
-        else if (sub === 'drawdown') {
-            const [dd, eq] = await Promise.all([api.drawdown(acct), api.equity(acct)]);
+            renderWinLossDays(body, wld);
+        } else if (primary === 'drawdown') {
+            const [dd, eq] = await Promise.all([
+                api.drawdown(acct, undefined, apiF),
+                api.equity(acct, undefined, apiF),
+            ]);
             if (!viewIsCurrent(tok)) return;
             setBody(drawdownHtml(dd));
             const eqMount = mount.querySelector('#eq-mount');
             if (eqMount) equityChart(eqMount, eq);
-        } else if (sub === 'risk-adjusted') setBody(riskAdjustedHtml(await api.riskAdjusted(acct)));
+        } else if (primary === 'compare') {
+            await renderCompareTab(mount, state, tok);
+        } else if (primary === 'tag-breakdown') {
+            const tags = await api.byTag(acct, apiF);
+            if (!viewIsCurrent(tok)) return;
+            renderTagBreakdown(body, tags, style);
+        } else if (primary === 'advanced') {
+            const adv = await api.advanced(acct, undefined, apiF);
+            if (!viewIsCurrent(tok)) return;
+            renderAdvanced(body, adv);
+        } else if (primary === 'year-month-day') {
+            const [monthly, cal] = await Promise.all([
+                api.byMonth(acct, apiF),
+                api.calendar(acct, apiF),
+            ]);
+            if (!viewIsCurrent(tok)) return;
+            renderYearMonthDay(body, monthly, cal);
+        } else if (primary === 'calendar') {
+            const cal = await api.calendar(acct, apiF);
+            if (!viewIsCurrent(tok)) return;
+            renderCalendarYearGrid(body, cal);
+        }
     } catch (e) {
         setBody(`<p class="boot">${esc(t('view.reports.error', { msg: e.message }))}</p>`);
     }
 }
 
-function overviewHtml(s) {
+// ----------------------------------------------------------------------------
+// Filter bar
+// ----------------------------------------------------------------------------
+function filterBarHtml(f) {
+    return `
+        <div class="report-filter-bar">
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.symbol">Symbol</span>
+                <input type="text" id="rfb-symbol" value="${esc(f.symbol)}" placeholder="${esc(t('view.reports.filter.all'))}" />
+            </label>
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.side">Side</span>
+                <select id="rfb-side">
+                    <option value=""        ${f.side === ''      ? 'selected' : ''}>${esc(t('view.reports.filter.all'))}</option>
+                    <option value="long"    ${f.side === 'long'  ? 'selected' : ''}>${esc(t('view.reports.filter.long'))}</option>
+                    <option value="short"   ${f.side === 'short' ? 'selected' : ''}>${esc(t('view.reports.filter.short'))}</option>
+                </select>
+            </label>
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.asset">Asset</span>
+                <select id="rfb-asset">
+                    <option value=""        ${f.asset_class === ''       ? 'selected' : ''}>${esc(t('view.reports.filter.all'))}</option>
+                    <option value="stock"   ${f.asset_class === 'stock'  ? 'selected' : ''}>Stock</option>
+                    <option value="option"  ${f.asset_class === 'option' ? 'selected' : ''}>Option</option>
+                    <option value="future"  ${f.asset_class === 'future' ? 'selected' : ''}>Future</option>
+                    <option value="forex"   ${f.asset_class === 'forex'  ? 'selected' : ''}>Forex</option>
+                </select>
+            </label>
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.duration">Duration</span>
+                <select id="rfb-duration">
+                    <option value=""          ${f.duration === ''         ? 'selected' : ''}>${esc(t('view.reports.filter.all'))}</option>
+                    <option value="intraday"  ${f.duration === 'intraday' ? 'selected' : ''}>Intraday</option>
+                    <option value="multiday"  ${f.duration === 'multiday' ? 'selected' : ''}>Multiday</option>
+                </select>
+            </label>
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.date_from">From</span>
+                <input type="date" id="rfb-from" value="${esc(f.date_from)}" />
+            </label>
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.date_to">To</span>
+                <input type="date" id="rfb-to" value="${esc(f.date_to)}" />
+            </label>
+            <label class="rfb-field">
+                <span data-i18n="view.reports.filter.rolling">Rolling</span>
+                <select id="rfb-days">
+                    <option value=""    ${f.days === ''  ? 'selected' : ''}>${esc(t('view.reports.filter.all_time'))}</option>
+                    <option value="30"  ${String(f.days) === '30' ? 'selected' : ''}>30 days</option>
+                    <option value="60"  ${String(f.days) === '60' ? 'selected' : ''}>60 days</option>
+                    <option value="90"  ${String(f.days) === '90' ? 'selected' : ''}>90 days</option>
+                    <option value="180" ${String(f.days) === '180' ? 'selected' : ''}>180 days</option>
+                    <option value="365" ${String(f.days) === '365' ? 'selected' : ''}>365 days</option>
+                </select>
+            </label>
+            <button type="button" id="rfb-clear" class="btn btn-secondary" data-i18n="view.reports.filter.clear">Clear</button>
+            <button type="button" id="rfb-save"  class="btn btn-primary"   data-i18n="view.reports.filter.save_set">Save Set</button>
+            <select id="rfb-set" class="rfb-set-picker" title="${esc(t('view.reports.filter.saved_sets'))}">
+                <option value="" data-i18n="view.reports.filter.saved_sets">Saved sets…</option>
+            </select>
+        </div>
+    `;
+}
+
+function wireFilterBar(mount, state, filter) {
+    const get = (id) => mount.querySelector(id);
+    const collect = () => ({
+        symbol:      get('#rfb-symbol').value.trim().toUpperCase(),
+        side:        get('#rfb-side').value,
+        asset_class: get('#rfb-asset').value,
+        duration:    get('#rfb-duration').value,
+        date_from:   get('#rfb-from').value,
+        date_to:     get('#rfb-to').value,
+        days:        get('#rfb-days').value,
+        tag_id:      filter.tag_id, // not in bar; reused as-is
+    });
+    const apply = () => {
+        saveFilter(collect());
+        renderReports(mount, state, currentPrimary());
+    };
+    ['#rfb-symbol', '#rfb-side', '#rfb-asset', '#rfb-duration',
+     '#rfb-from',   '#rfb-to',   '#rfb-days'].forEach(sel => {
+        const el = get(sel);
+        if (!el) return;
+        if (el.tagName === 'INPUT' && el.type === 'text') {
+            el.addEventListener('change', apply);
+        } else {
+            el.addEventListener('change', apply);
+        }
+    });
+    const clear = get('#rfb-clear');
+    if (clear) clear.addEventListener('click', () => {
+        saveFilter({ ...FILTER_DEFAULTS });
+        renderReports(mount, state, currentPrimary());
+    });
+    const save = get('#rfb-save');
+    if (save) save.addEventListener('click', () => saveCurrentFilterSet(mount, state, collect()));
+    populateSavedSets(mount, state);
+}
+
+function currentPrimary() {
+    const h = (location.hash || '').replace(/^#/, '');
+    const parts = h.split('/');
+    if (parts[0] !== 'reports') return 'overview';
+    const sub = parts[1] || 'overview';
+    return sub;
+}
+
+// ----------------------------------------------------------------------------
+// Style bar
+// ----------------------------------------------------------------------------
+function styleBarHtml(s) {
+    const opt = (current, value, label, key) => `
+        <button type="button" data-style-key="${key}" data-style-val="${value}"
+                class="${current === value ? 'active' : ''}">${esc(label)}</button>
+    `;
+    return `
+        <div class="report-style-bar">
+            <div class="rsb-group">
+                <span class="rsb-label" data-i18n="view.reports.style.pnl_type">P&L Type</span>
+                ${opt(s.pnl_type, 'gross', t('view.reports.style.gross'), 'pnl_type')}
+                ${opt(s.pnl_type, 'net',   t('view.reports.style.net'),   'pnl_type')}
+            </div>
+            <div class="rsb-group">
+                <span class="rsb-label" data-i18n="view.reports.style.view_mode">View Mode</span>
+                ${opt(s.view_mode, 'value', t('view.reports.style.dollar'), 'view_mode')}
+                ${opt(s.view_mode, 'pct',   t('view.reports.style.percent'), 'view_mode')}
+            </div>
+            <div class="rsb-group">
+                <span class="rsb-label" data-i18n="view.reports.style.style">Report Style</span>
+                ${opt(s.style, 'aggregate', t('view.reports.style.aggregate'), 'style')}
+                ${opt(s.style, 'per_trade', t('view.reports.style.per_trade'), 'style')}
+            </div>
+        </div>
+    `;
+}
+
+function wireStyleBar(mount, state, style) {
+    mount.querySelectorAll('.report-style-bar [data-style-key]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.styleKey;
+            const val = btn.dataset.styleVal;
+            style[key] = val;
+            saveStyle(style);
+            renderReports(mount, state, currentPrimary());
+        });
+    });
+}
+
+// ----------------------------------------------------------------------------
+// Overview (style-aware)
+// ----------------------------------------------------------------------------
+function overviewHtml(s, style) {
+    const pnl = style.pnl_type === 'gross' ? s.gross_pnl : s.net_pnl;
     return `<div class="cards">
-        ${statCard(t('view.dashboard.stat.net_pnl'),   fmtMoney(s.net_pnl), pnlClass(s.net_pnl))}
-        ${statCard(t('view.reports.stat.gross_pnl'),   fmtMoney(s.gross_pnl), pnlClass(s.gross_pnl))}
+        ${statCard(t(style.pnl_type === 'gross' ? 'view.reports.stat.gross_pnl' : 'view.dashboard.stat.net_pnl'),
+                   fmtMoney(pnl), pnlClass(pnl))}
         ${statCard(t('view.dashboard.stat.trades'),    s.trade_count)}
         ${statCard(t('view.reports.stat.wls'),         `${s.win_count} / ${s.loss_count} / ${s.scratch_count}`)}
         ${statCard(t('view.dashboard.stat.win_rate'),  fmtPct(s.win_rate))}
@@ -116,18 +392,443 @@ function overviewHtml(s) {
     </div>`;
 }
 
-function bucketTable(rows, header) {
+// ----------------------------------------------------------------------------
+// Detailed tab — chooses one of the single-dimension reports.
+// ----------------------------------------------------------------------------
+async function renderDetailedTab(mount, state, sub, apiF, style, tok) {
+    const acct = state.accountId;
+    const body = mount.querySelector('#report-body');
+    const setBody = (html) => {
+        if (!viewIsCurrent(tok)) return null;
+        const el = mount.querySelector('#report-body');
+        if (el) el.innerHTML = html;
+        return el;
+    };
+    if (sub === 'by-symbol')        setBody(bucketTable(await api.bySymbol(acct, apiF), t('view.reports.col.symbol'), style));
+    else if (sub === 'by-side')     setBody(bucketTable(await api.bySide(acct, apiF), t('view.reports.col.side'), style));
+    else if (sub === 'by-asset')    setBody(bucketTable(await api.byAssetClass(acct, apiF), t('view.reports.col.asset'), style));
+    else if (sub === 'by-dow')      setBody(bucketTable(await api.byDow(acct, apiF), t('view.reports.col.dow'), style));
+    else if (sub === 'by-hour')     setBody(bucketTable(await api.byHour(acct, apiF), t('view.reports.col.hour'), style));
+    else if (sub === 'by-hold')     setBody(bucketTable(await api.byHold(acct, apiF), t('view.reports.col.hold'), style));
+    else if (sub === 'by-month')    setBody(bucketTable(await api.byMonth(acct, apiF), t('view.reports.col.month'), style));
+    else if (sub === 'by-price')    setBody(bucketTable(await api.byPrice(acct, apiF), t('view.reports.col.price'), style));
+    else if (sub === 'r-dist') {
+        const dist = await api.rDist(acct, apiF);
+        if (!viewIsCurrent(tok)) return;
+        const b = mount.querySelector('#report-body');
+        if (b) renderRDist(b, dist, mount);
+    }
+    else if (sub === 'streaks')      setBody(streaksHtml(await api.streaks(acct, apiF)));
+    else if (sub === 'comparison')   setBody(comparisonHtml(await api.comparison(acct, apiF)));
+    else if (sub === 'exit-eff')     setBody(exitEffHtml(await api.exitEff(acct, apiF)));
+    else if (sub === 'commissions')  setBody(commissionsHtml(await api.commissions(acct, apiF)));
+    else if (sub === 'liquidity')    setBody(liquidityHtml(await api.liquidity(acct)));
+    else if (sub === 'risk')         setBody(riskHtml(await api.risk(acct, apiF)));
+    else if (sub === 'risk-adjusted') setBody(riskAdjustedHtml(await api.riskAdjusted(acct, undefined, apiF)));
+}
+
+// ----------------------------------------------------------------------------
+// Compare tab — A vs B side-by-side using two filter sets.
+// ----------------------------------------------------------------------------
+const COMPARE_KEY_A = 'reports_compare_a_v1';
+const COMPARE_KEY_B = 'reports_compare_b_v1';
+function loadCompare(key, fallback) {
+    try { return { ...FILTER_DEFAULTS, ...JSON.parse(sessionStorage.getItem(key) || '{}'), ...fallback }; }
+    catch (_) { return { ...FILTER_DEFAULTS, ...fallback }; }
+}
+function saveCompare(key, f) { sessionStorage.setItem(key, JSON.stringify(f)); }
+
+async function renderCompareTab(mount, state, tok) {
+    const body = mount.querySelector('#report-body');
+    if (!body) return;
+    const fa = loadCompare(COMPARE_KEY_A, { side: 'long'  });
+    const fb = loadCompare(COMPARE_KEY_B, { side: 'short' });
+    body.innerHTML = `
+        <div class="cmp-filter-pair">
+            ${cmpFilterColumn('A', '#ffd84a', fa)}
+            ${cmpFilterColumn('B', '#3aa1ff', fb)}
+        </div>
+        <div id="cmp-summary" class="panel-grid"></div>
+        <div class="panel-grid">
+            <div class="chart-panel"><h2 data-i18n="view.reports.cmp.by_dow">By Day of Week</h2><div id="cmp-dow"   class="chart-h-240"></div></div>
+            <div class="chart-panel"><h2 data-i18n="view.reports.cmp.by_hour">By Hour</h2>      <div id="cmp-hour"  class="chart-h-240"></div></div>
+            <div class="chart-panel"><h2 data-i18n="view.reports.cmp.by_hold">By Hold Time</h2> <div id="cmp-hold"  class="chart-h-240"></div></div>
+            <div class="chart-panel"><h2 data-i18n="view.reports.cmp.by_price">By Price</h2>    <div id="cmp-price" class="chart-h-240"></div></div>
+        </div>
+    `;
+    wireCompareFilters(mount, state, 'A', fa, COMPARE_KEY_A);
+    wireCompareFilters(mount, state, 'B', fb, COMPARE_KEY_B);
+
+    const [oA, oB, dowA, dowB, hourA, hourB, holdA, holdB, priceA, priceB] = await Promise.all([
+        api.overview(state.accountId, filterForApi(fa)),
+        api.overview(state.accountId, filterForApi(fb)),
+        api.byDow(state.accountId, filterForApi(fa)),
+        api.byDow(state.accountId, filterForApi(fb)),
+        api.byHour(state.accountId, filterForApi(fa)),
+        api.byHour(state.accountId, filterForApi(fb)),
+        api.byHold(state.accountId, filterForApi(fa)),
+        api.byHold(state.accountId, filterForApi(fb)),
+        api.byPrice(state.accountId, filterForApi(fa)),
+        api.byPrice(state.accountId, filterForApi(fb)),
+    ]);
+    if (!viewIsCurrent(tok)) return;
+
+    const summary = body.querySelector('#cmp-summary');
+    if (summary) summary.innerHTML = cmpSummaryCards(oA, oB);
+    renderComparePair(body.querySelector('#cmp-dow'),   dowA, dowB);
+    renderComparePair(body.querySelector('#cmp-hour'),  hourA, hourB);
+    renderComparePair(body.querySelector('#cmp-hold'),  holdA, holdB);
+    renderComparePair(body.querySelector('#cmp-price'), priceA, priceB);
+}
+
+function cmpFilterColumn(label, color, f) {
+    const id = (k) => `cmp${label}-${k}`;
+    return `
+        <div class="cmp-filter-col cmp-filter-col-${label.toLowerCase()}">
+            <h3>Filter ${label}</h3>
+            <label><span>Symbol</span>
+                <input type="text" id="${id('symbol')}" value="${esc(f.symbol)}" /></label>
+            <label><span>Side</span>
+                <select id="${id('side')}">
+                    <option value=""        ${f.side === ''      ? 'selected' : ''}>All</option>
+                    <option value="long"    ${f.side === 'long'  ? 'selected' : ''}>Long</option>
+                    <option value="short"   ${f.side === 'short' ? 'selected' : ''}>Short</option>
+                </select>
+            </label>
+            <label><span>Duration</span>
+                <select id="${id('duration')}">
+                    <option value=""          ${f.duration === ''         ? 'selected' : ''}>All</option>
+                    <option value="intraday"  ${f.duration === 'intraday' ? 'selected' : ''}>Intraday</option>
+                    <option value="multiday"  ${f.duration === 'multiday' ? 'selected' : ''}>Multiday</option>
+                </select>
+            </label>
+            <label><span>From</span><input type="date" id="${id('from')}" value="${esc(f.date_from)}" /></label>
+            <label><span>To</span>  <input type="date" id="${id('to')}"   value="${esc(f.date_to)}" /></label>
+        </div>
+    `;
+}
+
+function wireCompareFilters(mount, state, label, f, key) {
+    const id = (k) => `#cmp${label}-${k}`;
+    const apply = () => {
+        const next = { ...f,
+            symbol:    mount.querySelector(id('symbol')).value.trim().toUpperCase(),
+            side:      mount.querySelector(id('side')).value,
+            duration:  mount.querySelector(id('duration')).value,
+            date_from: mount.querySelector(id('from')).value,
+            date_to:   mount.querySelector(id('to')).value,
+        };
+        saveCompare(key, next);
+        renderReports(mount, state, 'compare');
+    };
+    ['symbol','side','duration','from','to'].forEach(k => {
+        const el = mount.querySelector(id(k));
+        if (el) el.addEventListener('change', apply);
+    });
+}
+
+function cmpSummaryCards(a, b) {
+    const card = (label, va, vb, fmt, klass = (x) => '') => `
+        <div class="cmp-stat-card">
+            <div class="cmp-stat-label">${esc(label)}</div>
+            <div class="cmp-stat-row"><span class="cmp-a-pip"></span><span class="${klass(va)}">${fmt(va)}</span></div>
+            <div class="cmp-stat-row"><span class="cmp-b-pip"></span><span class="${klass(vb)}">${fmt(vb)}</span></div>
+        </div>
+    `;
+    return [
+        card(t('view.dashboard.stat.net_pnl'), a.net_pnl, b.net_pnl, fmtMoney, pnlClass),
+        card(t('view.dashboard.stat.trades'),  a.trade_count, b.trade_count, x => x),
+        card(t('view.dashboard.stat.win_rate'), a.win_rate, b.win_rate, fmtPct),
+        card(t('view.dashboard.stat.profit_factor'), a.profit_factor, b.profit_factor, fmt),
+        card(t('view.dashboard.stat.expectancy'), a.expectancy, b.expectancy, fmtMoney, pnlClass),
+        card(t('view.dashboard.stat.avg_r'), a.avg_r, b.avg_r, fmt),
+    ].join('');
+}
+
+function renderComparePair(el, aRows, bRows) {
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const keys = Array.from(new Set([
+        ...(aRows || []).map(r => r.key),
+        ...(bRows || []).map(r => r.key),
+    ]));
+    if (!keys.length) {
+        el.innerHTML = `<div class="muted">${esc(t('view.reports.hint.no_data'))}</div>`;
+        return;
+    }
+    const aMap = new Map((aRows || []).map(r => [r.key, Number(r.net_pnl) || 0]));
+    const bMap = new Map((bRows || []).map(r => [r.key, Number(r.net_pnl) || 0]));
+    const aY = keys.map(k => aMap.get(k) ?? 0);
+    const bY = keys.map(k => bMap.get(k) ?? 0);
+    const xs = keys.map((_, i) => i);
+    const max = Math.max(...aY.map(Math.abs), ...bY.map(Math.abs), 1);
+    const drawPair = (u) => {
+        const ctx = u.ctx; ctx.save();
+        const bw = Math.max(2, (u.bbox.width / xs.length) * 0.32);
+        const yZero = u.valToPos(0, 'y', true);
+        for (let i = 0; i < xs.length; i++) {
+            const xc = u.valToPos(xs[i], 'x', true);
+            const aPos = u.valToPos(aY[i], 'y', true);
+            const bPos = u.valToPos(bY[i], 'y', true);
+            ctx.fillStyle = '#ffd84a';
+            ctx.fillRect(xc - bw - 1, Math.min(yZero, aPos), bw, Math.abs(aPos - yZero));
+            ctx.fillStyle = '#3aa1ff';
+            ctx.fillRect(xc + 1, Math.min(yZero, bPos), bw, Math.abs(bPos - yZero));
+        }
+        ctx.restore();
+        return null;
+    };
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 240,
+        scales: { x: {}, y: { auto: true, range: [-max * 1.1, max * 1.1] } },
+        series: [
+            { label: 'idx' },
+            { label: 'A',  stroke: 'transparent', paths: drawPair },
+            { label: 'B',  stroke: 'transparent' },
+        ],
+        axes: [
+            { stroke: '#aab', rotate: -45, size: 60,
+              values: (_u, splits) => splits.map(v => keys[Math.round(v)] || '') },
+            { stroke: '#aab', size: 64,
+              values: (_u, ticks) => ticks.map(v => {
+                  const ab = Math.abs(v); const sgn = v < 0 ? '-' : '';
+                  if (ab >= 1e6) return `${sgn}$${(ab/1e6).toFixed(1)}M`;
+                  if (ab >= 1e3) return `${sgn}$${(ab/1e3).toFixed(1)}K`;
+                  return `${sgn}$${ab.toFixed(0)}`;
+              }) },
+        ],
+        legend: { show: false },
+    }, [xs, aY, bY], el);
+}
+
+// ----------------------------------------------------------------------------
+// Tag Breakdown
+// ----------------------------------------------------------------------------
+function renderTagBreakdown(body, tags, style) {
+    if (!tags || !tags.length) {
+        body.innerHTML = `<p class="boot">${esc(t('view.reports.tag_break.empty'))}</p>`;
+        return;
+    }
+    const sorted = [...tags].sort((a, b) => Number(b.net_pnl) - Number(a.net_pnl));
+    const maxAbs = Math.max(...sorted.map(b => Math.abs(Number(b.net_pnl) || 0)), 1);
+    body.innerHTML = `
+        <div class="cards">
+            ${statCard(t('view.reports.tag_break.tags'),  tags.length)}
+            ${statCard(t('view.reports.tag_break.trades'), tags.reduce((s, t) => s + (t.trades||0), 0))}
+            ${statCard(t('view.reports.tag_break.net_pnl'),
+                       fmtMoney(tags.reduce((s, t) => s + Number(t.net_pnl||0), 0)),
+                       pnlClass(tags.reduce((s, t) => s + Number(t.net_pnl||0), 0)))}
+        </div>
+        <table class="trades">
+            <thead><tr>
+                <th data-i18n="view.reports.tag_break.col.tag">Tag</th>
+                <th data-i18n="view.reports.th.trades">Trades</th>
+                <th data-i18n="view.reports.th.wins">Wins</th>
+                <th data-i18n="view.reports.th.losses">Losses</th>
+                <th data-i18n="view.reports.th.win">Win %</th>
+                <th data-i18n="view.reports.th.net_p_l">Net P&L</th>
+                <th data-i18n="view.reports.th.avg_p_l">Avg P&L</th>
+                <th></th>
+            </tr></thead>
+            <tbody>${sorted.map(b => {
+                const v = Number(b.net_pnl) || 0;
+                const pct = (Math.abs(v) / maxAbs * 100).toFixed(0);
+                return `<tr>
+                    <td>${esc(b.key)}</td>
+                    <td>${b.trades}</td>
+                    <td>${b.wins}</td>
+                    <td>${b.losses}</td>
+                    <td>${fmtPct(b.win_rate)}</td>
+                    <td class="${pnlClass(v)}">${fmtMoney(v)}</td>
+                    <td class="${pnlClass(b.avg_pnl)}">${fmtMoney(b.avg_pnl)}</td>
+                    <td><div class="tag-bar-track">
+                        <div class="tag-bar-fill ${v >= 0 ? 'pos' : 'neg'}" data-bar-pct="${pct}"></div>
+                    </div></td>
+                </tr>`;
+            }).join('')}</tbody>
+        </table>
+    `;
+    applyBarWidths(body);
+}
+
+// ----------------------------------------------------------------------------
+// Advanced — equity curve + per-trade scatter
+// ----------------------------------------------------------------------------
+function renderAdvanced(body, adv) {
+    if (!adv || (!adv.cum_curve?.length && !adv.scatter?.length)) {
+        body.innerHTML = `<p class="boot">${esc(t('view.reports.hint.no_data'))}</p>`;
+        return;
+    }
+    body.innerHTML = `
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.adv.cum_pnl">Cumulative P&L</h2>
+            <div id="adv-eq" class="chart-h-280"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.adv.scatter">Per-Trade Scatter</h2>
+            <div id="adv-scatter" class="chart-h-320"></div>
+        </div>
+    `;
+    const eq = body.querySelector('#adv-eq');
+    if (eq) equityChart(eq, adv.cum_curve);
+
+    const sc = body.querySelector('#adv-scatter');
+    if (sc && window.uPlot && adv.scatter?.length) {
+        const xs = adv.scatter.map((_, i) => i);
+        const ys = adv.scatter.map(p => Number(p.net_pnl) || 0);
+        const points = adv.scatter;
+        const drawDots = (u) => {
+            const ctx = u.ctx; ctx.save();
+            const yZero = u.valToPos(0, 'y', true);
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.beginPath(); ctx.moveTo(0, yZero); ctx.lineTo(u.bbox.left + u.bbox.width, yZero); ctx.stroke();
+            for (let i = 0; i < xs.length; i++) {
+                const x = u.valToPos(xs[i], 'x', true);
+                const y = u.valToPos(ys[i], 'y', true);
+                ctx.fillStyle = points[i].win === false ? '#ff3860'
+                              : points[i].win === true  ? '#39ff14'
+                              : '#aab';
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            return null;
+        };
+        new window.uPlot({
+            title: '', width: sc.clientWidth || 800, height: 320,
+            scales: { x: {}, y: { auto: true } },
+            series: [
+                { label: 'idx' },
+                { label: 'P&L', stroke: 'transparent', paths: drawDots },
+            ],
+            axes: [
+                { stroke: '#aab', size: 28,
+                  values: (_u, splits) => splits.map(v => {
+                      const p = points[Math.round(v)];
+                      return p ? p.day.slice(5) : '';
+                  }) },
+                { stroke: '#aab', size: 64,
+                  values: (_u, ticks) => ticks.map(v => {
+                      const a = Math.abs(v); const sgn = v < 0 ? '-' : '';
+                      if (a >= 1e6) return `${sgn}$${(a/1e6).toFixed(1)}M`;
+                      if (a >= 1e3) return `${sgn}$${(a/1e3).toFixed(1)}K`;
+                      return `${sgn}$${a.toFixed(0)}`;
+                  }) },
+            ],
+            legend: { show: false },
+        }, [xs, ys], sc);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Calendar year-grid (12 mini-cals on one page)
+// ----------------------------------------------------------------------------
+function renderCalendarYearGrid(body, cal) {
+    if (!cal || !cal.length) {
+        body.innerHTML = `<p class="boot">${esc(t('view.calendar.hint.no_data_yet'))}</p>`;
+        return;
+    }
+    const byDay = new Map(cal.map(c => [c.day, c]));
+    const years = [...new Set(cal.map(c => Number(c.day.slice(0, 4))))].sort();
+    const year = years[years.length - 1];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const DOW = ['S','M','T','W','T','F','S'];
+    const monthHtml = (m) => {
+        const first = new Date(year, m, 1);
+        const daysInMo = new Date(year, m + 1, 0).getDate();
+        const start = first.getDay();
+        let monthPnl = 0;
+        let cells = '';
+        for (let i = 0; i < start; i++) cells += `<div class="ycal-cell empty"></div>`;
+        for (let d = 1; d <= daysInMo; d++) {
+            const key = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const c = byDay.get(key);
+            const v = Number(c?.net_pnl) || 0;
+            const trades = Number(c?.trades) || 0;
+            monthPnl += v;
+            const cls = trades === 0 ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+            cells += `<div class="ycal-cell ${cls}" title="${esc(key)}: ${fmtMoney(v)}">${d}</div>`;
+        }
+        return `
+            <div class="ycal-month">
+                <div class="ycal-month-head">
+                    <strong>${MONTHS[m]}, ${year}</strong>
+                    <span class="${pnlClass(monthPnl)}">${fmtMoney(monthPnl)}</span>
+                </div>
+                <div class="ycal-grid">
+                    ${DOW.map(d => `<div class="ycal-dow">${d}</div>`).join('')}
+                    ${cells}
+                </div>
+            </div>
+        `;
+    };
+    body.innerHTML = `
+        <div class="ycal-year-header">${year}</div>
+        <div class="ycal-row">${[0,1,2,3,4,5,6,7,8,9,10,11].map(monthHtml).join('')}</div>
+    `;
+}
+
+// ----------------------------------------------------------------------------
+// Saved filter sets (server-side via /filter-sets endpoints)
+// ----------------------------------------------------------------------------
+async function populateSavedSets(mount, state) {
+    try {
+        const sets = await api.listFilters?.();
+        if (!Array.isArray(sets)) return;
+        const sel = mount.querySelector('#rfb-set');
+        if (!sel) return;
+        for (const s of sets) {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            opt.dataset.payload = JSON.stringify(s.payload || {});
+            sel.appendChild(opt);
+        }
+        sel.addEventListener('change', () => {
+            const opt = sel.selectedOptions[0];
+            if (!opt || !opt.value) return;
+            try {
+                const payload = JSON.parse(opt.dataset.payload || '{}');
+                saveFilter({ ...FILTER_DEFAULTS, ...payload });
+                renderReports(mount, state, currentPrimary());
+            } catch (_) { /* noop */ }
+        });
+    } catch (_) { /* noop */ }
+}
+
+async function saveCurrentFilterSet(mount, state, filter) {
+    const name = prompt(t('view.reports.filter.save_prompt'));
+    if (!name) return;
+    try {
+        await api.saveFilter?.(name, filter, false);
+        // Re-render so the set picker shows the new entry.
+        renderReports(mount, state, currentPrimary());
+    } catch (e) {
+        alert(t('view.reports.filter.save_err', { msg: e.message }));
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Helpers that didn't change
+// ----------------------------------------------------------------------------
+function bucketTable(rows, header, style) {
     if (!rows.length) return '<p data-i18n="view.reports.hint.no_data" class="boot">No data.</p>';
+    const useGross = style && style.pnl_type === 'gross';
+    const asPct    = style && style.view_mode === 'pct';
+    const total    = rows.reduce((s, b) => s + Math.abs(Number(useGross ? b.gross_pnl : b.net_pnl) || 0), 0) || 1;
     return `
         <table class="trades">
         <thead><tr><th>${esc(header)}</th><th data-i18n="view.reports.th.trades">Trades</th><th data-i18n="view.reports.th.wins">Wins</th><th data-i18n="view.reports.th.losses">Losses</th>
-        <th data-i18n="view.reports.th.win">Win%</th><th data-i18n="view.reports.th.net_p_l">Net P&L</th><th data-i18n="view.reports.th.avg_p_l">Avg P&L</th></tr></thead>
-        <tbody>${rows.map(b => `
-            <tr><td>${esc(b.key)}</td><td>${b.trades}</td><td>${b.wins}</td><td>${b.losses}</td>
-            <td>${fmtPct(b.win_rate)}</td>
-            <td class="${pnlClass(b.net_pnl)}">${fmtMoney(b.net_pnl)}</td>
-            <td class="${pnlClass(b.avg_pnl)}">${fmtMoney(b.avg_pnl)}</td></tr>
-        `).join('')}</tbody></table>`;
+        <th data-i18n="view.reports.th.win">Win%</th><th>${esc(useGross ? t('view.reports.stat.gross_pnl') : t('view.dashboard.stat.net_pnl'))}</th><th data-i18n="view.reports.th.avg_p_l">Avg P&L</th></tr></thead>
+        <tbody>${rows.map(b => {
+            const pnl = Number(useGross ? b.gross_pnl : b.net_pnl) || 0;
+            const cell = asPct ? `${(Math.abs(pnl) / total * 100).toFixed(2)}%` : fmtMoney(pnl);
+            return `<tr><td>${esc(b.key)}</td><td>${b.trades}</td><td>${b.wins}</td><td>${b.losses}</td>
+                <td>${fmtPct(b.win_rate)}</td>
+                <td class="${pnlClass(pnl)}">${cell}</td>
+                <td class="${pnlClass(b.avg_pnl)}">${fmtMoney(b.avg_pnl)}</td></tr>`;
+        }).join('')}</tbody></table>`;
 }
 
 function renderRDist(body, dist, mount) {
@@ -143,11 +844,11 @@ function renderRDist(body, dist, mount) {
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.reports.h2.r_chart">R-bin count (uPlot)</h2>
-            <div id="r-uplot" style="width:100%;height:240px"></div>
+            <div id="r-uplot" class="chart-h-240"></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.reports.h2.r_cumcount_chart">R-bin cumulative count</h2>
-            <div id="r-cum-chart" style="width:100%;height:200px"></div>
+            <div id="r-cum-chart" class="chart-h-200"></div>
         </div>`;
     const chart = mount.querySelector('#r-chart');
     if (!chart) return;
@@ -155,7 +856,7 @@ function renderRDist(body, dist, mount) {
         chart,
         dist.bins.map(b => b.label),
         dist.bins.map(b => b.count),
-        { color: '#00e5ff' }
+        { color: '#00e5ff', yKind: 'count' }
     );
     renderRBinsChart(dist.bins);
     renderRCumChart(dist.bins);
@@ -167,7 +868,7 @@ function renderRCumChart(bins) {
     el.innerHTML = '';
     const rows = (bins || []).filter(b => Number.isFinite(Number(b.count)));
     if (rows.length < 1) {
-        el.innerHTML = `<div class="muted" data-i18n="view.reports.empty_cum_chart">${esc(t('view.reports.empty_cum_chart'))}</div>`;
+        el.innerHTML = `<div class="muted">${esc(t('view.reports.empty_cum_chart'))}</div>`;
         return;
     }
     const labels = rows.map(b => b.label);
@@ -197,7 +898,7 @@ function renderRBinsChart(bins) {
     if (!el || !window.uPlot) return;
     el.innerHTML = '';
     if (!bins || !bins.length) {
-        el.innerHTML = `<div class="muted" data-i18n="view.reports.empty_chart">${esc(t('view.reports.empty_chart'))}</div>`;
+        el.innerHTML = `<div class="muted">${esc(t('view.reports.empty_chart'))}</div>`;
         return;
     }
     const labels = bins.map(b => b.label);
@@ -327,10 +1028,8 @@ function riskAdjustedHtml(ra) {
     <p data-i18n="view.reports.hint.annualized_values_assume_252_trading_days_year_and" class="muted">Annualized values assume 252 trading days/year and rf = 0.</p>`;
 }
 
-// ---------- Year / Month / Day (Tradervue parity) ----------------------------
+// ---------- Year / Month / Day (unchanged) ----------------------------------
 function renderYearMonthDay(body, monthly, cal) {
-    // monthly buckets carry key "YYYY-MM"; aggregate up to year + take a
-    // year-picker (default = most recent year that has data).
     const years = new Map();
     for (const m of monthly || []) {
         const y = String(m.key || '').slice(0, 4);
@@ -353,46 +1052,41 @@ function renderYearMonthDay(body, monthly, cal) {
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.reports.ymd.trades_year">Trade Distribution By Year</h2>
-                <div id="ymd-trades-year" style="width:100%;height:240px"></div>
+                <div id="ymd-trades-year" class="chart-h-240"></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.reports.ymd.perf_year">Performance By Year</h2>
-                <div id="ymd-perf-year" style="width:100%;height:240px"></div>
+                <div id="ymd-perf-year" class="chart-h-240"></div>
             </div>
         </div>
-        <h2 class="view-title" style="margin-top:16px"><span id="ymd-year-label">${esc(selectedYear)}</span></h2>
+        <h2 class="view-title vt-mt-16"><span id="ymd-year-label">${esc(selectedYear)}</span></h2>
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.reports.ymd.trades_month">Trade Distribution By Month</h2>
-                <div id="ymd-trades-month" style="width:100%;height:240px"></div>
+                <div id="ymd-trades-month" class="chart-h-240"></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.reports.ymd.perf_month">Performance By Month</h2>
-                <div id="ymd-perf-month" style="width:100%;height:240px"></div>
+                <div id="ymd-perf-month" class="chart-h-240"></div>
             </div>
         </div>
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.reports.ymd.trades_day">Trade Distribution By Day</h2>
-                <div id="ymd-trades-day" style="width:100%;height:240px"></div>
+                <div id="ymd-trades-day" class="chart-h-240"></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.reports.ymd.perf_day">Performance By Day</h2>
-                <div id="ymd-perf-day" style="width:100%;height:240px"></div>
+                <div id="ymd-perf-day" class="chart-h-240"></div>
             </div>
         </div>
     `;
-
     barChart(body.querySelector('#ymd-trades-year'),
-        yearRows.map(r => r.key),
-        yearRows.map(r => r.trades),
+        yearRows.map(r => r.key), yearRows.map(r => r.trades),
         { color: '#39ff14', yKind: 'count', seriesLabel: t('view.reports.ymd.trades_year') });
     barChart(body.querySelector('#ymd-perf-year'),
-        yearRows.map(r => r.key),
-        yearRows.map(r => Number(r.net_pnl) || 0),
+        yearRows.map(r => r.key), yearRows.map(r => Number(r.net_pnl) || 0),
         { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_year') });
-
-    // Monthly rows for the selected year, padded to 12 months.
     const monthsInYear = Array.from({ length: 12 }, (_, i) => {
         const key = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
         const row = (monthly || []).find(m => m.key === key);
@@ -403,67 +1097,61 @@ function renderYearMonthDay(body, monthly, cal) {
         };
     });
     barChart(body.querySelector('#ymd-trades-month'),
-        monthsInYear.map(r => r.key),
-        monthsInYear.map(r => r.trades),
+        monthsInYear.map(r => r.key), monthsInYear.map(r => r.trades),
         { color: '#39ff14', yKind: 'count', seriesLabel: t('view.reports.ymd.trades_month') });
     barChart(body.querySelector('#ymd-perf-month'),
-        monthsInYear.map(r => r.key),
-        monthsInYear.map(r => r.net_pnl),
+        monthsInYear.map(r => r.key), monthsInYear.map(r => r.net_pnl),
         { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_month') });
-
-    // Daily breakdown comes from the calendar cells, filtered to selected year.
     const days = (cal || []).filter(c => c.day && c.day.startsWith(selectedYear));
     barChart(body.querySelector('#ymd-trades-day'),
-        days.map(d => d.day),
-        days.map(d => Number(d.trades) || 0),
+        days.map(d => d.day), days.map(d => Number(d.trades) || 0),
         { color: '#39ff14', yKind: 'count', seriesLabel: t('view.reports.ymd.trades_day') });
     barChart(body.querySelector('#ymd-perf-day'),
-        days.map(d => d.day),
-        days.map(d => Number(d.net_pnl) || 0),
+        days.map(d => d.day), days.map(d => Number(d.net_pnl) || 0),
         { color: '#39ff14', yKind: 'money', seriesLabel: t('view.reports.ymd.perf_day') });
 }
 
-// ---------- Win vs Loss Days (Tradervue parity) ------------------------------
+// ---------- Win vs Loss Days (unchanged) ------------------------------------
 function renderWinLossDays(body, wld) {
     if (!wld) {
         body.innerHTML = '<p class="boot">' + esc(t('view.reports.hint.no_data')) + '</p>';
         return;
     }
     body.innerHTML = `
-        <h2 class="view-title" style="margin-top:0">Win vs Loss Days</h2>
+        <h2 class="view-title vt-mt-0">Win vs Loss Days</h2>
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2>Trade Distribution By Day Of Week</h2>
-                <div id="wld-dow-w" style="width:100%;height:240px"></div>
+                <div id="wld-dow-w" class="chart-h-240"></div>
             </div>
             <div class="chart-panel">
                 <h2>Performance By Day Of Week</h2>
-                <div id="wld-dow-l" style="width:100%;height:240px"></div>
+                <div id="wld-dow-l" class="chart-h-240"></div>
             </div>
         </div>
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2>Trade Distribution By Hour</h2>
-                <div id="wld-hour-w" style="width:100%;height:240px"></div>
+                <div id="wld-hour-w" class="chart-h-240"></div>
             </div>
             <div class="chart-panel">
                 <h2>Performance By Hour</h2>
-                <div id="wld-hour-l" style="width:100%;height:240px"></div>
+                <div id="wld-hour-l" class="chart-h-240"></div>
             </div>
         </div>
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2>Trade Distribution By Hold Time</h2>
-                <div id="wld-hold-w" style="width:100%;height:240px"></div>
+                <div id="wld-hold-w" class="chart-h-240"></div>
             </div>
             <div class="chart-panel">
                 <h2>Performance By Hold Time</h2>
-                <div id="wld-hold-l" style="width:100%;height:240px"></div>
+                <div id="wld-hold-l" class="chart-h-240"></div>
             </div>
         </div>
     `;
-    renderWinLossPair(body.querySelector('#wld-dow-w'), wld.by_dow, 'trades');
-    renderWinLossPair(body.querySelector('#wld-dow-l'), wld.by_dow, 'net_pnl');
+    renderWinLossPair(body.querySelector('#wld-dow-w'),  wld.by_dow,  'trades');
+    renderWinLossPair(body.querySelector('#wld-dow-l'),  wld.by_dow,  'net_pnl');
     renderWinLossPair(body.querySelector('#wld-hour-w'), wld.by_hour, 'trades');
     renderWinLossPair(body.querySelector('#wld-hour-l'), wld.by_hour, 'net_pnl');
     renderWinLossPair(body.querySelector('#wld-hold-w'), wld.by_hold, 'trades');
@@ -493,9 +1181,9 @@ function renderWinLossPair(el, split, valKey) {
             const xc = u.valToPos(xs[i], 'x', true);
             const wY = u.valToPos(winY[i], 'y', true);
             const lY = u.valToPos(lossY[i], 'y', true);
-            ctx.fillStyle = '#ffd84a'; // winning days = yellow
+            ctx.fillStyle = '#ffd84a';
             ctx.fillRect(xc - bw - 1, Math.min(yZero, wY), bw, Math.abs(wY - yZero));
-            ctx.fillStyle = '#3aa1ff'; // losing days = blue
+            ctx.fillStyle = '#3aa1ff';
             ctx.fillRect(xc + 1, Math.min(yZero, lY), bw, Math.abs(lY - yZero));
         }
         ctx.restore();

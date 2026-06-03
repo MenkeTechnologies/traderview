@@ -1,24 +1,32 @@
 import { api } from '../api.js';
-import { fmtDateTime, md, esc } from '../util.js';
+import { fmtDateTime, fmtMoney, fmtSecs, md, esc, pnlClass } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
-export async function renderJournalView(mount, _state, dayOrGeneral) {
+export async function renderJournalView(mount, state, dayOrGeneral) {
     const tok = currentViewToken();
     const isGeneral = dayOrGeneral === 'general';
     const day = isGeneral ? null : (dayOrGeneral || new Date().toISOString().slice(0, 10));
-    const entries = isGeneral
-        ? await api.journalGeneral()
-        : await api.journalForDay(day);
+    const acct = state?.accountId;
+
+    // Fetch entries + (for day view) the day's trades in parallel. The trades
+    // power a Tradervue-style "day summary" card at the top: net P&L, trade
+    // count, win/loss splits, total volume, etc.
+    const [entries, dayTrades] = await Promise.all([
+        isGeneral ? api.journalGeneral() : api.journalForDay(day),
+        (!isGeneral && acct)
+            ? api.trades(acct, { date_from: day, date_to: day, limit: 200 }).catch(() => [])
+            : Promise.resolve([]),
+    ]);
     if (!viewIsCurrent(tok)) return;
 
     mount.innerHTML = `
         <h1 class="view-title">
             // JOURNAL ·
             ${isGeneral
-                ? `<span style="color:var(--magenta)">${esc(t('view.journal.label.general'))}</span>`
+                ? `<span class="journal-label-magenta">${esc(t('view.journal.label.general'))}</span>`
                 : `<input type="date" id="journal-day" value="${day}" data-tip="view.journal.tip.day">`}
             <a href="#journal/${isGeneral ? new Date().toISOString().slice(0,10) : 'general'}" class="link small">
                 ${esc(t(isGeneral ? 'view.journal.link.switch_to_daily' : 'view.journal.link.switch_to_general'))}
@@ -27,8 +35,9 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                     data-i18n="view.journal.btn.refresh"
                     data-tip="view.journal.tip.refresh"
                     data-shortcut="journal_refresh"
-                    style="margin-left:12px;font-size:11px;padding:4px 10px;vertical-align:middle">⟳ Refresh</button>
+                    class="btn btn-secondary journal-header-refresh">⟳ Refresh</button>
         </h1>
+        ${isGeneral ? '' : dayJourneySummary(day, dayTrades)}
         <div id="entries">${entries.map(e => `
             <div class="journal-entry"
                  data-context-scope="journal-entry"
@@ -45,11 +54,11 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
         `).join('') || `<p class="muted">${esc(t(isGeneral ? 'view.journal.empty.general' : 'view.journal.empty.day'))}</p>`}</div>
         <div class="chart-panel">
             <h2 data-i18n="view.journal.h2.mood_chart">Mood trend (per entry, -2..+2)</h2>
-            <div id="j-chart" style="width:100%;height:240px"></div>
+            <div id="j-chart" class="chart-h-240"></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.journal.h2.mood_dist_chart">Mood distribution (entry count per level)</h2>
-            <div id="j-dist-chart" style="width:100%;height:200px"></div>
+            <div id="j-dist-chart" class="chart-h-200"></div>
             <p data-i18n="view.journal.hint.mood_dist" class="muted small">Frequency of each mood level across all entries. Reveals overall sentiment shape — heavy-tailed toward frustrated vs. centered on focused — independent of when each entry happened.</p>
         </div>
         <div class="chart-panel">
@@ -68,7 +77,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                       data-i18n-placeholder="view.journal.placeholder.body" data-tip="view.journal.tip.body"></textarea>
             <div class="inline-form">
                 <button data-i18n="view.journal.btn.save" data-tip="view.journal.tip.save" data-shortcut="journal_save" class="primary" id="save">Save</button>
-                <button data-i18n="view.journal.btn.insert_template" data-tip="view.journal.tip.insert_template" class="primary" id="apply-template" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Insert template</button>
+                <button data-i18n="view.journal.btn.insert_template" data-tip="view.journal.tip.insert_template" class="primary btn-magenta-gradient" id="apply-template">Insert template</button>
             </div>
         </div>
     `;
@@ -83,6 +92,16 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             window.location.hash = `journal/${e.target.value}`;
         });
     }
+    // Prev / next day shortcuts that mirror Tradervue's day-stepper.
+    mount.querySelectorAll('[data-day-step]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const step = Number(btn.dataset.dayStep) || 0;
+            const d = new Date(day + 'T00:00:00');
+            d.setDate(d.getDate() + step);
+            const next = d.toISOString().slice(0, 10);
+            window.location.hash = `journal/${next}`;
+        });
+    });
     mount.querySelector('#save').addEventListener('click', async () => {
         const body_md = mount.querySelector('#body').value.trim();
         if (!body_md) {
@@ -98,7 +117,7 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
             });
             if (!viewIsCurrent(tok)) return;
             showToast(t('view.journal.toast.saved'), { level: 'success' });
-            renderJournalView(mount, _state, dayOrGeneral);
+            renderJournalView(mount, state, dayOrGeneral);
         } catch (err) {
             showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
@@ -121,12 +140,91 @@ export async function renderJournalView(mount, _state, dayOrGeneral) {
                 await api.deleteJournal(b.dataset.del);
                 if (!viewIsCurrent(tok)) return;
                 showToast(t('view.journal.toast.deleted'), { level: 'success' });
-                renderJournalView(mount, _state, dayOrGeneral);
+                renderJournalView(mount, state, dayOrGeneral);
             } catch (err) {
                 showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
             }
         }));
     void esc;
+}
+
+// ----------------------------------------------------------------------------
+// Day summary panel — shown above the entries when the user picks a specific
+// day. Mirrors Tradervue's per-day card: net P&L, win/loss split, trade list.
+// ----------------------------------------------------------------------------
+function dayJourneySummary(day, trades) {
+    if (!Array.isArray(trades) || !trades.length) {
+        return `
+            <div class="journal-day-strip">
+                <button type="button" class="link" data-day-step="-1">← ${esc(t('view.journal.day_step.prev'))}</button>
+                <span class="muted">${esc(t('view.journal.empty.no_trades', { day }))}</span>
+                <button type="button" class="link" data-day-step="1">${esc(t('view.journal.day_step.next'))} →</button>
+            </div>
+        `;
+    }
+    let net = 0, gross = 0, fees = 0, vol = 0, wins = 0, losses = 0, scratch = 0;
+    let totalHold = 0, holdN = 0;
+    for (const tr of trades) {
+        const n = Number(tr.net_pnl) || 0;
+        net += n;
+        gross += Number(tr.gross_pnl) || 0;
+        fees  += Number(tr.fees) || 0;
+        vol   += Math.abs(Number(tr.qty) || 0) * Math.abs(Number(tr.entry_avg) || 0);
+        if (n > 0) wins++;
+        else if (n < 0) losses++;
+        else scratch++;
+        if (tr.opened_at && tr.closed_at) {
+            const h = (new Date(tr.closed_at) - new Date(tr.opened_at)) / 1000;
+            if (h > 0) { totalHold += h; holdN++; }
+        }
+    }
+    const avgHold = holdN > 0 ? totalHold / holdN : 0;
+    return `
+        <div class="journal-day-strip">
+            <button type="button" class="link" data-day-step="-1">← ${esc(t('view.journal.day_step.prev'))}</button>
+            <span class="journal-day-label">${esc(day)}</span>
+            <button type="button" class="link" data-day-step="1">${esc(t('view.journal.day_step.next'))} →</button>
+        </div>
+        <div class="journal-day-summary">
+            <div class="jds-card"><div class="jds-label">${esc(t('view.dashboard.stat.net_pnl'))}</div>
+                <div class="jds-val ${pnlClass(net)}">${fmtMoney(net)}</div></div>
+            <div class="jds-card"><div class="jds-label">${esc(t('view.reports.stat.gross_pnl'))}</div>
+                <div class="jds-val ${pnlClass(gross)}">${fmtMoney(gross)}</div></div>
+            <div class="jds-card"><div class="jds-label">${esc(t('view.dashboard.stat.fees'))}</div>
+                <div class="jds-val">${fmtMoney(fees)}</div></div>
+            <div class="jds-card"><div class="jds-label">${esc(t('view.dashboard.stat.trades'))}</div>
+                <div class="jds-val">${trades.length}</div></div>
+            <div class="jds-card"><div class="jds-label">${esc(t('view.journal.day_summary.wls'))}</div>
+                <div class="jds-val">${wins} / ${losses} / ${scratch}</div></div>
+            <div class="jds-card"><div class="jds-label">${esc(t('view.dashboard.stat.avg_hold'))}</div>
+                <div class="jds-val">${fmtSecs(avgHold)}</div></div>
+            <div class="jds-card"><div class="jds-label">${esc(t('view.reports.stat.volume'))}</div>
+                <div class="jds-val">${fmtMoney(vol)}</div></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.journal.h2.trades_for_day">Trades for this day</h2>
+            <table class="trades">
+                <thead><tr>
+                    <th data-i18n="view.search.th.symbol">Symbol</th>
+                    <th data-i18n="view.search.th.side">Side</th>
+                    <th data-i18n="view.journal.day_summary.opened">Opened</th>
+                    <th data-i18n="view.journal.day_summary.closed">Closed</th>
+                    <th data-i18n="view.journal.day_summary.qty">Qty</th>
+                    <th data-i18n="view.dashboard.stat.net_pnl">Net P&L</th>
+                </tr></thead>
+                <tbody>${trades.map(tr => `
+                    <tr>
+                        <td><a href="#trade/${tr.id}">${esc(tr.symbol)}</a></td>
+                        <td>${tr.side}</td>
+                        <td>${fmtDateTime(tr.opened_at)}</td>
+                        <td>${tr.closed_at ? fmtDateTime(tr.closed_at) : '—'}</td>
+                        <td>${tr.qty}</td>
+                        <td class="${pnlClass(tr.net_pnl)}">${tr.net_pnl !== null && tr.net_pnl !== undefined ? fmtMoney(tr.net_pnl) : '—'}</td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>
+        </div>
+    `;
 }
 
 function renderMoodChart(entries) {

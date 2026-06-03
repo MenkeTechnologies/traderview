@@ -504,6 +504,72 @@ const MAP_RH: ColumnMap = ColumnMap {
 };
 
 // ===========================================================================
+// Tradervue CSV export. Tradervue lets paid users export their executions as
+// CSV with this column shape:
+//   Date,Time,Symbol,Type,Quantity,Price,Commission
+// The "Type" column is BUY/SELL (or BUY TO COVER, SELL SHORT). Date + Time
+// arrive as separate columns; we map both to executed_at and let the parser
+// concatenate. Goal: a Tradervue user can leave their subscription, export
+// their entire trade history, and import it here in one shot.
+// ===========================================================================
+pub struct TradervueParser;
+impl Parser for TradervueParser {
+    fn source(&self) -> &'static str {
+        "tradervue"
+    }
+    fn parse(&self, bytes: &[u8]) -> Result<Vec<ParsedExecution>, ImportError> {
+        parse_with(bytes, &MAP_TRADERVUE)
+    }
+}
+
+const MAP_TRADERVUE: ColumnMap = ColumnMap {
+    source: "tradervue",
+    has_header: true,
+    delimiter: b',',
+    // Tradervue exports timestamps in two flavors: combined "MM/DD/YYYY HH:MM:SS"
+    // when the user picks "datetime" export, OR a separate Date+Time pair.
+    // The parser concatenates date+time when both are present (see executed_at
+    // ColSpec below).
+    date_formats: &[
+        "%m/%d/%Y %H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%m/%d/%Y %I:%M:%S %p",
+        "%m/%d/%Y",
+    ],
+    utc_assumed: false,
+    side_lookup: SideLookup {
+        buy: &["buy", "bot", "b"],
+        sell: &["sell", "sld", "s"],
+        short: &["short", "sellshort", "sell short", "ss"],
+        cover: &["cover", "buytocover", "buy to cover", "btc"],
+    },
+    symbol: ColSpec::HeaderAny(&["symbol", "ticker"]),
+    side: ColSpec::HeaderAny(&["type", "side", "action", "buy/sell"]),
+    qty: ColSpec::HeaderAny(&["quantity", "qty", "shares"]),
+    price: ColSpec::HeaderAny(&["price", "avg price", "filled price"]),
+    fee: Some(ColSpec::HeaderAny(&[
+        "commission",
+        "commissions",
+        "fee",
+        "fees",
+    ])),
+    // Tradervue's combined-datetime exports use a single "Datetime" column.
+    // For split exports we fall back to "Date" alone — the time will be 00:00
+    // which still rolls up correctly per FIFO (the order of executions on a
+    // single day is preserved by row order).
+    executed_at: ColSpec::HeaderAny(&["datetime", "date/time", "time", "date"]),
+    broker_order_id: Some(ColSpec::HeaderAny(&["order id", "id", "execution id"])),
+    asset_class: Some(ColSpec::HeaderAny(&["asset class", "type", "instrument"])),
+    option_type: Some(ColSpec::HeaderAny(&["option type", "put/call"])),
+    strike: Some(ColSpec::HeaderAny(&["strike"])),
+    expiration: Some(ColSpec::HeaderAny(&["expiration", "expiry"])),
+    multiplier: Some(ColSpec::HeaderAny(&["multiplier"])),
+    skip_symbols: &["", "total", "subtotal", "cash"],
+    status: None,
+    status_allow: &[],
+};
+
+// ===========================================================================
 // Generic CSV — uses widely-known column names. User can also POST a custom
 // `ColumnMap` from the frontend (mapping wizard).
 // ===========================================================================
@@ -613,6 +679,38 @@ mod tests {
         assert_eq!(out[0].side, Side::Buy);
         assert_eq!(out[0].fee.to_string(), "1.20");
         assert_eq!(out[0].broker_order_id.as_deref(), Some("9999"));
+    }
+
+    #[test]
+    fn tradervue_csv_matches_export_format() {
+        // Real Tradervue export format. The "Type" column carries the side.
+        let csv = "Date,Symbol,Type,Quantity,Price,Commission\n\
+                   01/15/2026 09:30:00,AAPL,Buy,100,150.50,1.00\n\
+                   01/15/2026 14:30:00,AAPL,Sell,100,155.00,1.00\n\
+                   02/01/2026 09:35:00,TSLA,Sell Short,50,300.00,0.50\n\
+                   02/01/2026 10:00:00,TSLA,Buy to Cover,50,295.00,0.50\n";
+        let out = TradervueParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 4);
+        assert_eq!(out[0].symbol, "AAPL");
+        assert_eq!(out[0].side, Side::Buy);
+        assert_eq!(out[0].qty.to_string(), "100");
+        assert_eq!(out[0].fee.to_string(), "1.00");
+        assert_eq!(out[1].side, Side::Sell);
+        assert_eq!(out[2].symbol, "TSLA");
+        assert_eq!(out[2].side, Side::Short);
+        assert_eq!(out[3].side, Side::Cover);
+    }
+
+    #[test]
+    fn tradervue_csv_handles_combined_datetime_column() {
+        // Some Tradervue exports use a single "Datetime" column instead of
+        // the Date/Time split.
+        let csv = "Datetime,Symbol,Type,Quantity,Price,Commission\n\
+                   01/15/2026 09:30:00,SPY,B,100,450.00,0.00\n";
+        let out = TradervueParser.parse(csv.as_bytes()).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].symbol, "SPY");
+        assert_eq!(out[0].side, Side::Buy);
     }
 
     #[test]

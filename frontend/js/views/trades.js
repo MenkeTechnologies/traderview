@@ -4,8 +4,17 @@ import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
+import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
 
 let currentFilter = {};
+const PAGE_SIZE = 100;
+let currentPage = 1;
+let lastPageRows = 0;  // rows returned on the last page (to detect last page)
+// Column-level sort state. Backend returns trades ordered by opened_at DESC;
+// these get applied client-side after fetch so we don't hit the server when
+// the user toggles direction or column.
+let sortKey = '';      // '' = backend order, else one of trade keys
+let sortDir = 'desc';  // 'asc' | 'desc'
 
 export async function renderTradesView(mount, state) {
     const tok = currentViewToken();
@@ -26,9 +35,9 @@ export async function renderTradesView(mount, state) {
                     data-tip="view.trades.tip.refresh"
                     data-shortcut="trades_refresh">⟳ Refresh</button>
             <button data-i18n="view.trades.btn.re_run_fifo" data-tip="view.trades.tip.rollup" class="primary" id="rollup-btn">Re-run FIFO</button>
-            <button data-i18n="view.trades.btn.close_expired_options" data-tip="view.trades.tip.close_exp" class="primary" id="close-exp-btn" style="background:linear-gradient(180deg,var(--magenta),#7f00b5);border-color:var(--magenta)">Close expired options</button>
-            <span class="muted" id="sel-count" style="margin-left:14px">${esc(t('view.trades.label.n_selected', { n: 0 }))}</span>
-            <select id="bulk-action" data-tip="view.trades.tip.bulk_action" style="width:auto;min-width:140px;display:inline-block">
+            <button data-i18n="view.trades.btn.close_expired_options" data-tip="view.trades.tip.close_exp" class="primary btn-magenta-gradient" id="close-exp-btn">Close expired options</button>
+            <span class="muted trades-selcount" id="sel-count">${esc(t('view.trades.label.n_selected', { n: 0 }))}</span>
+            <select id="bulk-action" data-tip="view.trades.tip.bulk_action" class="trades-bulk-sel">
                 <option data-i18n="view.trades.opt.bulk_action" value="">— bulk action —</option>
                 <option data-i18n="view.trades.opt.delete" value="delete">Delete</option>
                 <option data-i18n="view.trades.opt.merge_into_one" value="merge">Merge into one</option>
@@ -39,15 +48,22 @@ export async function renderTradesView(mount, state) {
                 <option data-i18n="view.trades.opt.share_publicly" value="share">Share publicly</option>
             </select>
             <button data-i18n="view.trades.btn.apply" data-tip="view.trades.tip.apply" class="primary" id="apply-bulk" disabled>Apply</button>
+            <a href="${api.exportTradesUrl(state.accountId)}" download class="btn btn-secondary btn-compact trades-export-link"
+               data-i18n="view.trades.export.csv">Export CSV</a>
         </div>
         <div id="trades-table"></div>
+        <div id="trades-pagination" class="trades-pagination" hidden>
+            <button type="button" id="page-prev" data-i18n="view.trades.pagination.prev">← Prev</button>
+            <span class="page-info" id="page-info"></span>
+            <button type="button" id="page-next" data-i18n="view.trades.pagination.next">Next →</button>
+        </div>
         <div class="chart-panel">
             <h2 data-i18n="view.trades.h2.pnl_chart">Net P&L by trade (closed only)</h2>
-            <div id="trades-chart" style="width:100%;height:240px"></div>
+            <div id="trades-chart" class="chart-h-240"></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.trades.h2.cum_chart">Cumulative equity over closed trades</h2>
-            <div id="trades-cum-chart" style="width:100%;height:220px"></div>
+            <div id="trades-cum-chart" class="chart-h-220"></div>
             <p data-i18n="view.trades.hint.cum_chart" class="muted small">Running sum of net P&L in close-date order. Orthogonal to per-trade dots: reveals trajectory, drawdowns and recovery across the filtered set. Yellow dashed = breakeven.</p>
         </div>
     `;
@@ -131,21 +147,43 @@ export async function renderTradesView(mount, state) {
     }
 
     async function refresh() {
-        const trades = await api.trades(state.accountId, currentFilter);
+        const offset = (currentPage - 1) * PAGE_SIZE;
+        let trades = await api.trades(state.accountId, {
+            ...currentFilter, limit: PAGE_SIZE, offset,
+        });
+        lastPageRows = trades.length;
+        if (sortKey) trades = sortTrades(trades, sortKey, sortDir);
         if (!viewIsCurrent(tok)) return;
+        renderPager(mount);
         renderPnlChart(trades);
         renderCumChart(trades);
         const tableEl = mount.querySelector('#trades-table');
         if (!tableEl) return;
         if (!trades.length) { tableEl.innerHTML = '<p data-i18n="view.trades.hint.no_trades_match" class="boot">No trades match.</p>'; return; }
+        // Click headers to sort; clicking again toggles direction.
+        const th = (key, labelKey, label) => {
+            const active = sortKey === key;
+            const arrow = active ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+            return `<th data-sort-key="${esc(key)}" class="sortable${active ? ' active' : ''}"
+                       data-i18n="${labelKey}">${esc(label)}${arrow}</th>`;
+        };
         tableEl.innerHTML = `
             <table class="trades">
                 <thead><tr>
-                    <th style="width:28px"><input type="checkbox" id="sel-all"></th>
-                    <th data-i18n="view.trades.th.symbol">Symbol</th><th data-i18n="view.trades.th.asset">Asset</th><th data-i18n="view.trades.th.side">Side</th><th data-i18n="view.trades.th.status">Status</th>
-                    <th data-i18n="view.trades.th.qty">Qty</th><th data-i18n="view.trades.th.entry">Entry</th><th data-i18n="view.trades.th.exit">Exit</th>
-                    <th data-i18n="view.trades.th.net_p_l">Net P&L</th><th>R</th>
-                    <th data-i18n="view.trades.th.hold">Hold</th><th data-i18n="view.trades.th.opened">Opened</th><th data-i18n="view.trades.th.closed">Closed</th><th></th>
+                    <th class="col-checkbox"><input type="checkbox" id="sel-all"></th>
+                    ${th('symbol',      'view.trades.th.symbol',  'Symbol')}
+                    ${th('asset_class', 'view.trades.th.asset',   'Asset')}
+                    ${th('side',        'view.trades.th.side',    'Side')}
+                    ${th('status',      'view.trades.th.status',  'Status')}
+                    ${th('qty',         'view.trades.th.qty',     'Qty')}
+                    ${th('entry_avg',   'view.trades.th.entry',   'Entry')}
+                    ${th('exit_avg',    'view.trades.th.exit',    'Exit')}
+                    ${th('net_pnl',     'view.trades.th.net_p_l', 'Net P&L')}
+                    ${th('r_multiple',  'view.trades.th.r',       'R')}
+                    ${th('hold',        'view.trades.th.hold',    'Hold')}
+                    ${th('opened_at',   'view.trades.th.opened',  'Opened')}
+                    ${th('closed_at',   'view.trades.th.closed',  'Closed')}
+                    <th></th>
                 </tr></thead>
                 <tbody>${trades.map(t => `
                     <tr class="trade-row" data-id="${t.id}" data-context-scope="trade-row">
@@ -185,6 +223,33 @@ export async function renderTradesView(mount, state) {
         tableEl.querySelectorAll('tr[data-id]').forEach(tr => {
             tr.addEventListener('dblclick', () => go('trade', tr.dataset.id));
         });
+        tableEl.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', async () => {
+                const key = th.dataset.sortKey;
+                if (sortKey === key) {
+                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortKey = key;
+                    sortDir = 'desc';
+                }
+                await refresh();
+            });
+        });
+
+        // Trello-style column reorder. Persists per-column order to
+        // localStorage and reorders matching cells in each tbody row.
+        const headRow = tableEl.querySelector('thead tr');
+        if (headRow) {
+            resetDragReorder(headRow);
+            initDragReorder(headRow, 'th', 'trades_column_order', {
+                direction: 'horizontal',
+                getKey: (el) => el.dataset.sortKey || el.textContent.trim().slice(0, 12),
+                onReorder: () => reorderBodyCellsToHead(tableEl),
+                toastMessage: t('toast.reordered_columns'),
+            });
+            // Also reorder body cells once on init so a saved order applies.
+            reorderBodyCellsToHead(tableEl);
+        }
         tableEl.querySelectorAll('[data-del]').forEach(b =>
             b.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -194,12 +259,91 @@ export async function renderTradesView(mount, state) {
                 await refresh();
             }));
     }
+    const prev = mount.querySelector('#page-prev');
+    const next = mount.querySelector('#page-next');
+    if (prev) prev.addEventListener('click', async () => {
+        if (currentPage > 1) { currentPage--; await refresh(); window.scrollTo({ top: 0 }); }
+    });
+    if (next) next.addEventListener('click', async () => {
+        if (lastPageRows === PAGE_SIZE) { currentPage++; await refresh(); window.scrollTo({ top: 0 }); }
+    });
     await refresh();
+}
+
+function renderPager(mount) {
+    const wrap = mount.querySelector('#trades-pagination');
+    const info = mount.querySelector('#page-info');
+    const prev = mount.querySelector('#page-prev');
+    const next = mount.querySelector('#page-next');
+    if (!wrap || !info || !prev || !next) return;
+    const showing = currentPage > 1 || lastPageRows === PAGE_SIZE;
+    wrap.hidden = !showing;
+    info.textContent = t('view.trades.pagination.page_of', {
+        page: currentPage,
+        total: lastPageRows === PAGE_SIZE ? `${currentPage}+` : currentPage,
+    });
+    prev.disabled = currentPage <= 1;
+    next.disabled = lastPageRows < PAGE_SIZE;
 }
 
 function holdSeconds(t) {
     if (!t.closed_at) return null;
     return Math.round((new Date(t.closed_at) - new Date(t.opened_at)) / 1000);
+}
+
+/**
+ * After the user reorders `<th>` cells via drag, reshuffle each `<tr>` in
+ * tbody so cells match the new header order. We build an index map from the
+ * pre-reorder DOM order via data-orig-idx on every cell.
+ */
+function reorderBodyCellsToHead(tableEl) {
+    const headRow = tableEl.querySelector('thead tr');
+    const tbody = tableEl.querySelector('tbody');
+    if (!headRow || !tbody) return;
+    // Assign stable indices on first call.
+    [...headRow.children].forEach((th, i) => {
+        if (th.dataset.origIdx == null) th.dataset.origIdx = String(i);
+    });
+    const newOrder = [...headRow.children].map(th => Number(th.dataset.origIdx));
+    // Stamp the rows' original cell indices once.
+    for (const row of tbody.rows) {
+        [...row.cells].forEach((td, i) => {
+            if (td.dataset.origIdx == null) td.dataset.origIdx = String(i);
+        });
+        const byIdx = new Map([...row.cells].map(td => [Number(td.dataset.origIdx), td]));
+        const frag = document.createDocumentFragment();
+        for (const idx of newOrder) {
+            const cell = byIdx.get(idx);
+            if (cell) frag.appendChild(cell);
+        }
+        // Append any cells not covered (defensive).
+        for (const td of row.cells) frag.appendChild(td);
+        row.appendChild(frag);
+    }
+}
+
+/**
+ * Client-side sort for the current page of trades. We don't sort across
+ * the entire dataset — pagination already constrained the rows the user
+ * sees. 'hold' is a derived field so it doesn't exist on the row.
+ */
+function sortTrades(rows, key, dir) {
+    const mult = dir === 'asc' ? 1 : -1;
+    const get = (r) => {
+        if (key === 'hold') return holdSeconds(r) ?? -Infinity;
+        const v = r[key];
+        if (v == null) return null;
+        if (key === 'opened_at' || key === 'closed_at') return new Date(v).getTime();
+        const n = Number(v);
+        return Number.isFinite(n) ? n : String(v).toLowerCase();
+    };
+    return [...rows].sort((a, b) => {
+        const av = get(a), bv = get(b);
+        if (av === bv) return 0;
+        if (av === null || av === undefined) return 1;   // nulls last
+        if (bv === null || bv === undefined) return -1;
+        return av < bv ? -1 * mult : 1 * mult;
+    });
 }
 
 function renderCumChart(trades) {

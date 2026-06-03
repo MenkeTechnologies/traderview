@@ -36,6 +36,37 @@ export const pnlClass = (n) => {
     return 'flat';                              // exact zero / break-even is neutral
 };
 
+/**
+ * Apply inline styles that get stripped from innerHTML by Tauri release
+ * WebKit. Walk after the next paint:
+ *
+ *   - [data-bar-pct]      → el.style.width = "X%"
+ *   - [data-border-color] → el.style.borderColor
+ *   - [data-text-color]   → el.style.color
+ *   - [data-bg-color]     → el.style.backgroundColor
+ *
+ * These property assignments via the JS DOM API survive release builds where
+ * the equivalent `style="..."` attribute inserted via innerHTML would not.
+ * Pass a scoped container; falls back to whole document.
+ */
+export function applyBarWidths(root = document) {
+    requestAnimationFrame(() => {
+        root.querySelectorAll('[data-bar-pct]').forEach(el => {
+            const pct = Number(el.dataset.barPct);
+            if (Number.isFinite(pct)) el.style.width = `${pct}%`;
+        });
+        root.querySelectorAll('[data-border-color]').forEach(el => {
+            el.style.borderColor = el.dataset.borderColor;
+        });
+        root.querySelectorAll('[data-text-color]').forEach(el => {
+            el.style.color = el.dataset.textColor;
+        });
+        root.querySelectorAll('[data-bg-color]').forEach(el => {
+            el.style.backgroundColor = el.dataset.bgColor;
+        });
+    });
+}
+
 export const fmtDate = (iso) => (iso || '').slice(0, 10);
 export const fmtDateTime = (iso) => {
     if (!iso) return '—';

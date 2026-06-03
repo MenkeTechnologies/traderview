@@ -239,17 +239,28 @@ body:not(.no-neon-glow) .chart-panel {
 .dash-tv-na { color:var(--text-muted); font-style:italic; padding:18px 0 }
 
 .dash-tv-grid .chart-panel { position:relative }
-.dash-tv-grid .chart-panel[draggable="true"] { cursor:grab }
-.dash-tv-grid .chart-panel.dragging { opacity:0.4; cursor:grabbing }
-.dash-tv-grid .chart-panel.drop-target { outline:2px dashed var(--cyan); outline-offset:-2px }
+.dash-tv-grid .chart-panel > h2 { cursor:grab; user-select:none }
+
+/* ---- Trello-style drag engine (global) -------------------------
+   Hardcoded colors (not var(--cyan)) because the placeholder is a
+   dynamically inserted DOM node — release WebKit may not resolve
+   CSS custom properties on freshly inserted children of document.body. */
+.trello-placeholder {
+    border:2px dashed #00e5ff !important;
+    border-radius:4px;
+    background:rgba(0,229,255,0.08);
+    box-sizing:border-box;
+    min-height:20px;
+}
+.trello-ghost { transition:none !important }
 .dash-tv-drag-handle, .dash-tv-del-btn {
     position:absolute; top:6px; width:18px; height:18px;
-    color:var(--text-muted); cursor:pointer; opacity:0;
+    color:var(--text-muted); cursor:pointer; opacity:0.45;
     transition:opacity 120ms ease, color 120ms ease;
     display:flex; align-items:center; justify-content:center;
-    font-size:11px; user-select:none;
+    font-size:13px; user-select:none;
 }
-.dash-tv-drag-handle { left:6px; cursor:grab }
+.dash-tv-drag-handle { left:6px; cursor:grab; font-size:15px }
 .dash-tv-del-btn     { right:6px }
 .dash-tv-grid .chart-panel:hover .dash-tv-drag-handle,
 .dash-tv-grid .chart-panel:hover .dash-tv-del-btn { opacity:1 }
@@ -257,17 +268,289 @@ body:not(.no-neon-glow) .chart-panel {
 .dash-tv-del-btn:hover     { color:#ff3860 }
 
 .dash-tv-layout-controls { display:inline-flex; gap:8px; align-items:center }
+.dash-tv-add-wrap { position:relative; display:inline-block }
 .dash-tv-add-menu {
-    position:absolute; background:var(--bg-card); border:1px solid var(--cyan);
+    position:absolute; top:100%; left:0; margin-top:4px;
+    background:var(--bg-card); border:1px solid var(--cyan);
     border-radius:2px; padding:6px; min-width:240px; max-height:400px; overflow:auto;
     z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4);
 }
-.dash-tv-add-menu button {
+.dash-tv-add-menu .dash-tv-add-item {
     display:block; width:100%; text-align:left; background:transparent; border:0;
     color:var(--text); padding:6px 10px; font-size:12px; cursor:pointer; border-radius:2px;
 }
-.dash-tv-add-menu button:hover { background:rgba(0,229,255,0.12); color:var(--cyan) }
-.dash-tv-add-menu .empty { padding:8px 10px; color:var(--text-muted); font-style:italic; font-size:11px }
+.dash-tv-add-menu .dash-tv-add-item:hover { background:rgba(0,229,255,0.12); color:var(--cyan) }
+.dash-tv-add-empty { padding:8px 10px; color:var(--text-muted); font-style:italic; font-size:11px }
+
+/* ---- reports: filter bar, style bar, primary tabs --------------- */
+.report-filter-bar {
+    display:flex; flex-wrap:wrap; gap:10px 14px; align-items:flex-end;
+    padding:10px 12px; margin:8px 0 12px;
+    background:var(--bg-card); border:1px solid var(--border); border-radius:4px;
+}
+.report-filter-bar .rfb-field { display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--text-muted) }
+.report-filter-bar .rfb-field span { font-weight:600; letter-spacing:0.04em; text-transform:uppercase }
+.report-filter-bar .rfb-field input,
+.report-filter-bar .rfb-field select {
+    background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:2px; padding:5px 8px; font-size:12px; min-width:100px;
+}
+.report-filter-bar .rfb-field input:focus,
+.report-filter-bar .rfb-field select:focus { outline:none; border-color:var(--cyan) }
+.report-filter-bar .rfb-set-picker {
+    background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:2px; padding:5px 8px; font-size:12px;
+}
+.report-primary-tabs { margin-top:4px }
+.report-secondary-tabs { margin-top:6px; font-size:11px; opacity:0.85 }
+.report-secondary-tabs .report-tab { padding:4px 10px }
+
+.report-style-bar {
+    display:flex; flex-wrap:wrap; gap:18px;
+    padding:8px 12px; margin:8px 0 14px;
+    background:var(--bg-card); border:1px solid var(--border); border-radius:4px;
+}
+.report-style-bar .rsb-group { display:flex; align-items:center; gap:6px }
+.report-style-bar .rsb-label {
+    font-size:10px; font-weight:600; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--text-muted); margin-right:4px;
+}
+.report-style-bar button {
+    background:transparent; color:var(--text-muted); border:1px solid var(--border);
+    border-radius:2px; padding:4px 10px; font-size:11px; cursor:pointer;
+}
+.report-style-bar button.active { background:rgba(0,229,255,0.18); border-color:var(--cyan); color:var(--cyan) }
+.report-style-bar button:hover:not(.active) { color:var(--text) }
+
+/* ---- Compare tab ------------------------------------------------ */
+.cmp-filter-pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px }
+.cmp-filter-col {
+    background:var(--bg-card); padding:12px; border-radius:4px;
+    display:flex; flex-direction:column; gap:8px;
+}
+.cmp-filter-col h3 { margin:0 0 6px; font-size:13px; letter-spacing:0.04em }
+.cmp-filter-col label { display:grid; grid-template-columns:90px 1fr; gap:8px; align-items:center; font-size:11px; color:var(--text-muted) }
+.cmp-filter-col input, .cmp-filter-col select {
+    background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:2px; padding:4px 8px; font-size:12px;
+}
+.cmp-stat-card {
+    background:var(--bg-card); padding:10px 12px; border-radius:3px;
+    border:1px solid var(--border);
+}
+.cmp-stat-label { font-size:10px; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.06em; margin-bottom:6px }
+.cmp-stat-row { display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono', monospace; font-size:13px }
+.cmp-a-pip, .cmp-b-pip { display:inline-block; width:8px; height:8px; border-radius:50% }
+.cmp-a-pip { background:#ffd84a }
+.cmp-b-pip { background:#3aa1ff }
+
+/* ---- Tag breakdown table track ---------------------------------- */
+.tag-bar-track {
+    background:rgba(255,255,255,0.06); width:160px; height:8px; border-radius:2px; overflow:hidden;
+}
+.tag-bar-fill { height:100%; transition:width 0.2s ease }
+.tag-bar-fill.pos { background:#39ff14 }
+.tag-bar-fill.neg { background:#ff3860 }
+
+/* ---- Year calendar grid ---------------------------------------- */
+.ycal-year-header {
+    font-family:'Orbitron', sans-serif; font-size:24px; font-weight:700;
+    color:var(--cyan); margin:4px 0 12px;
+}
+.ycal-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px }
+.ycal-month { background:var(--bg-card); padding:10px; border-radius:4px; border:1px solid var(--border) }
+.ycal-month-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:11px }
+.ycal-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:2px }
+.ycal-dow { font-size:9px; color:var(--text-muted); text-align:center; padding:1px 0 }
+.ycal-cell {
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+    font-size:9px; border-radius:2px; background:rgba(255,255,255,0.04); color:var(--text-muted);
+}
+.ycal-cell.empty { background:transparent }
+.ycal-cell.pos   { background:rgba(57,255,20,0.18);  color:#9bff7e }
+.ycal-cell.neg   { background:rgba(255,56,96,0.18);  color:#ffb0bf }
+
+@media (max-width: 1200px) { .ycal-row { grid-template-columns:repeat(3, 1fr) } }
+@media (max-width: 900px)  { .ycal-row { grid-template-columns:repeat(2, 1fr) } .cmp-filter-pair { grid-template-columns:1fr } }
+
+/* ============================================================================
+   Release-build-safe utility classes.
+   Tauri WebKit release silently strips inline style="" from any element that
+   ships through innerHTML — even on plain <div>/<span>. These classes replace
+   the inline declarations my views were generating dynamically.
+   ============================================================================ */
+
+/* Chart container heights — uPlot reads clientWidth/Height on init, so these
+   must be explicit pixels, not flex children. */
+.chart-h-180 { width:100%; height:180px }
+.chart-h-200 { width:100%; height:200px }
+.chart-h-220 { width:100%; height:220px }
+.chart-h-240 { width:100%; height:240px }
+.chart-h-260 { width:100%; height:260px }
+.chart-h-280 { width:100%; height:280px }
+.chart-h-320 { width:100%; height:320px }
+.chart-h-360 { width:100%; height:360px }
+
+/* Compact buttons used in headers / toolbars. */
+.btn-compact { font-size:11px; padding:4px 10px }
+
+/* Hero-stat block — big centered number with subtitle. Used by profit factor
+   gauge, total fees, win-rate card etc. */
+.hero-stat {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px 0; gap:8px;
+}
+.hero-stat-tight { padding:12px 0 }
+.hero-stat-band { padding:36px 0; flex-direction:row }
+.hero-num     { font-size:48px; font-weight:700; line-height:1;
+                font-family:'Orbitron', sans-serif }
+.hero-num-md  { font-size:32px; font-family:'JetBrains Mono', monospace }
+.hero-num-cyan { color:#00e5ff }
+.hero-num-pos  { color:#39ff14 }
+.hero-num-neg  { color:#ff3860 }
+.hero-num-warn { color:#ffd84a }
+
+/* Compare-tab filter columns — colored top borders match A=yellow / B=blue. */
+.cmp-filter-col-a { border-top:3px solid #ffd84a }
+.cmp-filter-col-b { border-top:3px solid #3aa1ff }
+
+/* Trade-detail full-width grid span. */
+.td-span-all { grid-column:1 / -1 }
+.td-margin-top-8 { margin-top:8px; display:inline-block }
+
+/* World-markets mount spacing under the dashboard grid. */
+.world-mount { margin-top:14px }
+
+/* Compare-bar % muted label. */
+.cmp-pct-muted { font-weight:400 }
+
+/* Discipline-score strip on the dashboard. */
+.discipline-strip { display:flex; align-items:center; gap:20px; flex-wrap:wrap }
+.discipline-num   { font-size:48px; font-weight:700; line-height:1 }
+.discipline-grade { font-size:24px }
+.discipline-detail { flex:1; min-width:200px }
+.discipline-pos   { color:#39ff14 }
+.discipline-warn  { color:#ffb800 }
+.discipline-neg   { color:#ff2a6d }
+
+/* Profit factor SVG arc colors via class instead of inline stroke (only the
+   arc d= uses inline because it's a path attribute, which survives). */
+.pf-arc-pos  { stroke:#39ff14 }
+.pf-arc-warn { stroke:#ffd84a }
+.pf-arc-neg  { stroke:#ff3860 }
+.pf-num-pos  { color:#39ff14 }
+.pf-num-warn { color:#ffd84a }
+.pf-num-neg  { color:#ff3860 }
+
+/* View-title spacing variants. */
+.vt-mt-0  { margin-top:0 }
+.vt-mt-16 { margin-top:16px }
+
+/* Trades toolbar export link pushed to the right side. */
+.trades-export-link { margin-left:auto }
+
+/* Trades table checkbox column fixed width. */
+table.trades th.col-checkbox { width:28px }
+
+/* Section margin used by trade reviews / tape replay link. */
+.review-status-meta { display:inline }
+.review-saved-meta  { display:inline-block; margin-left:8px }
+
+/* Pre-existing magenta gradient buttons (Insert template, Close expired
+   options) — hardcoded colors because release WebKit may not resolve
+   var(--magenta) on dynamically inserted buttons. */
+.btn-magenta-gradient {
+    background:linear-gradient(180deg,#b86bff,#7f00b5);
+    border-color:#b86bff;
+}
+
+/* Pre-existing inline-style replacements in journal / trades / trade detail. */
+.journal-label-magenta { color:#b86bff }
+.journal-header-refresh {
+    margin-left:12px; font-size:11px; padding:4px 10px; vertical-align:middle;
+}
+.trades-selcount  { margin-left:14px }
+.trades-bulk-sel  { width:auto; min-width:140px; display:inline-block }
+.td-form-mt-8     { margin-top:8px }
+
+/* ---- Journal day summary --------------------------------------- */
+.journal-day-strip {
+    display:flex; gap:14px; align-items:center; padding:6px 10px;
+    background:var(--bg-card); border-radius:3px; margin:8px 0;
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+}
+.journal-day-label { color:var(--cyan); font-weight:700; letter-spacing:0.06em }
+.journal-day-summary {
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin:8px 0 12px;
+}
+.jds-card {
+    background:var(--bg-card); padding:8px 10px; border-radius:3px;
+    border:1px solid var(--border); display:flex; flex-direction:column; gap:4px;
+}
+.jds-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em }
+.jds-val   { font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:600 }
+@media (max-width: 1100px) { .journal-day-summary { grid-template-columns:repeat(4, 1fr) } }
+@media (max-width: 700px)  { .journal-day-summary { grid-template-columns:repeat(2, 1fr) } }
+
+/* ---- Dashboard period toggles (calendar-aware) ----------------- */
+.dash-tv-period-bar {
+    display:inline-flex; gap:4px; margin-left:8px;
+    background:rgba(0,0,0,0.25); border-radius:2px; padding:2px;
+}
+.dash-tv-period-bar button {
+    background:transparent; color:var(--text-muted); border:0;
+    padding:4px 9px; font-size:11px; cursor:pointer; border-radius:2px;
+}
+.dash-tv-period-bar button.active { background:rgba(0,229,255,0.18); color:var(--cyan) }
+
+/* ---- Trades table pagination ----------------------------------- */
+.trades-pagination {
+    display:flex; gap:8px; align-items:center; justify-content:center;
+    padding:10px 0; font-size:12px;
+}
+.trades-pagination button {
+    background:transparent; border:1px solid var(--border); color:var(--text);
+    padding:3px 9px; border-radius:2px; cursor:pointer;
+}
+.trades-pagination button:disabled { opacity:0.4; cursor:not-allowed }
+.trades-pagination .page-info { margin:0 8px; color:var(--text-muted) }
+
+/* ---- Related trades panel -------------------------------------- */
+.trade-related-trades { margin-top:14px }
+.trade-related-trades h2 { font-size:13px; letter-spacing:0.05em }
+
+/* ---- Trade review form (setup + mistakes) ---------------------- */
+.review-form { display:flex; flex-direction:column; gap:10px }
+.review-form label { display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--text-muted) }
+.review-form label span { font-weight:600; text-transform:uppercase; letter-spacing:0.05em }
+.review-form input[type=text],
+.review-form textarea,
+.review-form select {
+    background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:2px; padding:6px 8px; font-size:12px;
+}
+.review-form textarea { resize:vertical; font-family:'JetBrains Mono', monospace }
+.review-form .review-row { display:flex; flex-wrap:wrap; gap:18px; align-items:center }
+.review-form .review-check { flex-direction:row; gap:6px; align-items:center; cursor:pointer }
+.review-form .review-mood   { flex-direction:row; gap:8px; align-items:center }
+
+/* ---- Note templates editor ------------------------------------- */
+.tpl-form { display:flex; flex-direction:column; gap:10px }
+.tpl-form label { display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--text-muted) }
+.tpl-form label span { font-weight:600; text-transform:uppercase; letter-spacing:0.05em }
+.tpl-form input[type=text],
+.tpl-form select,
+.tpl-form textarea {
+    background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:2px; padding:6px 8px; font-size:12px;
+}
+.tpl-form textarea { resize:vertical; font-family:'JetBrains Mono', monospace; min-height:200px }
+.tpl-form .tpl-default { flex-direction:row; gap:6px; align-items:center; cursor:pointer }
+
+/* ---- Sortable table headers ------------------------------------ */
+table.trades th.sortable { cursor:pointer; user-select:none }
+table.trades th.sortable:hover { color:var(--cyan) }
+table.trades th.sortable.active { color:var(--cyan) }
 
 /* ---- table ----------------------------------------------------- */
 table.trades { width: 100%; border-collapse: collapse; background: var(--bg-card); }
@@ -642,32 +925,13 @@ label {
 }
 .world-map { width: 100%; height: 100%; display: block; }
 
-.world-map-wrap .pin-overlay {
-    position: absolute; inset: 0;
-    pointer-events: none;
-}
-.pin {
-    position: absolute;
-    transform: translate(-50%, -130%);
-    display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(10, 10, 18, 0.92);
-    border: 1px solid var(--border); border-radius: 11px;
-    padding: 2px 8px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10.5px; white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-}
-.pin .pin-flag  { font-size: 11px; }
-.pin .pin-label { color: var(--text); }
-.pin .pin-pct   { font-weight: 700; }
-.pin .pin-pct.pos { color: var(--green); }
-.pin .pin-pct.neg { color: var(--red); }
-
-@media (max-width: 720px) {
-    .pin { font-size: 9px; padding: 1px 5px; }
-    .pin .pin-label { display: none; }
-}
+/* World-map SVG label text + colored pct tspan. Labels are now drawn
+   inside the SVG (collision-resolved, leader-line connected) so they share
+   the map coordinate system instead of overlaying separately. */
+.wm-text { fill:#dbe8f2; font-weight:500 }
+.wm-pct-pos { fill:#23d160; font-weight:700 }
+.wm-pct-neg { fill:#ff3860; font-weight:700 }
+.wm-leaders line { vector-effect:non-scaling-stroke }
 
 .commodities-strip {
     display: grid;

@@ -96,6 +96,25 @@ where
             }
         }
 
+        // Query-param token: for file downloads (CSV/HTML) where the browser
+        // can't attach an Authorization header to <a download>. Same secret;
+        // only used when the header path didn't match. Hand-decodes %xx since
+        // we don't want to drag in a urlencoding dep just for this one path.
+        if let Some(q) = parts.uri.query() {
+            for kv in q.split('&') {
+                if let Some(tok) = kv.strip_prefix("token=") {
+                    let raw = percent_decode_simple(tok);
+                    if let Some(rest) = raw.strip_prefix("pat_") {
+                        let user_id = verify_pat(&app, rest).await?;
+                        return Ok(AuthUser { id: user_id });
+                    }
+                    if let Ok(claims) = decode_token(&app.jwt_secret, &raw) {
+                        return Ok(AuthUser { id: claims.sub });
+                    }
+                }
+            }
+        }
+
         if app.mode == AppMode::Desktop {
             let id = traderview_db::users::ensure_local(&app.pool)
                 .await
@@ -105,6 +124,30 @@ where
 
         Err(ApiError::Unauthorized)
     }
+}
+
+/// Minimal percent-decoder for `?token=...` query values. Handles `%XX`
+/// (case-insensitive) and `+` → space. Returns the input unchanged on
+/// malformed escapes — bad tokens fail JWT/PAT verification downstream.
+fn percent_decode_simple(s: &str) -> String {
+    let bytes = s.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if b == b'%' && i + 2 < bytes.len() {
+            let hi = (bytes[i + 1] as char).to_digit(16);
+            let lo = (bytes[i + 2] as char).to_digit(16);
+            if let (Some(h), Some(l)) = (hi, lo) {
+                out.push(((h << 4) | l) as u8);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(if b == b'+' { b' ' } else { b });
+        i += 1;
+    }
+    String::from_utf8(out).unwrap_or_else(|_| s.to_string())
 }
 
 // ===========================================================================
@@ -178,6 +221,33 @@ pub async fn verify_pat(app: &AppState, rest: &str) -> Result<Uuid, ApiError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ===========================================================================
+    // percent_decode_simple — query-token decoder used by file downloads
+    // ===========================================================================
+
+    #[test]
+    fn percent_decode_handles_basic_escapes() {
+        assert_eq!(percent_decode_simple("hello%20world"), "hello world");
+        assert_eq!(percent_decode_simple("a%2Bb%3Dc"), "a+b=c");
+        assert_eq!(percent_decode_simple("plus+sign"), "plus sign");
+    }
+
+    #[test]
+    fn percent_decode_passes_through_malformed_escapes() {
+        // %XX with non-hex chars is left as-is — downstream JWT/PAT verify
+        // will reject; we don't want to crash on garbage input.
+        assert_eq!(percent_decode_simple("oops%GG"), "oops%GG");
+        assert_eq!(percent_decode_simple("trail%"), "trail%");
+        assert_eq!(percent_decode_simple("trail%2"), "trail%2");
+    }
+
+    #[test]
+    fn percent_decode_preserves_unescaped_jwt_chars() {
+        // Real JWTs contain only [A-Za-z0-9._-] so nothing should change.
+        let jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.signature_part";
+        assert_eq!(percent_decode_simple(jwt), jwt);
+    }
 
     // ===========================================================================
     // hash_password / verify_password — Argon2 round-trip

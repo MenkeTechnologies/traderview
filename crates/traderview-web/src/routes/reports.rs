@@ -5,10 +5,11 @@ use crate::state::AppState;
 use axum::extract::{Query, State};
 use axum::routing::get;
 use axum::{Json, Router};
+use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use traderview_core::{liquidity, risk, stats, Trade};
+use traderview_core::{liquidity, risk, stats, AssetClass, Trade, TradeSide};
 use traderview_db::trades::TradeFilter;
 use uuid::Uuid;
 
@@ -23,6 +24,7 @@ pub fn router() -> Router<AppState> {
         .route("/reports/by-hold", get(by_hold))
         .route("/reports/by-month", get(by_month))
         .route("/reports/by-price", get(by_price))
+        .route("/reports/by-tag", get(by_tag))
         .route("/reports/daily-series", get(daily_series))
         .route("/reports/win-loss-days", get(win_loss_days))
         .route("/reports/r-distribution", get(r_distribution))
@@ -35,6 +37,7 @@ pub fn router() -> Router<AppState> {
         .route("/reports/drawdown", get(drawdown))
         .route("/reports/risk-adjusted", get(risk_adjusted))
         .route("/reports/calendar", get(calendar))
+        .route("/reports/advanced", get(advanced))
         .route("/stats/summary", get(summary))
         .route("/stats/equity", get(equity))
 }
@@ -49,11 +52,53 @@ struct RQ {
     /// the last N days are returned. Powers the dashboard's 30/60/90 toggle.
     #[serde(default)]
     days: Option<i64>,
+    #[serde(default)]
+    symbol: Option<String>,
+    /// "long" | "short"
+    #[serde(default)]
+    side: Option<String>,
+    /// "stock" | "option" | "future" | "forex"
+    #[serde(default)]
+    asset_class: Option<String>,
+    /// "intraday" | "multiday" — applies to closed trades; hold time computed
+    /// from opened_at/closed_at.
+    #[serde(default)]
+    duration: Option<String>,
+    #[serde(default)]
+    date_from: Option<NaiveDate>,
+    #[serde(default)]
+    date_to: Option<NaiveDate>,
+    #[serde(default)]
+    tag_id: Option<Uuid>,
+}
+
+fn parse_side(s: &str) -> Option<TradeSide> {
+    match s.to_ascii_lowercase().as_str() {
+        "long" => Some(TradeSide::Long),
+        "short" => Some(TradeSide::Short),
+        _ => None,
+    }
+}
+
+fn parse_asset(s: &str) -> Option<AssetClass> {
+    match s.to_ascii_lowercase().as_str() {
+        "stock" => Some(AssetClass::Stock),
+        "option" => Some(AssetClass::Option),
+        "future" => Some(AssetClass::Future),
+        "forex" => Some(AssetClass::Forex),
+        _ => None,
+    }
 }
 
 async fn load(s: &AppState, user_id: Uuid, q: &RQ) -> Result<Vec<Trade>, ApiError> {
     ensure_account_owner(s, user_id, q.account_id).await?;
     let f = TradeFilter {
+        symbol: q.symbol.clone().filter(|x| !x.is_empty()),
+        side: q.side.as_deref().and_then(parse_side),
+        asset_class: q.asset_class.as_deref().and_then(parse_asset),
+        date_from: q.date_from,
+        date_to: q.date_to,
+        tag_id: q.tag_id,
         limit: Some(100_000),
         ..Default::default()
     };
@@ -65,6 +110,21 @@ async fn load(s: &AppState, user_id: Uuid, q: &RQ) -> Result<Vec<Trade>, ApiErro
             let cutoff = chrono::Utc::now() - chrono::Duration::days(d);
             trades.retain(|t| t.closed_at.unwrap_or(t.opened_at) >= cutoff);
         }
+    }
+    if let Some(dur) = q.duration.as_deref() {
+        let dur = dur.to_ascii_lowercase();
+        // Intraday = open + close on the same calendar day (UTC). Multiday = different.
+        trades.retain(|t| {
+            let Some(close) = t.closed_at else {
+                return dur != "intraday" && dur != "multiday";
+            };
+            let same = close.date_naive() == t.opened_at.date_naive();
+            match dur.as_str() {
+                "intraday" => same,
+                "multiday" => !same,
+                _ => true,
+            }
+        });
     }
     Ok(trades)
 }
@@ -221,6 +281,43 @@ async fn commissions(
     Ok(Json(stats::commissions(
         &load(&s, user.id, &q).await?,
     )))
+}
+
+async fn by_tag(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    let trades = load(&s, user.id, &q).await?;
+    // Fetch tags-for-each-trade in a single query, then bucket client-side
+    // since the trade-list is already in memory.
+    let mut map: std::collections::HashMap<Uuid, Vec<String>> = std::collections::HashMap::new();
+    if !trades.is_empty() {
+        let ids: Vec<Uuid> = trades.iter().map(|t| t.id).collect();
+        let rows: Vec<(Uuid, String)> = sqlx::query_as(
+            "SELECT tt.trade_id, t.name
+               FROM trade_tags tt JOIN tags t ON t.id = tt.tag_id
+              WHERE tt.trade_id = ANY($1)",
+        )
+        .bind(&ids)
+        .fetch_all(&s.pool)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!(e)))?;
+        for (tid, name) in rows {
+            map.entry(tid).or_default().push(name);
+        }
+    }
+    Ok(Json(stats::by_tag(&trades, &map)))
+}
+
+async fn advanced(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<stats::Advanced>, ApiError> {
+    let trades = load(&s, user.id, &q).await?;
+    let cash = q.starting_cash.unwrap_or(Decimal::ZERO);
+    Ok(Json(stats::advanced(&trades, cash)))
 }
 
 async fn calendar(

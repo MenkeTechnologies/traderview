@@ -398,6 +398,7 @@ import { renderSection6404 } from './views/section_6404.js';
 import { renderImportView } from './views/import.js';
 import { renderPlans } from './views/plans.js';
 import { renderTags } from './views/tags.js';
+import { renderNoteTemplates } from './views/note_templates.js';
 import { renderMentorship } from './views/mentorship.js';
 import { renderCommunity, renderCommunityThread } from './views/community.js';
 import { renderShares, renderSharedTrade } from './views/shares.js';
@@ -755,6 +756,19 @@ function bindTabs() {
     window.addEventListener('hashchange', dispatch);
     bindNavToggle();
     installShortcuts();
+
+    // Trello-style reorder for the primary nav. Persists in localStorage so
+    // users can put the tabs they actually use first.
+    const nav = document.getElementById('primary-nav');
+    if (nav) {
+        import('./drag_reorder.js').then(({ initDragReorder }) => {
+            initDragReorder(nav, '.tab', 'primary_nav_order', {
+                direction: 'horizontal',
+                getKey: (el) => el.dataset.view || el.textContent.trim(),
+                toastMessage: 'Nav reordered',
+            });
+        }).catch(() => { /* drag_reorder optional — not fatal */ });
+    }
     installCommandPalette();
     installToasts();
     installDialog();
@@ -2764,6 +2778,7 @@ export async function dispatch() {
             case 'import':      await renderImportView(mount, state); break;
             case 'plans':       await renderPlans(mount, state); break;
             case 'tags':        await renderTags(mount, state); break;
+            case 'note-templates': await renderNoteTemplates(mount); break;
             case 'mentorship':  await renderMentorship(mount, state); break;
             case 'community':   if (rest.length === 2) await renderCommunityThread(mount, state, rest[0], rest[1]);
                                 else await renderCommunity(mount, state, rest[0]); break;

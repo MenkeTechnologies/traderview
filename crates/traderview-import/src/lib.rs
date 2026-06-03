@@ -116,6 +116,7 @@ pub fn parser_for(source: &str) -> Option<Box<dyn Parser>> {
         "fidelity" => Some(Box::new(FidelityParser)),
         "tradezero" => Some(Box::new(TradeZeroParser)),
         "robinhood" => Some(Box::new(RobinhoodParser)),
+        "tradervue" => Some(Box::new(TradervueParser)),
         "generic" | "csv" => Some(Box::new(brokers::GenericCsvParser)),
         _ => None,
     }
@@ -136,6 +137,7 @@ pub fn supported_sources() -> &'static [&'static str] {
         "fidelity",
         "tradezero",
         "robinhood",
+        "tradervue",
         "generic",
     ]
 }

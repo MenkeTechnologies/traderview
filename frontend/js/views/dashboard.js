@@ -1,12 +1,18 @@
 import { api } from '../api.js';
-import { fmtMoney, fmtPct, fmtSecs, pnlClass } from '../util.js';
+import { fmtMoney, fmtPct, fmtSecs, pnlClass, applyBarWidths } from '../util.js';
 import { equityChart } from '../charts.js';
 import { renderWorldMarkets } from './world_map.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
 
 const INTERVAL_KEY = 'dashboard_interval_days';
+const PERIOD_KEY   = 'dashboard_period_key';
 const VALID_INTERVALS = [30, 60, 90];
+// Calendar-aware quick-pick periods. Each maps to a number of days that
+// covers the period; 'all' clears the filter. Computed lazily so YTD
+// stretches the right amount each call.
+const PERIOD_KEYS = ['today', 'wtd', 'mtd', 'qtd', 'ytd', 'all'];
 
 function getInterval() {
     const v = Number(localStorage.getItem(INTERVAL_KEY));
@@ -14,6 +20,40 @@ function getInterval() {
 }
 function setInterval(days) {
     if (VALID_INTERVALS.includes(days)) localStorage.setItem(INTERVAL_KEY, String(days));
+}
+function getPeriod() {
+    const v = localStorage.getItem(PERIOD_KEY);
+    return PERIOD_KEYS.includes(v) ? v : null;
+}
+function setPeriod(p) {
+    if (p === null || p === '') localStorage.removeItem(PERIOD_KEY);
+    else if (PERIOD_KEYS.includes(p)) localStorage.setItem(PERIOD_KEY, p);
+}
+
+/**
+ * Convert a calendar period ('today', 'wtd', etc.) into a rolling `days`
+ * count from today back to the start of that period. `null` means no filter.
+ */
+function periodToDays(period) {
+    if (!period || period === 'all') return null;
+    const now = new Date();
+    const start = new Date(now);
+    if (period === 'today') start.setHours(0, 0, 0, 0);
+    else if (period === 'wtd') {
+        const dow = now.getDay();
+        start.setDate(start.getDate() - dow);  // Sunday-anchored week
+        start.setHours(0, 0, 0, 0);
+    } else if (period === 'mtd') {
+        start.setDate(1); start.setHours(0, 0, 0, 0);
+    } else if (period === 'qtd') {
+        const m = now.getMonth();
+        const qStart = m - (m % 3);
+        start.setMonth(qStart, 1); start.setHours(0, 0, 0, 0);
+    } else if (period === 'ytd') {
+        start.setMonth(0, 1); start.setHours(0, 0, 0, 0);
+    }
+    const ms = now - start;
+    return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -61,7 +101,7 @@ function compareRow(label, value, ratio, kind) {
     return `
         <div class="dash-tv-compare-row">
             <div class="dash-tv-compare-label">${esc(label)}</div>
-            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${kind}" style="width:${pct}%"></div></div>
+            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${kind}" data-bar-pct="${pct}"></div></div>
             <div class="dash-tv-compare-value ${kind}">${esc(value)}</div>
         </div>
     `;
@@ -111,19 +151,26 @@ function dayOfWeekWidget(dow) {
     if (!Array.isArray(dow) || !dow.length) {
         return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
     }
-    const order = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    // Backend bucket keys are "1_mon", "2_tue", ..., "7_sun" — preserving
+    // chronological week order. Map them to display labels Mon..Sun.
+    // (Previously this widget looked up "Mon", "Tue", ... directly against
+    // the bucket map, missed every key, and showed every bar as $0.)
+    const DOW = [
+        ['1_mon', 'Mon'], ['2_tue', 'Tue'], ['3_wed', 'Wed'],
+        ['4_thu', 'Thu'], ['5_fri', 'Fri'], ['6_sat', 'Sat'], ['7_sun', 'Sun'],
+    ];
     const byKey = new Map(dow.map(b => [b.key, b]));
     const maxAbs = Math.max(...dow.map(b => Math.abs(Number(b.net_pnl) || 0)), 1);
     const total  = dow.reduce((a, b) => a + Math.abs(Number(b.net_pnl) || 0), 0) || 1;
-    return compareWidget(order.map(k => {
-        const b = byKey.get(k) || { net_pnl: 0, trades: 0 };
+    return compareWidget(DOW.map(([key, label]) => {
+        const b = byKey.get(key) || { net_pnl: 0, trades: 0 };
         const v = Number(b.net_pnl) || 0;
         const pct = (Math.abs(v) / total) * 100;
         return `
             <div class="dash-tv-compare-row">
-                <div class="dash-tv-compare-label">${k}</div>
-                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" style="width:${(Math.abs(v) / maxAbs * 100).toFixed(0)}%"></div></div>
-                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted" style="font-weight:400">${pct.toFixed(2)}%</span></div>
+                <div class="dash-tv-compare-label">${label}</div>
+                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(v) / maxAbs * 100).toFixed(0)}"></div></div>
+                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted cmp-pct-muted">${pct.toFixed(2)}%</span></div>
             </div>
         `;
     }));
@@ -141,8 +188,8 @@ function hourOfDayWidget(hour) {
         return `
             <div class="dash-tv-compare-row">
                 <div class="dash-tv-compare-label">${esc(String(b.key))}</div>
-                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" style="width:${(Math.abs(v) / maxAbs * 100).toFixed(0)}%"></div></div>
-                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted" style="font-weight:400">${pct.toFixed(2)}%</span></div>
+                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(v) / maxAbs * 100).toFixed(0)}"></div></div>
+                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted cmp-pct-muted">${pct.toFixed(2)}%</span></div>
             </div>
         `;
     }));
@@ -153,7 +200,7 @@ function profitFactorGauge(pf) {
     // Normalize: 0 → empty arc, 1 → half arc, 2+ → full arc
     const clamped = Math.min(Math.max(v / 2, 0), 1);
     const angle = 180 * clamped; // 0..180 deg semicircle sweep
-    const color = v >= 1.5 ? '#39ff14' : v >= 1.0 ? '#ffd84a' : '#ff3860';
+    const cls = v >= 1.5 ? 'pos' : v >= 1.0 ? 'warn' : 'neg';
     const r = 70;
     const cx = 90, cy = 90;
     const rad = (angle - 180) * Math.PI / 180;
@@ -161,32 +208,51 @@ function profitFactorGauge(pf) {
     const endY = cy + r * Math.sin(rad);
     const largeArc = angle > 180 ? 1 : 0;
     return `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0;gap:8px">
-            <div style="font-size:32px;font-weight:700;color:${color};font-family:'Orbitron',sans-serif">${v.toFixed(2)}</div>
+        <div class="hero-stat hero-stat-tight">
+            <div class="hero-num hero-num-md pf-num-${cls}">${v.toFixed(2)}</div>
             <svg width="180" height="100" viewBox="0 0 180 100">
                 <path d="M 20 90 A 70 70 0 0 1 160 90" stroke="rgba(255,255,255,0.08)" stroke-width="10" fill="none"/>
-                <path d="M 20 90 A 70 70 0 ${largeArc} 1 ${endX.toFixed(2)} ${endY.toFixed(2)}" stroke="${color}" stroke-width="10" fill="none"/>
+                <path d="M 20 90 A 70 70 0 ${largeArc} 1 ${endX.toFixed(2)} ${endY.toFixed(2)}"
+                      class="pf-arc-${cls}" stroke-width="10" fill="none"/>
             </svg>
         </div>
     `;
 }
 
-function drawdownChart(elId, dd) {
-    if (!dd || !Array.isArray(dd.series) || !dd.series.length) return false;
+/**
+ * Plot the running drawdown (≤ 0) from the equity curve. We pass `equity`
+ * (Vec<EquityPoint>) here, not the MaxDrawdown summary — EquityPoint already
+ * has `drawdown` per day, and the dashboard already fetches equity. Earlier
+ * the widget tried to read `dd.series` from MaxDrawdown which doesn't carry
+ * a series field, so the chart silently bailed out.
+ */
+function drawdownChart(elId, equity) {
+    if (!Array.isArray(equity) || !equity.length) return false;
     setTimeout(() => {
         const el = document.getElementById(elId);
         if (!el || !window.uPlot) return;
-        const xs = dd.series.map((_, i) => i);
-        const ys = dd.series.map(p => Number(p.value) || 0);
+        const xs = equity.map((_, i) => i);
+        const ys = equity.map(p => Number(p.drawdown) || 0);
+        const labels = equity.map(p => shortDay(p.day));
         new window.uPlot({
-            title: '', width: el.clientWidth || 600, height: 220,
+            title: '', width: el.clientWidth || 600, height: 260,
             scales: { x: {}, y: { auto: true } },
             series: [
-                { label: 'idx' },
+                { label: 'day' },
                 { label: 'drawdown', stroke: '#ff3860', width: 2,
                   fill: 'rgba(255,56,96,0.18)' },
             ],
-            axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 56 }],
+            axes: [
+                { stroke: '#aab', size: 60, rotate: -45,
+                  values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
+                { stroke: '#aab', size: 64,
+                  values: (_u, ticks) => ticks.map(v => {
+                      const a = Math.abs(v); const sgn = v < 0 ? '-' : '';
+                      if (a >= 1e6) return `${sgn}$${(a/1e6).toFixed(1)}M`;
+                      if (a >= 1e3) return `${sgn}$${(a/1e3).toFixed(1)}K`;
+                      return `${sgn}$${a.toFixed(0)}`;
+                  }) },
+            ],
             legend: { show: false },
         }, [xs, ys], el);
     }, 0);
@@ -205,11 +271,19 @@ function byPriceWidget(rows) {
         return `
             <div class="dash-tv-compare-row">
                 <div class="dash-tv-compare-label">${esc(b.key)}</div>
-                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" style="width:${(Math.abs(v) / maxAbs * 100).toFixed(0)}%"></div></div>
-                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted" style="font-weight:400">${pct.toFixed(2)}%</span></div>
+                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(v) / maxAbs * 100).toFixed(0)}"></div></div>
+                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)} <span class="muted cmp-pct-muted">${pct.toFixed(2)}%</span></div>
             </div>
         `;
     }));
+}
+
+// Render dashboard date labels as MM/DD — the dashboard is always a rolling
+// window (30/60/90 days), so YYYY- is dead weight that just gets clipped.
+function shortDay(iso) {
+    if (!iso || typeof iso !== 'string') return '';
+    const parts = iso.slice(0, 10).split('-');
+    return parts.length >= 3 ? `${parts[1]}/${parts[2]}` : iso.slice(5, 10);
 }
 
 function dailyVolumeChart(elId, daily) {
@@ -219,7 +293,7 @@ function dailyVolumeChart(elId, daily) {
         if (!el || !window.uPlot) return;
         const xs = daily.map((_, i) => i);
         const ys = daily.map(d => Number(d.volume) || 0);
-        const labels = daily.map(d => d.day);
+        const labels = daily.map(d => shortDay(d.day));
         const barsPath = (u) => {
             const ctx = u.ctx;
             ctx.save();
@@ -235,14 +309,16 @@ function dailyVolumeChart(elId, daily) {
             return null;
         };
         new window.uPlot({
-            title: '', width: el.clientWidth || 600, height: 220,
+            title: '', width: el.clientWidth || 600, height: 260,
             scales: { x: {}, y: {} },
             series: [
                 { label: 'day' },
                 { label: 'volume', stroke: 'transparent', paths: barsPath },
             ],
             axes: [
-                { stroke: '#aab', size: 28, rotate: -45,
+                // size:60 reserves enough vertical room for the rotated date
+                // labels — at size:28 they get clipped to "20-" in release.
+                { stroke: '#aab', size: 60, rotate: -45,
                   values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
                 { stroke: '#aab', size: 64,
                   values: (_u, ticks) => ticks.map(v => {
@@ -265,16 +341,16 @@ function lineChart(elId, daily, valueKey, color) {
         if (!el || !window.uPlot) return;
         const xs = daily.map((_, i) => i);
         const ys = daily.map(d => Number(d[valueKey]) || 0);
-        const labels = daily.map(d => d.day);
+        const labels = daily.map(d => shortDay(d.day));
         new window.uPlot({
-            title: '', width: el.clientWidth || 600, height: 220,
+            title: '', width: el.clientWidth || 600, height: 260,
             scales: { x: {}, y: { auto: true } },
             series: [
                 { label: 'day' },
                 { label: valueKey, stroke: color, width: 2 },
             ],
             axes: [
-                { stroke: '#aab', size: 28, rotate: -45,
+                { stroke: '#aab', size: 60, rotate: -45,
                   values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
                 { stroke: '#aab', size: 64,
                   values: (_u, ticks) => ticks.map(v => {
@@ -307,12 +383,12 @@ function durationWidget(hold) {
     return compareWidget([
         `<div class="dash-tv-compare-row">
             <div class="dash-tv-compare-label">${esc(t('view.dashboard.tv.intraday'))}</div>
-            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${intraday >= 0 ? 'pos' : 'neg'}" style="width:${(Math.abs(intraday)/max*100).toFixed(0)}%"></div></div>
+            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${intraday >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(intraday)/max*100).toFixed(0)}"></div></div>
             <div class="dash-tv-compare-value ${pnlClass(intraday)}">${fmtMoney(intraday)}</div>
         </div>`,
         `<div class="dash-tv-compare-row">
             <div class="dash-tv-compare-label">${esc(t('view.dashboard.tv.multiday'))}</div>
-            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${multiday >= 0 ? 'pos' : 'neg'}" style="width:${(Math.abs(multiday)/max*100).toFixed(0)}%"></div></div>
+            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${multiday >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(multiday)/max*100).toFixed(0)}"></div></div>
             <div class="dash-tv-compare-value ${pnlClass(multiday)}">${fmtMoney(multiday)}</div>
         </div>`,
     ]);
@@ -322,8 +398,8 @@ function winPctSummary(s) {
     const rate = Number(s.win_rate) || 0;
     const pct = (rate * 100).toFixed(1);
     return `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0;gap:8px">
-            <div style="font-size:48px;font-weight:700;color:var(--cyan);font-family:'Orbitron',sans-serif">${pct}%</div>
+        <div class="hero-stat">
+            <div class="hero-num hero-num-cyan">${pct}%</div>
             <div class="muted small">${esc(t('view.dashboard.tv.win_rate_subtitle', {wins: s.win_count, total: s.win_count + s.loss_count}))}</div>
         </div>
     `;
@@ -351,7 +427,7 @@ const WIDGETS = [
     { id: 'largest_gain_loss', titleKey: 'view.dashboard.tv.largest_gain_loss',
         html: (d) => largestGainLoss(d.summary) },
     { id: 'win_pct', titleKey: 'view.dashboard.tv.win_pct',
-        html: (d) => `<div id="dash-win-pct-chart" style="width:100%;height:220px">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        html: (d) => `<div id="dash-win-pct-chart" class="chart-h-260">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
         mount: (d) => { if (d.daily && d.daily.length) lineChart('dash-win-pct-chart', d.daily, 'running_win_rate', '#39ff14'); } },
     { id: 'perf_dow', titleKey: 'view.dashboard.tv.perf_dow',
         html: (d) => dayOfWeekWidget(d.dow) },
@@ -364,17 +440,20 @@ const WIDGETS = [
     { id: 'profit_factor', titleKey: 'view.dashboard.tv.profit_factor',
         html: (d) => profitFactorGauge(d.summary.profit_factor) },
     { id: 'total_fees', titleKey: 'view.dashboard.tv.total_fees',
-        html: (d) => `<div style="display:flex;align-items:center;justify-content:center;padding:36px 0"><div style="font-size:32px;font-weight:700;color:#ffd84a;font-family:'JetBrains Mono',monospace">${esc(fmtMoney(d.summary.fees))}</div></div>` },
+        html: (d) => `<div class="hero-stat hero-stat-band"><div class="hero-num-md hero-num-warn">${esc(fmtMoney(d.summary.fees))}</div></div>` },
     { id: 'cumulative_drawdown', titleKey: 'view.dashboard.tv.cumulative_drawdown', spans2: true,
-        html: (d) => `<div id="dash-drawdown-chart" style="width:100%;height:220px">${d.dd ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
-        mount: (d) => { if (d.dd) drawdownChart('dash-drawdown-chart', d.dd); } },
+        // Drives off the equity curve (which has per-day drawdown) — the
+        // MaxDrawdown summary in `d.dd` carries only peak/trough values, no
+        // series, so it can't feed a line chart.
+        html: (d) => `<div id="dash-drawdown-chart" class="chart-h-260">${d.equity && d.equity.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        mount: (d) => { if (d.equity && d.equity.length) drawdownChart('dash-drawdown-chart', d.equity); } },
     { id: 'perf_price', titleKey: 'view.dashboard.tv.perf_price',
         html: (d) => byPriceWidget(d.byPrice) },
     { id: 'daily_volume', titleKey: 'view.dashboard.tv.daily_volume', spans2: true,
-        html: (d) => `<div id="dash-daily-volume-chart" style="width:100%;height:220px">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        html: (d) => `<div id="dash-daily-volume-chart" class="chart-h-260">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
         mount: (d) => { if (d.daily && d.daily.length) dailyVolumeChart('dash-daily-volume-chart', d.daily); } },
     { id: 'avg_trade_pnl', titleKey: 'view.dashboard.tv.avg_trade_pnl', spans2: true,
-        html: (d) => `<div id="dash-avg-pnl-chart" style="width:100%;height:220px">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
+        html: (d) => `<div id="dash-avg-pnl-chart" class="chart-h-260">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
         mount: (d) => { if (d.daily && d.daily.length) lineChart('dash-avg-pnl-chart', d.daily, 'running_avg_pnl', '#00e5ff'); } },
 ];
 const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
@@ -385,8 +464,8 @@ function renderLayoutPanels(layout, data) {
         .map(id => WIDGETS_BY_ID.get(id))
         .filter(Boolean)
         .map(w => `
-            <div class="chart-panel${w.spans2 ? ' dash-tv-span-2' : ''}" draggable="true" data-widget-id="${w.id}">
-                <span class="dash-tv-drag-handle" title="drag to reorder">⠿</span>
+            <div class="chart-panel${w.spans2 ? ' dash-tv-span-2' : ''}" data-widget-id="${w.id}">
+                <span class="dash-tv-drag-handle" title="drag to reorder" data-drag-handle>⠿</span>
                 <span class="dash-tv-del-btn" title="remove from layout" data-del-widget="${w.id}">✕</span>
                 <h2 data-i18n="${w.titleKey}">${esc(t(w.titleKey))}</h2>
                 ${w.html(data)}
@@ -394,53 +473,34 @@ function renderLayoutPanels(layout, data) {
         `).join('');
 }
 
-function attachLayoutHandlers(mount, layout, data, persistFn) {
+/**
+ * Wire the dashboard grid into the global Trello-style drag engine.
+ * Pointer-based — no HTML5 dragstart/dragover; bypasses Tauri and uPlot
+ * canvas interception entirely. Persists the new order to the user's
+ * server-side dashboard_layout setting via `persistFn`.
+ */
+function attachLayoutHandlers(mount, layout, _data, persistFn) {
     const grid = mount.querySelector('#dash-tv-grid');
     if (!grid) return;
-    let dragged = null;
-
-    grid.addEventListener('dragstart', (e) => {
-        const panel = e.target.closest('.chart-panel[data-widget-id]');
-        if (!panel) return;
-        dragged = panel;
-        panel.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', panel.dataset.widgetId);
-    });
-    grid.addEventListener('dragend', (e) => {
-        const panel = e.target.closest('.chart-panel[data-widget-id]');
-        if (panel) panel.classList.remove('dragging');
-        grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-        dragged = null;
-    });
-    grid.addEventListener('dragover', (e) => {
-        const over = e.target.closest('.chart-panel[data-widget-id]');
-        if (!over || over === dragged) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-        over.classList.add('drop-target');
-    });
-    grid.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        const over = e.target.closest('.chart-panel[data-widget-id]');
-        if (!over || !dragged || over === dragged) return;
-        const order = [...grid.querySelectorAll('.chart-panel[data-widget-id]')];
-        const srcIdx = order.indexOf(dragged);
-        const dstIdx = order.indexOf(over);
-        if (srcIdx < 0 || dstIdx < 0) return;
-        order.splice(srcIdx, 1);
-        order.splice(dstIdx, 0, dragged);
-        const newLayout = order.map(el => el.dataset.widgetId);
-        await persistFn(newLayout);
+    resetDragReorder(grid);  // allow re-wire after re-render
+    initDragReorder(grid, '.chart-panel[data-widget-id]', null, {
+        direction: 'vertical',
+        handleSelector: '[data-drag-handle], .chart-panel > h2',
+        getKey: (el) => el.dataset.widgetId,
+        persist: (newOrder) => persistFn(newOrder),
+        toastMessage: t('view.dashboard.tv.reordered'),
     });
 
+    // Delete button — optimistic remove then persist.
     grid.querySelectorAll('[data-del-widget]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = btn.dataset.delWidget;
-            const next = layout.filter(w => w !== id);
-            await persistFn(next);
+            const panel = btn.closest('.chart-panel[data-widget-id]');
+            if (panel) panel.remove();
+            const next = [...grid.querySelectorAll('.chart-panel[data-widget-id]')]
+                .map(el => el.dataset.widgetId);
+            persistFn(next).catch((err) => console.warn('layout persist failed', err));
         });
     });
 }
@@ -459,18 +519,24 @@ async function loadLayout() {
     return DEFAULT_LAYOUT.slice();
 }
 async function saveLayout(order) {
-    if (!cachedSettings) return;
-    cachedSettings.dashboard_layout = { order };
-    try {
-        await api.updateSettings(cachedSettings);
-    } catch (e) {
-        console.warn('layout save failed', e);
+    // If we never managed to load settings (first-render race, transient
+    // network blip), pull them fresh now so the user's drag/delete isn't
+    // silently dropped. saveLayout used to early-return here and the drop
+    // appeared to do nothing.
+    if (!cachedSettings) {
+        try { cachedSettings = await api.settings(); }
+        catch (e) { console.warn('layout save: fetch settings failed', e); return; }
     }
+    cachedSettings.dashboard_layout = { order };
+    await api.updateSettings(cachedSettings);
 }
 
 export async function renderDashboard(mount, state) {
     const tok = currentViewToken();
-    const interval = getInterval();
+    const period = getPeriod();
+    // Calendar-aware periods take precedence over rolling 30/60/90 — that's
+    // how Tradervue's dashboard period strip works.
+    const interval = period ? periodToDays(period) : getInterval();
 
     if (!state.accountId) {
         mount.innerHTML = `
@@ -501,29 +567,32 @@ export async function renderDashboard(mount, state) {
     mount.innerHTML = `
         <div class="dash-tv-header">
             <h1 class="view-title"><span data-i18n="view.dashboard.h1.dashboard_2">// DASHBOARD</span></h1>
-            <button type="button" class="btn btn-secondary" id="dashboard-refresh-btn"
+            <button type="button" class="btn btn-secondary btn-compact" id="dashboard-refresh-btn"
                     data-i18n="view.dashboard.btn.refresh"
                     data-tip="view.dashboard.tip.refresh"
-                    data-shortcut="dashboard_refresh"
-                    style="font-size:11px;padding:4px 10px">⟳ Refresh</button>
+                    data-shortcut="dashboard_refresh">⟳ Refresh</button>
             <div class="dash-tv-layout-controls">
-                <button type="button" id="dash-add-widget" class="btn btn-secondary" style="font-size:11px;padding:4px 10px">+ ${esc(t('view.dashboard.tv.add_widget'))}</button>
-                <button type="button" id="dash-reset-layout" class="btn btn-secondary" style="font-size:11px;padding:4px 10px">⟲ ${esc(t('view.dashboard.tv.reset_layout'))}</button>
+                <div class="dash-tv-add-wrap">
+                    <button type="button" id="dash-add-widget" class="btn btn-secondary btn-compact">+ ${esc(t('view.dashboard.tv.add_widget'))}</button>
+                    <div class="dash-tv-add-menu" id="dash-add-menu" hidden></div>
+                </div>
+                <button type="button" id="dash-reset-layout" class="btn btn-secondary btn-compact">⟲ ${esc(t('view.dashboard.tv.reset_layout'))}</button>
             </div>
             <div class="dash-tv-toggle" role="tablist">
-                ${VALID_INTERVALS.map(d => `<button type="button" data-interval="${d}" class="${d === interval ? 'active' : ''}">${d} Days</button>`).join('')}
+                ${VALID_INTERVALS.map(d => `<button type="button" data-interval="${d}" class="${!period && d === interval ? 'active' : ''}">${d} Days</button>`).join('')}
+            </div>
+            <div class="dash-tv-period-bar" role="tablist">
+                ${PERIOD_KEYS.map(k => `<button type="button" data-period="${k}" class="${k === period ? 'active' : ''}">${esc(t('view.dashboard.period.' + k))}</button>`).join('')}
             </div>
         </div>
         <div class="dash-tv-range">${esc(rangeLabel(interval))}</div>
         <div class="dash-tv-day-strip">${dayStrip(cal)}</div>
 
-        <div class="dash-tv-add-menu" id="dash-add-menu" hidden></div>
-
         <div class="dash-tv-grid" id="dash-tv-grid">
             ${renderLayoutPanels(layout, data)}
         </div>
 
-        <div id="world-markets-mount" style="margin-top:14px"></div>
+        <div id="world-markets-mount" class="world-mount"></div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.dashboard.h2.risk_gate_today">🛡 Risk Gate · today</h2>
@@ -544,9 +613,20 @@ export async function renderDashboard(mount, state) {
         btn.addEventListener('click', () => {
             const d = Number(btn.dataset.interval);
             setInterval(d);
+            setPeriod(null);  // clear calendar period when user picks rolling-days
             renderDashboard(mount, state);
         });
     });
+    mount.querySelectorAll('.dash-tv-period-bar button[data-period]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setPeriod(btn.dataset.period);
+            renderDashboard(mount, state);
+        });
+    });
+
+    // Apply data-bar-pct widths via rAF — Tauri release WebKit strips
+    // inline style="width:X%" from innerHTML, so widths land via JS.
+    applyBarWidths(mount);
 
     // Mount widgets that need post-DOM init (uPlot, etc). Walk the actual
     // layout — never assume a widget is present.
@@ -562,14 +642,20 @@ export async function renderDashboard(mount, state) {
     if (rgEl)   loadRiskGateBadge(rgEl);
     if (discEl) loadDisciplineScore(discEl, state.accountId);
 
-    const persist = async (newLayout) => {
+    // persist = write to server in background. We rely on the optimistic
+    // DOM reorder in attachLayoutHandlers for the visible change so the
+    // user doesn't experience a flash of re-rendered widgets on every drag.
+    const persist = async (newLayout) => { await saveLayout(newLayout); };
+    // Full re-render is only needed when widgets are *added* (the DOM
+    // doesn't have their nodes yet) — Add-Widget calls this.
+    const persistAndRerender = async (newLayout) => {
         await saveLayout(newLayout);
         renderDashboard(mount, state);
     };
     attachLayoutHandlers(mount, layout, data, persist);
 
     const resetBtn = mount.querySelector('#dash-reset-layout');
-    if (resetBtn) resetBtn.addEventListener('click', () => persist(DEFAULT_LAYOUT.slice()));
+    if (resetBtn) resetBtn.addEventListener('click', () => persistAndRerender(DEFAULT_LAYOUT.slice()));
 
     const addBtn = mount.querySelector('#dash-add-widget');
     const addMenu = mount.querySelector('#dash-add-menu');
@@ -578,24 +664,24 @@ export async function renderDashboard(mount, state) {
             e.stopPropagation();
             const inLayout = new Set(layout);
             const missing = WIDGETS.filter(w => !inLayout.has(w.id));
-            if (!missing.length) {
-                addMenu.innerHTML = `<div class="dash-tv-add-empty">${esc(t('view.dashboard.tv.all_widgets_shown'))}</div>`;
-            } else {
-                addMenu.innerHTML = missing.map(w =>
+            addMenu.innerHTML = missing.length
+                ? missing.map(w =>
                     `<button type="button" class="dash-tv-add-item" data-add-widget="${w.id}">+ ${esc(t(w.titleKey))}</button>`
-                ).join('');
-            }
+                  ).join('')
+                : `<div class="dash-tv-add-empty">${esc(t('view.dashboard.tv.all_widgets_shown'))}</div>`;
             addMenu.hidden = !addMenu.hidden;
         });
-        document.addEventListener('click', (e) => {
-            if (!addMenu.hidden && !addMenu.contains(e.target) && e.target !== addBtn) addMenu.hidden = true;
-        }, { once: true });
+        mount.addEventListener('click', (e) => {
+            if (addMenu.hidden) return;
+            if (addMenu.contains(e.target) || e.target === addBtn) return;
+            addMenu.hidden = true;
+        });
         addMenu.addEventListener('click', async (e) => {
             const btn = e.target.closest('[data-add-widget]');
             if (!btn) return;
             const id = btn.dataset.addWidget;
             if (!WIDGETS_BY_ID.has(id) || layout.includes(id)) return;
-            await persist([...layout, id]);
+            await persistAndRerender([...layout, id]);
         });
     }
 }
@@ -603,9 +689,7 @@ export async function renderDashboard(mount, state) {
 async function loadDisciplineScore(el, accountId) {
     try {
         const s = await api.disciplineScore(accountId, 7);
-        const color = s.score >= 90 ? '#39ff14'
-                    : s.score >= 75 ? '#ffb800'
-                                    : '#ff2a6d';
+        const cls = s.score >= 90 ? 'pos' : s.score >= 75 ? 'warn' : 'neg';
         const body = t('view.dashboard.discipline.body', {
             stop_set:       s.component_stop_set,
             stop_honored:   s.component_stop_honored,
@@ -619,10 +703,10 @@ async function loadDisciplineScore(el, accountId) {
             warning_label: t(s.gate_warnings === 1 ? 'view.dashboard.discipline.warning_singular' : 'view.dashboard.discipline.warning_plural'),
         });
         el.innerHTML = `
-            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-                <div style="font-size:48px;font-weight:700;color:${color};line-height:1">${s.score}</div>
-                <div style="font-size:24px;color:${color}">${esc(s.grade)}</div>
-                <div class="muted small" style="flex:1;min-width:200px">
+            <div class="discipline-strip">
+                <div class="discipline-num discipline-${cls}">${s.score}</div>
+                <div class="discipline-grade discipline-${cls}">${esc(s.grade)}</div>
+                <div class="muted small discipline-detail">
                     ${esc(body)}
                     <br>${esc(win)}
                 </div>
@@ -645,8 +729,8 @@ async function loadRiskGateBadge(el) {
             return;
         }
         el.innerHTML = t('view.dashboard.risk_gate.body', {
-            blocks_html: `<strong style="color:#ff2a6d">${blocks}</strong>`,
-            warns_html:  `<strong style="color:#ffb800">${warns}</strong>`,
+            blocks_html: `<strong class="discipline-neg">${blocks}</strong>`,
+            warns_html:  `<strong class="discipline-warn">${warns}</strong>`,
             audit_link:  `<a href="#risk-gate">${esc(t('view.dashboard.risk_gate.audit_log'))}</a>`,
         });
     } catch (_) {
