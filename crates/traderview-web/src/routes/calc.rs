@@ -366,6 +366,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-179",           post(section_179_route))
+        .route("/calc/section-179d",          post(section_179d_route))
         .route("/calc/section-183",           post(section_183_route))
         .route("/calc/section-263",           post(section_263_route))
         .route("/calc/section-263a",          post(section_263a_route))
@@ -1740,6 +1741,30 @@ async fn section_179_route(
         ));
     }
     Ok(Json(traderview_expense::section_179::compute(&b)))
+}
+
+// ── §179D Energy Efficient Commercial Buildings Deduction ──────────
+// Mounted at /api/calc/section-179d. Added by Section 1331 of the
+// Energy Policy Act of 2005 (Public Law 109-58, 119 Stat. 594),
+// signed by President George W. Bush on August 8, 2005, effective
+// for property placed in service after December 31, 2005.
+// Substantially amended by Section 13303 of the Inflation Reduction
+// Act of 2022 (Public Law 117-169, 136 Stat. 1818), signed by
+// President Biden on August 16, 2022. Energy reduction threshold
+// reduced from 50 % to 25 %; base deduction $0.50-$1.00/sq ft;
+// bonus deduction $2.50-$5.00/sq ft with prevailing wage +
+// apprenticeship; three eligible building systems (interior
+// lighting / HVAC and hot water / building envelope); ASHRAE 90.1
+// reference standard; designer allocation from government / tax-
+// exempt entity under § 179D(d)(2). Inflation-adjusted TY 2025 max
+// = $5.81/sq ft. TERMINATED by One Big Beautiful Bill Act of 2025
+// (Public Law 119-21, 139 Stat. 72, signed July 4, 2025) for
+// buildings whose construction begins AFTER June 30, 2026.
+async fn section_179d_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_179d::Section179DInput>,
+) -> Result<Json<traderview_expense::section_179d::Section179DResult>, ApiError> {
+    Ok(Json(traderview_expense::section_179d::check(&b)))
 }
 
 // ── §183 hobby loss rules ────────────────────────────────────────────

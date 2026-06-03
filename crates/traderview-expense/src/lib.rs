@@ -480,6 +480,7 @@ pub mod section_168g;
 pub mod section_168k;
 pub mod section_174;
 pub mod section_179;
+pub mod section_179d;
 pub mod section_183;
 pub mod section_263;
 pub mod section_263a;
