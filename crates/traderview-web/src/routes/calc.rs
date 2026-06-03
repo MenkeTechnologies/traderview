@@ -204,6 +204,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1271",          post(section_1271_route))
         .route("/calc/section-1272",          post(section_1272_route))
         .route("/calc/section-1273",          post(section_1273_route))
+        .route("/calc/section-1274",          post(section_1274_route))
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-1283",          post(section_1283_route))
         .route("/calc/section-1286",          post(section_1286_route))
@@ -8558,6 +8559,62 @@ async fn section_1273_route(
         ));
     }
     Ok(Json(traderview_expense::section_1273::compute(&b)))
+}
+
+// ── §1274 issue price for debt instruments issued for property ──
+// Mounted at /api/calc/section-1274. § 1274 is the foundational
+// anti-abuse rule that prevents seller-financed property transactions
+// from concealing imputed interest as disguised principal. § 1274(a)
+// general rule: issue price = (1) STATED PRINCIPAL AMOUNT if there is
+// adequate stated interest (stated interest rate ≥ AFR) OR (2)
+// IMPUTED PRINCIPAL AMOUNT under § 1274(b) if not adequate stated
+// interest. § 1274(b) imputed principal amount = sum of PRESENT
+// VALUES of ALL PAYMENTS due under debt instrument, computed using
+// AFR COMPOUNDED SEMIANNUALLY as of sale/exchange date. § 1274(b)(3)
+// exception for potentially abusive situations (tax shelters,
+// nonrecourse financing, unusually long terms): FAIR MARKET VALUE of
+// property received governs. § 1274(c) applicability scope: applies
+// if (1) some payments due MORE THAN 6 MONTHS after sale AND (2)
+// total payments exceed stated principal or imputed principal.
+// § 1274(c)(3) key exceptions: (A) farm sales ≤ $1,000,000 by
+// individuals/small businesses; (B) principal residence sales;
+// (C) total payments ≤ $250,000 aggregate; (D) publicly traded debt
+// under § 1273(b); (E) patent transfers under § 1235. § 1274(d) AFR
+// three-tier framework: SHORT-TERM AFR (term ≤ 3 years); MID-TERM
+// AFR (term > 3 but ≤ 9 years); LONG-TERM AFR (term > 9 years);
+// IRS publishes AFRs monthly based on Treasury obligation yields;
+// taxpayer may elect LOWEST of three monthly AFRs from 3 months
+// preceding binding contract (three-month lookback rule). § 1274(e)
+// sale-leaseback adjustment: 110 PERCENT of AFR compounded
+// semiannually when property sold and leased back. Cross-references:
+// § 483 unstated-interest rules apply to transactions excluded from
+// § 1274 (farms < $1M, principal residences, < $250,000); § 1273
+// OID determination feeds from § 1274 issue price ((SRPM − issue
+// price) = OID). Eleven-mode severity ladder × 2 transaction types ×
+// 6 exception statuses × 2 payment-timing statuses × 3 debt-term
+// categories × variable stated interest / AFR / principal / FMV /
+// sale-leaseback / abusive-situation inputs. Sibling cluster:
+// section_1271 (treatment of amounts received on retirement of debt
+// instrument), section_1272 (current OID inclusion mechanics),
+// section_1273 (general OID determination — § 1274 issue price
+// feeds § 1273(a)(1) OID), section_1276 (market discount accrual),
+// section_1277 / section_1278 (market discount deferred deductions),
+// section_1281 (current inclusion on short-term obligations),
+// section_1286 (stripped bonds — built iter 672; § 1273(a)(3) de
+// minimis rule incorporated by § 1286), section_1287 (anti-bearer-
+// bond rule), section_1258 (conversion transactions — uses § 1274(d)
+// AFR for indefinite-term applicable rate), section_1260
+// (constructive ownership transactions — uses § 6601 + § 6621 +
+// § 1274(d) AFR for interest charge), section_6621 (built iter 674;
+// federal short-term rate determined under § 1274(d) methodology),
+// section_7872 (below-market loans — uses § 1274(d) AFR for imputed
+// interest computation).
+
+async fn section_1274_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1274::Section1274Input>,
+) -> Result<Json<traderview_expense::section_1274::Section1274Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1274::compute(&b)))
 }
 
 // ── §1281 current inclusion of acquisition discount on short-term ─
