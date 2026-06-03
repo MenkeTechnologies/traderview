@@ -208,6 +208,7 @@ pub mod rental_foreclosure_tenant_protection_ptfa;
 pub mod rental_broadband_mte_rules;
 pub mod rental_energy_benchmarking;
 pub mod rental_garage_door_safety_compliance;
+pub mod rental_georgia_landlord_tenant_act_ocga_44_7;
 pub mod rental_gas_appliance_ban;
 pub mod rental_gas_piping_inspection_local_law_152;
 pub mod rental_grill_propane_bbq_restriction;

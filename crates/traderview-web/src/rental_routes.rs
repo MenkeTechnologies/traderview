@@ -711,6 +711,11 @@ use traderview_expense::rental_garage_door_safety_compliance::{
     check as check_rental_garage_door_safety_compliance,
     RentalGarageDoorSafetyComplianceInput, RentalGarageDoorSafetyComplianceResult,
 };
+use traderview_expense::rental_georgia_landlord_tenant_act_ocga_44_7::{
+    check as check_rental_georgia_landlord_tenant_act_ocga_44_7,
+    RentalGeorgiaLandlordTenantActOcga44_7Input,
+    RentalGeorgiaLandlordTenantActOcga44_7Result,
+};
 use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
     RentalGasApplianceBanResult,
@@ -1688,6 +1693,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-garage-door-safety-compliance", axum::routing::post(rental_garage_door_safety_compliance_route))
+        .route("/rental-georgia-landlord-tenant-act-ocga-44-7", axum::routing::post(rental_georgia_landlord_tenant_act_ocga_44_7_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-gas-piping-inspection-local-law-152", axum::routing::post(rental_gas_piping_inspection_local_law_152_route))
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
@@ -8969,6 +8975,34 @@ async fn rental_garage_door_safety_compliance_route(
     Json(b): Json<RentalGarageDoorSafetyComplianceInput>,
 ) -> Result<Json<RentalGarageDoorSafetyComplianceResult>, ApiError> {
     Ok(Json(check_rental_garage_door_safety_compliance(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_georgia_landlord_tenant_act_ocga_44_7: Georgia Landlord-
+// Tenant Law. Codified at O.C.G.A. §§ 44-7-1 through 44-7-119 (Title
+// 44 Property, Chapter 7). Georgia is NOT a URLTA state. Substantially
+// amended by Safe at Home Act of 2024 (effective July 1, 2024) which
+// codified the implied warranty of habitability under § 44-7-13 and
+// added 3-business-day pay-or-quit notice requirement under § 44-7-50.
+// § 44-7-7 tenancy at will termination (60-day landlord / 30-day
+// tenant); § 44-7-13 landlord obligation to repair + implied warranty
+// of habitability; § 44-7-31 security deposit escrow account in
+// regulated bank or lending institution + tenant informed in writing;
+// § 44-7-32 small-landlord exception (10 or fewer units + no
+// management agent); § 44-7-34 30-day deposit return + itemized
+// statement; § 44-7-35 treble damages + attorney fees for wrongful
+// retention + forfeiture of withholding rights for failure to provide
+// statements within statutory window; § 44-7-50 3-business-day pay
+// or quit notice; § 44-7-103 Section 8 voucher tenant retaliation
+// prohibited.
+// ---------------------------------------------------------------------------
+
+async fn rental_georgia_landlord_tenant_act_ocga_44_7_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalGeorgiaLandlordTenantActOcga44_7Input>,
+) -> Result<Json<RentalGeorgiaLandlordTenantActOcga44_7Result>, ApiError> {
+    Ok(Json(check_rental_georgia_landlord_tenant_act_ocga_44_7(&b)))
 }
 
 // ---------------------------------------------------------------------------
