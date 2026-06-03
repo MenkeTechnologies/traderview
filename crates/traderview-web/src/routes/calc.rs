@@ -205,6 +205,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1272",          post(section_1272_route))
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1274",          post(section_1274_route))
+        .route("/calc/section-1275",          post(section_1275_route))
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-1283",          post(section_1283_route))
         .route("/calc/section-1286",          post(section_1286_route))
@@ -8615,6 +8616,65 @@ async fn section_1274_route(
     Json(b): Json<traderview_expense::section_1274::Section1274Input>,
 ) -> Result<Json<traderview_expense::section_1274::Section1274Result>, ApiError> {
     Ok(Json(traderview_expense::section_1274::compute(&b)))
+}
+
+// ── §1275 other definitions and special rules / OID anchor ──
+// Mounted at /api/calc/section-1275. § 1275 is the definitional
+// anchor for the OID statutory cluster (§§ 163(e), 1271-1275
+// inclusive) and its implementing regulations at Treas. Reg.
+// §§ 1.1275-1 through 1.1275-7. § 1275(a)(1)(A) defines "debt
+// instrument" as any instrument constituting indebtedness under
+// federal income tax principles (including CDs and loans).
+// § 1275(a)(1)(B) excludes (i) annuity contracts depending on life
+// expectancy with no disqualifying provisions (cash surrender, secured
+// loan availability, max payout, decreasing payouts); (ii) annuity
+// contracts issued by foreign insurers subject to subchapter L tax.
+// § 1275(a)(2) issue date = date of first issue. § 1275(a)(3) issue
+// price cross-references § 1273(b) (cash-sold / publicly offered) and
+// § 1274 (debt-for-property). § 1275(b) personal-use property loan
+// exception: for any loan between natural persons NOT issued in
+// connection with trade/business of lender, OID rules of §§ 1272 and
+// 1273 do NOT apply to borrower; borrower governed by cash
+// receipts/disbursements method. § 1275(c) information requirements:
+// Secretary requires all OID information sent to holders + reported
+// on Form 1099-OID / Form 1099-INT under § 6049; failure triggers
+// § 6721/§ 6722 penalties. § 1275(d) anti-abuse regs: Secretary
+// prescribes regulations to prevent avoidance by variable-rate /
+// contingent / convertible recharacterizations (Treas. Reg.
+// §§ 1.1275-2 through 1.1275-7). § 1.1275-1 adjusted issue price =
+// issue price + OID previously included − payments other than QSI.
+// § 1.1275-2(a) OID payment allocation: each payment is FIRST a
+// payment of OID to extent of accrued OID not allocated to prior
+// payments, SECOND a payment of principal — prevents tax-motivated
+// repayment-ordering schemes. Transition rule: current § 1.1275-1
+// definitions apply to debt instruments issued ON OR AFTER
+// March 13, 2001. Annuity grandfather date April 7, 1995 exempts
+// pre-grandfather contracts from certain disqualifying-provision
+// limits under Notice FI-33-94. Fourteen-mode severity ladder ×
+// 4 instrument types × 6 compliance aspects × 3 payment-allocation
+// orders × 5 annuity disqualifying-provision statuses × 2 transition-
+// date statuses × variable adjusted-issue-price / info-return /
+// personal-use-loan inputs. Sibling cluster: section_163e (issuer-
+// side OID deduction; parallel to § 1272 holder-side inclusion),
+// section_1271 (retirement of debt instrument), section_1272
+// (current OID inclusion), section_1273 (general OID determination
+// — § 1275(a)(3) cross-references § 1273(b)), section_1274 (issue
+// price for debt-for-property exchanges — built iter 678; § 1275(a)(3)
+// cross-references § 1274), section_1276 (market discount accrual),
+// section_1277 / section_1278 (market discount deferred deductions),
+// section_1281 (current inclusion on short-term obligations),
+// section_1286 (built iter 672 — stripped bonds; § 1275(c)(3) info
+// reporting on stripped bonds), section_1287 (anti-bearer-bond rule),
+// section_6049 (info reporting on OID + interest; Form 1099-OID /
+// Form 1099-INT), section_6621 (built iter 674 — federal short-term
+// rate determined under § 1274(d) methodology that § 1275(a)(3)
+// cross-references).
+
+async fn section_1275_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1275::Section1275Input>,
+) -> Result<Json<traderview_expense::section_1275::Section1275Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1275::compute(&b)))
 }
 
 // ── §1281 current inclusion of acquisition discount on short-term ─
