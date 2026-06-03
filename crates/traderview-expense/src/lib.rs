@@ -204,6 +204,7 @@ pub mod rental_lead_paint_disclosure;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
 pub mod rental_mold_disclosure_remediation;
+pub mod rental_multilingual_lease_translation;
 pub mod rental_natural_gas_leak_response;
 pub mod rental_oil_tank_replacement_disclosure;
 pub mod rental_organic_waste_collection_disclosure;

@@ -855,6 +855,11 @@ use traderview_expense::rental_mold_disclosure_remediation::{
     RentalMoldDisclosureRemediationInput,
     RentalMoldDisclosureRemediationResult,
 };
+use traderview_expense::rental_multilingual_lease_translation::{
+    check as check_rental_multilingual_lease_translation,
+    MultilingualLeaseTranslationInput as RentalMultilingualLeaseTranslationInput,
+    MultilingualLeaseTranslationResult as RentalMultilingualLeaseTranslationResult,
+};
 use traderview_expense::rental_fair_housing_reasonable_accommodation::{
     check as check_rental_fair_housing_reasonable_accommodation,
     RentalFairHousingReasonableAccommodationInput,
@@ -1398,6 +1403,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
+        .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
@@ -11643,6 +11649,32 @@ async fn rental_mold_disclosure_remediation_route(
     Json(b): Json<RentalMoldDisclosureRemediationInput>,
 ) -> Result<Json<RentalMoldDisclosureRemediationResult>, ApiError> {
     Ok(Json(check_rental_mold_disclosure_remediation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_multilingual_lease_translation: CA Civ. Code § 1632
+// multilingual lease translation compliance. Translation required
+// BEFORE execution in the negotiated language when landlord
+// negotiates primarily in Spanish, Chinese, Tagalog, Vietnamese, or
+// Korean. Residential leases > 1 month coverage per § 1632(b)(1)(A).
+// Commercial coverage added by SB 1103 (eff. Jan 1, 2025) for
+// qualified commercial tenants (microenterprise + restaurant with
+// < 10 employees + nonprofit with < 20 employees). Own-interpreter
+// exemption per § 1632(h): non-minor + fluent in both English and
+// negotiated language + not employed by or made available through
+// landlord. Non-compliance remedy: tenant may RESCIND under
+// § 1632(k). Sibling: rental_application_denial_disclosure (state-
+// specific written-denial regimes), adverse_action_notice (FCRA
+// adverse action), rental_source_of_income_discrimination (related
+// fair-housing regime).
+// ---------------------------------------------------------------------------
+
+async fn rental_multilingual_lease_translation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMultilingualLeaseTranslationInput>,
+) -> Result<Json<RentalMultilingualLeaseTranslationResult>, ApiError> {
+    Ok(Json(check_rental_multilingual_lease_translation(&b)))
 }
 
 // ── /rental-fair-housing-reasonable-accommodation (iter 547) ────────────────
