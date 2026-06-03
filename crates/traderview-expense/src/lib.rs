@@ -191,6 +191,7 @@ pub mod rental_broadband_mte_rules;
 pub mod rental_energy_benchmarking;
 pub mod rental_garage_door_safety_compliance;
 pub mod rental_gas_appliance_ban;
+pub mod rental_gas_piping_inspection_local_law_152;
 pub mod rental_grill_propane_bbq_restriction;
 pub mod rental_hardwired_smoke_alarm_responsibility;
 pub mod rental_heat_minimum_temperature_season;

@@ -646,6 +646,11 @@ use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
     RentalGasApplianceBanResult,
 };
+use traderview_expense::rental_gas_piping_inspection_local_law_152::{
+    check as check_rental_gas_piping_inspection_local_law_152,
+    GasPipingInspectionLocalLaw152Input as RentalGasPipingInspectionLocalLaw152Input,
+    GasPipingInspectionLocalLaw152Result as RentalGasPipingInspectionLocalLaw152Result,
+};
 use traderview_expense::rental_hardwired_smoke_alarm_responsibility::{
     check as check_rental_hardwired_smoke_alarm_responsibility,
     RentalHardwiredSmokeAlarmResponsibilityInput,
@@ -1372,6 +1377,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
         .route("/rental-garage-door-safety-compliance", axum::routing::post(rental_garage_door_safety_compliance_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
+        .route("/rental-gas-piping-inspection-local-law-152", axum::routing::post(rental_gas_piping_inspection_local_law_152_route))
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
         .route("/rental-heat-minimum-temperature-season", axum::routing::post(rental_heat_minimum_temperature_season_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
@@ -7979,6 +7985,36 @@ async fn rental_gas_appliance_ban_route(
     Json(b): Json<RentalGasApplianceBanInput>,
 ) -> Result<Json<RentalGasApplianceBanResult>, ApiError> {
     Ok(Json(check_rental_gas_appliance_ban(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_gas_piping_inspection_local_law_152: NYC Local Law 152 of
+// 2016 periodic gas piping inspection compliance. Enacted in
+// response to March 12, 2014 East Harlem gas explosion at 1644-1646
+// Park Avenue (8 fatalities). NYC Admin Code § 28-318 + 1 RCNY
+// § 103-10. All NYC buildings except R-3 (one- and two-family
+// homes) must be inspected every 4 years by Licensed Master Plumber
+// (LMP). Community-district rotating schedule (Districts 1/3/10
+// 2024+, 2/5/7/13/18 2025+, 4/6/8/9/16 2026+, 11/12/14/15/17 2027+).
+// Filing workflow: LMP delivers GPS1 to owner within 30 days; owner
+// files GPS2 with DOB within 60 days; corrections certified within
+// 120 days, or 180 days with DOB-approved extension. Unsafe
+// condition: immediate 911 + utility + DOB notification + LMP
+// gas-shutoff authority. Penalties: $10,000 missed filing + $10,000/
+// year continuing; Cycle 2+ non-certification $1,500 residential /
+// $5,000 commercial. Sibling: rental_facade_inspection_fisp_local_
+// law_11 (NYC LL 11 facade 5-year cycle), rental_natural_gas_leak_
+// response (NYC tenant gas-leak response protocol), rental_carbon_
+// monoxide_detector (combustion safety), rental_gas_appliance_ban
+// (all-electric mandate stacks atop LL 152).
+// ---------------------------------------------------------------------------
+
+async fn rental_gas_piping_inspection_local_law_152_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalGasPipingInspectionLocalLaw152Input>,
+) -> Result<Json<RentalGasPipingInspectionLocalLaw152Result>, ApiError> {
+    Ok(Json(check_rental_gas_piping_inspection_local_law_152(&b)))
 }
 
 // ---------------------------------------------------------------------------
