@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-988",           post(section_988_route))
         .route("/calc/section-1296",          post(section_1296_route))
         .route("/calc/section-1341",          post(section_1341_route))
+        .route("/calc/section-168",           post(section_168_route))
         .route("/calc/section-168g",          post(section_168g_route))
         .route("/calc/section-168k",          post(section_168k_route))
         .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
@@ -8590,6 +8591,31 @@ async fn mlp_ubti_route(
 // annual ADS deduction for a property at a given year, with a GDS
 // comparison so callers can sum up multi-property differences and
 // feed into the §163(j) tradeoff analyzer.
+
+// ── § 168 MACRS general depreciation ─────────────────────────────
+// Mounted at /api/calc/section-168. Foundational depreciation
+// provision under Tax Reform Act of 1986. § 168(a) MACRS formula:
+// method × recovery period × convention. § 168(b)(1) 200% DB
+// default for 3/5/7/10-year property; § 168(b)(2)(B) 150% DB for
+// 15/20-year property; § 168(b)(3) straight-line required for
+// residential rental (27.5 years) and nonresidential real (39
+// years); § 168(b)(5) elective straight-line. § 168(c) recovery
+// periods. § 168(d)(1) half-year default for personal property;
+// § 168(d)(2) mid-month for real property; § 168(d)(3) mid-quarter
+// triggered when > 40% of personal property placed in last quarter.
+// § 168(e)(2)(A) residential rental 80% dwelling-income threshold;
+// § 168(e)(2)(B) nonresidential real. § 168(g) ADS straight-line
+// over class life. § 168(k) bonus depreciation (separate iter
+// module). Sibling cluster: § 168(e)(6), § 168(g), § 168(k),
+// § 179 (expensing), § 167 (general depreciation), § 197
+// (intangibles amortization).
+
+async fn section_168_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_168::Section168Input>,
+) -> Result<Json<traderview_expense::section_168::Section168Output>, ApiError> {
+    Ok(Json(traderview_expense::section_168::check(&b)))
+}
 
 async fn section_168g_route(
     _u: AuthUser,
