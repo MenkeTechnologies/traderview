@@ -1064,6 +1064,11 @@ use traderview_expense::rental_texas_hb_2127_state_preemption::{
     RentalTexasHb2127StatePreemptionInput,
     RentalTexasHb2127StatePreemptionResult,
 };
+use traderview_expense::rental_texas_property_code_chapter_92_residential_tenancies::{
+    check as check_rental_texas_property_code_chapter_92_residential_tenancies,
+    RentalTexasPropertyCodeChapter92ResidentialTenanciesInput,
+    RentalTexasPropertyCodeChapter92ResidentialTenanciesResult,
+};
 use traderview_expense::rental_minneapolis_renter_protections_ordinance_2020::{
     check as check_rental_minneapolis_renter_protections_ordinance_2020,
     RentalMinneapolisRenterProtectionsOrdinance2020Input,
@@ -1726,6 +1731,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
         .route("/rental-texas-hb-2127-state-preemption", axum::routing::post(rental_texas_hb_2127_state_preemption_route))
+        .route("/rental-texas-property-code-chapter-92-residential-tenancies", axum::routing::post(rental_texas_property_code_chapter_92_residential_tenancies_route))
         .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
         .route("/rental-minneapolis-renter-protections-ordinance-2020", axum::routing::post(rental_minneapolis_renter_protections_ordinance_2020_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
@@ -13633,6 +13639,33 @@ async fn rental_texas_hb_2127_state_preemption_route(
     Json(b): Json<RentalTexasHb2127StatePreemptionInput>,
 ) -> Result<Json<RentalTexasHb2127StatePreemptionResult>, ApiError> {
     Ok(Json(check_rental_texas_hb_2127_state_preemption(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_texas_property_code_chapter_92_residential_tenancies: Texas
+// Property Code Chapter 92 (Residential Tenancies). Texas statewide
+// residential tenancy regime — Tex. Prop. Code §§ 92.001 through
+// 92.355 (Title 8 Landlord and Tenant). Security deposit return
+// 30 days (§ 92.103); itemized deductions required (§ 92.104); bad
+// faith retention = $100 + 3x wrongfully withheld + attorney fees
+// (§ 92.109); landlord repair duty for material health/safety
+// conditions (§ 92.052); 7-day reasonable-time presumption
+// (§ 92.056); tenant repair-and-deduct cap = greater of one month's
+// rent or $500 (§ 92.0561); smoke alarm 7-day install/inspect/
+// repair (§ 92.156); tenant lawsuit or extrajudicial lease
+// termination on smoke alarm failure (§ 92.260); retaliation
+// prohibited 6-month window (§ 92.331); retaliation remedies = $500
+// + one month's rent + actual + attorney fees (§ 92.335). Sibling
+// to rental_texas_hb_2127_state_preemption (HB 2127 makes Chapter
+// 92 both the FLOOR and the CEILING for TX tenancies).
+// ---------------------------------------------------------------------------
+
+async fn rental_texas_property_code_chapter_92_residential_tenancies_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTexasPropertyCodeChapter92ResidentialTenanciesInput>,
+) -> Result<Json<RentalTexasPropertyCodeChapter92ResidentialTenanciesResult>, ApiError> {
+    Ok(Json(check_rental_texas_property_code_chapter_92_residential_tenancies(&b)))
 }
 
 // ---------------------------------------------------------------------------

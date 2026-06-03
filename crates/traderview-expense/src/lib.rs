@@ -283,6 +283,7 @@ pub mod rental_storage_unit_lease_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_tenant_abandoned_personal_property;
 pub mod rental_texas_hb_2127_state_preemption;
+pub mod rental_texas_property_code_chapter_92_residential_tenancies;
 pub mod rental_tenant_bill_of_rights_handout;
 pub mod rental_tenant_criminal_background_screening;
 pub mod rental_tenant_data_privacy_compliance;
