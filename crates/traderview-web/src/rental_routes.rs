@@ -650,6 +650,11 @@ use traderview_expense::rental_california_ab_2347_unlawful_detainer_response::{
     RentalCaliforniaAb2347UnlawfulDetainerResponseInput,
     RentalCaliforniaAb2347UnlawfulDetainerResponseResult,
 };
+use traderview_expense::rental_california_sb_567_no_fault_eviction_amendments::{
+    check as check_rental_california_sb_567_no_fault_eviction_amendments,
+    RentalCaliforniaSb567NoFaultEvictionAmendmentsInput,
+    RentalCaliforniaSb567NoFaultEvictionAmendmentsResult,
+};
 use traderview_expense::rental_chimney_fireplace_inspection_disclosure::{
     check as check_rental_chimney_fireplace_inspection_disclosure,
     RentalChimneyFireplaceInspectionDisclosureInput,
@@ -1585,6 +1590,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-california-ab-12-security-deposit-cap", axum::routing::post(rental_california_ab_12_security_deposit_cap_route))
         .route("/rental-california-ab-2347-unlawful-detainer-response", axum::routing::post(rental_california_ab_2347_unlawful_detainer_response_route))
+        .route("/rental-california-sb-567-no-fault-eviction-amendments", axum::routing::post(rental_california_sb_567_no_fault_eviction_amendments_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
         .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
@@ -7905,6 +7911,72 @@ async fn rental_california_ab_2347_unlawful_detainer_response_route(
     Json(b): Json<RentalCaliforniaAb2347UnlawfulDetainerResponseInput>,
 ) -> Result<Json<RentalCaliforniaAb2347UnlawfulDetainerResponseResult>, ApiError> {
     Ok(Json(check_rental_california_ab_2347_unlawful_detainer_response(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_california_sb_567_no_fault_eviction_amendments: California
+// SB 567 of 2023 (Sen. Maria Elena Durazo, D-Los Angeles), signed
+// by Governor Gavin Newsom on September 30, 2023, effective April 1,
+// 2024. Amends Civil Code § 1946.2 (Tenant Protection Act enacted
+// by AB 1482) to tighten the no-fault eviction grounds for owner /
+// family-member move-in (OMI) and substantial remodel. OMI must
+// satisfy 90-day move-in PLUS 12 continuous months of primary-
+// residence occupancy; permitted family members limited to six
+// enumerated categories (spouse, domestic partner, children,
+// grandchildren, parents, grandparents); OMI unavailable if
+// intended occupant already rents another unit on the property or
+// if similar vacant unit exists on the property. Substantial
+// remodel must require tenant to vacate for at least 30 consecutive
+// days AND not be safely accomplishable with tenant in place;
+// written notice must include description + expected duration +
+// either required permit(s) OR signed contractor agreement. OMI
+// failure-to-comply remedy: owner MUST offer unit to vacated tenant
+// at same rent + lease terms + reimburse moving expenses. Remodel
+// non-completion remedy: tenant may reclaim unit at previous rate.
+// Civil penalties: actual damages + up to 3× actual damages for
+// willful or malicious conduct + reasonable attorney fees + costs +
+// punitive damages. Termination notice rendered VOID by non-
+// compliance with any just-cause provision. Nineteen-mode severity
+// ladder × two property jurisdictions × two notice-date statuses ×
+// two coverage statuses × five no-fault cause types × four OMI
+// actual-occupancy statuses × five OMI intended-occupant statuses ×
+// five substantial-remodel compliance statuses × three reoccupancy-
+// offer statuses × three willfulness statuses × variable monthly
+// rent input. Trader-landlord critical because SB 567 dramatically
+// increased OMI compliance cost: the 12-continuous-month requirement
+// means a trader-landlord using OMI to vacate a unit for renovation,
+// flip, or family relocation now incurs full-year occupancy
+// commitment + civil-liability exposure for early-departure breach.
+// The substantial-remodel permit/signed-contractor documentation
+// requirement caught many landlords using verbal contractor
+// arrangements or pending-permit-application scenarios. Multi-state
+// trader-landlord portfolio operators should treat CA OMI as the
+// strictest in US — by comparison, NJ Anti-Eviction Act subsection
+// (k) requires only owner permanent move-in (no time threshold),
+// CO HB 24-1098 owner / family-member occupancy requires only good-
+// faith intent + 90-day notice + relocation assistance, Seattle JCEO
+// requires 60-day continuous occupancy within 90 days of vacate.
+// Sibling cluster: rental_california_ab_12_security_deposit_cap
+// (iter 645 — CA companion AB 12 security deposit cap 2024),
+// rental_california_ab_2347_unlawful_detainer_response (iter 667 —
+// CA companion unlawful detainer response time), rental_just_cause_
+// eviction (multi-state base regime — CA AB 1482 + SB 567 = strictest
+// US OMI regime), rental_owner_move_in_eviction (multi-state OMI
+// regime), rental_demolition_tenant_notice (substantial-remodel /
+// demolition cross-reference), rental_tenant_relocation_assistance
+// (relocation assistance regime), rental_colorado_hb_24_1098_just_
+// cause_eviction (iter 649 — CO companion), rental_seattle_smc_22_
+// 206_160_just_cause_eviction (iter 669 — Seattle companion OMI
+// 60-day occupancy + 90-day deadline + $2,000 OMI damages), rental_
+// new_jersey_anti_eviction_act (iter 651 — NJ companion).
+// ---------------------------------------------------------------------------
+
+async fn rental_california_sb_567_no_fault_eviction_amendments_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalCaliforniaSb567NoFaultEvictionAmendmentsInput>,
+) -> Result<Json<RentalCaliforniaSb567NoFaultEvictionAmendmentsResult>, ApiError> {
+    Ok(Json(check_rental_california_sb_567_no_fault_eviction_amendments(&b)))
 }
 
 async fn rental_carbon_monoxide_detector_route(
