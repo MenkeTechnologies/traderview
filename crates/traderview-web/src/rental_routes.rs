@@ -796,6 +796,11 @@ use traderview_expense::rental_illegal_lockout_self_help_eviction::{
     RentalIllegalLockoutSelfHelpEvictionInput,
     RentalIllegalLockoutSelfHelpEvictionResult,
 };
+use traderview_expense::rental_retaliation_prohibition::{
+    check as check_rental_retaliation_prohibition,
+    RentalRetaliationProhibitionInput,
+    RentalRetaliationProhibitionResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1272,6 +1277,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
         .route("/rental-illegal-lockout-self-help-eviction", axum::routing::post(rental_illegal_lockout_self_help_eviction_route))
+        .route("/rental-retaliation-prohibition", axum::routing::post(rental_retaliation_prohibition_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10977,4 +10983,62 @@ async fn rental_illegal_lockout_self_help_eviction_route(
     Json(b): Json<RentalIllegalLockoutSelfHelpEvictionInput>,
 ) -> Result<Json<RentalIllegalLockoutSelfHelpEvictionResult>, ApiError> {
     Ok(Json(check_rental_illegal_lockout_self_help_eviction(&b)))
+}
+
+// ── /rental-retaliation-prohibition (iter 531) ──────────────────────────────
+// POST endpoint for landlord retaliation prohibition exposure across CA + NY
+// (1-yr + 3-yr stabilized) + WA + TX + FL + IL (Chicago RLTO + statewide
+// common-law) + Default jurisdictions. Every state with a residential
+// tenancy code prohibits landlord retaliation for tenant exercise of
+// protected rights (habitability complaint to landlord/government, joining
+// tenants' association, exercising repair-and-deduct or rent-withhold,
+// filing fair-housing complaint, commencing legal proceeding). Prohibition
+// operates via rebuttable presumption that adverse landlord action within
+// the statutory window is retaliatory.
+//
+// CA Civ. Code § 1942.5 — 180-day presumption + $100-$2,000 per retaliatory
+// act punitive damages (showing fraud/oppression/malice) + actual damages +
+// attorney fees. Ellis Act withdrawal from rental market is documented
+// legitimate-business-reason rebuttal.
+//
+// NY RPL § 223-b — 1-year presumption (3 years for rent-stabilized /
+// rent-controlled units). Tenant defense to eviction + reinstatement.
+// Rent-stabilized tenancy value often six figures on permanent loss.
+//
+// WA RCW 59.18.240 + § 59.18.250 — 90-day presumption (shortest among
+// surveyed states) + remedies under RCW 59.18.060 (greater of actual
+// damages or 3× monthly rent) + attorney fees.
+//
+// TX Prop. Code §§ 92.331-92.335 — 6-month (180-day) presumption +
+// statutory $500 civil penalty + one month's rent + actual damages + court
+// costs + attorney fees.
+//
+// FL Stat. § 83.64 — rebuttable presumption WITHOUT codified window;
+// common-law reasonable-temporal-proximity analysis (Florida courts apply
+// 90-180-day heuristic).
+//
+// IL Chicago RLTO § 5-12-150 — 1-year presumption + GREATER OF two months'
+// rent or twice damages + attorney fees + tenant may recover possession or
+// terminate. Illinois statewide has NO codified statute; common-law
+// retaliatory-eviction doctrine via Clore v. Fredman, 59 Ill. 2d 20 (1974)
+// operates as defense to forcible-entry-and-detainer.
+//
+// Fourteen-mode severity ladder: NotApplicable, NoProtectedActNoPresumption-
+// Triggered, NoAdverseActionNoRetaliationClaim, LandlordRebuttalProbably-
+// Successful, OutsidePresumptionWindowBurdenOnTenant, CaliforniaCiv1942_5-
+// PresumptionRetaliationPunitiveDamages, NewYorkRpl223BOneYearPresumption,
+// NewYorkRpl223BThreeYearPresumptionRentStabilized,
+// WashingtonRcw59_18_240NinetyDayPresumption,
+// TexasPropCode92_331SixMonthPresumptionFiveHundredPenalty,
+// FloridaStat83_64CommonLawTemporalProximityPresumption,
+// IllinoisChicagoRlto5_12_150OneYearPresumptionTwoMonthRent,
+// IllinoisStatewideCommonLawCloreVFredmanDefense,
+// DefaultJurisdictionStateLawRetaliationPresumption.
+
+async fn rental_retaliation_prohibition_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRetaliationProhibitionInput>,
+) -> Result<Json<RentalRetaliationProhibitionResult>, ApiError> {
+    Ok(Json(check_rental_retaliation_prohibition(&b)))
 }
