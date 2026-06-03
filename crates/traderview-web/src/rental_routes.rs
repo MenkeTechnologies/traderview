@@ -811,6 +811,11 @@ use traderview_expense::rental_natural_gas_leak_response::{
     check as check_rental_natural_gas_leak_response,
     RentalNaturalGasLeakResponseInput, RentalNaturalGasLeakResponseResult,
 };
+use traderview_expense::rental_new_jersey_anti_eviction_act::{
+    check as check_rental_new_jersey_anti_eviction_act,
+    RentalNewJerseyAntiEvictionActInput,
+    RentalNewJerseyAntiEvictionActResult,
+};
 use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
     check as check_rental_ny_rent_receipt_late_notice_requirements,
     NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
@@ -1555,6 +1560,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-local-law-88-lighting-upgrades-sub-metering", axum::routing::post(rental_local_law_88_lighting_upgrades_sub_metering_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
+        .route("/rental-new-jersey-anti-eviction-act", axum::routing::post(rental_new_jersey_anti_eviction_act_route))
         .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
         .route("/rental-ny-rpl-235f-roommate-law", axum::routing::post(rental_ny_rpl_235f_roommate_law_route))
         .route("/rental-attorney-fee-clause-reciprocity", axum::routing::post(rental_attorney_fee_clause_reciprocity_route))
@@ -9559,6 +9565,54 @@ async fn rental_natural_gas_leak_response_route(
     Json(b): Json<RentalNaturalGasLeakResponseInput>,
 ) -> Result<Json<RentalNaturalGasLeakResponseResult>, ApiError> {
     Ok(Json(check_rental_natural_gas_leak_response(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_new_jersey_anti_eviction_act: New Jersey Anti-Eviction Act
+// (P.L. 1974, c. 49) — codified at N.J.S.A. 2A:18-61.1; OLDEST
+// statewide just-cause eviction regime in United States history,
+// predating California AB 1482 of 2019 by 45 years. Enumerates 18
+// statutory grounds for eviction: (a) failure to pay rent; (b)
+// disorderly conduct after notice to cease; (c) willful or grossly
+// negligent destruction; (d) substantial lease violation after
+// notice to cease; (e) continued violation of landlord rules; (f)
+// habitual late payment; (g) refusal of reasonable lease changes at
+// renewal; (h) owner retires from rental business; (i) conversion
+// to non-residential use; (j) conversion to condominium/cooperative;
+// (k) owner permanently moves into unit; (l) owner needs unit for
+// family; (m) refusing reasonable lease changes at tenancy end; (n)
+// habitual nonpayment; (o) drug-related criminal activity; (p)
+// assault/threats/weapons use; (q) theft from premises; (r) other
+// specified criminal activity. Owner-occupied 3-or-fewer-apartments
+// exemption: Act does NOT apply where building has 3 or fewer
+// apartments AND owner lives in one. Notice to Cease required for
+// grounds (b)/(d)/(e)/(f). Notice to Quit periods: typically 1
+// month; 3 days for criminal activity (o)/(p)/(q)/(r); 18 months
+// for owner-occupier conversion grounds (h)/(i)/(k)/(l); 3 years
+// for condominium/cooperative conversion (j). N.J.S.A. 2A:18-61.7
+// et seq. companion condominium/cooperative conversion regime.
+// N.J.S.A. 2A:18-56 prerequisite notice-to-quit-and-demand-for-
+// possession for summary dispossess action. Nineteen-mode severity
+// ladder × nineteen eviction grounds × three property classifications
+// × three notice-to-cease statuses × seven notice-to-quit durations.
+// Trader-landlord critical because New Jersey is the OLDEST statewide
+// just-cause eviction jurisdiction; HSTPA-style tenant protections
+// predate every other state. Sibling cluster: rental_just_cause_
+// eviction (multi-state base regime; NJ Anti-Eviction Act = OLDEST
+// entry), rental_colorado_hb_24_1098_just_cause_eviction (iter 649
+// — Colorado newest entry), rental_oregon_sb_608_sb_611_rent_
+// stabilization (iter 647 — Oregon companion), rental_eviction_
+// notices (notice to quit cross-reference), rental_owner_move_in_
+// eviction (owner move-in cross-reference), rental_condominium_
+// conversion_protection (multi-state condo conversion regime).
+// ---------------------------------------------------------------------------
+
+async fn rental_new_jersey_anti_eviction_act_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNewJerseyAntiEvictionActInput>,
+) -> Result<Json<RentalNewJerseyAntiEvictionActResult>, ApiError> {
+    Ok(Json(check_rental_new_jersey_anti_eviction_act(&b)))
 }
 
 // ---------------------------------------------------------------------------

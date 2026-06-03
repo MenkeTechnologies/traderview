@@ -221,6 +221,7 @@ pub mod rental_massachusetts_security_deposit_statute;
 pub mod rental_mold_disclosure_remediation;
 pub mod rental_multilingual_lease_translation;
 pub mod rental_natural_gas_leak_response;
+pub mod rental_new_jersey_anti_eviction_act;
 pub mod rental_ny_rent_receipt_late_notice_requirements;
 pub mod rental_ny_rpl_235f_roommate_law;
 pub mod rental_nyc_childhood_lead_poisoning_prevention_act;
