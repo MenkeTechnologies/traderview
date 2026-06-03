@@ -187,6 +187,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6038b",         post(section_6038b_route))
         .route("/calc/section-6038c",         post(section_6038c_route))
         .route("/calc/section-6038d",         post(section_6038d_route))
+        .route("/calc/section-6039",          post(section_6039_route))
         .route("/calc/section-6011",          post(section_6011_route))
         .route("/calc/section-6111",          post(section_6111_route))
         .route("/calc/section-6112",          post(section_6112_route))
@@ -7587,6 +7588,29 @@ async fn section_6038d_route(
         ));
     }
     Ok(Json(traderview_expense::section_6038d::compute(&b)))
+}
+
+// ── § 6039 corporate reporting of ISO exercises and ESPP transfers ──
+// Mounted at /api/calc/section-6039. Corporate reporting obligation
+// under § 6039(a)(1) (Form 3921 — one return per ISO exercise) and
+// § 6039(a)(2) (Form 3922 — one return per ESPP first-transfer where
+// purchase price < FMV at grant or not fixed/determinable at grant).
+// Employee statement deadline § 6039(b): January 31. IRS deadline:
+// February 28 paper, March 31 electronic. Mandatory e-filing threshold
+// (Treas. Reg. § 301.6011-2 as amended by T.D. 9972 effective filings
+// in 2024): 10 or more aggregate information returns. Penalties under
+// § 6721 cross-referenced by § 6039(c): $60/form late ≤ 30 days,
+// $120/form late 31 days through August 1, $310/form after August 1
+// or complete failure (2025 amounts); intentional disregard under
+// § 6721(e) carries NO maximum penalty. Companion to § 422 (ISO) and
+// § 423 (ESPP) — together they pin employee tax treatment + corporate
+// reporting + employee basis tracking for statutory option plans.
+
+async fn section_6039_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6039::Section6039Input>,
+) -> Result<Json<traderview_expense::section_6039::Section6039Output>, ApiError> {
+    Ok(Json(traderview_expense::section_6039::check(&b)))
 }
 
 // ── § 6011 reportable transaction disclosure (Form 8886) ──────────
