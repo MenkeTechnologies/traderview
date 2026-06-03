@@ -647,6 +647,7 @@ pub mod section_679;
 pub mod section_67g;
 pub mod section_6011;
 pub mod section_6020;
+pub mod section_6035;
 pub mod section_6038a;
 pub mod section_6038b;
 pub mod section_6038c;

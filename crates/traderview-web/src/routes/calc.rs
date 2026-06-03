@@ -220,6 +220,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1297",          post(section_1297_route))
         .route("/calc/section-1298",          post(section_1298_route))
         .route("/calc/section-6020",          post(section_6020_route))
+        .route("/calc/section-6035",          post(section_6035_route))
         .route("/calc/section-6038a",         post(section_6038a_route))
         .route("/calc/section-6038b",         post(section_6038b_route))
         .route("/calc/section-6038c",         post(section_6038c_route))
@@ -9243,6 +9244,27 @@ async fn section_6020_route(
     Json(b): Json<traderview_expense::section_6020::Section6020Input>,
 ) -> Result<Json<traderview_expense::section_6020::Section6020Result>, ApiError> {
     Ok(Json(traderview_expense::section_6020::check(&b)))
+}
+
+// ── §6035 Basis Info to Persons Acquiring Property From Decedent ────
+// Mounted at /api/calc/section-6035. Public Law 114-41 § 2004 (signed
+// July 31, 2015) added § 1014(f) basis consistency rule + § 6035
+// executor reporting via Form 8971 + Schedule A within 30 days of
+// estate tax return filing; supplemental Form 8971 due within 30
+// days of final value determination or discovery of incorrect info.
+// § 6662(k) 20% accuracy-related penalty on inconsistent estate
+// basis underpayment. § 6721 + § 6722 information return / payee
+// statement failure penalties (base $250 per failure). Final
+// regulations published Federal Register September 17, 2024 —
+// eliminated the zero-basis rule for unreported property; modified
+// 'acquiring' definition for § 6035(a)(1) timing; eliminated
+// subsequent-transfer reporting except for trustees. Companion to
+// § 1014 (cost basis at death) and § 1014e (transferred-basis rule).
+async fn section_6035_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6035::Section6035Input>,
+) -> Result<Json<traderview_expense::section_6035::Section6035Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6035::check(&b)))
 }
 
 // ── §6038A Form 5472 25%-foreign-owned domestic corp + DRE ─────────
