@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-641",           post(section_641_route))
         .route("/calc/section-643",           post(section_643_route))
+        .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
         .route("/calc/section-6042",          post(section_6042_route))
@@ -5430,6 +5431,33 @@ async fn section_643_route(
     Json(b): Json<traderview_expense::section_643::Section643Input>,
 ) -> Result<Json<traderview_expense::section_643::Section643Result>, ApiError> {
     Ok(Json(traderview_expense::section_643::compute(&b)))
+}
+
+// ── §661 complex trust distribution deduction ────────────────────────
+// Mounted at /api/calc/section-661. § 661(a)(1) tier-1 mandatory
+// distributions + § 661(a)(2) tier-2 discretionary distributions;
+// total CAPPED at DNI under § 661(c) + § 643(a). § 661(b) character
+// preservation — same proportion of each DNI class as that class
+// bears to total DNI flows to beneficiaries. § 661(c) coordination
+// with § 642(c) charitable contribution deduction. § 662(a)(1)/(2)
+// beneficiary inclusion mirrors tier priority. § 662(b) beneficiary
+// character parallels § 661(b). § 663(a)(1) specific bequest
+// excluded; § 663(a)(2) capital gains allocated to corpus excluded.
+// § 663(b) 65-day rule election: distributions within first 65 days
+// of next year may be elected as made on last day of prior year.
+// § 663(c) separate share rule: substantially separate and
+// independent shares treated as separate trusts for § 661/§ 662/
+// § 663(b). Treas. Reg. § 1.661(c)-2 + § 1.663(c)-1 to § 1.663(c)-5
+// implementing regs. Conduit principle: trust deduction +
+// beneficiary inclusion = no double tax; shifts income from
+// compressed 37 % trust bracket (~$15,650 for 2025) to potentially
+// lower individual brackets.
+
+async fn section_661_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_661::Section661Input>,
+) -> Result<Json<traderview_expense::section_661::Section661Result>, ApiError> {
+    Ok(Json(traderview_expense::section_661::compute(&b)))
 }
 
 // ── §67(g) TCJA misc itemized deduction suspension ────────────────────
