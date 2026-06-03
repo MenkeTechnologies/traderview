@@ -820,6 +820,11 @@ use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
     NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
     NycChildhoodLeadPoisoningPreventionActResult as RentalNycChildhoodLeadPoisoningPreventionActResult,
 };
+use traderview_expense::rental_nyc_local_law_55_ipm_pest_control::{
+    check as check_rental_nyc_local_law_55_ipm_pest_control,
+    RentalNycLocalLaw55IpmPestControlInput,
+    RentalNycLocalLaw55IpmPestControlResult,
+};
 use traderview_expense::rental_nyc_scrie_drie_rent_freeze::{
     check as check_rental_nyc_scrie_drie_rent_freeze,
     RentalNycScrieDrieRentFreezeInput,
@@ -1513,6 +1518,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-nyc-scrie-drie-rent-freeze", axum::routing::post(rental_nyc_scrie_drie_rent_freeze_route))
+        .route("/rental-nyc-local-law-55-ipm-pest-control", axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
@@ -9561,6 +9567,33 @@ async fn rental_nyc_scrie_drie_rent_freeze_route(
     Json(b): Json<RentalNycScrieDrieRentFreezeInput>,
 ) -> Result<Json<RentalNycScrieDrieRentFreezeResult>, ApiError> {
     Ok(Json(check_rental_nyc_scrie_drie_rent_freeze(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_nyc_local_law_55_ipm_pest_control: NYC Local Law 55 of
+// 2018 (Asthma-Free Housing Act; effective Jan 19, 2019; NYC Admin
+// Code § 27-2017 et seq.). Applies to multiple dwellings (3+
+// units). Indoor allergen hazards = mice/cockroaches/rats/mold.
+// Owner must perform ANNUAL INSPECTION for indoor allergen hazards
+// and apply Integrated Pest Management (IPM). § 27-2017.8 — any
+// pesticide must be applied by NYS DEC-licensed pest professional.
+// Tenant must receive annual notice + DOHMH fact sheet at lease
+// signing and renewal. Access notice — 24-hour written notice
+// constitutes good-faith effort. HPD enforcement: $10-$125 per
+// day; max $10,000; false certification of correction $50-$250
+// non-hazardous / $250-$500 hazardous. Fourteen-mode severity
+// ladder × three property classifications × six allergen hazards
+// × three pesticide operator licenses. Trader-landlord critical
+// for NYC portfolio operators with 3+ unit buildings; daily
+// penalties accrue + false-certification can compound.
+// ---------------------------------------------------------------------------
+
+async fn rental_nyc_local_law_55_ipm_pest_control_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNycLocalLaw55IpmPestControlInput>,
+) -> Result<Json<RentalNycLocalLaw55IpmPestControlResult>, ApiError> {
+    Ok(Json(check_rental_nyc_local_law_55_ipm_pest_control(&b)))
 }
 
 // ---------------------------------------------------------------------------
