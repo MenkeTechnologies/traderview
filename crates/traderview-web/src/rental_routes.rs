@@ -886,6 +886,11 @@ use traderview_expense::rental_waste_recycling_collection_mandate::{
     RentalWasteRecyclingCollectionMandateInput,
     RentalWasteRecyclingCollectionMandateResult,
 };
+use traderview_expense::rental_dog_bite_liability::{
+    check as check_rental_dog_bite_liability,
+    RentalDogBiteLiabilityInput,
+    RentalDogBiteLiabilityResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1380,6 +1385,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
+        .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11969,4 +11975,49 @@ async fn rental_waste_recycling_collection_mandate_route(
     Json(b): Json<RentalWasteRecyclingCollectionMandateInput>,
 ) -> Result<Json<RentalWasteRecyclingCollectionMandateResult>, ApiError> {
     Ok(Json(check_rental_waste_recycling_collection_mandate(&b)))
+}
+
+// ── /rental-dog-bite-liability (iter 567) ───────────────────────────────────
+// POST endpoint for landlord dog-bite liability compliance across eight
+// jurisdictions. Dog-bite liability for landlords (vs dog-owner tenants)
+// turns on NEGLIGENCE standard: landlord liable when (1) actual or
+// constructive knowledge of dangerous propensities + (2) legal ability
+// to abate + (3) failure to take reasonable steps. Strict-liability dog-
+// bite statutes apply to DOG OWNER, not landlord.
+//
+// CA Cal. Civ. Code § 3342 dog-owner strict liability + Uccello v.
+// Laudenslayer (1975) 44 Cal. App. 3d 504 landlord knowledge-plus-
+// ability-to-act test + Code Civ. Proc. § 335.1 2-year SOL.
+//
+// NY Agriculture & Markets Law § 121 + § 123 dangerous-dog statute +
+// Bard v. Jahnke (2006) 6 N.Y.3d 592 vicious-propensities standard.
+//
+// IL 510 ILCS 5/16 Animal Control Act dog-owner strict liability +
+// landlord premises-liability framework.
+//
+// WA RCW 16.08.040 strictest dog-owner strict liability regardless of
+// viciousness or knowledge + landlord on common-law negligence.
+//
+// TX one-bite rule + Marshall v. Ranne (1974) 511 S.W.2d 255 vicious-
+// propensity test.
+//
+// FL Fla. Stat. § 767.04 dog-owner strict liability with comparative-
+// negligence reduction + § 767.13(2) dangerous-dog classification.
+//
+// OH ORC § 955.28 dog-owner strict liability for property/personal
+// injury.
+//
+// Six-mode severity ladder: NotApplicable,
+// NoLandlordLiabilityNoKnowledgeOrNoControl,
+// LandlordLiableKnowledgeFailedToAbateCommonArea,
+// LandlordLiableKnowledgeFailedToAbateTenantPremises,
+// LandlordTookReasonableAbatementNoLiability,
+// DogOwnerStrictLiabilityNoLandlordExposure.
+
+async fn rental_dog_bite_liability_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalDogBiteLiabilityInput>,
+) -> Result<Json<RentalDogBiteLiabilityResult>, ApiError> {
+    Ok(Json(check_rental_dog_bite_liability(&b)))
 }
