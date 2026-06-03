@@ -900,6 +900,11 @@ use traderview_expense::rental_new_york_hstpa_2019_chapter_36::{
     RentalNewYorkHstpa2019Chapter36Input,
     RentalNewYorkHstpa2019Chapter36Result,
 };
+use traderview_expense::rental_north_carolina_chapter_42_landlord_tenant::{
+    check as check_rental_north_carolina_chapter_42_landlord_tenant,
+    RentalNorthCarolinaChapter42LandlordTenantInput,
+    RentalNorthCarolinaChapter42LandlordTenantResult,
+};
 use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
     check as check_rental_ny_rent_receipt_late_notice_requirements,
     NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
@@ -1714,6 +1719,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-new-jersey-anti-eviction-act", axum::routing::post(rental_new_jersey_anti_eviction_act_route))
         .route("/rental-new-york-hstpa-2019-chapter-36", axum::routing::post(rental_new_york_hstpa_2019_chapter_36_route))
+        .route("/rental-north-carolina-chapter-42-landlord-tenant", axum::routing::post(rental_north_carolina_chapter_42_landlord_tenant_route))
         .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
         .route("/rental-ny-rpl-235f-roommate-law", axum::routing::post(rental_ny_rpl_235f_roommate_law_route))
         .route("/rental-attorney-fee-clause-reciprocity", axum::routing::post(rental_attorney_fee_clause_reciprocity_route))
@@ -10495,6 +10501,35 @@ async fn rental_new_york_hstpa_2019_chapter_36_route(
     Json(b): Json<RentalNewYorkHstpa2019Chapter36Input>,
 ) -> Result<Json<RentalNewYorkHstpa2019Chapter36Result>, ApiError> {
     Ok(Json(check_rental_new_york_hstpa_2019_chapter_36(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_north_carolina_chapter_42_landlord_tenant: North Carolina
+// General Statutes Chapter 42 (Landlord and Tenant). Codified at
+// N.C. Gen. Stat. §§ 42-1 through 42-86. Charlotte and Raleigh-
+// Durham major Southeastern rental markets. § 42-50 security deposit
+// trust account or bond requirement; § 42-51 security deposit caps
+// (2 weeks for week-to-week; 1.5 months for month-to-month; 2 months
+// for terms greater than month); § 42-52 30-day deposit return +
+// itemized statement + interim/final accounting at 30/60 days when
+// claim cannot be determined within 30 days + 6-month hold for
+// unknown tenant address; § 42-42 landlord obligation to maintain
+// (implied warranty of habitability); § 42-46(a) late fee cap of
+// greater of $15 or 5 percent + one-time-per-late-payment rule;
+// § 42-46(b) administrative complaint-filing fee with four
+// prerequisites; § 42-26 10-day pay or quit demand before summary
+// ejectment; § 42-25.6 self-help eviction prohibited; § 42-7.1
+// landlord's acceptance of past-due rent does not waive eviction
+// right; § 42-44 tenant remedies (cannot withhold rent without
+// court order — unlike most other states).
+// ---------------------------------------------------------------------------
+
+async fn rental_north_carolina_chapter_42_landlord_tenant_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNorthCarolinaChapter42LandlordTenantInput>,
+) -> Result<Json<RentalNorthCarolinaChapter42LandlordTenantResult>, ApiError> {
+    Ok(Json(check_rental_north_carolina_chapter_42_landlord_tenant(&b)))
 }
 
 // ---------------------------------------------------------------------------
