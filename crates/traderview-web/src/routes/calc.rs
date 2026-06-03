@@ -158,6 +158,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1234a",         post(section_1234a_route))
         .route("/calc/section-1234b",         post(section_1234b_route))
         .route("/calc/section-263g",          post(section_263g_route))
+        .route("/calc/section-264",           post(section_264_route))
         .route("/calc/section-265",           post(section_265_route))
         .route("/calc/section-1276",          post(section_1276_route))
         .route("/calc/section-1277",          post(section_1277_route))
@@ -6280,6 +6281,59 @@ async fn section_263g_route(
         ));
     }
     Ok(Json(traderview_expense::section_263g::compute(&b)))
+}
+
+// ── § 264 Insurance-Related Interest + Premium Disallowance ─────────
+// Mounted at /api/calc/section-264 (iter 542). Pure compute. § 264
+// disallows four categories of insurance-related deductions: (1)
+// § 264(a)(1) premiums on life insurance covering officers/employees
+// where the taxpayer is the beneficiary; (2) § 264(a)(2) interest on
+// debt to purchase or carry SINGLE-PREMIUM life, endowment, or annuity
+// contracts (per se non-deductible); (3) § 264(a)(3) interest on debt
+// under plans of systematic borrowing against cash-value buildup (added
+// by Tax Reform Act of 1986); (4) § 264(f) pro-rata interest
+// disallowance for businesses owning life insurance on owners/employees
+// (the "inside-buildup" regime added by Taxpayer Relief Act of 1997).
+//
+// § 264(c) FOUR EXCEPTIONS to § 264(a)(3) systematic-borrowing rule:
+//   (c)(1) 4-of-7 — no part of 4 of first 7 annual premiums paid through debt;
+//   (c)(2) trade-or-business — debt in connection with unrelated trade or business;
+//   (c)(3) unforeseen-loss — substantial unforeseen income loss or obligation increase;
+//   (c)(4) de minimis — interest paid ≤ $100 for the taxable year.
+//
+// § 264(a)(2) SINGLE-PREMIUM RULE has NO § 264(c) exceptions — disallowance
+// is per se permanent. Single-premium definition: substantially all
+// premiums paid within 4 years OR amount deposited with insurer for
+// substantial future premiums.
+//
+// § 264(f) PRO-RATA DISALLOWANCE formula: disallowance = total interest
+// × (avg unborrowed policy cash value / avg total assets). § 264(f)(4)
+// exceptions: (A) owner-employee 20%+ policies, (E) key-person policies
+// limited to 20 individuals max, $50K aggregate de minimis threshold.
+//
+// Ten-mode severity ladder: NotApplicable,
+// Section264A2SinglePremiumInterestDisallowedPerSe,
+// Section264A3SystematicBorrowingInterestDisallowed,
+// Section264cFourOfSevenExceptionPreservesDeduction,
+// Section264cTradeOrBusinessExceptionPreservesDeduction,
+// Section264cUnforeseenLossExceptionPreservesDeduction,
+// Section264cDeMinimisInterestExceptionPreservesDeduction,
+// Section264fProRataInterestDisallowanceApplied,
+// Section264f4ExceptionAppliesNoProRataDisallowance,
+// NonSinglePremiumNoSystematicBorrowingNoDisallowance.
+//
+// Coordinates with § 163(j) business-interest limit (separate cap on
+// remaining interest), § 265 (iter 532 — tax-exempt-income interest
+// disallowance parallel), § 246A (iter 530 — debt-financed portfolio
+// stock DRD reduction), § 101(j) employer-owned life insurance EOLI
+// notice + consent requirements enacted by Pension Protection Act of
+// 2006, § 7702 modified endowment contract rules.
+
+async fn section_264_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_264::Section264InsuranceInterestDisallowanceInput>,
+) -> Result<Json<traderview_expense::section_264::Section264InsuranceInterestDisallowanceOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_264::check(&b)))
 }
 
 // ── § 265 Expenses + Interest Relating to Tax-Exempt Income ──────────
