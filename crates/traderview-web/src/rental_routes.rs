@@ -871,6 +871,11 @@ use traderview_expense::rental_tenant_relocation_assistance::{
     RentalTenantRelocationAssistanceInput,
     RentalTenantRelocationAssistanceResult,
 };
+use traderview_expense::rental_tenant_data_privacy_compliance::{
+    check as check_rental_tenant_data_privacy_compliance,
+    RentalTenantDataPrivacyComplianceInput,
+    RentalTenantDataPrivacyComplianceResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1362,6 +1367,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
         .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
+        .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11809,4 +11815,53 @@ async fn rental_tenant_relocation_assistance_route(
     Json(b): Json<RentalTenantRelocationAssistanceInput>,
 ) -> Result<Json<RentalTenantRelocationAssistanceResult>, ApiError> {
     Ok(Json(check_rental_tenant_relocation_assistance(&b)))
+}
+
+// ── /rental-tenant-data-privacy-compliance (iter 561) ───────────────────────
+// POST endpoint for tenant data privacy compliance across eight
+// jurisdictions. Landlords collect substantial tenant personal data
+// (application screening + lease execution + smart-lock access logs +
+// IoT-thermostat usage + biometric package-locker + surveillance
+// footage + rent-payment history). State and local data-privacy
+// regimes impose disclosure + consent + security + right-to-delete
+// obligations. Federal FCRA layers consumer-report-specific duties.
+//
+// FCRA 15 U.S.C. §§ 1681-1681x: written consent + adverse-action
+// notice + § 1681n willful $100-$1,000 per violation + § 1681o
+// negligent actual damages.
+//
+// CA CCPA + CPRA (Cal. Civ. Code §§ 1798.100-1798.199.100): notice
+// + access/delete/correct rights + opt-out + sensitive-info limit;
+// $2,500 / $7,500 civil penalty.
+//
+// IL BIPA (740 ILCS 14): written consent + retention policy required
+// for biometric collection; $1,000 negligent / $5,000 intentional
+// per record + Rosenbach v. Six Flags 432 Ill. Dec. 654 (Ill. 2019)
+// no-actual-injury standing.
+//
+// NYC Tenant Data Privacy Act (NYC Admin. Code §§ 26-3001-3007):
+// smart-access buildings + notice + consent + security + deletion.
+// NY SHIELD Act Gen. Bus. Law § 899-aa + § 899-bb statewide
+// reasonable-security overlay.
+//
+// VA CDPA (Va. Code §§ 59.1-575 to 59.1-585) biometric sensitive-data
+// opt-in + DPA. TX CUBI (Bus. & Com. Code §§ 521.052 + 503.001). CO
+// CPA (C.R.S. §§ 6-1-1301 to 6-1-1313).
+//
+// Nine-mode severity ladder: NotApplicable,
+// CompliantConsentAndNoticeFramework,
+// FcraConsumerReportConsentObtainedAdverseActionDuty,
+// FcraAdverseActionNoticeMissingViolation,
+// BipaBiometricCollectionWithoutWrittenConsentViolation,
+// CcpaCpraConsumerRightsNotProvidedViolation,
+// NycTenantDataPrivacyActViolation,
+// NySchieldActDataSecurityNonCompliance,
+// DefaultJurisdictionFcraAndCommonLawOnly.
+
+async fn rental_tenant_data_privacy_compliance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantDataPrivacyComplianceInput>,
+) -> Result<Json<RentalTenantDataPrivacyComplianceResult>, ApiError> {
+    Ok(Json(check_rental_tenant_data_privacy_compliance(&b)))
 }

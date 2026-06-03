@@ -229,6 +229,7 @@ pub mod rental_storage_unit_lease_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_tenant_abandoned_personal_property;
 pub mod rental_tenant_criminal_background_screening;
+pub mod rental_tenant_data_privacy_compliance;
 pub mod rental_tenant_relocation_assistance;
 pub mod rental_tenant_rent_escrow_habitability_dispute;
 pub mod rental_underground_storage_tank_disclosure;
