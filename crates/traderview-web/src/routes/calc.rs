@@ -41,6 +41,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/wash-sale",             post(wash_sale_route))
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
+        .route("/calc/section-1248",          post(section_1248_route))
         .route("/calc/section-1245-1250",     post(section_1245_1250_route))
         .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/section-1045",          post(section_1045_route))
@@ -2882,6 +2883,28 @@ async fn section_1239_route(
     Json(b): Json<traderview_expense::section_1239::Section1239Input>,
 ) -> Result<Json<traderview_expense::section_1239::Section1239Result>, ApiError> {
     Ok(Json(traderview_expense::section_1239::compute(&b)))
+}
+
+// ── §1248 CFC stock sale deemed-dividend recharacterization ──────────
+// Mounted at /api/calc/section-1248. § 1248(a) 10 %+ US shareholder
+// (§ 958(a)/(b)) at any time during 5-year period ending on sale
+// date — gain recharacterized as deemed dividend to extent of CFC
+// E&P attributable to stock + ownership period while CFC. § 1248(b)
+// individual LTCG limitation: pro rata domestic-corp tax + LTCG tax
+// on residual. § 1248(c)(2) lower-tier CFC E&P inclusion when upper
+// CFC owns ≥ 50 %. § 1248(d)(1) PTI (§ 951 subpart F / § 951A
+// GILTI) excluded. § 1248(d)(2) ECI excluded. § 1248(d)(3) pre-1963
+// excluded. § 1248(e) US-holding-corp avoidance extension. § 245A
+// TCJA 2017 100 % DRD effectively eliminates § 1248 for US C-corp
+// sellers via foreign-source dividend participation exemption.
+// Trader-critical for individuals selling foreign-corp stock and
+// hedge fund / private equity LPs computing CFC-stock-sale tax.
+
+async fn section_1248_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1248::Section1248Input>,
+) -> Result<Json<traderview_expense::section_1248::Section1248Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1248::compute(&b)))
 }
 
 // ── §754 election + §743(b) inside basis adjustment ─────────────────
