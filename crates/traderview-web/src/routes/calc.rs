@@ -79,6 +79,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1375",          post(section_1375_route))
         .route("/calc/section-1411",          post(section_1411_route))
         .route("/calc/section-1445",          post(section_1445_route))
+        .route("/calc/section-1446",          post(section_1446_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-475f",          post(section_475f_route))
         .route("/calc/section-213",           post(section_213_route))
@@ -4802,6 +4803,33 @@ async fn section_1445_route(
     Json(b): Json<traderview_expense::section_1445::Section1445Input>,
 ) -> Result<Json<traderview_expense::section_1445::Section1445Result>, ApiError> {
     Ok(Json(traderview_expense::section_1445::compute(&b)))
+}
+
+// ── §1446 partnership withholding on foreign-partner ECTI ────────────
+// Mounted at /api/calc/section-1446. § 1446(a) partnership with
+// effectively connected taxable income (ECTI) allocable to foreign
+// partner must withhold; partnership is statutory withholding agent
+// personally liable. § 1446(b)(1) highest § 1 rate (37 %) for
+// noncorporate; highest § 11 rate (21 %) for corporate; reduced
+// rates with documentation: 20 % LTCG, 25 % unrecaptured § 1250,
+// 28 % collectibles. § 1446(c) foreign partner = non-US-person per
+// § 7701(a). § 1446(e) quarterly installments due 15th of
+// 4th/6th/9th/12th months on Form 8813. § 1446(f) added by TCJA
+// 2017 (P.L. 115-97 § 13501): transferee withholds 10 % of amount
+// realized on foreign-partner partnership interest transfer if
+// portion of gain would be ECI; Treas. Reg. § 1.1446(f)-1 et seq.
+// final regs effective Oct 7, 2020. Form 8804 annual return due
+// 15th day of 3rd month after close. Form 8805 information
+// statement per foreign partner. Form 8804-C partner-level
+// certificate reducing withholding for partner-level deductions.
+// Trader-critical for hedge funds, real estate LPs, S-corp
+// converts with foreign LP/LLC members.
+
+async fn section_1446_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1446::Section1446Input>,
+) -> Result<Json<traderview_expense::section_1446::Section1446Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1446::compute(&b)))
 }
 
 // ── §1374 S-corp built-in gains (BIG) tax ───────────────────────────
