@@ -826,6 +826,11 @@ use traderview_expense::rental_source_of_income_discrimination::{
     RentalSourceOfIncomeDiscriminationInput,
     RentalSourceOfIncomeDiscriminationResult,
 };
+use traderview_expense::rental_tenant_abandoned_personal_property::{
+    check as check_rental_tenant_abandoned_personal_property,
+    RentalTenantAbandonedPersonalPropertyInput,
+    RentalTenantAbandonedPersonalPropertyResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1308,6 +1313,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-late-fee-cap", axum::routing::post(rental_late_fee_cap_route))
         .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
+        .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11330,4 +11336,55 @@ async fn rental_source_of_income_discrimination_route(
     Json(b): Json<RentalSourceOfIncomeDiscriminationInput>,
 ) -> Result<Json<RentalSourceOfIncomeDiscriminationResult>, ApiError> {
     Ok(Json(check_rental_source_of_income_discrimination(&b)))
+}
+
+// ── /rental-tenant-abandoned-personal-property (iter 543) ───────────────────
+// POST endpoint for tenant-abandoned personal property handling compliance
+// across eight jurisdictions. When a tenant vacates and leaves personal
+// property behind, the landlord must follow state-specific procedures to
+// lawfully dispose, sell, or store the property. Conversion of tenant
+// property is a strict-liability tort independent of any breach-of-contract
+// claim; punitive damages available for willful or bad-faith disposal.
+//
+// CA Civ. Code §§ 1983-1991: written notice + 15-day claim window
+// (personal delivery) or 18-day (mailed); $700 sale-vs-disposal threshold
+// (§ 1988); auction sale if value > $700, landlord discretion if ≤ $700.
+//
+// WA RCW 59.18.310: 45-day storage window from notice mailed or
+// personally delivered; deceased-tenant exception.
+//
+// TX Prop. Code § 54.045 + § 92.014: landlord lien procedure; 30-day
+// notice before sale required by BOTH first-class AND certified mail
+// return receipt requested; sale proceeds applied first to delinquent
+// rents + reasonable packing/moving/storage/sale costs per § 54.046.
+//
+// FL Stat. ch. 715 (§§ 715.10-715.111): OPTIONAL procedure; minimum
+// 10-day claim window (personal delivery) or 15-day (mailed); $500
+// sale-vs-disposal threshold; if < $500, landlord may retain or dispose
+// at discretion per § 715.109 + § 715.107.
+//
+// IL: no specific landlord-tenant abandoned-property statute statewide;
+// common-law reasonable-time standard + 765 ILCS 1026 Revised Uniform
+// Unclaimed Property Act for bona-fide unclaimed property after escheat.
+//
+// MA Gen. L. ch. 239 § 4 + ch. 105A: court-supervised storage required.
+//
+// CO Rev. Stat. § 38-20-116: 30-day notice required before sale.
+//
+// Nine-mode severity ladder: NotApplicable,
+// CompliantStoredPendingTenantClaim,
+// CompliantBelowSaleValueThresholdLandlordRetention,
+// CompliantPublicAuctionSaleAfterNoticeWindow,
+// PrematureDisposalConversionTortLiability,
+// NoticeNotGivenStrictLiabilityConversion,
+// NoticeDeliveryMethodNonCompliantPerJurisdiction,
+// TexasCertifiedAndFirstClassMailDualRequirementViolated,
+// CommonLawReasonableTimeUnverified.
+
+async fn rental_tenant_abandoned_personal_property_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantAbandonedPersonalPropertyInput>,
+) -> Result<Json<RentalTenantAbandonedPersonalPropertyResult>, ApiError> {
+    Ok(Json(check_rental_tenant_abandoned_personal_property(&b)))
 }
