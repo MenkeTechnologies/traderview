@@ -715,6 +715,11 @@ use traderview_expense::rental_hardwired_smoke_alarm_responsibility::{
     RentalHardwiredSmokeAlarmResponsibilityInput,
     RentalHardwiredSmokeAlarmResponsibilityResult,
 };
+use traderview_expense::rental_hawaii_residential_landlord_tenant_code_hrs_521::{
+    check as check_rental_hawaii_residential_landlord_tenant_code_hrs_521,
+    RentalHawaiiResidentialLandlordTenantCodeHrs521Input,
+    RentalHawaiiResidentialLandlordTenantCodeHrs521Result,
+};
 use traderview_expense::rental_heat_minimum_temperature_season::{
     check as check_rental_heat_minimum_temperature_season,
     HeatMinimumTemperatureInput as RentalHeatMinimumTemperatureInput,
@@ -1639,6 +1644,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-gas-piping-inspection-local-law-152", axum::routing::post(rental_gas_piping_inspection_local_law_152_route))
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
+        .route("/rental-hawaii-residential-landlord-tenant-code-hrs-521", axum::routing::post(rental_hawaii_residential_landlord_tenant_code_hrs_521_route))
         .route("/rental-heat-minimum-temperature-season", axum::routing::post(rental_heat_minimum_temperature_season_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-housing-for-older-persons-act-hopa-1995", axum::routing::post(rental_housing_for_older_persons_act_hopa_1995_route))
@@ -8912,6 +8918,52 @@ async fn rental_hardwired_smoke_alarm_responsibility_route(
     Json(b): Json<RentalHardwiredSmokeAlarmResponsibilityInput>,
 ) -> Result<Json<RentalHardwiredSmokeAlarmResponsibilityResult>, ApiError> {
     Ok(Json(check_rental_hardwired_smoke_alarm_responsibility(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_hawaii_residential_landlord_tenant_code_hrs_521: Hawaii
+// Residential Landlord-Tenant Code (HRS Chapter 521) — comprehensive
+// state-level landlord-tenant statute covering all residential rental
+// properties in the State of Hawaii; administered by Hawaii DCCA
+// Regulated Industries Complaints Office (RICO). HRS § 521-44(b)
+// security deposit cap of ONE MONTH'S RENT; § 521-44(c) 14-day
+// return after termination; § 521-44(f) treble (3X) damages for
+// willful retention. HRS § 521-21(d) rent increase notice: 45
+// consecutive days month-to-month, 15 days week-to-week; no
+// statewide rent control. HRS § 521-71(a) landlord termination
+// notice 45 days; § 521-71(b) tenant termination notice 28 days;
+// § 521-71(d) demolition / conversion notice 120 days. HRS § 521-68
+// 5-business-day non-payment notice; § 521-72 10-day rule violation
+// cure notice; § 521-53 2-day landlord entry notice; § 521-64
+// 3-business-day emergency repairs / 12-business-day general
+// repairs; § 521-64(b) repair-and-deduct remedy. § 521-74
+// retaliatory eviction prohibition with rebuttable presumption.
+// § 521-8 transient lodging exclusion (hotels, motels, vacation
+// rentals under 90 days). 27-mode severity ladder × 2 jurisdictions
+// × 3 unit types × 12 compliance aspects × 2 retaliation statuses ×
+// variable monthly rent / security deposit / notice days / repair
+// response times inputs. Sibling cluster: rental_san_francisco_
+// rent_ordinance_chapter_37 (iter 677), rental_berkeley_rent_
+// stabilization_ordinance_bmc_chapter_13_76 (iter 679), rental_
+// seattle_smc_22_206_160_just_cause_eviction (iter 669), rental_
+// oakland_measure_ee_just_cause_omc_8_22 (iter 681), rental_
+// california_sb_567_no_fault_eviction_amendments (iter 673),
+// rental_minneapolis_renter_protections_ordinance_2020 (iter 685),
+// rental_cook_county_rtlo (iter 671), rental_security_deposit_
+// interest (multi-state security deposit interest), rental_late_
+// fee_cap (multi-state late fee cap), rental_just_cause_eviction
+// (multi-state base regime; Hawaii lacks just-cause), rental_
+// rent_control_stabilization (multi-state; Hawaii lacks rent
+// control), rental_short_term_subletting_airbnb_restriction
+// (Hawaii transient accommodations cross-reference).
+// ---------------------------------------------------------------------------
+
+async fn rental_hawaii_residential_landlord_tenant_code_hrs_521_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHawaiiResidentialLandlordTenantCodeHrs521Input>,
+) -> Result<Json<RentalHawaiiResidentialLandlordTenantCodeHrs521Result>, ApiError> {
+    Ok(Json(check_rental_hawaii_residential_landlord_tenant_code_hrs_521(&b)))
 }
 
 // ---------------------------------------------------------------------------
