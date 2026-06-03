@@ -281,6 +281,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-707",           post(section_707_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
+        .route("/calc/section-732",           post(section_732_route))
         .route("/calc/section-734",           post(section_734_route))
         .route("/calc/section-736",           post(section_736_route))
         .route("/calc/section-737",           post(section_737_route))
@@ -2782,6 +2783,34 @@ async fn section_734_route(
     Json(b): Json<traderview_expense::section_734::Section734Input>,
 ) -> Result<Json<traderview_expense::section_734::Section734Output>, ApiError> {
     Ok(Json(traderview_expense::section_734::check(&b)))
+}
+
+// ── § 732 distributee basis in distributed property ──────────────
+// Mounted at /api/calc/section-732. § 732(a)(1) general carryover
+// basis rule for current distributions; § 732(a)(2) limitation to
+// outside basis minus money. § 732(b) liquidating-distribution
+// substituted basis = outside basis minus money. § 732(c) basis
+// allocation: first to § 751(c)/(d) hot assets, then to other
+// property. § 732(d) special rule: distributee within 2 years of
+// transfer where § 754 NOT in effect may elect to treat property as
+// if § 743(b) adjustment were in effect. Mandatory application per
+// Treas. Reg. § 1.732-1(d)(4) when FMV at transfer > 110% of basis
+// + § 732(c) shift to depreciable + § 743(b) would change basis.
+// § 732(f) corporate-partner distribution rule (post-2015). Sibling
+// cluster: § 731 (distribution recognition rules — basis determined
+// by § 732 sets up § 731 gain/loss), § 734 (iter 578 — distributee
+// basis adjustment), § 736 (iter 582 — retiring partner payment
+// characterization), § 737 (iter 580 — mixing-bowl), § 743 (iter
+// 576 — transferee basis adjustment), § 751 (iter 572 — hot assets
+// definition that § 732(c) cross-references), § 754 (election
+// mechanics — § 732(d) operates when § 754 was NOT in effect at
+// time of transfer), § 755 (iter 586 — § 755 allocation framework).
+
+async fn section_732_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_732::Section732Input>,
+) -> Result<Json<traderview_expense::section_732::Section732Output>, ApiError> {
+    Ok(Json(traderview_expense::section_732::check(&b)))
 }
 
 // ── § 737 mixing-bowl recognition for contributing partner ───────
