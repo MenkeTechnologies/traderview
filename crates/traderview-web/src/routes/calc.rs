@@ -261,6 +261,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-45l",           post(section_45l_route))
+        .route("/calc/section-45w",           post(section_45w_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-451c",          post(section_451c_route))
         .route("/calc/section-1031",          post(section_1031_route))
@@ -10266,6 +10267,28 @@ async fn section_45l_route(
     Json(b): Json<traderview_expense::section_45l::Section45LInput>,
 ) -> Result<Json<traderview_expense::section_45l::Section45LResult>, ApiError> {
     Ok(Json(traderview_expense::section_45l::check(&b)))
+}
+
+// ── §45W Qualified Commercial Clean Vehicle Credit (IRA + OBBBA) ───
+// Mounted at /api/calc/section-45w. Added by Section 13403 of the
+// Inflation Reduction Act of 2022 (Public Law 117-169, 136 Stat.
+// 1818), signed by President Biden on August 16, 2022. Credit equal
+// to LESSER of (1) 15 % of vehicle basis (30 % if not powered by
+// gas/diesel ICE) or (2) incremental cost. Per-vehicle maximum
+// $7,500 (GVWR < 14,000 lbs) / $40,000 (GVWR ≥ 14,000 lbs). C-corps
+// + pass-through entities eligible; § 6417 direct pay election for
+// tax-exempt entities. Battery capacity ≥ 7 kWh (light-duty) /
+// 15 kWh (heavy-duty). Retail Price Equivalent (RPE) for incremental
+// cost determination (proposed regs January 14, 2025). Form 8936-A.
+// TERMINATED by Section 70503 of One Big Beautiful Bill Act of 2025
+// (Public Law 119-21, signed July 4, 2025) for vehicles acquired
+// after September 30, 2025 (parallel § 30D new clean vehicle
+// termination; accelerates original IRA 2032 sunset by 7+ years).
+async fn section_45w_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_45w::Section45WInput>,
+) -> Result<Json<traderview_expense::section_45w::Section45WResult>, ApiError> {
+    Ok(Json(traderview_expense::section_45w::check(&b)))
 }
 
 async fn section_451b_route(
