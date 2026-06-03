@@ -156,6 +156,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-3406",          post(section_3406_route))
         .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-311",           post(section_311_route))
+        .route("/calc/section-318",           post(section_318_route))
         .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-332",           post(section_332_route))
         .route("/calc/section-1234a",         post(section_1234a_route))
@@ -6301,6 +6302,52 @@ async fn section_311_route(
     Json(b): Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionInput>,
 ) -> Result<Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionOutput>, ApiError> {
     Ok(Json(traderview_expense::section_311::check(&b)))
+}
+
+// ── § 318 Constructive Ownership of Stock ────────────────────────────
+// Mounted at /api/calc/section-318 (iter 552). Pure compute. § 318
+// attributes stock ownership from one taxpayer to another for purposes
+// of related-party and ownership-percentage testing throughout the
+// Code. Drives stock-redemption analysis (§ 302), brother-sister
+// redemption recharacterization (§ 304), accumulated-earnings tax
+// (§ 531), personal-holding-company tax (§ 542), corporate-attribution-
+// to-shareholder rules, qualified-personal-service-corporation testing.
+//
+// § 318(a)(1) family attribution: individual treated as owning stock
+// owned by spouse (unless legally separated), children, grandchildren,
+// and parents. § 318 family attribution does NOT extend to SIBLINGS or
+// grandparents (compare § 267 which DOES include siblings).
+//
+// § 318(a)(2) entity-to-owner attribution: proportional for
+// partnership/estate, trust (actuarial under § 7520), and corporation
+// (50%+ shareholders).
+//
+// § 318(a)(3) owner-to-entity attribution: in FULL for partnership/
+// estate, trust, and corporation (50%+ shareholder).
+//
+// § 318(a)(4) option attribution: holder of call option, warrant, or
+// convertible debenture treated as owning the underlying stock.
+// § 318(a)(5)(D) option attribution takes priority over family
+// attribution when both could apply.
+//
+// § 318(a)(5)(B) family-to-family re-attribution DISALLOWED.
+// § 318(a)(5)(C) entity-bounce re-attribution DISALLOWED.
+//
+// Nine-mode severity ladder: NotApplicable,
+// NoAttributionUnderSection318,
+// Section318A1FamilyAttributionApplies,
+// Section318A2EntityToOwnerProportionalAttribution,
+// Section318A3OwnerToEntityFullAttribution,
+// Section318A4OptionAttributionApplies,
+// Section318A5BReAttributionDisallowedFamilyToFamily,
+// Section318A5CReAttributionDisallowedEntityBounce,
+// SiblingNotIncludedInSection318FamilyAttribution.
+
+async fn section_318_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_318::Section318ConstructiveOwnershipInput>,
+) -> Result<Json<traderview_expense::section_318::Section318ConstructiveOwnershipOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_318::check(&b)))
 }
 
 // ── §331 shareholder gain/loss in corporate complete liquidation ─
