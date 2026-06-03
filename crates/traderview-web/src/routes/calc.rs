@@ -210,6 +210,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-351",           post(section_351_route))
         .route("/calc/section-354",           post(section_354_route))
         .route("/calc/section-358",           post(section_358_route))
+        .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
@@ -2818,6 +2819,61 @@ async fn section_358_route(
     Json(b): Json<traderview_expense::section_358::Section358ShareholderBasisInput>,
 ) -> Result<Json<traderview_expense::section_358::Section358ShareholderBasisOutput>, ApiError> {
     Ok(Json(traderview_expense::section_358::check(&b)))
+}
+
+// ── § 362 Basis to Corporations on Tax-Free Transfers ────────────────
+// Mounted at /api/calc/section-362 (iter 562). Pure compute. § 362
+// governs the basis a TRANSFEREE CORPORATION takes in property received
+// in tax-free § 351 transfers, § 368 reorganizations, and contributions
+// to capital. Companion to § 358 (iter 560) shareholder basis side;
+// together they implement double basis preservation through formation
+// and reorganization transactions.
+//
+// § 362(a) general rule: corp's basis = transferor's adjusted basis +
+// gain recognized by transferor under § 351(b).
+// § 362(b) reorganizations: same carryover with § 356 gain.
+// § 362(c) paid-in surplus / capital contribution by shareholder:
+// carryover basis from contributor.
+// § 362(d) contribution by non-shareholder: zero basis; TCJA (Pub. L.
+// 115-97 § 13312) repealed § 118 exclusion for contributions after
+// Dec 22, 2017.
+//
+// § 362(e)(1) anti-loss-importation rule (American Jobs Creation Act
+// of 2004, finalized in 2016 regs effective March 28, 2016): if
+// property would be subject to US tax in transferee's hands but was
+// NOT subject in transferor's hands (foreign / tax-exempt) AND
+// transferor's aggregate basis exceeds aggregate FMV, transferee's
+// basis stepped down to FMV per § 1.362-3. Companion § 358(h) at
+// shareholder level + § 334(b)(1)(B) parallel for § 332 liquidations.
+//
+// § 362(e)(2) anti-loss-duplication rule (2004): § 351 transfers of
+// net-built-in-loss property — transferee's aggregate basis reduced
+// to aggregate FMV; allocation per § 1.362-4 in proportion to
+// built-in losses. § 362(e)(2)(C) joint election: transferor and
+// transferee may instead reduce transferor's stock basis (preserving
+// corporation's carryover basis); strategic for preserving tax
+// attributes (NOLs, depreciation, capital-loss carryforward).
+//
+// Eight-mode severity ladder: NotApplicable,
+// Section362ACarryoverBasisStandardSection351,
+// Section362BCarryoverBasisReorganization,
+// Section362CPaidInSurplusCarryover,
+// Section362DContributionByNonShareholderZeroOrTcjaTreatment,
+// Section362E1ImportationBasisSteppedDownToFmv,
+// Section362E2DuplicationCorpBasisSteppedDownToFmv,
+// Section362E2CJointElectionTransferorStockBasisReducedCorpKeepsCarryover.
+//
+// Coordinates with § 351 (transfer parent regime), § 357 (liability
+// rules), § 358 (iter 560 — shareholder basis side), § 368 (reorg
+// definitions + § 368(c) 80% control), § 1223 (holding-period
+// tacking), § 1245 + § 1250 (depreciation recapture carryover),
+// § 334(b)(1)(B) (§ 332 liquidation parallel).
+
+async fn section_362_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_362::Section362CorporationBasisInput>,
+) -> Result<Json<traderview_expense::section_362::Section362CorporationBasisOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_362::check(&b)))
 }
 
 // ── § 367 Foreign Corporations ────────────────────────────────────────
