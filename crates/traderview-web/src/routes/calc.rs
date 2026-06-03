@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-671",           post(section_671_route))
+        .route("/calc/section-675",           post(section_675_route))
         .route("/calc/section-677",           post(section_677_route))
         .route("/calc/section-678",           post(section_678_route))
         .route("/calc/section-67g",           post(section_67g_route))
@@ -5591,6 +5592,41 @@ async fn section_671_route(
     Json(b): Json<traderview_expense::section_671::Section671Input>,
 ) -> Result<Json<traderview_expense::section_671::Section671Result>, ApiError> {
     Ok(Json(traderview_expense::section_671::compute(&b)))
+}
+
+// ── §675 administrative powers / IDGT substitution power ──────────────
+// Mounted at /api/calc/section-675. § 675 third grantor-trust trigger
+// in §§ 671-679 progression after § 673 (reversionary) + § 674
+// (beneficial enjoyment); precedes § 676 (revocation), § 677 (income
+// for benefit; built iter 642), § 678 (third-party owner; built iter
+// 640). § 675(1) power to deal for LESS THAN ADEQUATE CONSIDERATION.
+// § 675(2) power to borrow corpus or income without adequate interest
+// OR security — exception when trustee other than grantor acts under
+// general lending power. § 675(3) grantor actually borrowed and not
+// repaid before beginning of taxable year — exception for loans with
+// adequate interest AND security by independent trustee (not grantor,
+// not related/subordinate party). § 675(4) general powers of admin
+// exercisable in NONFIDUCIARY capacity without fiduciary approval:
+// (A) power to vote securities where grantor + trust hold significant
+// voting control (10 % presumed significant under Treas. Reg.
+// § 1.675-1); (B) power to control investment of trust funds in
+// significant corporate holdings; (C) POWER TO SUBSTITUTE TRUST
+// CORPUS for equivalent value ("swap power") — THE classic modern
+// IDGT trigger; mere inclusion creates grantor trust status without
+// further action; Rev. Rul. 2008-22 confirms no § 2036/§ 2038 estate
+// inclusion when exercised in fiduciary capacity (trustee challenge +
+// no value-shifting among beneficiaries); Rev. Rul. 2011-28 same for
+// § 2042 in life insurance trusts. Paul Hood Swap Power Monograph
+// (LISI) + Kitces Utilizing Swap Powers in Irrevocable Trusts =
+// foundational practitioner references. § 672(a) adverse party +
+// § 672(b) nonadverse + § 672(c) related/subordinate party definitions
+// determine exception eligibility for § 675(2) and § 675(3).
+
+async fn section_675_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_675::Section675Input>,
+) -> Result<Json<traderview_expense::section_675::Section675Result>, ApiError> {
+    Ok(Json(traderview_expense::section_675::compute(&b)))
 }
 
 // ── §677 income for benefit of grantor / spouse ───────────────────────
