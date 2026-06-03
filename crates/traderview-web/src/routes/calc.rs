@@ -321,6 +321,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-179",           post(section_179_route))
         .route("/calc/section-183",           post(section_183_route))
+        .route("/calc/section-263",           post(section_263_route))
         .route("/calc/section-263a",          post(section_263a_route))
         .route("/calc/section-168-e6",        post(section_168_e6_route))
         .route("/calc/section-108",           post(section_108_route))
@@ -1608,6 +1609,29 @@ async fn section_168_e6_route(
 // capitalize direct + indirect inventory costs; traders + investors
 // are exempt. §263A(b)(2)(B) small business exception per §448(c)
 // threshold.
+
+// ── § 263 capital expenditures general rule ─────────────────────
+// Mounted at /api/calc/section-263. § 263(a)(1)(A) general
+// capitalization rule for buildings + permanent improvements +
+// betterments. § 263(a)(1)(B) restoration capitalization.
+// Tangible Property Regulations (T.D. 9636, 2013) finalized BAR
+// test: Betterment (§ 1.263(a)-3(j)) + Adaptation (§ 1.263(a)-3
+// (l)) + Restoration (§ 1.263(a)-3(k)). Three safe harbors:
+// § 1.263(a)-1(f) de minimis ($5,000 AFS / $2,500 no AFS per
+// invoice); § 1.263(a)-3(h) small taxpayer (lesser of 2% basis
+// or $10,000 aggregate); § 1.263(a)-3(i) routine maintenance
+// (10 years buildings / 3 years non-buildings). Sibling cluster:
+// § 263A (UNICAP inventory capitalization), § 263(g) (interest
+// + carrying charges), § 162 (ordinary & necessary expense),
+// § 168 (MACRS depreciation of capitalized amounts), § 461(h)
+// (economic performance timing).
+
+async fn section_263_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_263::Section263Input>,
+) -> Result<Json<traderview_expense::section_263::Section263Output>, ApiError> {
+    Ok(Json(traderview_expense::section_263::check(&b)))
+}
 
 async fn section_263a_route(
     _u: AuthUser,
