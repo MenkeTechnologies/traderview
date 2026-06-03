@@ -99,6 +99,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-641",           post(section_641_route))
+        .route("/calc/section-642",           post(section_642_route))
         .route("/calc/section-643",           post(section_643_route))
         .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
@@ -5404,6 +5405,33 @@ async fn section_641_route(
     Json(b): Json<traderview_expense::section_641::Section641Input>,
 ) -> Result<Json<traderview_expense::section_641::Section641Result>, ApiError> {
     Ok(Json(traderview_expense::section_641::compute(&b)))
+}
+
+// ── §642 special rules for trust/estate credits + deductions ────────
+// Mounted at /api/calc/section-642. § 642(a)(1) FTC cross-ref.
+// § 642(b)(1) $600 estate exemption + § 642(b)(2)(A)/(B) $300
+// complex trust exemption + § 642(b)(3) $100 simple trust exemption
+// (NOT indexed for inflation). § 642(c)(1) UNLIMITED charitable
+// contribution deduction from gross taxable income (tax-exempt
+// interest excluded) pursuant to governing instrument — NO AGI
+// FLOOR like § 170 individual. § 642(c)(2) following-year payment
+// election. § 642(c)(3) remainder interest cross-ref to § 170(f)
+// (3). § 642(c)(4) tax-exempt interest adjustment per Treas. Reg.
+// § 1.642(c)-3. § 642(d) NOL cross-ref. § 642(e) depreciation +
+// depletion apportioned between fiduciary and beneficiaries on
+// income basis. § 642(f) amortization cross-ref to § 178/§ 169.
+// § 642(g) double deduction disallowed — same expense cannot be
+// claimed on BOTH income tax (§ 162/§ 212) AND estate tax (§ 2053/
+// § 2054). § 642(h) unused loss carryovers + excess deductions
+// pass to beneficiaries on termination. § 642(i) § 673 grantor
+// trust cross-ref. OBBBA 2025 Pease limitation reinstatement
+// (2026) — applicability to § 642(c) under analysis.
+
+async fn section_642_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_642::Section642Input>,
+) -> Result<Json<traderview_expense::section_642::Section642Result>, ApiError> {
+    Ok(Json(traderview_expense::section_642::compute(&b)))
 }
 
 // ── §643 trust/estate DNI + accounting income definition ────────────
