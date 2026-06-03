@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-223",           post(section_223_route))
         .route("/calc/section-243",           post(section_243_route))
         .route("/calc/section-245a",          post(section_245a_route))
+        .route("/calc/section-246a",          post(section_246a_route))
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
@@ -4202,6 +4203,52 @@ async fn section_245a_route(
     Json(b): Json<traderview_expense::section_245a::Section245aInput>,
 ) -> Result<Json<traderview_expense::section_245a::Section245aResult>, ApiError> {
     Ok(Json(traderview_expense::section_245a::check(&b)))
+}
+
+// ── § 246A DRD Reduction for Debt-Financed Portfolio Stock ──────────
+// Mounted at /api/calc/section-246a (iter 530). Pure compute. § 246A
+// substitutes a reduced DRD percentage for the base § 243 (domestic
+// dividend) or § 245(a) (US-source foreign-corp dividend) DRD percentage
+// when the corporate dividend recipient holds the underlying stock with
+// portfolio indebtedness during the base period. Reverse-engineers the
+// DRD downward to neutralize the financing arbitrage between simultaneous
+// interest deduction and DRD on the same economic return.
+//
+// § 246A(a) formula: substituted DRD % = base DRD % × (100% - average
+// indebtedness %). Base DRD percentages: 50% for less than 20% ownership;
+// 65% for 20%-up-to-50% ownership. § 246A(b) "portfolio stock" = corporate
+// shareholder owns less than 50% of issuer; 50%+ ownership is NOT portfolio
+// stock and § 246A inapplicable. § 246A(c) "average indebtedness percentage"
+// = average portfolio indebtedness divided by average adjusted basis of
+// stock during base period. § 246A(d)(3) CAP: reduction cannot exceed
+// interest deduction (including deductible short-sale expense) allocable
+// to the dividend.
+//
+// § 246A(e) exceptions: (1) § 243(b) qualifying dividends from
+// affiliated-group members (80% or more ownership per § 1504), (2) SBIC
+// dividends under Small Business Investment Act of 1958. § 245A 100%
+// participation DRD on foreign-source dividend is NOT subject to § 246A
+// reduction by statutory structure and Treas. Reg. § 1.245A-3.
+//
+// Seven-mode severity ladder: NotApplicable (50%+ ownership not portfolio
+// stock), Section245aFullParticipationDrdPreservedNoReduction,
+// Section243bAffiliatedQualifyingDividendPreservedNoReduction,
+// SbicExemptionPreservesFullDrd, Section246aReductionApplied,
+// Section246aReductionCappedByInterestDeductionAllocable,
+// InvalidInputAverageIndebtednessExceedsOneHundred.
+//
+// Coordinates with § 243 (50% / 65% / 100% base DRD tiers), § 245(a)
+// (US-source DRD on foreign-corp dividend), § 245A (100% participation
+// DRD — distinct branch not reduced), § 246 (general DRD limits incl.
+// § 246(c) 46/91-day holding-period rule + § 246(b) taxable-income cap),
+// § 265 (interest-expense disallowance for tax-exempt income — parallel
+// logic), § 1504 (affiliated group), § 56A (CAMT — DRD effect on AFSI).
+
+async fn section_246a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_246a::Section246aDebtFinancedPortfolioStockInput>,
+) -> Result<Json<traderview_expense::section_246a::Section246aDebtFinancedPortfolioStockOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_246a::check(&b)))
 }
 
 // ── §250 GILTI/FDII (NCTI/FDDEI post-OBBBA 2025) deduction ──────────
