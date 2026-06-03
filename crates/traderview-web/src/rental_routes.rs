@@ -920,6 +920,11 @@ use traderview_expense::rental_source_of_income_discrimination::{
     RentalSourceOfIncomeDiscriminationInput,
     RentalSourceOfIncomeDiscriminationResult,
 };
+use traderview_expense::rental_tenant_bill_of_rights_handout::{
+    check as check_rental_tenant_bill_of_rights_handout,
+    RentalTenantBillOfRightsHandoutInput,
+    RentalTenantBillOfRightsHandoutResult,
+};
 use traderview_expense::rental_tenant_abandoned_personal_property::{
     check as check_rental_tenant_abandoned_personal_property,
     RentalTenantAbandonedPersonalPropertyInput,
@@ -1527,6 +1532,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
+        .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
@@ -12174,6 +12180,36 @@ async fn rental_tenant_abandoned_personal_property_route(
     Json(b): Json<RentalTenantAbandonedPersonalPropertyInput>,
 ) -> Result<Json<RentalTenantAbandonedPersonalPropertyResult>, ApiError> {
     Ok(Json(check_rental_tenant_abandoned_personal_property(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_tenant_bill_of_rights_handout: multi-state tenant
+// disclosure / handout compliance. Michigan Truth in Renting Act
+// (Public Act 454 of 1978; MCL § 554.631+) — required statutory
+// notice in ≥ 12-point type or 1/8 inch legible print + domestic
+// abuse protection notice + lead paint + security deposit + owner
+// identity + environmental hazard + utility billing. NJ Truth-in-
+// Renting Act (N.J. Stat. § 46:8-43 to § 46:8-50) — DCA booklet
+// distribution at lease signing + 30 days for existing tenants;
+// $100 penalty per non-distribution. DC Tenant Bill of Rights
+// (D.C. Code § 42-3502.22b) — OTA-published Bill of Rights at
+// lease signing. California Civ Code § 1962 (15-day owner identity
+// disclosure) + § 1962.5 / § 1962.7 (security deposit location).
+// Florida Stat § 83.49 (30-day deposit location disclosure).
+// Nineteen-mode severity ladder × six jurisdictions × three
+// Michigan font states × two NJ distribution states × two DC
+// states. Trader-landlord critical because cross-state portfolios
+// must apply at least four different handout regimes; defective
+// handouts can void monetary lease provisions and trigger
+// statutory penalties.
+// ---------------------------------------------------------------------------
+
+async fn rental_tenant_bill_of_rights_handout_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantBillOfRightsHandoutInput>,
+) -> Result<Json<RentalTenantBillOfRightsHandoutResult>, ApiError> {
+    Ok(Json(check_rental_tenant_bill_of_rights_handout(&b)))
 }
 
 // ── /rental-mold-disclosure-remediation (iter 545) ──────────────────────────
