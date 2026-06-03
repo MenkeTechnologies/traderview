@@ -385,6 +385,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
         .route("/calc/section-1059",          post(section_1059_route))
+        .route("/calc/section-1060",          post(section_1060_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1231",          post(section_1231_route))
         .route("/calc/section-1233",          post(section_1233_route))
@@ -2629,6 +2630,26 @@ async fn section_1059_route(
     Json(b): Json<traderview_expense::section_1059::Section1059Input>,
 ) -> Result<Json<traderview_expense::section_1059::Section1059Output>, ApiError> {
     Ok(Json(traderview_expense::section_1059::check(&b)))
+}
+
+// ── §1060 Special Allocation Rules for Certain Asset Acquisitions ──
+// Mounted at /api/calc/section-1060. Enacted by Section 641 of the
+// Tax Reform Act of 1986 (Public Law 99-514). Both buyer and seller
+// in an applicable asset acquisition (transfer of a group of assets
+// constituting a trade or business where goodwill or going concern
+// attaches) must file Form 8594 and allocate consideration using the
+// residual method per § 338(b)(5) and Treas. Reg. § 1.338-6 across
+// SEVEN ASSET CLASSES (Class I cash through Class VII goodwill
+// residual). § 1060(b) consistency requirement between buyer and
+// seller; § 6662 + § 6721 + § 6722 penalty exposure for inconsistent
+// allocation or failure to file Form 8594. Trader-business-purchase
+// / M&A relevance for every taxpayer buying or selling a trade or
+// business.
+async fn section_1060_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1060::Section1060Input>,
+) -> Result<Json<traderview_expense::section_1060::Section1060Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1060::check(&b)))
 }
 
 async fn section_1091_route(
