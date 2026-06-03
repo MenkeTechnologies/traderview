@@ -816,6 +816,11 @@ use traderview_expense::rental_late_fee_cap::{
     RentalLateFeeCapInput,
     RentalLateFeeCapResult,
 };
+use traderview_expense::rental_tenant_criminal_background_screening::{
+    check as check_rental_tenant_criminal_background_screening,
+    RentalTenantCriminalBackgroundScreeningInput,
+    RentalTenantCriminalBackgroundScreeningResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1296,6 +1301,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-landlord-notice-to-enter", axum::routing::post(rental_landlord_notice_to_enter_route))
         .route("/rental-security-deposit-return-notice", axum::routing::post(rental_security_deposit_return_notice_route))
         .route("/rental-late-fee-cap", axum::routing::post(rental_late_fee_cap_route))
+        .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11213,4 +11219,55 @@ async fn rental_late_fee_cap_route(
     Json(b): Json<RentalLateFeeCapInput>,
 ) -> Result<Json<RentalLateFeeCapResult>, ApiError> {
     Ok(Json(check_rental_late_fee_cap(&b)))
+}
+
+// ── /rental-tenant-criminal-background-screening (iter 539) ─────────────────
+// POST endpoint for tenant criminal-background-screening compliance under
+// HUD 2016 guidance + state and local Fair Chance Housing laws. HUD's
+// April 4, 2016 guidance (Helen Kanovsky General Counsel memorandum)
+// establishes that blanket criminal-history bans create a disparate
+// impact on protected classes (race, color, national origin) under the
+// Fair Housing Act (42 U.S.C. § 3601 et seq.) absent a substantial,
+// legitimate, nondiscriminatory interest backed by individualized
+// assessment.
+//
+// HUD 2016 federal floor: arrest records cannot serve as basis for
+// adverse action (per se discriminatory because arrest is not proof of
+// criminal conduct); conviction-record bans subject to disparate-impact
+// analysis; individualized assessment required (nature/severity of
+// offense, time elapsed, relevance to tenancy).
+//
+// NYC Local Law 24 of 2024 (Fair Chance for Housing Act, effective Jan
+// 1, 2025): prohibits consideration of criminal history until other
+// qualifications determined; 3-year lookback for misdemeanors, 5-year
+// for felonies; sex crimes only convictions categorically considerable.
+//
+// California AB 2052 + Cal. Civ. Code § 1786.21: sequential-screening
+// regime — criminal background check only after applicant meets other
+// qualifications. 7-year lookback for conviction-only consideration.
+//
+// New Jersey Fair Chance in Housing Act (P.L. 2021, c. 197, N.J.S.A.
+// 46:8-52 et seq.): housing providers cannot ask about criminal history
+// before extending conditional offer. 1-year lookback for misdemeanors,
+// 4-year for indictable felonies. Individualized assessment required
+// post-conditional-offer.
+//
+// Illinois HB 4366 (2024): Fair Housing Act amendment restricting
+// criminal-history screening for federally-assisted housing.
+//
+// Eight-mode severity ladder: NotApplicable,
+// NoCriminalHistoryNoSection804OrFchaViolation,
+// CompliantSequentialScreeningAndIndividualizedAssessment,
+// SexOffenseExceptionCategoricallyPermissiblePerJurisdiction,
+// ArrestRecordReliancePerSeDiscriminatoryHud2016,
+// PreApplicationInquiryViolatesFairChanceLaw,
+// BlanketBanWithoutIndividualizedAssessmentDisparateImpact,
+// LookbackWindowExceededFairChanceViolation.
+
+async fn rental_tenant_criminal_background_screening_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantCriminalBackgroundScreeningInput>,
+) -> Result<Json<RentalTenantCriminalBackgroundScreeningResult>, ApiError> {
+    Ok(Json(check_rental_tenant_criminal_background_screening(&b)))
 }

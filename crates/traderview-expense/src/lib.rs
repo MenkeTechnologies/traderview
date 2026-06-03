@@ -220,6 +220,7 @@ pub mod rental_smoke_free_housing_disclosure;
 pub mod rental_solar_panel_disclosure;
 pub mod rental_storage_unit_lease_disclosure;
 pub mod rental_swimming_pool_drain_safety;
+pub mod rental_tenant_criminal_background_screening;
 pub mod rental_underground_storage_tank_disclosure;
 pub mod rental_unpermitted_unit_disclosure;
 pub mod rental_video_surveillance_retention;
