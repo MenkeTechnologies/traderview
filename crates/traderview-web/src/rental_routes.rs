@@ -695,6 +695,11 @@ use traderview_expense::rental_hot_water_temperature::{
     check as check_rental_hot_water_temperature, RentalHotWaterTemperatureInput,
     RentalHotWaterTemperatureResult,
 };
+use traderview_expense::rental_hud_hotma_income_asset_compliance::{
+    check as check_rental_hud_hotma_income_asset_compliance,
+    RentalHudHotmaIncomeAssetComplianceInput,
+    RentalHudHotmaIncomeAssetComplianceResult,
+};
 use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
@@ -1551,6 +1556,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
         .route("/rental-heat-minimum-temperature-season", axum::routing::post(rental_heat_minimum_temperature_season_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
+        .route("/rental-hud-hotma-income-asset-compliance", axum::routing::post(rental_hud_hotma_income_asset_compliance_route))
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-just-cause-eviction", axum::routing::post(rental_just_cause_eviction_route))
@@ -8548,6 +8554,54 @@ async fn rental_hot_water_temperature_route(
     Json(b): Json<RentalHotWaterTemperatureInput>,
 ) -> Result<Json<RentalHotWaterTemperatureResult>, ApiError> {
     Ok(Json(check_rental_hot_water_temperature(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_hud_hotma_income_asset_compliance: HUD Housing Opportunity
+// Through Modernization Act of 2016 (HOTMA; P.L. 114-201; signed
+// July 29, 2016) Income and Asset Compliance. HUD Final Rule
+// published in Federal Register on February 14, 2023 (88 FR 9600);
+// general effective date January 1, 2024. HOTMA Section 102 amends
+// 24 CFR § 5.609(a) income definition: all amounts received by
+// adult household members plus unearned income by household member
+// under age 18 is income unless excluded; imputed returns on assets
+// over $50,000 plus actual returns on calculable assets. HOTMA
+// Section 103 standardizes elderly/disabled/medical/child care
+// deductions under revised 24 CFR § 5.611. HOTMA Section 104 (NEW)
+// imposes two asset limits for public housing, tenant-based Section
+// 8 (Housing Choice Voucher), and project-based Section 8: $100,000
+// net household assets ceiling OR ownership of real property
+// suitable for occupancy by household as residence. Pre-HOTMA
+// imputed asset threshold raised from $5,000 to $50,000. Compliance
+// extensions: original deadline January 1, 2024; first extension
+// to January 1, 2025 (Sept 29, 2023); PIH Sept 18, 2024 further
+// delay; HUD Notice H-2025-03 extended Multifamily compliance to
+// January 1, 2026; Federal Register Dec 30, 2025 (90 FR) further
+// extension to January 1, 2027 for full Multifamily compliance.
+// Covered Programs: Public Housing; Section 8 HCV (tenant-based);
+// Section 8 Project-Based Rental Assistance; Section 8 Moderate
+// Rehabilitation; HOPWA; Multifamily Section 202 / 811. Twelve-mode
+// severity ladder × seven HUD programs × four asset limit
+// exceptions × three imputed return statuses. Trader-landlord
+// critical for: Section 8 HCV portfolio operators; project-based
+// Section 8 owners under HAP contracts; LIHTC + Section 8 layered
+// properties; mixed-income developments with Section 8 households;
+// PHA-administered scattered-site programs; tracking Multifamily
+// Section 202 / 811 January 1, 2027 final compliance deadline.
+// Sibling cluster: rental_source_of_income_discrimination (Section
+// 8 voucher anti-discrimination cross-reference), rental_eviction_
+// notices (Section 8 HAP contract termination procedures),
+// rental_just_cause_eviction (LIHTC/Section 8 just-cause overlay),
+// rental_application_denial_disclosure (HOTMA documentation
+// requirements), rental_property_registration (PHA registration).
+// ---------------------------------------------------------------------------
+
+async fn rental_hud_hotma_income_asset_compliance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHudHotmaIncomeAssetComplianceInput>,
+) -> Result<Json<RentalHudHotmaIncomeAssetComplianceResult>, ApiError> {
+    Ok(Json(check_rental_hud_hotma_income_asset_compliance(&b)))
 }
 
 // ---------------------------------------------------------------------------
