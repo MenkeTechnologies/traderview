@@ -201,6 +201,7 @@ pub mod rental_fair_housing_amendments_act_of_1988_fhaa;
 pub mod rental_fair_housing_reasonable_accommodation;
 pub mod rental_fire_extinguisher_requirement;
 pub mod rental_flood_hazard_disclosure;
+pub mod rental_florida_chapter_83_part_ii_residential_tenancies;
 pub mod rental_florida_hb_1417_state_preemption;
 pub mod rental_foreclosure_tenant_protection_ptfa;
 pub mod rental_broadband_mte_rules;

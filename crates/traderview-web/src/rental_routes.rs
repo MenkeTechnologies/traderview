@@ -636,6 +636,11 @@ use traderview_expense::rental_florida_hb_1417_state_preemption::{
     RentalFloridaHb1417StatePreemptionInput,
     RentalFloridaHb1417StatePreemptionResult,
 };
+use traderview_expense::rental_florida_chapter_83_part_ii_residential_tenancies::{
+    check as check_rental_florida_chapter_83_part_ii_residential_tenancies,
+    RentalFloridaChapter83PartIIResidentialTenanciesInput,
+    RentalFloridaChapter83PartIIResidentialTenanciesResult,
+};
 use traderview_expense::rental_foreclosure_tenant_protection_ptfa::{
     check as check_rental_foreclosure_tenant_protection_ptfa,
     PtfaInput as RentalForeclosureTenantProtectionPtfaInput,
@@ -1651,6 +1656,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
         .route("/rental-florida-hb-1417-state-preemption", axum::routing::post(rental_florida_hb_1417_state_preemption_route))
+        .route("/rental-florida-chapter-83-part-ii-residential-tenancies", axum::routing::post(rental_florida_chapter_83_part_ii_residential_tenancies_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
         .route("/rental-foreclosure-tenant-protection-ptfa", axum::routing::post(rental_foreclosure_tenant_protection_ptfa_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
@@ -8464,6 +8470,31 @@ async fn rental_florida_hb_1417_state_preemption_route(
     Json(b): Json<RentalFloridaHb1417StatePreemptionInput>,
 ) -> Result<Json<RentalFloridaHb1417StatePreemptionResult>, ApiError> {
     Ok(Json(check_rental_florida_hb_1417_state_preemption(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_florida_chapter_83_part_ii_residential_tenancies: Florida
+// Statute Chapter 83 Part II — Residential Tenancies. Florida
+// statewide residential tenancy regime codified at Fla. Stat.
+// §§ 83.40 through 83.683. Security deposit return 15 days no claim
+// / 30 days claim notice (§ 83.49); landlord obligation to maintain
+// premises (§ 83.51); 24-hour landlord entry notice during
+// reasonable time 7:30 AM-8:00 PM (§ 83.53); 3-day pay or quit
+// notice (§ 83.56(3)); 7-day cure or vacate (§ 83.56(2)(a));
+// 15-day month-to-month no-fault termination (§ 83.57); retaliation
+// prohibited 1-year presumption window (§ 83.64); servicemember
+// termination without penalty for qualifying military circumstance
+// (§ 83.682). Sibling to rental_florida_hb_1417_state_preemption
+// (HB 1417 of 2023 makes Chapter 83 Part II BOTH the floor AND the
+// ceiling for FL residential tenancies).
+// ---------------------------------------------------------------------------
+
+async fn rental_florida_chapter_83_part_ii_residential_tenancies_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFloridaChapter83PartIIResidentialTenanciesInput>,
+) -> Result<Json<RentalFloridaChapter83PartIIResidentialTenanciesResult>, ApiError> {
+    Ok(Json(check_rental_florida_chapter_83_part_ii_residential_tenancies(&b)))
 }
 
 // ---------------------------------------------------------------------------
