@@ -786,6 +786,11 @@ use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
     NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
     NyRentReceiptLateNoticeRequirementsResult as RentalNyRentReceiptLateNoticeRequirementsResult,
 };
+use traderview_expense::rental_ny_rpl_235f_roommate_law::{
+    check as check_rental_ny_rpl_235f_roommate_law,
+    NyRpl235FRoommateLawInput as RentalNyRpl235FRoommateLawInput,
+    NyRpl235FRoommateLawResult as RentalNyRpl235FRoommateLawResult,
+};
 use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
@@ -1438,6 +1443,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
+        .route("/rental-ny-rpl-235f-roommate-law", axum::routing::post(rental_ny_rpl_235f_roommate_law_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
@@ -9192,6 +9198,35 @@ async fn rental_ny_rent_receipt_late_notice_requirements_route(
     Json(b): Json<RentalNyRentReceiptLateNoticeRequirementsInput>,
 ) -> Result<Json<RentalNyRentReceiptLateNoticeRequirementsResult>, ApiError> {
     Ok(Json(check_rental_ny_rent_receipt_late_notice_requirements(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_ny_rpl_235f_roommate_law: NY Real Property Law § 235-f
+// (Unlawful Restrictions on Occupancy — Roommate Law). Enacted 1983.
+// Permits tenant + immediate family + additional occupants + dependent
+// children. Single-tenant lease: tenant + immediate family + 1
+// additional occupant + dependent children of occupant. Multi-tenant
+// lease: tenants + immediate family + occupants such that total
+// (excluding occupants' dependent children) ≤ number of tenants in
+// lease. Requires tenant or spouse to use as primary residence.
+// § 235-f(4) tenant must inform landlord of occupant name within 30
+// days of commencement or landlord request. § 235-f(5) occupants
+// acquire no tenancy rights without express written landlord consent.
+// § 235-f(6) lease restrictions on occupancy unenforceable as against
+// public policy. § 235-f(7) waiver of § 235-f null and void.
+// § 235-f(8) MDL § 4(7) overcrowding standard still applies. Sibling:
+// rental_nyc_loft_law_article_7c (iter 597 — statutory tenant cross-
+// reference), rental_just_cause_eviction (iter 573 — eviction
+// restriction overlay), rental_ny_rent_receipt_late_notice_requirements
+// (iter 603 — adjacent NY tenant-protection statute).
+// ---------------------------------------------------------------------------
+
+async fn rental_ny_rpl_235f_roommate_law_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNyRpl235FRoommateLawInput>,
+) -> Result<Json<RentalNyRpl235FRoommateLawResult>, ApiError> {
+    Ok(Json(check_rental_ny_rpl_235f_roommate_law(&b)))
 }
 
 // ---------------------------------------------------------------------------
