@@ -259,6 +259,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-451b",          post(section_451b_route))
+        .route("/calc/section-451c",          post(section_451c_route))
         .route("/calc/section-1031",          post(section_1031_route))
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-1033",          post(section_1033_route))
@@ -10231,6 +10232,30 @@ async fn section_451b_route(
         ));
     }
     Ok(Json(traderview_expense::section_451b::compute(&b)))
+}
+
+// ── §451(c) Special Rule for Advance Payments (TCJA 2017) ──────────
+// Mounted at /api/calc/section-451c. Added by Section 13221 of the
+// Tax Cuts and Jobs Act of 2017 (Public Law 115-97), signed December
+// 22, 2017. Accrual-method taxpayer 1-year deferral framework for
+// advance payments. § 451(c)(1)(A) full inclusion in year of receipt;
+// § 451(c)(1)(B) AFS deferral method election (AFS revenue in year of
+// receipt + remainder in succeeding taxable year, max 1-year defer).
+// § 451(c)(4)(A) advance payment definition (goods + services + IP
+// use + software + gift cards + subscriptions + warranties +
+// memberships + property use ancillary to services + loyalty
+// programs per Treas. Reg. § 1.451-8(a)(1)). Treas. Reg. § 1.451-8
+// proposed September 9, 2019 (84 FR 47175); finalized January 6,
+// 2021 (T.D. 9941; 86 FR 810); obsoletes Rev. Proc. 2004-34 +
+// Notice 2018-35 for tax years beginning on or after January 1,
+// 2021. Rev. Proc. 2021-34 method change procedures. Treas. Reg.
+// § 1.451-8(f) accelerates deferred balance on cessation /
+// bankruptcy / certain M&A transactions.
+async fn section_451c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_451c::Section451CInput>,
+) -> Result<Json<traderview_expense::section_451c::Section451CResult>, ApiError> {
+    Ok(Json(traderview_expense::section_451c::check(&b)))
 }
 
 // ── MLP K-1 UBTI tracker for IRAs ─────────────────────────────────────
