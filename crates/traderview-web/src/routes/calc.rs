@@ -98,6 +98,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-67g",           post(section_67g_route))
+        .route("/calc/section-6041",          post(section_6041_route))
         .route("/calc/section-6042",          post(section_6042_route))
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6049",          post(section_6049_route))
@@ -5387,6 +5388,33 @@ async fn section_67g_route(
 // 2014-01-01 + more-complex debt 2016-01-01 + digital asset 2026-01-01
 // (NEW under IIJA § 80603 amending § 6045; requires continuous broker-
 // account holding). NO DE MINIMIS — even one cent triggers reporting.
+
+// ── §6041 information at source + 1099-NEC / 1099-MISC reporting ────
+// Mounted at /api/calc/section-6041. § 6041(a) trade-or-business
+// persons making payments of $2,000+ (post-OBBBA) to another
+// person must file Form 1099. § 6041(c) corporate exception
+// (general); attorneys + medical/health payments NOT exempt
+// despite corporate payee status. § 6041(h) TIN requirement
+// (W-9); § 3406 backup withholding at 24 % when payee fails to
+// provide TIN. § 6041A direct sales of $5,000+ + nonemployee
+// remuneration subject to same OBBBA threshold. § 6721 failure
+// to file ($60 ≤ 30 days, $130 ≤ Aug 1, $330 after Aug 1;
+// intentional disregard $660+). § 6722 failure to furnish
+// payee statement. § 6723 other reporting failures ($50). P.L.
+// 119-21 OBBBA § 70433 raised § 6041(a) + § 6041A(a)(2) threshold
+// from $600 to $2,000 effective Jan 1, 2026; inflation indexed
+// from 2027 with 2025 base, rounded to nearest $100. Forms:
+// 1099-NEC (non-employee comp; due Jan 31), 1099-MISC (rents/
+// prizes/awards; due Feb 28 paper / Mar 31 electronic), 1042-S
+// (foreign payee FATCA Chapter 3/4), W-9 (US payee TIN), W-8BEN /
+// W-8BEN-E (foreign payee).
+
+async fn section_6041_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6041::Section6041Input>,
+) -> Result<Json<traderview_expense::section_6041::Section6041Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6041::compute(&b)))
+}
 
 // ── §6042 returns regarding payments of dividends (1099-DIV) ────────
 // Mounted at /api/calc/section-6042. § 6042(a)(1) — every person who
