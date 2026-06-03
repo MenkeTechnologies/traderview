@@ -277,6 +277,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-704c",          post(section_704c_route))
+        .route("/calc/section-707",           post(section_707_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
         .route("/calc/section-751",           post(section_751_route))
@@ -1890,6 +1891,39 @@ async fn section_248_route(
 // organizational definition; § 1.709-2(b) syndication definition.
 // T.D. 9542 (Sept. 8, 2011) automatic election. AJCA 2004 § 902
 // harmonization with § 195 / § 248.
+
+// ── § 707 partner-partnership transactions ──────────────────────
+// Mounted at /api/calc/section-707. Four operative paragraphs:
+// § 707(a) — partner-partnership transactions treated as between
+// non-partners when partner not acting in capacity as partner;
+// § 707(a)(2)(A) — payments to partner for services may be
+// recharacterized as guaranteed payment or distributive share;
+// § 707(a)(2)(B) — DISGUISED SALES: contribution + related
+// distribution recast as sale. Treas. Reg. § 1.707-3(c)(1) creates
+// 2-year presumption that distributions within 24 months are sales
+// unless facts and circumstances clearly establish otherwise;
+// § 1.707-3(d) creates opposite presumption for transfers > 2 years
+// apart (presumed NOT sales). Two-prong test: but-for + entrepreneurial-
+// risk independence. § 707(b) — losses disallowed between partner
+// owning > 50% capital or profits and partnership, or between two
+// partnerships with > 50% common owner. § 707(c) — guaranteed payments:
+// payments to partner for services or use of capital DETERMINED
+// WITHOUT REGARD TO partnership income; ordinary income to recipient
+// + § 162 deduction to partnership. § 1402(a)(13) limited-partner
+// SECA exclusion does NOT apply to GP for services — GP for capital
+// to limited partner IS excluded from SE tax. Sibling cluster:
+// § 704(b) (allocations), § 704(c) (built-in gain), § 704(d) (basis
+// limit), § 705 (basis), § 721 (contribution nonrecognition), § 723
+// (partnership basis in contributed property), § 731 (distribution
+// nonrecognition), § 751 (hot assets), § 752 (liabilities), § 754
+// (basis adjustment election).
+
+async fn section_707_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_707::Section707Input>,
+) -> Result<Json<traderview_expense::section_707::Section707Output>, ApiError> {
+    Ok(Json(traderview_expense::section_707::check(&b)))
+}
 
 async fn section_709_route(
     _u: AuthUser,
