@@ -230,6 +230,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6707a",         post(section_6707a_route))
         .route("/calc/section-6708",          post(section_6708_route))
         .route("/calc/section-6713",          post(section_6713_route))
+        .route("/calc/section-6721",          post(section_6721_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-6862",          post(section_6862_route))
@@ -9273,6 +9274,36 @@ async fn section_6713_route(
     Json(b): Json<traderview_expense::section_6713::Section6713Input>,
 ) -> Result<Json<traderview_expense::section_6713::Section6713Result>, ApiError> {
     Ok(Json(traderview_expense::section_6713::check(&b)))
+}
+
+// ── §6721 failure to file correct information returns ────────────────
+// Mounted at /api/calc/section-6721. § 6721(a) failure to file
+// correct information return on or before required filing date,
+// failure to include all required information, or including
+// incorrect information triggers per-return penalty. § 6721(b)(1)
+// Tier 1: corrected within 30 days = $50 per return base ($60
+// inflation-adjusted 2026 under Rev. Proc. 2025-32); max $500,000
+// annual. § 6721(b)(2) Tier 2: corrected after 30 days but by Aug
+// 1 = $100 per return base ($130 for 2026); max $1,500,000 annual.
+// § 6721(a)(1) Tier 3: not corrected by Aug 1 = $250 per return
+// base ($340 for 2026); max $3,000,000 annual base ($4,191,500 for
+// 2026 large filer). § 6721(d) small business exception (average
+// annual gross receipts ≤ $5,000,000 for 3-year lookback): reduced
+// max ($175,000 / $500,000 / $1,000,000 base; $1,397,000 for 2026
+// Tier 3 small business). § 6721(e) intentional disregard: § 6721
+// (b)/(c)/(d) NOT apply; penalty GREATER OF $500 per return base
+// ($680 for 2026) OR 10 % of aggregate amount required to be
+// reported; NO MAXIMUM. § 6724 reasonable cause waiver. Treas. Reg.
+// § 301.6721-1. § 6722 parallel payee statement penalty. § 6723
+// $50 per other reporting failure. IRS IRM 20.1.7. Companion to
+// § 6109 (TIN requirements — iter 656) and § 6041 (information
+// reporting — iter 620).
+
+async fn section_6721_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6721::Section6721Input>,
+) -> Result<Json<traderview_expense::section_6721::Section6721Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6721::compute(&b)))
 }
 
 // ── §6851 termination assessment of income tax ──────────────────────
