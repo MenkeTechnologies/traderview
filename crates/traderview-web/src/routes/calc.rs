@@ -232,6 +232,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6713",          post(section_6713_route))
         .route("/calc/section-6721",          post(section_6721_route))
         .route("/calc/section-6722",          post(section_6722_route))
+        .route("/calc/section-6723",          post(section_6723_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-6862",          post(section_6862_route))
@@ -9331,6 +9332,31 @@ async fn section_6722_route(
     Json(b): Json<traderview_expense::section_6722::Section6722Input>,
 ) -> Result<Json<traderview_expense::section_6722::Section6722Result>, ApiError> {
     Ok(Json(traderview_expense::section_6722::compute(&b)))
+}
+
+// ── §6723 failure to comply with other information reporting reqs ────
+// Mounted at /api/calc/section-6723. Catch-all penalty for OTHER
+// specified information reporting requirements not covered by § 6721
+// (failure to file with IRS — iter 658) or § 6722 (failure to furnish
+// payee statement — iter 660). § 6723 general rule: $50 per failure
+// with $100,000 annual maximum. NO TIER STRUCTURE, NO INFLATION
+// ADJUSTMENT, NO SMALL BUSINESS EXCEPTION, NO SAFE HARBOR. Treas.
+// Reg. § 301.6723-1 "specified information reporting requirement"
+// includes: (1) TIN-furnishing under § 6109(a); (2) §§ 6038A/6038B
+// ancillary filing (Forms 5471, 8865); (3) § 6041A direct-sales
+// notice; (4) § 6042(c)(2) corporate shareholder listing; (5)
+// magnetic media filing requirements. Common triggers: failure to
+// provide correct TIN on Form W-4; failure of payee to provide Form
+// W-9 to payor on request; failure to file in magnetic media (10+
+// returns); failure to provide TIN for § 6042(c)(2). § 6724
+// reasonable cause waiver. Completes the § 6109/§ 6721/§ 6722/
+// § 6723 information-return compliance set.
+
+async fn section_6723_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6723::Section6723Input>,
+) -> Result<Json<traderview_expense::section_6723::Section6723Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6723::compute(&b)))
 }
 
 // ── §6851 termination assessment of income tax ──────────────────────
