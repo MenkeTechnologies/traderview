@@ -600,6 +600,11 @@ use traderview_expense::rental_application_denial_disclosure::{
     check as check_rental_application_denial_disclosure,
     RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
 };
+use traderview_expense::rental_arizona_residential_landlord_tenant_act_ars_33_1301::{
+    check as check_rental_arizona_residential_landlord_tenant_act_ars_33_1301,
+    RentalArizonaResidentialLandlordTenantActArs33_1301Input,
+    RentalArizonaResidentialLandlordTenantActArs33_1301Result,
+};
 use traderview_expense::rental_basement_water_intrusion_disclosure::{
     check as check_rental_basement_water_intrusion_disclosure,
     RentalBasementWaterIntrusionDisclosureInput,
@@ -1653,6 +1658,7 @@ pub fn router() -> Router<AppState> {
         .route("/landlord-post-eviction-tenant-property-storage-disposal", axum::routing::post(landlord_post_eviction_tenant_property_storage_disposal_route))
         .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
         .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
+        .route("/rental-arizona-residential-landlord-tenant-act-ars-33-1301", axum::routing::post(rental_arizona_residential_landlord_tenant_act_ars_33_1301_route))
         .route("/rental-asbestos-disclosure", axum::routing::post(rental_asbestos_disclosure_route))
         .route("/rental-basement-water-intrusion-disclosure", axum::routing::post(rental_basement_water_intrusion_disclosure_route))
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
@@ -8623,6 +8629,30 @@ async fn rental_application_denial_disclosure_route(
     Json(b): Json<RentalApplicationDenialDisclosureInput>,
 ) -> Result<Json<RentalApplicationDenialDisclosureResult>, ApiError> {
     Ok(Json(check_rental_application_denial_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_arizona_residential_landlord_tenant_act_ars_33_1301:
+// Arizona Residential Landlord and Tenant Act (ARLTA). Codified at
+// A.R.S. §§ 33-1301 through 33-1381 (Title 33 Property, Chapter 10).
+// Adopted by Arizona Legislature in 1973 based on Uniform Residential
+// Landlord and Tenant Act (URLTA). § 33-1321 1.5-months'-rent
+// security deposit cap + 14 business days return; § 33-1324
+// landlord obligation to maintain premises; § 33-1343 48-hour entry
+// notice with emergency / court-order exception; § 33-1361 tenant
+// 14-day termination; § 33-1368(B) 5-day pay or quit; § 33-1368(A)
+// 10-day cure for material noncompliance OR 5-day cure for health
+// and safety; § 33-1370 unlawful ouster remedy (actual damages or
+// 2 months' periodic rent, whichever greater); § 33-1376 retaliation
+// prohibited; § 33-1377 6-month retaliation presumption.
+// ---------------------------------------------------------------------------
+
+async fn rental_arizona_residential_landlord_tenant_act_ars_33_1301_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalArizonaResidentialLandlordTenantActArs33_1301Input>,
+) -> Result<Json<RentalArizonaResidentialLandlordTenantActArs33_1301Result>, ApiError> {
+    Ok(Json(check_rental_arizona_residential_landlord_tenant_act_ars_33_1301(&b)))
 }
 
 // ---------------------------------------------------------------------------
