@@ -831,6 +831,11 @@ use traderview_expense::rental_tenant_abandoned_personal_property::{
     RentalTenantAbandonedPersonalPropertyInput,
     RentalTenantAbandonedPersonalPropertyResult,
 };
+use traderview_expense::rental_mold_disclosure_remediation::{
+    check as check_rental_mold_disclosure_remediation,
+    RentalMoldDisclosureRemediationInput,
+    RentalMoldDisclosureRemediationResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1314,6 +1319,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
+        .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11387,4 +11393,58 @@ async fn rental_tenant_abandoned_personal_property_route(
     Json(b): Json<RentalTenantAbandonedPersonalPropertyInput>,
 ) -> Result<Json<RentalTenantAbandonedPersonalPropertyResult>, ApiError> {
     Ok(Json(check_rental_tenant_abandoned_personal_property(&b)))
+}
+
+// ── /rental-mold-disclosure-remediation (iter 545) ──────────────────────────
+// POST endpoint for mold disclosure + remediation compliance across eight
+// jurisdictions. Indoor mold poses serious health hazards (asthma triggers,
+// allergic reactions, respiratory infection) subject to state-by-state
+// disclosure and remediation requirements. Failure to disclose known mold
+// or promptly remediate exposes the landlord to actual damages, statutory
+// civil penalty, lease rescission + constructive eviction, and
+// personal-injury tort liability with toxic-mold settlements ranging
+// $50K-$5M+.
+//
+// CA Health & Safety Code §§ 26100-26156 (Toxic Mold Protection Act of
+// 2001) + CA Civ. Code § 1102.17 + § 1941.7 (CDPH mold booklet effective
+// Jan 1, 2022): written disclosure required if landlord knows or has
+// reasonable cause to believe mold present.
+//
+// NYC Local Law 55 of 2018 (Asthma-Free Housing Act) codified at NYC HMC
+// § 27-2017.1: multi-dwelling property owners must investigate AND remove
+// indoor mold; licensed-professional remediation required for mold > 10
+// square feet; annual inspections; tenant informational materials; HPD
+// class-C immediately-hazardous violation framework.
+//
+// WA RCW 59.18.060(13): landlord must notify tenants of health hazards
+// + provide WA Dept of Health mold-prevention information at lease
+// execution.
+//
+// TX Prop. Code § 92.052 diligent-effort-to-repair duty + Texas Deceptive
+// Trade Practices Act (DTPA) requires disclosure of known mold
+// infestation.
+//
+// VA Code § 55.1-1215 (lease-execution disclosure) + § 55.1-1226
+// (itemized inspection report within 5 days of move-in) + § 8.01-226.12
+// (visible-mold duty) + § 55.1-1220(A)(5) (moisture-prevention duty).
+//
+// FL Stat. § 83.51 landlord duty to maintain — no explicit mold statute.
+// IL no statewide mold statute; common-law implied warranty of
+// habitability + Jack Spring v. Little doctrine.
+//
+// Eight-mode severity ladder: NotApplicable,
+// NoKnowledgeOfMoldNoDisclosureObligation,
+// CompliantWrittenDisclosureAndRemediation,
+// DisclosureProvidedRemediationOngoing,
+// NoDisclosureViolatesStateMoldStatute,
+// NycLocalLaw55LicensedProfessionalRequiredViolation,
+// UnremediatedMoldImpliedWarrantyHabitabilityBreach,
+// PersonalInjuryToxicTortExposureRisk.
+
+async fn rental_mold_disclosure_remediation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMoldDisclosureRemediationInput>,
+) -> Result<Json<RentalMoldDisclosureRemediationResult>, ApiError> {
+    Ok(Json(check_rental_mold_disclosure_remediation(&b)))
 }
