@@ -409,6 +409,7 @@ pub mod section_304;
 pub mod section_30d;
 pub mod section_305;
 pub mod section_311;
+pub mod section_312;
 pub mod section_318;
 pub mod section_3406;
 pub mod section_331;

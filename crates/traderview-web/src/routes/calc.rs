@@ -158,6 +158,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-304",           post(section_304_route))
         .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-311",           post(section_311_route))
+        .route("/calc/section-312",           post(section_312_route))
         .route("/calc/section-318",           post(section_318_route))
         .route("/calc/section-331",           post(section_331_route))
         .route("/calc/section-332",           post(section_332_route))
@@ -6404,6 +6405,61 @@ async fn section_311_route(
     Json(b): Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionInput>,
 ) -> Result<Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionOutput>, ApiError> {
     Ok(Json(traderview_expense::section_311::check(&b)))
+}
+
+// ── § 312 Effect on Earnings and Profits ─────────────────────────────
+// Mounted at /api/calc/section-312 (iter 558). Pure compute. § 312
+// governs the computation and adjustment of a corporation's E&P. E&P
+// is the touchstone for distribution character determination throughout
+// subchapter C: § 301(c) classifies distributions as dividends to extent
+// of E&P, basis recovery thereafter, capital gain on excess. § 302
+// redemption analysis turns on E&P when redemption defaults to § 301
+// distribution. § 304 brother-sister stacks acquiring then issuing E&P.
+//
+// § 312(a) general rule: E&P decreased by cash + principal of
+// obligations + adjusted basis of distributed property.
+//
+// § 312(b) appreciated-property distribution: E&P increased by § 311(b)
+// recognized gain, then decreased by FMV (net effect equals decrease
+// by basis + gain accrual).
+//
+// § 312(c) liability-assumption modifier: E&P decrease reduced by
+// liability assumed by shareholder OR to which property is subject.
+//
+// § 312(d) stock dividend: § 305(a) non-taxable does not reduce E&P;
+// § 305(b) taxable does (by FMV).
+//
+// § 312(k)(3) ADS straight-line depreciation: § 168(g)(2) Alternative
+// Depreciation System applies for E&P (vs accelerated for taxable
+// income); creates permanent timing difference.
+//
+// § 312(n) special adjustments to align E&P with economic income:
+// (n)(1) construction-period interest + (n)(2) intangible drilling +
+// (n)(3) circulation/organizational amortization + (n)(4) LIFO + (n)(5)
+// installment sales (full recognition in year of sale) + (n)(6)
+// completed-contract + (n)(7) stock redemptions + (n)(8) foreign
+// corporation PTEP under § 959 + § 961.
+//
+// Nine-mode severity ladder: NotApplicable,
+// EepDecreaseCashOrObligation,
+// EepDecreaseDistributedPropertyBasis,
+// EepIncreaseAppreciationThenDecreaseFmv,
+// EepDecreaseAdjustedByLiabilityAssumed,
+// EepUnchangedNonTaxableStockDividendSection305A,
+// EepReducedTaxableStockDividendSection305B,
+// EepAdjustedAdsStraightLineSection312K3,
+// EepFullRecognitionSection312N5InstallmentSale.
+//
+// Coordinates with § 301 distribution character + § 302 redemption
+// (iter 556) + § 304 related-corp (iter 554) + § 311 corporate-level
+// recognition (iter 550) + § 305 stock-dividend rules + § 307 basis
+// allocation + § 168(g)(2) ADS + § 959 + § 961 PTEP.
+
+async fn section_312_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_312::Section312EepAdjustmentInput>,
+) -> Result<Json<traderview_expense::section_312::Section312EepAdjustmentOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_312::check(&b)))
 }
 
 // ── § 318 Constructive Ownership of Stock ────────────────────────────
