@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1471",          post(section_1471_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
         .route("/calc/section-475f",          post(section_475f_route))
+        .route("/calc/section-4701",          post(section_4701_route))
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-170",           post(section_170_route))
         .route("/calc/section-219",           post(section_219_route))
@@ -5102,6 +5103,35 @@ async fn section_475f_route(
     Json(b): Json<traderview_expense::section_475f::Section475fInput>,
 ) -> Result<Json<traderview_expense::section_475f::Section475fOutput>, ApiError> {
     Ok(Json(traderview_expense::section_475f::check(&b)))
+}
+
+// ── §4701 tax on issuer of registration-required obligation ──────────
+// Mounted at /api/calc/section-4701. § 4701 issuer-side excise tax
+// companion to § 1287 holder-side ordinary income recharacterization
+// (built iter 666). Together § 1287 and § 4701 form the TEFRA anti-
+// bearer-bond duo enacted by Public Law 97-248 § 310 effective for
+// obligations issued after December 31, 1982. § 4701(a) imposes 1
+// PERCENT of principal amount × number of calendar years (or
+// portions thereof) during the period from issue date through
+// maturity. § 4701(b) registration-required obligation definition
+// matches § 163(f)(2): excepts (1) individual issuers; (2) non-
+// public obligations; (3) short-term ≤ 1 year; (4) foreign-targeted
+// Eurobond / TEFRA D obligations under Treas. Reg. § 1.163-5(c)(2)
+// (i)(D). HIRE Act of 2010 (Pub. L. 111-147) substantially narrowed
+// the Eurobond / TEFRA D exception for obligations issued after
+// March 18, 2012 — most foreign-targeted bearer obligations now
+// subject to § 4701 except narrow class of qualifying obligations.
+// TEFRA § 310(d)(3) exception for warrants/convertibles offered
+// outside US without 1933 Act registration before August 10, 1982.
+// Treas. Reg. § 46.4701-1 implementing regulation. § 1287(a)
+// parenthetical exception applies if § 4701 tax paid by issuer
+// (avoids double penalty on holder).
+
+async fn section_4701_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_4701::Section4701Input>,
+) -> Result<Json<traderview_expense::section_4701::Section4701Result>, ApiError> {
+    Ok(Json(traderview_expense::section_4701::compute(&b)))
 }
 
 // ── §213 medical expense deduction ──────────────────────────────────

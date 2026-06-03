@@ -543,6 +543,7 @@ pub mod section_4980;
 pub mod section_4980h;
 pub mod section_475c2;
 pub mod section_475f;
+pub mod section_4701;
 pub mod section_691;
 pub mod section_704c;
 pub mod section_706;
