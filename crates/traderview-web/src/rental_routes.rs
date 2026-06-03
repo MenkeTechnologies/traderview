@@ -1030,6 +1030,11 @@ use traderview_expense::rental_domestic_violence_lock_change_lease_termination::
     RentalDomesticViolenceLockChangeLeaseTerminationInput,
     RentalDomesticViolenceLockChangeLeaseTerminationResult,
 };
+use traderview_expense::rental_drone_overflight_surveillance_privacy::{
+    check as check_rental_drone_overflight_surveillance_privacy,
+    RentalDroneOverflightSurveillancePrivacyInput,
+    RentalDroneOverflightSurveillancePrivacyResult,
+};
 use traderview_expense::rental_dog_bite_liability::{
     check as check_rental_dog_bite_liability,
     RentalDogBiteLiabilityInput,
@@ -1568,6 +1573,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
         .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
         .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
+        .route("/rental-drone-overflight-surveillance-privacy", axum::routing::post(rental_drone_overflight_surveillance_privacy_route))
         .route("/rental-domestic-violence-lock-change-lease-termination", axum::routing::post(rental_domestic_violence_lock_change_lease_termination_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
@@ -13042,6 +13048,41 @@ async fn rental_dog_bite_liability_route(
     Json(b): Json<RentalDogBiteLiabilityInput>,
 ) -> Result<Json<RentalDogBiteLiabilityResult>, ApiError> {
     Ok(Json(check_rental_dog_bite_liability(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_drone_overflight_surveillance_privacy: multi-state drone
+// overflight + aerial imagery + surveillance privacy compliance.
+// CA Civ Code § 1708.8 (rewritten by AB 856 of 2015; anti-paparazzi
+// drone law) — physical invasion of privacy when airspace entered
+// without permission to capture image of private/personal/familial
+// activity; $5,000-$50,000 statutory fine + treble + disgorgement.
+// Texas Government Code Chapter 423 (Privacy of Captured Images
+// Act of 2013) — offense to capture image with intent to surveil
+// without owner consent; $5,000/episode + $10,000/disclosed; 5th
+// Cir. upheld 2023; illegally obtained images inadmissible.
+// Florida Stat § 934.50 (Freedom from Unwarranted Surveillance
+// Act; 2013 enactment + 2015 amendment) — drone with imaging
+// device may NOT record privately owned property OR owner/tenant/
+// occupant/invitee/licensee with intent to surveil in violation
+// of reasonable expectation of privacy WITHOUT WRITTEN CONSENT;
+// presumption of reasonable expectation when not observable from
+// ground level. FAA Part 107 — Remote Pilot Certificate required
+// for commercial flight; daylight + visual line-of-sight; max
+// altitude 400 feet AGL. Twelve-mode severity ladder × four
+// jurisdictions × six flight purposes × five consent statuses.
+// Trader-landlord critical because drone-based facade inspection
+// + parking-lot security + tenant surveillance is increasingly
+// common but per-image civil penalties up to $50,000 (CA) and
+// treble damages create substantial liability exposure.
+// ---------------------------------------------------------------------------
+
+async fn rental_drone_overflight_surveillance_privacy_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalDroneOverflightSurveillancePrivacyInput>,
+) -> Result<Json<RentalDroneOverflightSurveillancePrivacyResult>, ApiError> {
+    Ok(Json(check_rental_drone_overflight_surveillance_privacy(&b)))
 }
 
 // ---------------------------------------------------------------------------

@@ -170,6 +170,7 @@ pub mod rental_dc_topa_tenant_opportunity_purchase;
 pub mod rental_depreciation;
 pub mod rental_domestic_violence_lock_change_lease_termination;
 pub mod rental_dog_bite_liability;
+pub mod rental_drone_overflight_surveillance_privacy;
 pub mod rental_ada_accessible_parking_compliance;
 pub mod rental_application_denial_disclosure;
 pub mod rental_attached_garage_carbon_monoxide_disclosure;
