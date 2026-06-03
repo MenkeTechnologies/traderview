@@ -885,6 +885,11 @@ use traderview_expense::rental_new_jersey_anti_eviction_act::{
     RentalNewJerseyAntiEvictionActInput,
     RentalNewJerseyAntiEvictionActResult,
 };
+use traderview_expense::rental_new_york_hstpa_2019_chapter_36::{
+    check as check_rental_new_york_hstpa_2019_chapter_36,
+    RentalNewYorkHstpa2019Chapter36Input,
+    RentalNewYorkHstpa2019Chapter36Result,
+};
 use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
     check as check_rental_ny_rent_receipt_late_notice_requirements,
     NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
@@ -1686,6 +1691,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-new-jersey-anti-eviction-act", axum::routing::post(rental_new_jersey_anti_eviction_act_route))
+        .route("/rental-new-york-hstpa-2019-chapter-36", axum::routing::post(rental_new_york_hstpa_2019_chapter_36_route))
         .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
         .route("/rental-ny-rpl-235f-roommate-law", axum::routing::post(rental_ny_rpl_235f_roommate_law_route))
         .route("/rental-attorney-fee-clause-reciprocity", axum::routing::post(rental_attorney_fee_clause_reciprocity_route))
@@ -10389,6 +10395,30 @@ async fn rental_new_jersey_anti_eviction_act_route(
     Json(b): Json<RentalNewJerseyAntiEvictionActInput>,
 ) -> Result<Json<RentalNewJerseyAntiEvictionActResult>, ApiError> {
     Ok(Json(check_rental_new_jersey_anti_eviction_act(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_new_york_hstpa_2019_chapter_36: New York Housing Stability
+// and Tenant Protection Act of 2019 (HSTPA). Chapter 36 of the Laws
+// of 2019; signed by Governor Andrew M. Cuomo on June 14, 2019.
+// Statewide. GOL § 7-103 1-month-rent security deposit cap;
+// GOL § 7-108 14-day deposit return + itemized statement; RPL
+// § 238-a 5-day late-fee grace period + lesser of $50 or 5 % cap +
+// $20 statewide application fee cap; RPL § 226-c 30/60/90-day
+// termination notice based on tenancy duration; RPAPL § 711(2)
+// 14-day written nonpayment demand (oral abolished); RPAPL § 753
+// 1-year post-warrant hardship stay; eliminated 20 % vacancy bonus
+// in rent-regulated units; made rent regulation permanent (ETPA
+// sunset eliminated); RPL § 235-b implied warranty of habitability
+// strengthened.
+// ---------------------------------------------------------------------------
+
+async fn rental_new_york_hstpa_2019_chapter_36_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNewYorkHstpa2019Chapter36Input>,
+) -> Result<Json<RentalNewYorkHstpa2019Chapter36Result>, ApiError> {
+    Ok(Json(check_rental_new_york_hstpa_2019_chapter_36(&b)))
 }
 
 // ---------------------------------------------------------------------------
