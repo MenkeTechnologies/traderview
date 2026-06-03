@@ -626,6 +626,11 @@ use traderview_expense::rental_flood_hazard_disclosure::{
     FloodHazardDisclosureInput as RentalFloodHazardDisclosureInput,
     FloodHazardDisclosureResult as RentalFloodHazardDisclosureResult,
 };
+use traderview_expense::rental_florida_hb_1417_state_preemption::{
+    check as check_rental_florida_hb_1417_state_preemption,
+    RentalFloridaHb1417StatePreemptionInput,
+    RentalFloridaHb1417StatePreemptionResult,
+};
 use traderview_expense::rental_foreclosure_tenant_protection_ptfa::{
     check as check_rental_foreclosure_tenant_protection_ptfa,
     PtfaInput as RentalForeclosureTenantProtectionPtfaInput,
@@ -1551,6 +1556,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
+        .route("/rental-florida-hb-1417-state-preemption", axum::routing::post(rental_florida_hb_1417_state_preemption_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
         .route("/rental-foreclosure-tenant-protection-ptfa", axum::routing::post(rental_foreclosure_tenant_protection_ptfa_route))
         .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
@@ -8104,6 +8110,51 @@ async fn rental_flood_hazard_disclosure_route(
     Json(b): Json<RentalFloodHazardDisclosureInput>,
 ) -> Result<Json<RentalFloodHazardDisclosureResult>, ApiError> {
     Ok(Json(check_rental_flood_hazard_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_florida_hb_1417_state_preemption: Florida HB 1417 of 2023
+// (CS/HB 1417 — Residential Tenancies) statewide preemption of local
+// landlord-tenant ordinances. Signed by Governor Ron DeSantis;
+// effective July 1, 2023; created Fla. Stat. § 83.425; amended
+// Chapter 83 Part II (Florida Residential Landlord and Tenant Act).
+// § 83.425 preempts to STATE regulation of residential tenancies,
+// landlord-tenant relationship, and all matters covered under
+// Chapter 83 Part II; expressly supersedes local government
+// regulations; renders all existing local ordinances null and void.
+// Affected 46 tenant protection ordinances spanning 35 cities/counties
+// including Miami-Dade, Broward, Orange, Hillsborough, Pinellas
+// counties. Local rules no longer permissible: rent notices, Section
+// 8 housing voucher acceptance mandates, source-of-income protections,
+// tenants' bill of rights ordinances, rent stabilization measures,
+// eviction sealing, late fee caps, summons-process modifications.
+// Fla. Stat. § 83.57(3) month-to-month termination notice increased
+// from 15 to 30 days. Fla. Stat. § 83.575 end-of-term termination
+// notice revised range: not less than 30 days or more than 60 days
+// (from prior "not more than 60 days"). Nine-mode severity ladder ×
+// two property jurisdictions × ten local ordinance categories × five
+// tenancy actions. Trader-landlord critical because FL portfolio
+// operators previously faced patchwork of local rules now uniformly
+// preempted; reduces compliance burden but eliminates tenant-friendly
+// local protections. Multi-state portfolio operators tracking FL HB
+// 1417 alongside CO HB 24-1098 (iter 649), CA AB 1482, OR SB 608/611
+// (iter 647), WA HB 1217 (iter 643), NJ Anti-Eviction Act (iter
+// 651) just-cause/preemption framework comparisons. Sibling cluster:
+// rental_just_cause_eviction (multi-state regime; FL has none post-
+// preemption), rental_rent_control_stabilization (multi-state regime;
+// FL ordinances preempted), rental_source_of_income_discrimination
+// (FL Section 8 voucher acceptance preempted), rental_late_fee_caps
+// (FL local late fee caps preempted), rental_eviction_record_sealing
+// (FL local eviction sealing preempted), rental_eviction_notices,
+// rental_demolition_tenant_notice.
+// ---------------------------------------------------------------------------
+
+async fn rental_florida_hb_1417_state_preemption_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFloridaHb1417StatePreemptionInput>,
+) -> Result<Json<RentalFloridaHb1417StatePreemptionResult>, ApiError> {
+    Ok(Json(check_rental_florida_hb_1417_state_preemption(&b)))
 }
 
 // ---------------------------------------------------------------------------
