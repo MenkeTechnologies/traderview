@@ -76,10 +76,18 @@ export function saveState(state, storage = globalThis.localStorage) {
     if (!storage) return false;
     try {
         storage.setItem(STORAGE_KEY, JSON.stringify(state));
-        return true;
     } catch {
         return false;
     }
+    // Mirror to the per-user backend when authed. No-op for anon sessions
+    // and in unit tests (no fetch/__tvApiToken). Dynamic import avoids a
+    // cycle and keeps this module pure when consumers don't need sync.
+    if (typeof globalThis.fetch === 'function' && globalThis.__tvApiToken) {
+        import('./_dashboards_sync.js')
+            .then(m => m.schedulePush(state))
+            .catch(() => {});
+    }
+    return true;
 }
 
 // Slugified ID generator. Increments a numeric suffix on collision.

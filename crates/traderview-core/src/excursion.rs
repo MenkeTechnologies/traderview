@@ -111,6 +111,7 @@ mod tests {
             exit_avg: Some(entry),
             gross_pnl: None,
             fees: Decimal::ZERO,
+            commissions: Decimal::ZERO,
             net_pnl: None,
             asset_class: AssetClass::Stock,
             option_type: None,

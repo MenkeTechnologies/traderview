@@ -25,6 +25,12 @@ pub struct ParsedExecution {
     pub qty: Decimal,
     pub price: Decimal,
     pub fee: Decimal,
+    /// Broker commission, tracked separately from `fee` (regulatory /
+    /// exchange / clearing). Importers that don't break the two out may
+    /// leave this zero; the rollup will still produce a correct net P&L
+    /// from `fee` alone.
+    #[serde(default)]
+    pub commission: Decimal,
     pub executed_at: DateTime<Utc>,
     pub broker_order_id: Option<String>,
     pub raw: serde_json::Value,
@@ -56,6 +62,7 @@ impl ParsedExecution {
             qty,
             price,
             fee,
+            commission: Decimal::ZERO,
             executed_at,
             broker_order_id: None,
             raw: serde_json::json!({}),

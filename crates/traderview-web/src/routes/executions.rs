@@ -62,6 +62,8 @@ struct ManualBody {
     price: Decimal,
     #[serde(default)]
     fee: Decimal,
+    #[serde(default)]
+    commission: Decimal,
     executed_at: DateTime<Utc>,
     #[serde(default)]
     asset_class: AssetClass,
@@ -91,6 +93,7 @@ async fn create(
         qty: body.qty,
         price: body.price,
         fee: body.fee,
+        commission: body.commission,
         executed_at: body.executed_at,
         broker_order_id: None,
         raw: serde_json::json!({"source": "manual"}),
@@ -183,6 +186,8 @@ struct AddBody {
     price: Decimal,
     #[serde(default)]
     fee: Decimal,
+    #[serde(default)]
+    commission: Decimal,
     executed_at: DateTime<Utc>,
     #[serde(default)]
     asset_class: AssetClass,
@@ -216,6 +221,7 @@ async fn add_to_trade(
         qty: body.qty,
         price: body.price,
         fee: body.fee,
+        commission: body.commission,
         executed_at: body.executed_at,
         broker_order_id: None,
         raw: serde_json::json!({"source": "manual-add"}),

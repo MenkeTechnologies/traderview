@@ -77,6 +77,23 @@ export async function renderCalendar(mount, state) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
+    // Day cell → expanded Journal Entry for that day. Both the active month
+    // grid (.cal-tv-day) and the 12 month thumbnails (.cal-tv-thumb-cell)
+    // carry data-day; cells with no trades navigate too so the user can
+    // start a journal entry for an untraded day.
+    mount.querySelectorAll('[data-day]').forEach(el => {
+        const go = () => {
+            const day = el.getAttribute('data-day');
+            if (day) window.location.hash = `journal/${day}`;
+        };
+        el.addEventListener('click', go);
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                go();
+            }
+        });
+    });
 }
 
 function activeMonthHtml(byDay, year, month) {
@@ -108,8 +125,10 @@ function activeMonthHtml(byDay, year, month) {
             const tr = Number(c?.trades) || 0;
             weekPnl += v; weekTrades += tr;
             const cls = tr === 0 ? 'zero' : v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+            const ariaLabel = `Open journal for ${key}`;
             cellsHtml += `
-                <div class="cal-tv-day ${cls}">
+                <div class="cal-tv-day ${cls}" data-day="${key}" role="button" tabindex="0"
+                     aria-label="${esc(ariaLabel)}" title="${esc(ariaLabel)}">
                     <div class="cal-tv-day-num">${cursor}</div>
                     <div class="cal-tv-day-pnl ${pnlClass(v)}">${tr === 0 ? '$0' : fmtMoney(v)}</div>
                     <div class="cal-tv-day-trades">${tr} ${tr === 1 ? 'trade' : 'trades'}</div>
@@ -157,7 +176,8 @@ function thumbnailHtml(byDay, year, month, isActive) {
         const v = Number(c?.net_pnl) || 0;
         const tr = Number(c?.trades) || 0;
         const cls = tr === 0 ? 'muted' : v > 0 ? 'pos' : v < 0 ? 'neg' : 'muted';
-        grid += `<div class="cal-tv-thumb-cell ${cls}">${day}</div>`;
+        grid += `<div class="cal-tv-thumb-cell ${cls}" data-day="${key}" role="button" tabindex="0"
+                      aria-label="Open journal for ${esc(key)}" title="${esc(key)}">${day}</div>`;
     }
     return `
         <div class="cal-tv-thumb">

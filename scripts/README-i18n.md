@@ -27,9 +27,23 @@ python3 -m venv .venv-i18n
 ```
 
 Each per-locale generator (`scripts/gen_app_i18n_<loc>.py`) is a thin
-wrapper around `_i18n_translate.translate_locale()` — translate each
-unique English value once via Google Translate, map keys back, repair
-`{tok}` placeholders that the translator capitalized, write sorted JSON.
+wrapper around `_i18n_translate.translate_locale()` — load existing
+non-stub translations from `app_i18n_<loc>.json`, translate each
+remaining unique English value once via Google Translate, map keys
+back, repair `{tok}` placeholders that the translator capitalized,
+write sorted JSON.
+
+**Incremental by default.** A re-run only translates English values
+that are new or whose locale entry is a stub (locale value equals the
+English value). Translations carried over from a prior run are kept
+verbatim. Each run logs `cached=<N> to_translate=<M>` so the actual
+work is visible.
+
+To force a full re-translate of every value:
+
+```bash
+TRADERVIEW_I18N_FORCE=1 .venv-i18n/bin/python scripts/gen_app_i18n_de.py
+```
 
 Per-locale runs (subset of the above):
 
@@ -62,5 +76,9 @@ spellings may still need manual touch-up.
 
 The English catalog is ~19k keys / ~14.7k unique values. At Google
 Translate's anonymous-rate-limit ceiling (~0.06s sleep between calls), a
-single locale takes ~15 minutes; the full 26-locale orchestrator takes
-~5-6 hours wall-clock. Safe to interrupt and re-run.
+cold single-locale run takes ~15 minutes; the full 26-locale orchestrator
+takes ~5-6 hours wall-clock. Incremental re-runs scale with the new-key
+count (e.g. adding 50 keys ≈ 50 × 0.06s = ~3s per locale). Safe to
+interrupt and re-run, but note that the locale file is only written at
+the end of each per-locale pass — an interrupted locale keeps the
+previous file intact and the next run re-translates from there.

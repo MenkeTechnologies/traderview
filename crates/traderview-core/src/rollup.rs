@@ -116,6 +116,11 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
         } else {
             e.fee / e.qty
         };
+        let commission_per_unit = if e.qty.is_zero() {
+            Decimal::ZERO
+        } else {
+            e.commission / e.qty
+        };
 
         match e.side {
             Side::Buy => {
@@ -128,6 +133,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             open_side: TradeSide::Short,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
+                        closing_commission_per_unit: commission_per_unit,
                             current_holder: &mut current_short,
                             out,
                             method,
@@ -146,7 +152,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                     current_long
                         .as_mut()
                         .unwrap()
-                        .observe_open(e, remaining, fee_per_unit);
+                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
                     long_lots.push_back(lot);
                 }
             }
@@ -159,6 +165,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             open_side: TradeSide::Long,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
+                        closing_commission_per_unit: commission_per_unit,
                             current_holder: &mut current_long,
                             out,
                             method,
@@ -177,7 +184,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                     current_short
                         .as_mut()
                         .unwrap()
-                        .observe_open(e, remaining, fee_per_unit);
+                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
                     short_lots.push_back(lot);
                 }
             }
@@ -191,6 +198,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             open_side: TradeSide::Long,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
+                        closing_commission_per_unit: commission_per_unit,
                             current_holder: &mut current_long,
                             out,
                             method,
@@ -210,7 +218,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                     current_short
                         .as_mut()
                         .unwrap()
-                        .observe_open(e, remaining, fee_per_unit);
+                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
                     short_lots.push_back(lot);
                 }
             }
@@ -223,6 +231,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             open_side: TradeSide::Short,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
+                        closing_commission_per_unit: commission_per_unit,
                             current_holder: &mut current_short,
                             out,
                             method,
@@ -241,7 +250,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                     current_long
                         .as_mut()
                         .unwrap()
-                        .observe_open(e, remaining, fee_per_unit);
+                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
                     long_lots.push_back(lot);
                 }
             }
@@ -266,6 +275,7 @@ struct CloseAgainst<'a> {
     open_side: TradeSide,
     closing_exec: &'a Execution,
     closing_fee_per_unit: Decimal,
+    closing_commission_per_unit: Decimal,
     current_holder: &'a mut Option<TradeBuilder>,
     out: &'a mut Vec<RolledTrade>,
     method: LotMethod,
@@ -280,6 +290,7 @@ fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
         open_side,
         closing_exec,
         closing_fee_per_unit,
+        closing_commission_per_unit,
         current_holder,
         out,
         method,
@@ -302,7 +313,14 @@ fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
             let b = current_holder
                 .as_mut()
                 .expect("non-empty lot queue implies an active builder");
-            b.observe_close_leg(lot, closing_exec, take, closing_fee_per_unit, open_side);
+            b.observe_close_leg(
+                lot,
+                closing_exec,
+                take,
+                closing_fee_per_unit,
+                closing_commission_per_unit,
+                open_side,
+            );
         }
 
         lot.qty_open -= take;
@@ -355,6 +373,7 @@ struct TradeBuilder {
     qty_closed: Decimal,
     gross_pnl: Decimal,
     fees: Decimal,
+    commissions: Decimal,
     legs: Vec<TradeExecutionLink>,
 }
 
@@ -383,14 +402,22 @@ impl TradeBuilder {
             qty_closed: Decimal::ZERO,
             gross_pnl: Decimal::ZERO,
             fees: Decimal::ZERO,
+            commissions: Decimal::ZERO,
             legs: Vec::new(),
         }
     }
 
-    fn observe_open(&mut self, e: &Execution, qty: Decimal, fee_per_unit: Decimal) {
+    fn observe_open(
+        &mut self,
+        e: &Execution,
+        qty: Decimal,
+        fee_per_unit: Decimal,
+        commission_per_unit: Decimal,
+    ) {
         self.qty_total += qty;
         self.notional_in += e.price * qty;
         self.fees += fee_per_unit * qty;
+        self.commissions += commission_per_unit * qty;
         self.legs.push(TradeExecutionLink {
             trade_id: self.id,
             execution_id: e.id,
@@ -404,6 +431,7 @@ impl TradeBuilder {
         close_exec: &Execution,
         qty: Decimal,
         close_fee_per_unit: Decimal,
+        close_commission_per_unit: Decimal,
         open_side: TradeSide,
     ) {
         let pnl = gross_pnl(
@@ -424,6 +452,7 @@ impl TradeBuilder {
         // Open-side fees were already accrued in `observe_open` when the lot was
         // created; only add the close-side fee here.
         self.fees += close_fee_per_unit * qty;
+        self.commissions += close_commission_per_unit * qty;
         self.last_close_at = Some(close_exec.executed_at);
         self.legs.push(TradeExecutionLink {
             trade_id: self.id,
@@ -444,7 +473,7 @@ impl TradeBuilder {
         } else {
             Some(self.notional_out / qty)
         };
-        let net = self.gross_pnl - self.fees;
+        let net = self.gross_pnl - self.fees - self.commissions;
         let trade = Trade {
             id: self.id,
             account_id: self.account_id,
@@ -458,6 +487,7 @@ impl TradeBuilder {
             exit_avg,
             gross_pnl: Some(self.gross_pnl),
             fees: self.fees,
+            commissions: self.commissions,
             net_pnl: Some(net),
             asset_class: self.asset_class,
             option_type: self.option_type,
@@ -503,6 +533,7 @@ impl TradeBuilder {
             exit_avg: None,
             gross_pnl: None,
             fees: self.fees,
+            commissions: self.commissions,
             net_pnl: None,
             asset_class: self.asset_class,
             option_type: self.option_type,

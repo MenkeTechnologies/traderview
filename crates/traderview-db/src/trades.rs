@@ -33,7 +33,7 @@ pub async fn list_for_account(
 ) -> anyhow::Result<Vec<Trade>> {
     let mut q = sqlx::QueryBuilder::new(
         "SELECT id, account_id, symbol, side::text, status::text, opened_at, closed_at,
-                qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+                qty, entry_avg, exit_avg, gross_pnl, fees, commissions, net_pnl,
                 asset_class::text, option_type::text, strike, expiration, multiplier,
                 tick_size, tick_value, base_ccy, quote_ccy, pip_size,
                 stop_loss, risk_amount, initial_target, mfe, mae, best_exit_pnl, exit_efficiency
@@ -110,7 +110,7 @@ pub async fn list_for_account(
 pub async fn get(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Option<Trade>> {
     let row: Option<TradeRow> = sqlx::query_as(
         "SELECT id, account_id, symbol, side::text, status::text, opened_at, closed_at,
-                qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+                qty, entry_avg, exit_avg, gross_pnl, fees, commissions, net_pnl,
                 asset_class::text, option_type::text, strike, expiration, multiplier,
                 tick_size, tick_value, base_ccy, quote_ccy, pip_size,
                 stop_loss, risk_amount, initial_target, mfe, mae, best_exit_pnl, exit_efficiency
@@ -146,14 +146,14 @@ async fn insert_rolled(tx: &mut sqlx::PgConnection, rt: &RolledTrade) -> anyhow:
     sqlx::query(
         "INSERT INTO trades (
             id, account_id, symbol, side, status, opened_at, closed_at,
-            qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+            qty, entry_avg, exit_avg, gross_pnl, fees, commissions, net_pnl,
             asset_class, option_type, strike, expiration, multiplier,
             tick_size, tick_value, base_ccy, quote_ccy, pip_size
          ) VALUES (
             $1, $2, $3, $4::trade_side_t, $5::trade_status_t, $6, $7,
-            $8, $9, $10, $11, $12, $13,
-            $14::asset_class_t, $15::option_type_t, $16, $17, $18,
-            $19, $20, $21, $22, $23
+            $8, $9, $10, $11, $12, $13, $14,
+            $15::asset_class_t, $16::option_type_t, $17, $18, $19,
+            $20, $21, $22, $23, $24
          )",
     )
     .bind(t.id)
@@ -168,6 +168,7 @@ async fn insert_rolled(tx: &mut sqlx::PgConnection, rt: &RolledTrade) -> anyhow:
     .bind(t.exit_avg)
     .bind(t.gross_pnl)
     .bind(t.fees)
+    .bind(t.commissions)
     .bind(t.net_pnl)
     .bind(ac_to_pg(t.asset_class))
     .bind(t.option_type.map(option_type_to_pg).map(|s| s as &str))
@@ -283,6 +284,7 @@ pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
     // Sum legs into one new trade.
     let total_qty: Decimal = trades.iter().map(|t| t.qty).sum();
     let total_fees: Decimal = trades.iter().map(|t| t.fees).sum();
+    let total_commissions: Decimal = trades.iter().map(|t| t.commissions).sum();
     let weighted_entry: Decimal =
         trades.iter().map(|t| t.entry_avg * t.qty).sum::<Decimal>() / total_qty.max(Decimal::ONE);
     let weighted_exit: Option<Decimal> = {
@@ -310,14 +312,14 @@ pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
     let new_id: Uuid = sqlx::query_scalar(
         "INSERT INTO trades (
             account_id, symbol, side, status, opened_at, closed_at,
-            qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+            qty, entry_avg, exit_avg, gross_pnl, fees, commissions, net_pnl,
             asset_class, option_type, strike, expiration, multiplier,
             tick_size, tick_value, base_ccy, quote_ccy, pip_size
          ) VALUES (
             $1, $2, $3::trade_side_t, $4::trade_status_t, $5, $6,
-            $7, $8, $9, $10, $11, $12,
-            $13::asset_class_t, $14::option_type_t, $15, $16, $17,
-            $18, $19, $20, $21, $22
+            $7, $8, $9, $10, $11, $12, $13,
+            $14::asset_class_t, $15::option_type_t, $16, $17, $18,
+            $19, $20, $21, $22, $23
          ) RETURNING id",
     )
     .bind(first.account_id)
@@ -331,6 +333,7 @@ pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
     .bind(weighted_exit)
     .bind(total_gross)
     .bind(total_fees)
+    .bind(total_commissions)
     .bind(total_net)
     .bind(ac_to_pg(first.asset_class))
     .bind(first.option_type.map(option_type_to_pg).map(|s| s as &str))
@@ -372,7 +375,7 @@ pub async fn merge(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Uuid> {
 async fn futures(pool: &PgPool, ids: &[Uuid]) -> anyhow::Result<Vec<traderview_core::Trade>> {
     let rows: Vec<TradeRow> = sqlx::query_as(
         "SELECT id, account_id, symbol, side::text, status::text, opened_at, closed_at,
-                qty, entry_avg, exit_avg, gross_pnl, fees, net_pnl,
+                qty, entry_avg, exit_avg, gross_pnl, fees, commissions, net_pnl,
                 asset_class::text, option_type::text, strike, expiration, multiplier,
                 tick_size, tick_value, base_ccy, quote_ccy, pip_size,
                 stop_loss, risk_amount, initial_target, mfe, mae, best_exit_pnl, exit_efficiency
@@ -511,6 +514,7 @@ pub struct TradeRow {
     pub exit_avg: Option<Decimal>,
     pub gross_pnl: Option<Decimal>,
     pub fees: Decimal,
+    pub commissions: Decimal,
     pub net_pnl: Option<Decimal>,
     pub asset_class: String,
     pub option_type: Option<String>,
@@ -552,6 +556,7 @@ impl From<TradeRow> for Trade {
             exit_avg: r.exit_avg,
             gross_pnl: r.gross_pnl,
             fees: r.fees,
+            commissions: r.commissions,
             net_pnl: r.net_pnl,
             asset_class: match r.asset_class.as_str() {
                 "option" => AssetClass::Option,

@@ -170,8 +170,18 @@ export async function renderReports(mount, state, sub) {
 
     try {
         if (primary === 'overview') {
-            const s = await api.overview(acct, apiF);
+            const [s, dow, hour] = await Promise.all([
+                api.overview(acct, apiF),
+                api.byDow(acct, apiF),
+                api.byHour(acct, apiF),
+            ]);
+            if (!viewIsCurrent(tok)) return;
             setBody(overviewHtml(s, style));
+            renderDistBars(mount.querySelector('#rep-dist-dow'),  dow,  'trades');
+            renderDistBars(mount.querySelector('#rep-perf-dow'),  dow,  'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-hour'), hour, 'trades');
+            renderDistBars(mount.querySelector('#rep-perf-hour'), hour, 'net_pnl');
+            applyBarWidths(mount);
         } else if (primary === 'detailed') {
             await renderDetailedTab(mount, state, detailedSub || 'by-symbol', apiF, style, tok);
         } else if (primary === 'win-loss-days') {
@@ -368,6 +378,13 @@ function wireStyleBar(mount, state, style) {
 // ----------------------------------------------------------------------------
 function overviewHtml(s, style) {
     const pnl = style.pnl_type === 'gross' ? s.gross_pnl : s.net_pnl;
+    // Render Option<f64> coming back as null/undefined as em-dash so the
+    // grid stays uniform when the metric is undefined (e.g. SQN with
+    // zero r-spread, kelly with no losers).
+    const optF = (v, digits = 2) =>
+        v === null || v === undefined || !Number.isFinite(Number(v)) ? '—' : fmt(v, digits);
+    const optPct = (v) =>
+        v === null || v === undefined || !Number.isFinite(Number(v)) ? '—' : fmtPct(v);
     return `<div class="cards">
         ${statCard(t(style.pnl_type === 'gross' ? 'view.reports.stat.gross_pnl' : 'view.dashboard.stat.net_pnl'),
                    fmtMoney(pnl), pnlClass(pnl))}
@@ -385,11 +402,74 @@ function overviewHtml(s, style) {
         ${statCard(t('view.dashboard.stat.avg_hold'),  fmtSecs(s.avg_hold_seconds))}
         ${statCard(t('view.reports.stat.avg_win_hold'),  fmtSecs(s.avg_win_hold_seconds))}
         ${statCard(t('view.reports.stat.avg_loss_hold'), fmtSecs(s.avg_loss_hold_seconds))}
+        ${statCard(t('view.reports.stat.avg_scratch_hold'), fmtSecs(s.avg_scratch_hold_seconds))}
         ${statCard(t('view.dashboard.stat.avg_r'),     fmt(s.avg_r))}
         ${statCard(t('view.reports.stat.volume'),      fmtMoney(s.total_volume))}
+        ${statCard(t('view.reports.stat.commissions'), fmtMoney(s.commissions))}
         ${statCard(t('view.dashboard.stat.fees'),      fmtMoney(s.fees))}
         ${statCard(t('view.reports.stat.open'),        s.open_count)}
+        ${statCard(t('view.reports.stat.trading_days'), s.trading_days)}
+        ${statCard(t('view.reports.stat.avg_daily_pnl'), fmtMoney(s.avg_daily_pnl), pnlClass(s.avg_daily_pnl))}
+        ${statCard(t('view.reports.stat.avg_daily_volume'), fmtMoney(s.avg_daily_volume))}
+        ${statCard(t('view.reports.stat.avg_per_share_pnl'), fmtMoney(s.avg_per_share_pnl), pnlClass(s.avg_per_share_pnl))}
+        ${statCard(t('view.reports.stat.net_pnl_stddev'), fmtMoney(s.net_pnl_stddev))}
+        ${statCard(t('view.reports.stat.avg_mae'), fmtMoney(s.avg_mae), 'neg')}
+        ${statCard(t('view.reports.stat.avg_mfe'), fmtMoney(s.avg_mfe), 'pos')}
+        ${statCard(t('view.reports.stat.sqn'), optF(s.sqn))}
+        ${statCard(t('view.reports.stat.k_ratio'), optF(s.k_ratio))}
+        ${statCard(t('view.reports.stat.kelly_pct'), optPct(s.kelly_pct))}
+        ${statCard(t('view.reports.stat.random_chance'), optPct(s.random_chance_prob))}
+    </div>
+    <div class="panel-grid">
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.dist.by_dow">Trade distribution by day of week</h2>
+            <div id="rep-dist-dow" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.perf.by_dow">Performance by day of week</h2>
+            <div id="rep-perf-dow" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.dist.by_hour">Trade distribution by hour of day</h2>
+            <div id="rep-dist-hour" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.perf.by_hour">Performance by hour of day</h2>
+            <div id="rep-perf-hour" class="dist-bars"></div>
+        </div>
     </div>`;
+}
+
+// Horizontal bar chart with one row per bucket. Used by Overview to render
+// trade-count distributions and net-P&L performance by day-of-week / hour.
+// DOM-based (no canvas / chart lib) so it survives Tauri release WebKit
+// compositing and avoids the inline-style stripping pitfall (widths come
+// from data-bar-pct via applyBarWidths). `field` is 'trades' (unsigned,
+// cyan) or 'net_pnl' (signed, green/red).
+function renderDistBars(el, rows, field) {
+    if (!el) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+        el.innerHTML = `<div class="muted">${esc(t('view.reports.hint.no_data'))}</div>`;
+        return;
+    }
+    const signed = field === 'net_pnl';
+    const vals = rows.map(r => Number(r[field]) || 0);
+    const max  = Math.max(...vals.map(Math.abs), 1);
+    const fmtVal = signed ? fmtMoney : (n) => String(n);
+    el.innerHTML = rows.map((r, i) => {
+        const v = vals[i];
+        const pct = Math.round(Math.abs(v) / max * 100);
+        const cls = signed
+            ? (v > 0 ? 'pos' : v < 0 ? 'neg' : 'zero')
+            : 'neutral';
+        return `<div class="dist-row">
+            <div class="dist-label">${esc(String(r.key))}</div>
+            <div class="dist-track">
+                <div class="dist-fill ${cls}" data-bar-pct="${pct}"></div>
+            </div>
+            <div class="dist-value ${signed ? pnlClass(v) : ''}">${esc(fmtVal(v))}</div>
+        </div>`;
+    }).join('');
 }
 
 // ----------------------------------------------------------------------------
@@ -748,7 +828,8 @@ function renderCalendarYearGrid(body, cal) {
             const trades = Number(c?.trades) || 0;
             monthPnl += v;
             const cls = trades === 0 ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '';
-            cells += `<div class="ycal-cell ${cls}" title="${esc(key)}: ${fmtMoney(v)}">${d}</div>`;
+            cells += `<div class="ycal-cell ${cls}" data-day="${key}" role="button" tabindex="0"
+                            title="${esc(key)}: ${fmtMoney(v)}">${d}</div>`;
         }
         return `
             <div class="ycal-month">
@@ -767,6 +848,19 @@ function renderCalendarYearGrid(body, cal) {
         <div class="ycal-year-header">${year}</div>
         <div class="ycal-row">${[0,1,2,3,4,5,6,7,8,9,10,11].map(monthHtml).join('')}</div>
     `;
+    body.querySelectorAll('.ycal-cell[data-day]').forEach(el => {
+        const go = () => {
+            const day = el.getAttribute('data-day');
+            if (day) window.location.hash = `journal/${day}`;
+        };
+        el.addEventListener('click', go);
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                go();
+            }
+        });
+    });
 }
 
 // ----------------------------------------------------------------------------

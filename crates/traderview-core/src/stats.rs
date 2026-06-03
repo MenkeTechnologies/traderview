@@ -7,7 +7,7 @@ use crate::models::{AssetClass, Trade, TradeSide, TradeStatus};
 use chrono::{Datelike, NaiveDate, Timelike};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 // ===========================================================================
 // Overview summary
@@ -23,6 +23,7 @@ pub struct Summary {
     pub gross_pnl: Decimal,
     pub net_pnl: Decimal,
     pub fees: Decimal,
+    pub commissions: Decimal,
     pub avg_win: Decimal,
     pub avg_loss: Decimal,
     pub win_rate: f64,
@@ -35,8 +36,21 @@ pub struct Summary {
     pub avg_hold_seconds: i64,
     pub avg_win_hold_seconds: i64,
     pub avg_loss_hold_seconds: i64,
+    pub avg_scratch_hold_seconds: i64,
     pub avg_r: f64,
     pub total_volume: Decimal,
+    pub total_shares: Decimal,
+    pub trading_days: u32,
+    pub avg_daily_pnl: Decimal,
+    pub avg_daily_volume: Decimal,
+    pub avg_per_share_pnl: Decimal,
+    pub net_pnl_stddev: f64,
+    pub avg_mae: Decimal,
+    pub avg_mfe: Decimal,
+    pub sqn: Option<f64>,
+    pub k_ratio: Option<f64>,
+    pub kelly_pct: Option<f64>,
+    pub random_chance_prob: Option<f64>,
 }
 
 pub fn summary(trades: &[Trade]) -> Summary {
@@ -45,9 +59,24 @@ pub fn summary(trades: &[Trade]) -> Summary {
     let mut loss_sum = Decimal::ZERO;
     let mut win_hold_sum: i64 = 0;
     let mut loss_hold_sum: i64 = 0;
+    let mut scratch_hold_sum: i64 = 0;
+    let mut scratch_hold_count: i64 = 0;
     let mut hold_sum: i64 = 0;
     let mut r_sum: f64 = 0.0;
     let mut r_count: usize = 0;
+    // Welford for trade-P&L stddev (over closed trades) and r-multiple stddev.
+    let mut pnl_mean = 0.0_f64;
+    let mut pnl_m2 = 0.0_f64;
+    let mut r_mean = 0.0_f64;
+    let mut r_m2 = 0.0_f64;
+    let mut mae_sum = Decimal::ZERO;
+    let mut mae_count: u64 = 0;
+    let mut mfe_sum = Decimal::ZERO;
+    let mut mfe_count: u64 = 0;
+    let mut trading_days: HashSet<NaiveDate> = HashSet::new();
+    // Per-trade running net-P&L for K-Ratio.
+    let mut cum_pnl_series: Vec<f64> = Vec::new();
+    let mut cum_running = 0.0_f64;
 
     // For streak computation, walk closed trades in chronological order.
     let mut closed_sorted: Vec<&Trade> = trades
@@ -66,14 +95,43 @@ pub fn summary(trades: &[Trade]) -> Summary {
         s.gross_pnl += gross;
         s.net_pnl += net;
         s.fees += t.fees;
+        s.commissions += t.commissions;
         s.total_volume += t.qty * t.entry_avg * t.multiplier;
+        s.total_shares += t.qty;
+
+        if let Some(closed) = t.closed_at {
+            trading_days.insert(closed.date_naive());
+        }
+        if let Some(mae) = t.mae {
+            mae_sum += mae;
+            mae_count += 1;
+        }
+        if let Some(mfe) = t.mfe {
+            mfe_sum += mfe;
+            mfe_count += 1;
+        }
+
+        // Welford for net-P&L stddev across all closed trades.
+        let net_f = decimal_to_f64(net);
+        let n = s.trade_count as f64;
+        let delta = net_f - pnl_mean;
+        pnl_mean += delta / n;
+        pnl_m2 += delta * (net_f - pnl_mean);
+
+        cum_running += net_f;
+        cum_pnl_series.push(cum_running);
 
         if let Some(h) = t.hold_seconds() {
             hold_sum += h;
         }
         if let Some(r) = t.r_multiple() {
-            r_sum += decimal_to_f64(r);
+            let rf = decimal_to_f64(r);
+            r_sum += rf;
             r_count += 1;
+            let rn = r_count as f64;
+            let r_delta = rf - r_mean;
+            r_mean += r_delta / rn;
+            r_m2 += r_delta * (rf - r_mean);
         }
 
         if net > Decimal::ZERO {
@@ -106,6 +164,10 @@ pub fn summary(trades: &[Trade]) -> Summary {
             }
         } else {
             s.scratch_count += 1;
+            if let Some(h) = t.hold_seconds() {
+                scratch_hold_sum += h;
+                scratch_hold_count += 1;
+            }
             cur_win_streak = 0;
             cur_loss_streak = 0;
         }
@@ -124,6 +186,9 @@ pub fn summary(trades: &[Trade]) -> Summary {
         s.avg_loss = loss_sum / Decimal::from(s.loss_count as u64);
         s.avg_loss_hold_seconds = loss_hold_sum / s.loss_count as i64;
     }
+    if scratch_hold_count > 0 {
+        s.avg_scratch_hold_seconds = scratch_hold_sum / scratch_hold_count;
+    }
     if s.trade_count > 0 {
         s.win_rate = s.win_count as f64 / s.trade_count as f64;
         s.expectancy = s.net_pnl / Decimal::from(s.trade_count as u64);
@@ -131,6 +196,76 @@ pub fn summary(trades: &[Trade]) -> Summary {
     }
     if r_count > 0 {
         s.avg_r = r_sum / r_count as f64;
+    }
+    if mae_count > 0 {
+        s.avg_mae = mae_sum / Decimal::from(mae_count);
+    }
+    if mfe_count > 0 {
+        s.avg_mfe = mfe_sum / Decimal::from(mfe_count);
+    }
+    s.trading_days = trading_days.len() as u32;
+    if s.trading_days > 0 {
+        let td = Decimal::from(s.trading_days as u64);
+        s.avg_daily_pnl = s.net_pnl / td;
+        s.avg_daily_volume = s.total_volume / td;
+    }
+    if !s.total_shares.is_zero() {
+        s.avg_per_share_pnl = s.net_pnl / s.total_shares;
+    }
+    if s.trade_count > 1 {
+        // Welford produces population M2; sample variance divides by n-1.
+        let var = pnl_m2 / (s.trade_count as f64 - 1.0);
+        if var.is_finite() && var >= 0.0 {
+            s.net_pnl_stddev = var.sqrt();
+        }
+    }
+
+    // Van Tharp SQN = avg_r / r_stddev * sqrt(n), capped at sqrt(100).
+    // Capped because SQN's discriminating power saturates past n=100.
+    if r_count > 1 {
+        let r_var = r_m2 / (r_count as f64 - 1.0);
+        if r_var > 0.0 && r_var.is_finite() {
+            let r_std = r_var.sqrt();
+            let n_eff = (r_count as f64).min(100.0);
+            let v = s.avg_r / r_std * n_eff.sqrt();
+            if v.is_finite() {
+                s.sqn = Some(v);
+            }
+        }
+    }
+
+    s.k_ratio = k_ratio(&cum_pnl_series);
+
+    // Kelly: f* = W - (1-W) / (avg_win / |avg_loss|).
+    // Undefined when avg_loss is zero (no losers).
+    if s.loss_count > 0 && !s.avg_loss.is_zero() && s.trade_count > 0 {
+        let avg_w = decimal_to_f64(s.avg_win);
+        let avg_l_abs = decimal_to_f64(s.avg_loss).abs();
+        if avg_l_abs > 0.0 {
+            let payoff = avg_w / avg_l_abs;
+            if payoff > 0.0 && payoff.is_finite() {
+                let f = s.win_rate - (1.0 - s.win_rate) / payoff;
+                if f.is_finite() {
+                    s.kelly_pct = Some(f);
+                }
+            }
+        }
+    }
+
+    // One-tailed binomial P(X >= win_count | n, p=0.5) via normal approx
+    // with continuity correction. For n=1752 this is well-approximated.
+    if s.trade_count > 0 {
+        let n = s.trade_count as f64;
+        let mu = n * 0.5;
+        let sigma = (n * 0.25).sqrt();
+        if sigma > 0.0 {
+            // continuity correction: use k - 0.5 as the lower bound of [k,∞)
+            let z = (s.win_count as f64 - 0.5 - mu) / sigma;
+            let p = 1.0 - normal_cdf(z);
+            if p.is_finite() {
+                s.random_chance_prob = Some(p.clamp(0.0, 1.0));
+            }
+        }
     }
 
     let loss_abs = loss_sum.abs();
@@ -145,6 +280,63 @@ pub fn summary(trades: &[Trade]) -> Summary {
     };
 
     s
+}
+
+/// Kestner K-Ratio: regress cumulative P&L on trade index, return slope/SE.
+/// Higher = more consistent equity-curve growth. None when n<3 or zero variance.
+fn k_ratio(cum_pnl: &[f64]) -> Option<f64> {
+    let n = cum_pnl.len();
+    if n < 3 {
+        return None;
+    }
+    let nf = n as f64;
+    let mean_x = (nf + 1.0) / 2.0;
+    let mean_y = cum_pnl.iter().sum::<f64>() / nf;
+    let mut num = 0.0_f64;
+    let mut denom_x = 0.0_f64;
+    for (i, &y) in cum_pnl.iter().enumerate() {
+        let xi = (i as f64) + 1.0;
+        let dx = xi - mean_x;
+        num += dx * (y - mean_y);
+        denom_x += dx * dx;
+    }
+    if denom_x == 0.0 {
+        return None;
+    }
+    let slope = num / denom_x;
+    let intercept = mean_y - slope * mean_x;
+    let mut ss_res = 0.0_f64;
+    for (i, &y) in cum_pnl.iter().enumerate() {
+        let xi = (i as f64) + 1.0;
+        let yhat = intercept + slope * xi;
+        let r = y - yhat;
+        ss_res += r * r;
+    }
+    let sigma2 = ss_res / ((n - 2) as f64);
+    if sigma2 <= 0.0 || !sigma2.is_finite() {
+        return None;
+    }
+    let se_slope = (sigma2 / denom_x).sqrt();
+    if se_slope == 0.0 || !se_slope.is_finite() {
+        return None;
+    }
+    let v = slope / se_slope;
+    if v.is_finite() { Some(v) } else { None }
+}
+
+/// Standard normal CDF via Abramowitz & Stegun 7.1.26 (max error ~1.5e-7).
+/// Φ(x) = 0.5 · (1 + erf(x / √2)).
+fn normal_cdf(x: f64) -> f64 {
+    let z = x / std::f64::consts::SQRT_2;
+    let t = 1.0 / (1.0 + 0.3275911 * z.abs());
+    let a1 = 0.254829592;
+    let a2 = -0.284496736;
+    let a3 = 1.421413741;
+    let a4 = -1.453152027;
+    let a5 = 1.061405429;
+    let y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * (-z * z).exp();
+    let erf = if z < 0.0 { -y } else { y };
+    0.5 * (1.0 + erf)
 }
 
 // ===========================================================================
@@ -1139,6 +1331,24 @@ mod tests {
         }
     }
 
+    /// Sequence-indexed trade. `seq` maps to a real calendar date by
+    /// walking forward from 2026-05-01, so callers can build batches of
+    /// >28 trades without hitting "invalid day of month".
+    fn ts(symbol: &str, side: TradeSide, net_pnl: Decimal, seq: u32) -> Trade {
+        let base = chrono::NaiveDate::from_ymd_opt(2026, 5, 1).unwrap();
+        let dt = base + chrono::Duration::days((seq.saturating_sub(1)) as i64);
+        let opened = Utc
+            .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 9, 30, 0)
+            .unwrap();
+        let closed = Utc
+            .with_ymd_and_hms(dt.year(), dt.month(), dt.day(), 15, 30, 0)
+            .unwrap();
+        let mut tr = t(symbol, side, net_pnl, 1);
+        tr.opened_at = opened;
+        tr.closed_at = Some(closed);
+        tr
+    }
+
     fn open_trade(symbol: &str) -> Trade {
         let mut tr = t(symbol, TradeSide::Long, Decimal::ZERO, 1);
         tr.status = TradeStatus::Open;
@@ -1271,6 +1481,208 @@ mod tests {
         ]);
         // avg R = (200/100 + 300/100) / 2 = 2.5
         assert!((s.avg_r - 2.5).abs() < 1e-9, "got avg_r={}", s.avg_r);
+    }
+
+    // ─── extended summary fields (Tradervue-parity) ───────────────────────
+
+    #[test]
+    fn summary_trading_days_counts_distinct_close_dates() {
+        // Three trades over two distinct closing days.
+        let s = summary(&[
+            t("S", TradeSide::Long, dec("100"), 1),
+            t("S", TradeSide::Long, dec("50"), 1),
+            t("S", TradeSide::Long, dec("75"), 2),
+        ]);
+        assert_eq!(s.trading_days, 2);
+        // 225 / 2 = 112.5
+        assert_eq!(s.avg_daily_pnl, dec("112.5"));
+    }
+
+    #[test]
+    fn summary_avg_daily_volume_divides_by_trading_days() {
+        // Each trade volume = qty(100) * entry(10) * mult(1) = 1000. Two days.
+        let s = summary(&[
+            t("S", TradeSide::Long, dec("0"), 1),
+            t("S", TradeSide::Long, dec("0"), 2),
+        ]);
+        assert_eq!(s.trading_days, 2);
+        assert_eq!(s.total_volume, dec("2000"));
+        assert_eq!(s.avg_daily_volume, dec("1000"));
+    }
+
+    #[test]
+    fn summary_avg_per_share_uses_total_qty() {
+        // 100 shares × 2 trades = 200 total. Net P&L = 200 → $1/share.
+        let s = summary(&[
+            t("S", TradeSide::Long, dec("100"), 1),
+            t("S", TradeSide::Long, dec("100"), 2),
+        ]);
+        assert_eq!(s.total_shares, dec("200"));
+        assert_eq!(s.avg_per_share_pnl, dec("1"));
+    }
+
+    #[test]
+    fn summary_net_pnl_stddev_matches_sample_variance() {
+        // P&Ls [100, -100, 100, -100] → mean 0, sample-var = (4 × 10000) / 3
+        // → std = sqrt(40000/3) ≈ 115.47005.
+        let s = summary(&[
+            t("S", TradeSide::Long, dec("100"), 1),
+            t("S", TradeSide::Long, dec("-100"), 2),
+            t("S", TradeSide::Long, dec("100"), 3),
+            t("S", TradeSide::Long, dec("-100"), 4),
+        ]);
+        let expected = (40000.0_f64 / 3.0).sqrt();
+        assert!(
+            (s.net_pnl_stddev - expected).abs() < 1e-6,
+            "got stddev={} expected≈{}",
+            s.net_pnl_stddev,
+            expected
+        );
+    }
+
+    #[test]
+    fn summary_kelly_pct_classic_formula() {
+        // Win rate 0.6, avg_win 200, avg_loss -100 → payoff 2.0.
+        // Kelly = 0.6 - 0.4/2 = 0.4.
+        let mut trades = vec![];
+        for d in 1..=6 {
+            trades.push(t("S", TradeSide::Long, dec("200"), d));
+        }
+        for d in 7..=10 {
+            trades.push(t("S", TradeSide::Long, dec("-100"), d));
+        }
+        let s = summary(&trades);
+        assert!((s.win_rate - 0.6).abs() < 1e-9);
+        let k = s.kelly_pct.expect("kelly defined");
+        assert!((k - 0.4).abs() < 1e-9, "got kelly={}", k);
+    }
+
+    #[test]
+    fn summary_kelly_pct_none_when_no_losers() {
+        let s = summary(&[t("S", TradeSide::Long, dec("100"), 1)]);
+        assert!(s.kelly_pct.is_none());
+    }
+
+    #[test]
+    fn summary_sqn_positive_for_winning_system() {
+        // Steady positive R-multiples (200/100=2) for several trades and a
+        // small spread → SQN should be positive and finite.
+        let trades: Vec<Trade> = (1..=10)
+            .map(|d| t("S", TradeSide::Long, dec("200"), d))
+            .chain((11..=15).map(|d| t("S", TradeSide::Long, dec("150"), d)))
+            .collect();
+        let s = summary(&trades);
+        let sqn = s.sqn.expect("sqn defined when r-spread > 0");
+        assert!(sqn > 0.0 && sqn.is_finite(), "got sqn={}", sqn);
+    }
+
+    #[test]
+    fn summary_sqn_none_for_constant_r() {
+        // Zero variance in R → undefined SQN.
+        let trades: Vec<Trade> = (1..=5)
+            .map(|d| t("S", TradeSide::Long, dec("100"), d))
+            .collect();
+        let s = summary(&trades);
+        assert!(s.sqn.is_none(), "got sqn={:?}", s.sqn);
+    }
+
+    #[test]
+    fn summary_random_chance_low_for_strong_edge() {
+        // 80% wins over 50 trades → binomial p(X≥40 | n=50,p=0.5) ≈ 3.3e-6.
+        let mut trades = vec![];
+        for d in 1..=40 {
+            trades.push(ts("S", TradeSide::Long, dec("100"), d));
+        }
+        for d in 41..=50 {
+            trades.push(ts("S", TradeSide::Long, dec("-100"), d));
+        }
+        let s = summary(&trades);
+        let p = s.random_chance_prob.expect("p defined");
+        assert!(p < 0.001, "got p={}", p);
+    }
+
+    #[test]
+    fn summary_random_chance_about_half_for_50_50() {
+        // 25 wins / 25 losses → continuity-corrected p ≈ 0.56.
+        let mut trades = vec![];
+        for d in 1..=25 {
+            trades.push(ts("S", TradeSide::Long, dec("100"), d));
+        }
+        for d in 26..=50 {
+            trades.push(ts("S", TradeSide::Long, dec("-100"), d));
+        }
+        let s = summary(&trades);
+        let p = s.random_chance_prob.expect("p defined");
+        assert!(
+            (p - 0.56).abs() < 0.05,
+            "got p={} (expected ≈0.56 with continuity correction)",
+            p
+        );
+    }
+
+    #[test]
+    fn summary_k_ratio_positive_for_noisy_uptrend() {
+        // Mostly $100 winners with a few $50 winners — slope is positive,
+        // residuals are non-zero, so k-ratio is defined and positive.
+        let pnls = [100, 100, 50, 100, 100, 50, 100, 100, 100, 50];
+        let trades: Vec<Trade> = pnls
+            .iter()
+            .enumerate()
+            .map(|(i, p)| ts("S", TradeSide::Long, Decimal::from(*p), (i + 1) as u32))
+            .collect();
+        let s = summary(&trades);
+        let k = s.k_ratio.expect("k-ratio defined");
+        assert!(k > 0.0 && k.is_finite(), "got k_ratio={}", k);
+    }
+
+    #[test]
+    fn summary_k_ratio_none_for_fewer_than_three() {
+        let s = summary(&[
+            t("S", TradeSide::Long, dec("100"), 1),
+            t("S", TradeSide::Long, dec("-50"), 2),
+        ]);
+        assert!(s.k_ratio.is_none());
+    }
+
+    #[test]
+    fn summary_avg_mae_mfe_uses_only_set_values() {
+        let mut a = t("S", TradeSide::Long, dec("100"), 1);
+        a.mae = Some(dec("-30"));
+        a.mfe = Some(dec("80"));
+        let mut b = t("S", TradeSide::Long, dec("-50"), 2);
+        b.mae = Some(dec("-90"));
+        // b.mfe left None — must not pollute the mfe average.
+        let mut c = t("S", TradeSide::Long, dec("20"), 3);
+        c.mfe = Some(dec("40"));
+        // c.mae None.
+        let s = summary(&[a, b, c]);
+        // mae avg over 2: (-30 + -90) / 2 = -60
+        assert_eq!(s.avg_mae, dec("-60"));
+        // mfe avg over 2: (80 + 40) / 2 = 60
+        assert_eq!(s.avg_mfe, dec("60"));
+    }
+
+    #[test]
+    fn summary_scratch_hold_isolated_from_winloss_holds() {
+        // Default helper hold = 6h (09:30 → 15:30) = 21600 s.
+        let s = summary(&[
+            t("S", TradeSide::Long, dec("100"), 1),
+            t("S", TradeSide::Long, dec("-50"), 2),
+            t("S", TradeSide::Long, dec("0"), 3),
+        ]);
+        assert_eq!(s.avg_scratch_hold_seconds, 21600);
+        assert_eq!(s.avg_win_hold_seconds, 21600);
+        assert_eq!(s.avg_loss_hold_seconds, 21600);
+    }
+
+    // ─── normal_cdf ───────────────────────────────────────────────────────
+
+    #[test]
+    fn normal_cdf_known_values() {
+        assert!((normal_cdf(0.0) - 0.5).abs() < 1e-6);
+        // Φ(1.96) ≈ 0.975, Φ(-1.96) ≈ 0.025
+        assert!((normal_cdf(1.96) - 0.975).abs() < 1e-3);
+        assert!((normal_cdf(-1.96) - 0.025).abs() < 1e-3);
     }
 
     // ─── equity_curve ─────────────────────────────────────────────────────

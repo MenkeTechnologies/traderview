@@ -7,7 +7,8 @@ use uuid::Uuid;
 
 pub async fn list_for_account(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Vec<Execution>> {
     let rows: Vec<ExecRow> = sqlx::query_as(
-        "SELECT id, account_id, symbol, side::text, qty, price, fee, executed_at, broker_order_id,
+        "SELECT id, account_id, symbol, side::text, qty, price, fee, commissions AS commission,
+                executed_at, broker_order_id,
                 raw, import_id,
                 asset_class::text, option_type::text, strike, expiration, multiplier,
                 tick_size, tick_value, base_ccy, quote_ccy, pip_size
@@ -22,6 +23,7 @@ pub async fn list_for_account(pool: &PgPool, account_id: Uuid) -> anyhow::Result
 pub async fn list_for_trade(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Vec<Execution>> {
     let rows: Vec<ExecRow> = sqlx::query_as(
         "SELECT e.id, e.account_id, e.symbol, e.side::text, e.qty, e.price, e.fee,
+                e.commissions AS commission,
                 e.executed_at, e.broker_order_id, e.raw, e.import_id,
                 e.asset_class::text, e.option_type::text, e.strike, e.expiration, e.multiplier,
                 e.tick_size, e.tick_value, e.base_ccy, e.quote_ccy, e.pip_size
@@ -71,15 +73,15 @@ fn build_insert_parsed<'q>(
 ) -> sqlx::query::Query<'q, sqlx::Postgres, sqlx::postgres::PgArguments> {
     sqlx::query(
         "INSERT INTO executions (
-            account_id, symbol, side, qty, price, fee, executed_at,
+            account_id, symbol, side, qty, price, fee, commissions, executed_at,
             broker_order_id, raw, import_id,
             asset_class, option_type, strike, expiration, multiplier,
             tick_size, tick_value, base_ccy, quote_ccy, pip_size
          ) VALUES (
-            $1, $2, $3::side_t, $4, $5, $6, $7,
-            $8, $9, $10,
-            $11::asset_class_t, $12::option_type_t, $13, $14, $15,
-            $16, $17, $18, $19, $20
+            $1, $2, $3::side_t, $4, $5, $6, $7, $8,
+            $9, $10, $11,
+            $12::asset_class_t, $13::option_type_t, $14, $15, $16,
+            $17, $18, $19, $20, $21
          )
          ON CONFLICT DO NOTHING",
     )
@@ -89,6 +91,7 @@ fn build_insert_parsed<'q>(
     .bind(p.qty)
     .bind(p.price)
     .bind(p.fee)
+    .bind(p.commission)
     .bind(p.executed_at)
     .bind(p.broker_order_id.as_deref())
     .bind(&p.raw)
@@ -112,13 +115,13 @@ pub async fn insert_manual(
 ) -> anyhow::Result<Uuid> {
     let (id,): (Uuid,) = sqlx::query_as(
         "INSERT INTO executions (
-            account_id, symbol, side, qty, price, fee, executed_at,
+            account_id, symbol, side, qty, price, fee, commissions, executed_at,
             broker_order_id, raw, asset_class, option_type, strike, expiration, multiplier,
             tick_size, tick_value, base_ccy, quote_ccy, pip_size
          ) VALUES (
-            $1, $2, $3::side_t, $4, $5, $6, $7,
-            $8, $9, $10::asset_class_t, $11::option_type_t, $12, $13, $14,
-            $15, $16, $17, $18, $19
+            $1, $2, $3::side_t, $4, $5, $6, $7, $8,
+            $9, $10, $11::asset_class_t, $12::option_type_t, $13, $14, $15,
+            $16, $17, $18, $19, $20
          ) RETURNING id",
     )
     .bind(account_id)
@@ -127,6 +130,7 @@ pub async fn insert_manual(
     .bind(p.qty)
     .bind(p.price)
     .bind(p.fee)
+    .bind(p.commission)
     .bind(p.executed_at)
     .bind(p.broker_order_id.as_deref())
     .bind(&p.raw)
@@ -226,6 +230,7 @@ pub struct ExecRow {
     pub qty: Decimal,
     pub price: Decimal,
     pub fee: Decimal,
+    pub commission: Decimal,
     pub executed_at: DateTime<Utc>,
     pub broker_order_id: Option<String>,
     pub raw: serde_json::Value,
@@ -258,6 +263,7 @@ impl From<ExecRow> for Execution {
             qty: r.qty,
             price: r.price,
             fee: r.fee,
+            commission: r.commission,
             executed_at: r.executed_at,
             broker_order_id: r.broker_order_id,
             raw: r.raw,

@@ -221,6 +221,11 @@ pub struct Execution {
     pub qty: Decimal,
     pub price: Decimal,
     pub fee: Decimal,
+    /// Broker commission charged on this execution. Tracked separately from
+    /// `fee` (which carries regulatory/exchange/clearing charges) so the
+    /// rollup can split them on the trade. Defaults to zero for older rows.
+    #[serde(default)]
+    pub commission: Decimal,
     pub executed_at: DateTime<Utc>,
     pub broker_order_id: Option<String>,
     #[serde(default)]
@@ -259,6 +264,12 @@ pub struct Trade {
     pub exit_avg: Option<Decimal>,
     pub gross_pnl: Option<Decimal>,
     pub fees: Decimal,
+    /// Broker commissions only. Regulatory/exchange/clearing charges live
+    /// in `fees`. Sum of both is what reduces gross→net. Older trades
+    /// imported before the 0038 migration carry everything in `fees` and
+    /// `commissions = 0`.
+    #[serde(default)]
+    pub commissions: Decimal,
     pub net_pnl: Option<Decimal>,
     #[serde(default)]
     pub asset_class: AssetClass,
@@ -630,6 +641,7 @@ mod tests {
             exit_avg: Some(Decimal::from(52)),
             gross_pnl: net_pnl,
             fees: Decimal::ZERO,
+            commissions: Decimal::ZERO,
             net_pnl,
             asset_class: AssetClass::Stock,
             option_type: None,

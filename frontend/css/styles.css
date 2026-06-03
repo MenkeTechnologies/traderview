@@ -202,6 +202,20 @@ body:not(.no-neon-glow) .chart-panel {
     gap: 14px;
 }
 
+.dist-bars { display:flex; flex-direction:column; gap:4px; padding:4px 0 }
+.dist-row {
+    display:grid; grid-template-columns: 60px 1fr 90px;
+    align-items:center; gap:8px; font-size:11px;
+}
+.dist-label { color:var(--text-muted); font-family:'Orbitron',sans-serif; letter-spacing:1px; text-align:right }
+.dist-track { background:rgba(255,255,255,0.04); border-radius:2px; height:14px; overflow:hidden }
+.dist-fill  { height:100%; min-width:1px; transition: width 160ms ease }
+.dist-fill.neutral { background:rgba(0,229,255,0.55) }
+.dist-fill.pos     { background:rgba(57,255,20,0.55) }
+.dist-fill.neg     { background:rgba(255,56,96,0.55) }
+.dist-fill.zero    { background:rgba(255,255,255,0.12) }
+.dist-value { font-family:'JetBrains Mono',monospace; text-align:right }
+
 .dash-tv-header { display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap }
 .dash-tv-header h1 { margin:0 }
 .dash-tv-range { color: var(--text-muted); font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:2px; margin:8px 0 12px }
@@ -369,6 +383,9 @@ body:not(.no-neon-glow) .chart-panel {
 .ycal-cell.empty { background:transparent }
 .ycal-cell.pos   { background:rgba(57,255,20,0.18);  color:#9bff7e }
 .ycal-cell.neg   { background:rgba(255,56,96,0.18);  color:#ffb0bf }
+.ycal-cell[data-day] { cursor:pointer; transition: outline-color 120ms ease }
+.ycal-cell[data-day]:hover { outline:1px solid var(--cyan) }
+.ycal-cell[data-day]:focus-visible { outline:1px solid var(--cyan); outline-offset:1px }
 
 @media (max-width: 1200px) { .ycal-row { grid-template-columns:repeat(3, 1fr) } }
 @media (max-width: 900px)  { .ycal-row { grid-template-columns:repeat(2, 1fr) } .cmp-filter-pair { grid-template-columns:1fr } }
@@ -690,6 +707,9 @@ label {
     display:flex; flex-direction:column; gap:4px;
     transition: background 120ms ease, border-color 120ms ease;
 }
+.cal-tv-day[data-day] { cursor:pointer }
+.cal-tv-day[data-day]:hover { background:rgba(0,229,255,0.08); border-color:rgba(0,229,255,0.45) }
+.cal-tv-day[data-day]:focus-visible { outline:1px solid var(--cyan); outline-offset:1px }
 .cal-tv-day-num { font-size:16px; font-weight:600; color:var(--text) }
 .cal-tv-day-num.muted { color:var(--text-muted); opacity:0.4 }
 .cal-tv-day-pnl  { font-size:13px; font-weight:600; font-family:'JetBrains Mono',monospace; margin-top:auto }
@@ -723,6 +743,9 @@ label {
 .cal-tv-thumb-cell.muted { color:var(--text-muted); opacity:0.3 }
 .cal-tv-thumb-cell.pos { background:rgba(57,255,20,0.18); color:#39ff14 }
 .cal-tv-thumb-cell.neg { background:rgba(255,56,96,0.18); color:#ff3860 }
+.cal-tv-thumb-cell[data-day] { cursor:pointer; transition: outline-color 120ms ease }
+.cal-tv-thumb-cell[data-day]:hover { outline:1px solid var(--cyan) }
+.cal-tv-thumb-cell[data-day]:focus-visible { outline:1px solid var(--cyan); outline-offset:1px }
 
 /* ---- report tabs ----------------------------------------------------- */
 .report-tabs {

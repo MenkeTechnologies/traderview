@@ -393,6 +393,12 @@ export const api = {
         request('/webull/connect', { method: 'POST', body: JSON.stringify(body) }),
     webullSnapshot: () => request('/webull/snapshot'),
 
+    // dashboards (per-user mirror of localStorage layouts)
+    dashboards:        () => request('/dashboards'),
+    createDashboard:   (body) => request('/dashboards', { method: 'POST', body: JSON.stringify(body) }),
+    updateDashboard:   (id, body) => request(`/dashboards/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    deleteDashboard:   (id) => request(`/dashboards/${id}`, { method: 'DELETE' }),
+
     // watchlists
     watchlists:        () => request('/watchlists'),
     createWatchlist:   (name) => request('/watchlists', { method: 'POST', body: JSON.stringify({ name }) }),
