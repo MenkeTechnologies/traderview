@@ -856,6 +856,11 @@ use traderview_expense::rental_ada_accessible_parking_compliance::{
     RentalAdaAccessibleParkingComplianceInput,
     RentalAdaAccessibleParkingComplianceResult,
 };
+use traderview_expense::rental_smoke_free_cannabis_restriction::{
+    check as check_rental_smoke_free_cannabis_restriction,
+    RentalSmokeFreeCannabisRestrictionInput,
+    RentalSmokeFreeCannabisRestrictionResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1344,6 +1349,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
+        .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11660,4 +11666,50 @@ async fn rental_ada_accessible_parking_compliance_route(
     Json(b): Json<RentalAdaAccessibleParkingComplianceInput>,
 ) -> Result<Json<RentalAdaAccessibleParkingComplianceResult>, ApiError> {
     Ok(Json(check_rental_ada_accessible_parking_compliance(&b)))
+}
+
+// ── /rental-smoke-free-cannabis-restriction (iter 555 milestone) ────────────
+// POST endpoint for smoke-free housing + cannabis-use restriction
+// compliance across eight jurisdictions. HUD 24 C.F.R. Parts 200 + 982
+// + 5 final rule (effective Feb 3, 2017) MANDATES smoke-free policy in
+// HUD-subsidized public housing. State and municipal laws authorize
+// private landlords to prohibit smoking and require advance disclosure
+// to incoming tenants. Cannabis carries parallel landlord-control
+// framework with state statutes preserving property-owner authority.
+//
+// CA SB 332 + Cal. Civ. Code § 1947.5 (effective Jan 1, 2012):
+// authorizes private landlords to prohibit smoking + lease must contain
+// smoke-free provision + pre-existing-tenant grandfathering.
+//
+// NYC Local Law 147 of 2017 + NYC Admin. Code § 17-505: smoking-policy
+// disclosure mandate.
+//
+// WA RCW 70.160 Clean Indoor Air Act + RLTA disclosure.
+//
+// IL Smoke Free Illinois Act 410 ILCS 82.
+//
+// OR Smoke-Free Workplace ORS 433.835-990.
+//
+// Cannabis-specific landlord rights: CA H&S § 11362.45(h) + NY Cannabis
+// Law § 222 + Penal Law § 222.05 + CO Amendment 64 + § 12-43.4 + WA RCW
+// 69.50.4014. Federal Controlled Substances Act Schedule I classification
+// supports prohibition; FHA does NOT generally require accommodation
+// of cannabis use per Forest City Residential Mgmt. v. Beasley + James
+// v. City of Costa Mesa.
+//
+// Eight-mode severity ladder: NotApplicable,
+// CompliantSmokeFreePolicyEnforceable,
+// HudFederalMandatePreemptsLocalLawSubsidizedHousing,
+// PreExistingTenantGrandfatheredPolicyUnenforceable,
+// LeaseDisclosureDefectivePolicyUnenforceable,
+// NoDisclosureSmokeFreePolicyUnenforceable,
+// CannabisEdiblesNotSubjectToSmokeFreePolicy,
+// LandlordMayProhibitCannabisOnPremises.
+
+async fn rental_smoke_free_cannabis_restriction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSmokeFreeCannabisRestrictionInput>,
+) -> Result<Json<RentalSmokeFreeCannabisRestrictionResult>, ApiError> {
+    Ok(Json(check_rental_smoke_free_cannabis_restriction(&b)))
 }
