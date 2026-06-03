@@ -789,6 +789,11 @@ use traderview_expense::rental_satellite_dish_installation_right::{
     check as check_rental_satellite_dish_installation_right,
     RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
 };
+use traderview_expense::rental_seattle_smc_22_206_160_just_cause_eviction::{
+    check as check_rental_seattle_smc_22_206_160_just_cause_eviction,
+    RentalSeattleSmc22206160JustCauseEvictionInput,
+    RentalSeattleSmc22206160JustCauseEvictionResult,
+};
 use traderview_expense::rental_security_deposit_interest::{
     check as check_rental_security_deposit_interest,
     SecurityDepositInterestInput as RentalSecurityDepositInterestInput,
@@ -1628,6 +1633,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
         .route("/rental-renters-insurance-requirement", axum::routing::post(rental_renters_insurance_requirement_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
+        .route("/rental-seattle-smc-22-206-160-just-cause-eviction", axum::routing::post(rental_seattle_smc_22_206_160_just_cause_eviction_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
         .route("/rental-septic-system-disclosure", axum::routing::post(rental_septic_system_disclosure_route))
         .route("/rental-sewer-lateral-responsibility", axum::routing::post(rental_sewer_lateral_responsibility_route))
@@ -9877,6 +9883,78 @@ async fn rental_new_jersey_anti_eviction_act_route(
     Json(b): Json<RentalNewJerseyAntiEvictionActInput>,
 ) -> Result<Json<RentalNewJerseyAntiEvictionActResult>, ApiError> {
     Ok(Json(check_rental_new_jersey_anti_eviction_act(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_seattle_smc_22_206_160_just_cause_eviction: Seattle Just
+// Cause Eviction Ordinance (JCEO) codified at SMC § 22.206.160.C —
+// the FIRST municipal just-cause eviction ordinance in the United
+// States, adopted by the Seattle City Council in 1980. Preceded
+// New Jersey Anti-Eviction Act statewide regime (1974 was already
+// in place at state level) and every subsequent local just-cause
+// ordinance (Berkeley, Oakland, San Francisco, Minneapolis,
+// Portland). Codified under SMC Title 22 (Building and Construction
+// Codes), Subtitle II (Housing Code), Chapter 22.206 (Habitable
+// Buildings), Subchapter VI (Duties of Owners and Tenants).
+// Applies to all month-to-month tenancies AND lease non-renewals
+// on residential property within Seattle city limits. Exempts
+// transient lodging, educational institution housing, medical /
+// correctional occupancy, and live-aboard vessels. Enumerated just
+// causes (between 16 and 18 depending on amendment cycle, 2021
+// amendments most recent major package): (1) non-payment of rent
+// after 14-day pay-or-vacate notice (RCW 59.18.057); (2) material
+// noncompliance after 10-day comply-or-vacate notice; (3) chronic
+// late rent — 4+ 14-day pay-or-vacate notices in 12 months +
+// 20-day termination; (4) habitual rule violations — 3+ 10-day
+// comply-or-vacate notices in 12 months + 20-day termination;
+// (5) owner / immediate-family occupancy — 90-day notice + 60
+// consecutive days of good-faith occupancy within 90 days of
+// vacate; failure triggers $2,000 statutory damages + actual
+// damages + attorney fees; (6) sale of single-family dwelling —
+// 90-day written notice + list/show within 30 days; failure
+// triggers $2,000 tenant damages; (7) substantial rehabilitation /
+// demolition / change of use — landlord MUST first obtain Tenant
+// Relocation Assistance Ordinance (TRAO) license from SDCI under
+// SMC § 22.210 before serving 20-day termination notice;
+// (8) condominium / cooperative conversion — 120-day written
+// notice under RCW 64.34.440; (9) tenant refused to sign new lease
+// with substantially identical terms; (10) criminal activity
+// recorded with city substantially affecting other tenants or
+// property; (11) owner quitting shared occupancy with tenant in
+// same dwelling; (12) transfer to comparable subsidized or rent-
+// restricted unit. Twenty-three-mode severity ladder × thirteen
+// just-cause assertions × six unit types × three TRAO statuses ×
+// three owner-occupancy statuses × variable notice-day input.
+// SDCI investigates JCEO complaints; landlord who terminates
+// without qualifying just cause subject to civil penalty + tenant
+// private right of action for unlawful-detainer defense, statutory
+// damages, and reasonable attorney fees. Trader-landlord critical
+// because Seattle JCEO (1980) is the founding municipal just-cause
+// regime — every subsequent local and state just-cause statute
+// builds on the Seattle template; the OMI rebuttable presumption
+// and TRAO linkage are landlord-side exposure hotspots. Sibling
+// cluster: rental_just_cause_eviction (multi-state base regime;
+// Seattle JCEO = OLDEST municipal entry), rental_new_jersey_anti_
+// eviction_act (NJ statewide 1974 = OLDEST statewide entry; iter
+// 651), rental_colorado_hb_24_1098_just_cause_eviction (CO 2024
+// newest statewide; iter 649), rental_oregon_sb_608_sb_611_rent_
+// stabilization (OR 2019 statewide; iter 647), rental_california_
+// ab_12_security_deposit_cap (CA 2024 companion; iter 645),
+// rental_wa_hb_1217_rent_stabilization (WA 2025 statewide companion;
+// iter 643), rental_owner_move_in_eviction (OMI cross-reference),
+// rental_demolition_tenant_notice (demolition / use-change cross-
+// reference), rental_tenant_relocation_assistance (general state-
+// level relocation assistance regime), rental_condominium_
+// conversion_protection (multi-state condo conversion regime),
+// rental_eviction_notices (notice-to-quit cross-reference).
+// ---------------------------------------------------------------------------
+
+async fn rental_seattle_smc_22_206_160_just_cause_eviction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSeattleSmc22206160JustCauseEvictionInput>,
+) -> Result<Json<RentalSeattleSmc22206160JustCauseEvictionResult>, ApiError> {
+    Ok(Json(check_rental_seattle_smc_22_206_160_just_cause_eviction(&b)))
 }
 
 // ---------------------------------------------------------------------------

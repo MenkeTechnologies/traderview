@@ -256,6 +256,7 @@ pub mod rental_rent_increase_notice_requirement;
 pub mod rental_rent_to_own_lease_purchase_disclosures;
 pub mod rental_retaliation_prohibition;
 pub mod rental_satellite_dish_installation_right;
+pub mod rental_seattle_smc_22_206_160_just_cause_eviction;
 pub mod rental_security_deposit_interest;
 pub mod rental_security_deposit_return_notice;
 pub mod rental_septic_system_disclosure;
