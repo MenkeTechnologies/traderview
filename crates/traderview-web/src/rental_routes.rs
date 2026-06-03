@@ -660,6 +660,11 @@ use traderview_expense::rental_colorado_hb_24_1098_just_cause_eviction::{
     RentalColoradoHb241098JustCauseEvictionInput,
     RentalColoradoHb241098JustCauseEvictionResult,
 };
+use traderview_expense::rental_connecticut_fair_rent_commission::{
+    check as check_rental_connecticut_fair_rent_commission,
+    RentalConnecticutFairRentCommissionInput,
+    RentalConnecticutFairRentCommissionResult,
+};
 use traderview_expense::rental_cooling_tower_inspection_local_law_77::{
     check as check_rental_cooling_tower_inspection_local_law_77,
     CoolingTowerInspectionLocalLaw77Input as RentalCoolingTowerInspectionLocalLaw77Input,
@@ -1558,6 +1563,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
         .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
+        .route("/rental-connecticut-fair-rent-commission", axum::routing::post(rental_connecticut_fair_rent_commission_route))
         .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
@@ -7969,6 +7975,46 @@ async fn rental_colorado_hb_24_1098_just_cause_eviction_route(
     Json(b): Json<RentalColoradoHb241098JustCauseEvictionInput>,
 ) -> Result<Json<RentalColoradoHb241098JustCauseEvictionResult>, ApiError> {
     Ok(Json(check_rental_colorado_hb_24_1098_just_cause_eviction(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_connecticut_fair_rent_commission: Connecticut Public Act
+// 22-30 (2022) Fair Rent Commission regime under C.G.S. §§ 7-148b
+// and 7-148c. PA 22-30 required every town/city/borough with
+// population of 25,000+ per most recent decennial census to adopt
+// ordinance creating Fair Rent Commission by July 1, 2023; ~83 % of
+// Connecticut residents now have access to a Fair Rent Commission.
+// C.G.S. § 7-148b creation/powers + 30-day Commissioner of Housing
+// notification requirement. C.G.S. § 7-148c — 13 excessive rent
+// factors: rent increase size, premises condition, operating costs,
+// services included, tenant income, comparable rents, service
+// decrease, expense increase, rental history, property age/condition,
+// capital improvements, real estate taxes, other relevant factors.
+// Seasonal basis exemption ≤ 120 days/year. Rental charge definition
+// includes any fee/charge beyond rent (parking, amenity, junk fees).
+// Commission powers: investigate, adjudicate excessive rent
+// complaints, order rent reductions, stay evictions for retaliation,
+// subpoena testimony. C.G.S. § 47a-20 retaliation prohibition within
+// 6 months of tenant complaint. Twelve-mode severity ladder × four
+// municipality classifications × four commission statuses × two
+// rental arrangements × five landlord actions. Trader-landlord
+// critical for CT operators in Bridgeport, Hartford, New Haven,
+// Waterbury, Stamford, Norwalk, Danbury, New Britain, West Hartford,
+// Greenwich and other large municipalities subject to Fair Rent
+// Commission jurisdiction. Sibling cluster: rental_rent_control_
+// stabilization (multi-state rent regulation regime), rental_just_
+// cause_eviction (parallel tenant protection overlay), rental_
+// retaliation_prohibition (state-law DV/retaliation analog), rental_
+// rent_increase_notice_requirement, rental_oregon_sb_608_sb_611_rent_
+// stabilization (iter 647 — OR companion).
+// ---------------------------------------------------------------------------
+
+async fn rental_connecticut_fair_rent_commission_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalConnecticutFairRentCommissionInput>,
+) -> Result<Json<RentalConnecticutFairRentCommissionResult>, ApiError> {
+    Ok(Json(check_rental_connecticut_fair_rent_commission(&b)))
 }
 
 // ---------------------------------------------------------------------------
