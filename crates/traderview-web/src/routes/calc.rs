@@ -283,6 +283,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-706",           post(section_706_route))
         .route("/calc/section-707",           post(section_707_route))
         .route("/calc/section-721",           post(section_721_route))
+        .route("/calc/section-723",           post(section_723_route))
         .route("/calc/section-731",           post(section_731_route))
         .route("/calc/section-732",           post(section_732_route))
         .route("/calc/section-734",           post(section_734_route))
@@ -2650,6 +2651,28 @@ async fn section_721_route(
         ));
     }
     Ok(Json(traderview_expense::section_721::compute(&b)))
+}
+
+// ── § 723 basis of property contributed to partnership ──────────
+// Mounted at /api/calc/section-723. Foundational inside-basis
+// provision: partnership takes contributing partner's adjusted
+// basis (carryover) plus any § 721(b) investment-company gain
+// recognized. § 722 paired outside-basis rule produces inside =
+// outside basis at moment of contribution. § 704(c) requires pre-
+// contribution gain/loss to be allocated back to contributing
+// partner upon subsequent partnership disposition. § 1223(2)
+// holding-period tacking rule. § 351(e)(1) investment-company
+// definition (80%-of-assets threshold). Sibling cluster: § 721
+// (contribution nonrecognition), § 722 (outside basis), § 732
+// (distributee basis), § 743 + § 734 (basis adjustments under
+// § 754), § 704(c) (built-in gain allocation), § 1223(2) (holding-
+// period tacking).
+
+async fn section_723_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_723::Section723Input>,
+) -> Result<Json<traderview_expense::section_723::Section723Output>, ApiError> {
+    Ok(Json(traderview_expense::section_723::check(&b)))
 }
 
 // ── § 731 partnership distribution gain/loss recognition ────────────
