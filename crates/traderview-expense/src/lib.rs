@@ -173,6 +173,7 @@ pub mod rental_balcony_inspection_seismic_safety;
 pub mod rental_basement_water_intrusion_disclosure;
 pub mod rental_bed_bug_disclosure;
 pub mod rental_bedroom_egress_window;
+pub mod rental_boiler_inspection_compliance;
 pub mod rental_carbon_monoxide_detector;
 pub mod rental_chimney_fireplace_inspection_disclosure;
 pub mod rental_elevator_safety_inspection;

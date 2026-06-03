@@ -841,6 +841,11 @@ use traderview_expense::rental_fair_housing_reasonable_accommodation::{
     RentalFairHousingReasonableAccommodationInput,
     RentalFairHousingReasonableAccommodationResult,
 };
+use traderview_expense::rental_boiler_inspection_compliance::{
+    check as check_rental_boiler_inspection_compliance,
+    RentalBoilerInspectionComplianceInput,
+    RentalBoilerInspectionComplianceResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1326,6 +1331,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
+        .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11503,4 +11509,48 @@ async fn rental_fair_housing_reasonable_accommodation_route(
     Json(b): Json<RentalFairHousingReasonableAccommodationInput>,
 ) -> Result<Json<RentalFairHousingReasonableAccommodationResult>, ApiError> {
     Ok(Json(check_rental_fair_housing_reasonable_accommodation(&b)))
+}
+
+// ── /rental-boiler-inspection-compliance (iter 549) ─────────────────────────
+// POST endpoint for boiler and gas-piping inspection compliance across
+// seven jurisdictions. Boilers and gas-piping in residential rentals are
+// subject to periodic inspection requirements under ASME BPVC Section IV
+// + Section VI engineering standard plus municipal/state code overlays.
+//
+// NYC Local Law 152 of 2016 + NYC Admin. Code § 28-318: gas-piping
+// systems in all buildings except one- and two-family R-3 occupancies
+// must be inspected by Licensed Master Plumber (LMP) every 4 years on
+// community-district-based schedule. Inspection report due within 30
+// days; GPS1 Certification filing with DOB due within 60 days.
+//
+// NY State Industrial Code Rule 4: annual high-pressure boiler /
+// biennial low-pressure boiler inspection.
+//
+// CA Cal/OSHA Title 8 Subchapter 1 §§ 750-784: Pressure Vessel Unit
+// jurisdiction; annual inspection for boilers above 15 psi steam or
+// 160 psi water.
+//
+// IL 430 ILCS 75 Boiler & Pressure Vessel Safety Act: annual external
+// + 6-year internal inspection.
+//
+// MA Gen. L. ch. 146 § 46: annual external + internal inspection by
+// Department of Public Safety, Office of Public Safety and Inspections.
+//
+// TX Health & Safety Code § 755: boiler inspection program by Texas
+// Department of Licensing and Regulation (TDLR).
+//
+// Seven-mode severity ladder: NotApplicable,
+// OneOrTwoFamilyExemptNoInspectionRequired,
+// CompliantInspectionAndReportFiled,
+// LateFilingWithinThirtyDayCureWindow,
+// NycLocalLaw152UnqualifiedInspectorViolation,
+// InspectionMissedDeadlineDobCivilPenaltyExposure,
+// UnaddressedCorrectionsClassCViolationEscalatedEnforcement.
+
+async fn rental_boiler_inspection_compliance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBoilerInspectionComplianceInput>,
+) -> Result<Json<RentalBoilerInspectionComplianceResult>, ApiError> {
+    Ok(Json(check_rental_boiler_inspection_compliance(&b)))
 }
