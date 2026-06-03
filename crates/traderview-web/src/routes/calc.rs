@@ -154,6 +154,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6654",          post(section_6654_route))
         .route("/calc/section-6662",          post(section_6662_route))
         .route("/calc/section-448",           post(section_448_route))
+        .route("/calc/section-446",           post(section_446_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
         .route("/calc/section-302",           post(section_302_route))
@@ -6716,6 +6717,30 @@ async fn section_6662_route(
 // / $32M 2026); §448(a)(3) tax shelter disqualification; §448(c)(2)
 // §52(a)/(b) aggregation. Cascade exemptions: §263A UNICAP, §471
 // inventory, §163(j) business interest, §460 long-term contracts.
+
+// ── § 446 general rule for methods of accounting ─────────────────
+// Mounted at /api/calc/section-446. Foundational accounting-method
+// provision. § 446(a) book-tax conformity default. § 446(b)
+// Secretary's authority to override when method does not clearly
+// reflect income. § 446(c) permissible methods: (1) cash; (2)
+// accrual; (3) other permitted (§ 475 MTM, § 453 installment, § 460
+// long-term contracts); (4) hybrid combinations. § 446(d) different
+// methods for different trades. § 446(e) Form 3115 consent required
+// for method changes. § 446(f) cross-reference to § 460 long-term
+// contracts. Treas. Reg. § 1.446-1(a)(2) consistency requirement
+// (year-to-year treatment of gross profit and deductions). Sibling
+// cluster: § 461(h) economic performance (accrual deduction
+// timing), § 471 inventory requirement, § 475 trader/dealer MTM,
+// § 453 installment method, § 460 long-term contracts, § 448
+// limitation on cash method, § 481 accounting-method-change
+// adjustments.
+
+async fn section_446_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_446::Section446Input>,
+) -> Result<Json<traderview_expense::section_446::Section446Output>, ApiError> {
+    Ok(Json(traderview_expense::section_446::check(&b)))
+}
 
 async fn section_448_route(
     _u: AuthUser,
