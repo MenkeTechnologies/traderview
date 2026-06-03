@@ -166,6 +166,7 @@ pub mod rent_receipts;
 pub mod rent_stabilized_mci_iai_passthrough;
 pub mod repair_and_deduct;
 pub mod retaliation_windows;
+pub mod rental_dc_topa_tenant_opportunity_purchase;
 pub mod rental_depreciation;
 pub mod rental_dog_bite_liability;
 pub mod rental_ada_accessible_parking_compliance;

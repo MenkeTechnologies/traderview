@@ -27,6 +27,11 @@ use traderview_expense::disposition::{
 use traderview_expense::rental_depreciation::{
     macrs_rental_year_1_deduction, RealPropertyClass,
 };
+use traderview_expense::rental_dc_topa_tenant_opportunity_purchase::{
+    check as check_rental_dc_topa_tenant_opportunity_purchase,
+    DcTopaInput as RentalDcTopaTenantOpportunityPurchaseInput,
+    DcTopaResult as RentalDcTopaTenantOpportunityPurchaseResult,
+};
 use traderview_expense::contractor_1099::{
     compute as compute_contractor_1099, Contractor1099Input, Contractor1099Report,
 };
@@ -1450,6 +1455,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
+        .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
         .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
@@ -12382,6 +12388,34 @@ async fn rental_waste_recycling_collection_mandate_route(
 // LandlordLiableKnowledgeFailedToAbateTenantPremises,
 // LandlordTookReasonableAbatementNoLiability,
 // DogOwnerStrictLiabilityNoLandlordExposure.
+
+// ---------------------------------------------------------------------------
+// rental_dc_topa_tenant_opportunity_purchase: D.C. Tenant Opportunity
+// to Purchase Act compliance for trader-landlords selling residential
+// rental property in Washington, D.C. D.C. Code § 42-3401.01 et seq.
+// (Rental Housing Conversion and Sale Act of 1980 — D.C. Law 3-86)
+// with operative tenant-purchase provisions at § 42-3404.02 et seq.
+// and civil-action provisions at § 42-3405.03. Three coverage tiers:
+// (1) Single-family homes exempt as of July 3, 2018 (TOPA Single-
+// Family Home Exemption Amendment Act of 2017); (2) 2-4 unit buildings
+// covered IF owned by corporate business or multi-property owner —
+// 90-day negotiation period; (3) 5+ unit buildings — full TOPA with
+// 45-day cooling-off (or 30-day Statement of Interest if association
+// pre-existing), 120-day negotiation, 120-240 day financing window,
+// DHCD tenant-organization registration + certified training required.
+// Civil cause of action with attorney fees + costs to prevailing
+// party. RENTAL Act of 2025 (passed Sep 17, 2025; eff. Dec 31, 2025)
+// shortens windows and clarifies exemptions but preserves core right-
+// of-first-refusal regime.
+// ---------------------------------------------------------------------------
+
+async fn rental_dc_topa_tenant_opportunity_purchase_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalDcTopaTenantOpportunityPurchaseInput>,
+) -> Result<Json<RentalDcTopaTenantOpportunityPurchaseResult>, ApiError> {
+    Ok(Json(check_rental_dc_topa_tenant_opportunity_purchase(&b)))
+}
 
 async fn rental_dog_bite_liability_route(
     _s: State<AppState>,
