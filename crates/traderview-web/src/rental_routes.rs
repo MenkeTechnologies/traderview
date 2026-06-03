@@ -645,6 +645,11 @@ use traderview_expense::rental_california_ab_12_security_deposit_cap::{
     RentalCaliforniaAb12SecurityDepositCapInput,
     RentalCaliforniaAb12SecurityDepositCapResult,
 };
+use traderview_expense::rental_california_ab_2347_unlawful_detainer_response::{
+    check as check_rental_california_ab_2347_unlawful_detainer_response,
+    RentalCaliforniaAb2347UnlawfulDetainerResponseInput,
+    RentalCaliforniaAb2347UnlawfulDetainerResponseResult,
+};
 use traderview_expense::rental_chimney_fireplace_inspection_disclosure::{
     check as check_rental_chimney_fireplace_inspection_disclosure,
     RentalChimneyFireplaceInspectionDisclosureInput,
@@ -1570,6 +1575,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-california-ab-12-security-deposit-cap", axum::routing::post(rental_california_ab_12_security_deposit_cap_route))
+        .route("/rental-california-ab-2347-unlawful-detainer-response", axum::routing::post(rental_california_ab_2347_unlawful_detainer_response_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
         .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
@@ -7852,6 +7858,42 @@ async fn rental_california_ab_12_security_deposit_cap_route(
     Json(b): Json<RentalCaliforniaAb12SecurityDepositCapInput>,
 ) -> Result<Json<RentalCaliforniaAb12SecurityDepositCapResult>, ApiError> {
     Ok(Json(check_rental_california_ab_12_security_deposit_cap(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_california_ab_2347_unlawful_detainer_response: California
+// AB 2347 of 2024 (Kalra; 2023-2024 Regular Session) signed by
+// Governor Gavin Newsom on September 24, 2024; effective January 1,
+// 2025; amends California Code of Civil Procedure (CCP) § 1167 and
+// § 1170. CCP § 1167: tenant unlawful detainer response time
+// EXTENDED from 5 days to 10 COURT DAYS (excluding Saturdays,
+// Sundays, and judicial holidays) to file answer, demurrer, or
+// motion to strike. CCP § 1170: if tenant files demurrer or motion
+// to strike, hearing must occur not less than 5 court days nor more
+// than 7 court days after filing notice of motion; oral opposition
+// and reply may be made at hearing rather than requiring written
+// papers. Service requirements: landlord must file proof of service
+// 3 days before requesting default judgment. Twelve-mode severity
+// ladder × two property jurisdictions × two unlawful detainer
+// action dates × four tenant response types × four landlord
+// actions. Trader-landlord critical for California portfolio
+// operators because the doubled response window slows eviction
+// timelines and gives tenants more time to retain counsel/build
+// defense; particularly impacts portfolios with high turnover unit
+// counts. Sibling cluster: rental_california_ab_12_security_
+// deposit_cap (iter 645 — CA companion), rental_eviction_notices,
+// rental_just_cause_eviction (parallel tenant protection regime),
+// rental_eviction_record_sealing, rental_landlord_notice_to_enter,
+// rental_demolition_tenant_notice, rental_eviction_diversion_
+// program.
+// ---------------------------------------------------------------------------
+
+async fn rental_california_ab_2347_unlawful_detainer_response_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalCaliforniaAb2347UnlawfulDetainerResponseInput>,
+) -> Result<Json<RentalCaliforniaAb2347UnlawfulDetainerResponseResult>, ApiError> {
+    Ok(Json(check_rental_california_ab_2347_unlawful_detainer_response(&b)))
 }
 
 async fn rental_carbon_monoxide_detector_route(

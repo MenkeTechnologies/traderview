@@ -182,6 +182,7 @@ pub mod rental_bed_bug_disclosure;
 pub mod rental_bedroom_egress_window;
 pub mod rental_boiler_inspection_compliance;
 pub mod rental_california_ab_12_security_deposit_cap;
+pub mod rental_california_ab_2347_unlawful_detainer_response;
 pub mod rental_carbon_monoxide_detector;
 pub mod rental_chimney_fireplace_inspection_disclosure;
 pub mod rental_climate_mobilization_act_ll97_emissions;
