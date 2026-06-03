@@ -107,6 +107,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-671",           post(section_671_route))
         .route("/calc/section-675",           post(section_675_route))
+        .route("/calc/section-676",           post(section_676_route))
         .route("/calc/section-677",           post(section_677_route))
         .route("/calc/section-678",           post(section_678_route))
         .route("/calc/section-67g",           post(section_67g_route))
@@ -5627,6 +5628,40 @@ async fn section_675_route(
     Json(b): Json<traderview_expense::section_675::Section675Input>,
 ) -> Result<Json<traderview_expense::section_675::Section675Result>, ApiError> {
     Ok(Json(traderview_expense::section_675::compute(&b)))
+}
+
+// ── §676 power to revoke / revocable trust grantor trust ──────────────
+// Mounted at /api/calc/section-676. § 676 is the fourth grantor-trust
+// trigger in §§ 671-679 progression after § 673 (reversionary), § 674
+// (beneficial enjoyment), § 675 (administrative powers — built iter
+// 644). Precedes § 677 (income for grantor — iter 642), § 678
+// (third-party owner / BDIT — iter 640), § 679 (foreign trusts).
+// § 676 is the BROADEST and most commonly triggered grantor-trust
+// rule because the standard revocable living trust used in routine
+// estate planning falls squarely within § 676(a). § 676(a) general
+// rule: grantor treated as owner of any portion where power to REVEST
+// title in grantor is exercisable at any time by grantor OR
+// nonadverse party OR both. 26 CFR § 1.676(a)-1 — power form
+// irrelevant: revoke, terminate, alter, amend, appoint all trigger
+// § 676(a) if exercise revests title in grantor. Adverse party
+// exception: if power exercisable only with adverse-party consent
+// (substantial adverse beneficial interest per § 672(a)), § 676 does
+// NOT trigger. § 672(e) (enacted 1986) — spouse never adverse for
+// § 671-679 purposes. § 676(b) postponement exception: § 676(a)
+// inapplicable to power whose exercise can only affect beneficial
+// enjoyment for period commencing after event such that grantor
+// would not be treated as owner under § 673 (5 % reversionary rule)
+// if power were reversionary interest. 26 CFR § 1.676(b)-1 — postpone-
+// ment exception parallels § 673 5 % threshold. Post-event rule:
+// grantor MAY be treated as owner post-event unless power relinquished
+// (the "ticking clock"). Treas. Reg. § 1.673(d)-1 postponement
+// period rule.
+
+async fn section_676_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_676::Section676Input>,
+) -> Result<Json<traderview_expense::section_676::Section676Result>, ApiError> {
+    Ok(Json(traderview_expense::section_676::compute(&b)))
 }
 
 // ── §677 income for benefit of grantor / spouse ───────────────────────
