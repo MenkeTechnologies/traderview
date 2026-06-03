@@ -810,6 +810,11 @@ use traderview_expense::rental_emergency_action_plan_high_rise::{
     RentalEmergencyActionPlanHighRiseInput,
     RentalEmergencyActionPlanHighRiseResult,
 };
+use traderview_expense::rental_eviction_record_sealing_screening::{
+    check as check_rental_eviction_record_sealing_screening,
+    EvictionRecordSealingInput as RentalEvictionRecordSealingScreeningInput,
+    EvictionRecordSealingResult as RentalEvictionRecordSealingScreeningResult,
+};
 use traderview_expense::rental_illegal_lockout_self_help_eviction::{
     check as check_rental_illegal_lockout_self_help_eviction,
     RentalIllegalLockoutSelfHelpEvictionInput,
@@ -1394,6 +1399,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
+        .route("/rental-eviction-record-sealing-screening", axum::routing::post(rental_eviction_record_sealing_screening_route))
         .route("/rental-illegal-lockout-self-help-eviction", axum::routing::post(rental_illegal_lockout_self_help_eviction_route))
         .route("/rental-retaliation-prohibition", axum::routing::post(rental_retaliation_prohibition_route))
         .route("/rental-landlord-notice-to-enter", axum::routing::post(rental_landlord_notice_to_enter_route))
@@ -11171,6 +11177,34 @@ async fn rental_emergency_action_plan_high_rise_route(
     Json(b): Json<RentalEmergencyActionPlanHighRiseInput>,
 ) -> Result<Json<RentalEmergencyActionPlanHighRiseResult>, ApiError> {
     Ok(Json(check_rental_emergency_action_plan_high_rise(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_eviction_record_sealing_screening: Multi-jurisdiction
+// eviction-record sealing and tenant-screening compliance. Five
+// regimes: CA AB 2819 / Cal. Code Civ. Proc. § 1161.2 (60-day
+// automatic masking + permanent seal unless landlord prevails
+// within 60 days), WA SB 5160 / RCW 59.18.367 (3-year reporting
+// lookback limit), NY RPAPL § 745(2)(c)(iv) (5-year housing-court
+// records lookback), IL HB 1561 / 735 ILCS 5/9-121.5 (Cook County
+// pilot court-order sealing with defendant-friendly presumption),
+// MN Minn. Stat. § 484.014 (automatic 3-year expungement when
+// landlord did not prevail). FCRA 15 U.S.C. § 1681c federal 7-year
+// floor applies in default-no-regime jurisdictions. Sibling cluster:
+// adverse_action_notice (FCRA § 615 adverse-action notice when
+// relying on consumer report), rental_application_denial_disclosure
+// (state-specific written-denial regimes), rental_tenant_criminal_
+// background_screening (parallel criminal-record sealing regime),
+// rental_source_of_income_discrimination (FEHA + parallel state
+// fair-housing protection that overlays screening).
+// ---------------------------------------------------------------------------
+
+async fn rental_eviction_record_sealing_screening_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalEvictionRecordSealingScreeningInput>,
+) -> Result<Json<RentalEvictionRecordSealingScreeningResult>, ApiError> {
+    Ok(Json(check_rental_eviction_record_sealing_screening(&b)))
 }
 
 // ── /rental-illegal-lockout-self-help-eviction (iter 529) ───────────────────
