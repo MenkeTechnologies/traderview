@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-671",           post(section_671_route))
+        .route("/calc/section-673",           post(section_673_route))
         .route("/calc/section-675",           post(section_675_route))
         .route("/calc/section-676",           post(section_676_route))
         .route("/calc/section-677",           post(section_677_route))
@@ -5593,6 +5594,41 @@ async fn section_671_route(
     Json(b): Json<traderview_expense::section_671::Section671Input>,
 ) -> Result<Json<traderview_expense::section_671::Section671Result>, ApiError> {
     Ok(Json(traderview_expense::section_671::compute(&b)))
+}
+
+// ── §673 reversionary interests / GRAT GRUT foundation ────────────────
+// Mounted at /api/calc/section-673. § 673 is the FIRST substantive
+// grantor-trust trigger in the §§ 671-679 progression (after § 672
+// definitions; before § 674 beneficial enjoyment, § 675 administrative
+// powers — iter 644, § 676 power to revoke — iter 646, § 677 income
+// for benefit of grantor — iter 642, § 678 person other than grantor
+// — iter 640, § 679 foreign trusts). § 673(a) general rule: grantor
+// treated as owner of any portion in which grantor has reversionary
+// interest in corpus or income if value of interest exceeds 5 %
+// of trust portion value at inception. Tax Reform Act of 1986
+// (Public Law 99-514) replaced prior "10-year rule" (Clifford trust
+// era) with 5 % present-value test — effectively eliminated
+// Clifford-style short-term grantor trust income shifting. § 673(b)
+// minor lineal descendant exception: grantor not treated as owner
+// solely by reason of reversion taking effect on death of lineal-
+// descendant beneficiary before beneficiary attains age 21. § 673(c)
+// special valuation rule: reversion value computed assuming MAXIMUM
+// EXERCISE OF DISCRETION in favor of grantor (anti-avoidance).
+// § 673(d) postponement rule: postponement of reacquisition date
+// treated as NEW TRANSFER IN TRUST commencing with postponement
+// effective date. § 673 is foundational substantive trigger for
+// GRAT (Grantor Retained Annuity Trust) and GRUT (Grantor Retained
+// Unitrust) grantor-trust status — retained annuity/unitrust
+// interest value under § 7520 AFR tables creates reversionary
+// interest exceeding 5 % threshold. Walton v. Comm'r 115 T.C. 589
+// (2000) zeroed-out GRAT precedent. Treas. Reg. § 1.673(a)-1 +
+// § 1.673(c)-1 implementing regs.
+
+async fn section_673_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_673::Section673Input>,
+) -> Result<Json<traderview_expense::section_673::Section673Result>, ApiError> {
+    Ok(Json(traderview_expense::section_673::compute(&b)))
 }
 
 // ── §675 administrative powers / IDGT substitution power ──────────────
