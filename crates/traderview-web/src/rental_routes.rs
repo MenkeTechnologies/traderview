@@ -785,6 +785,11 @@ use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
 };
+use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
+    check as check_rental_nyc_childhood_lead_poisoning_prevention_act,
+    NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
+    NycChildhoodLeadPoisoningPreventionActResult as RentalNycChildhoodLeadPoisoningPreventionActResult,
+};
 use traderview_expense::rental_solar_panel_disclosure::{
     check as check_rental_solar_panel_disclosure,
     RentalSolarPanelDisclosureInput, RentalSolarPanelDisclosureResult,
@@ -1410,6 +1415,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-lead-paint-disclosure", axum::routing::post(rental_lead_paint_disclosure_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
+        .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
@@ -9135,6 +9141,39 @@ async fn rental_natural_gas_leak_response_route(
     Json(b): Json<RentalNaturalGasLeakResponseInput>,
 ) -> Result<Json<RentalNaturalGasLeakResponseResult>, ApiError> {
     Ok(Json(check_rental_natural_gas_leak_response(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_nyc_childhood_lead_poisoning_prevention_act: NYC Local Law 1
+// of 2004 (Childhood Lead Poisoning Prevention Act) — codified at
+// NYC Admin Code § 27-2056 et seq. + 28 RCNY Subchapter K. Covers
+// pre-1960 multiple dwellings (3+ units) AND 1960-1977 with known
+// lead-based paint where child under 6 resides (lives or routinely
+// spends 10+ hours per week). Six core obligations: (1) annual
+// notice Jan 1 - Feb 15 to all tenants; (2) annual investigation
+// for units with child under 6; (3) turnover inspection at new
+// tenancy with child under 6; (4) 21-day remediation of identified
+// hazards under § 27-2056.4(g); (5) EPA-certified RRP renovator for
+// disturbance over 100 sqft or window replacement under
+// § 27-2056.11; (6) 10-year recordkeeping under § 27-2056.14. NYC
+// Local Law 31 of 2020: XRF lead-paint testing required by Aug 9,
+// 2025 — Class "C" immediately hazardous violation with up to
+// $1,500 civil penalty. NYC Local Law 66 of 2019: lowered HUD
+// 1.0 mg/cm² threshold to 0.5 mg/cm² (stricter NYC standard) eff.
+// Dec 1, 2021. § 27-2125 HPD emergency repair administrative lien
+// chargeback if landlord fails to remediate. Sibling cluster:
+// rental_lead_paint_disclosure (iter 569 federal Title X § 1018),
+// rental_lead_pipe_disclosure, rental_post_construction_lead_dust_
+// clearance, rental_facade_inspection_fisp_local_law_11 (iter 583),
+// rental_gas_piping_inspection_local_law_152 (iter 585).
+// ---------------------------------------------------------------------------
+
+async fn rental_nyc_childhood_lead_poisoning_prevention_act_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNycChildhoodLeadPoisoningPreventionActInput>,
+) -> Result<Json<RentalNycChildhoodLeadPoisoningPreventionActResult>, ApiError> {
+    Ok(Json(check_rental_nyc_childhood_lead_poisoning_prevention_act(&b)))
 }
 
 // ---------------------------------------------------------------------------
