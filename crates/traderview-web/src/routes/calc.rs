@@ -231,6 +231,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6708",          post(section_6708_route))
         .route("/calc/section-6713",          post(section_6713_route))
         .route("/calc/section-6721",          post(section_6721_route))
+        .route("/calc/section-6722",          post(section_6722_route))
         .route("/calc/section-6851",          post(section_6851_route))
         .route("/calc/section-6861",          post(section_6861_route))
         .route("/calc/section-6862",          post(section_6862_route))
@@ -9304,6 +9305,32 @@ async fn section_6721_route(
     Json(b): Json<traderview_expense::section_6721::Section6721Input>,
 ) -> Result<Json<traderview_expense::section_6721::Section6721Result>, ApiError> {
     Ok(Json(traderview_expense::section_6721::compute(&b)))
+}
+
+// ── §6722 failure to furnish correct payee statements ────────────────
+// Mounted at /api/calc/section-6722. § 6722 is the structural parallel
+// to § 6721 (iter 658) for the payer-side obligation to furnish a
+// correct payee statement (e.g., recipient copy of Form 1099-B, DIV,
+// INT, K, NEC, MISC, K-1, W-2) to the payee — distinct from § 6721
+// obligation to file with the IRS. Same per-statement amounts
+// ($50/$100/$250 base; $60/$130/$340 for 2026 under Rev. Proc.
+// 2025-32), same small business exception ($5M gross receipts
+// threshold), same intentional disregard rule with NO MAXIMUM. Key
+// difference: § 6722(e) intentional disregard uses 10 PERCENT of
+// aggregate amount for MOST payee statements OR 5 PERCENT for
+// CERTAIN SPECIFIED STATEMENTS (vs § 6721 uniform 10 percent).
+// § 6722(a) general rule; § 6722(b)(1) Tier 1 (≤30 days); § 6722(b)(2)
+// Tier 2 (≤Aug 1); § 6722(a)(1) Tier 3 (uncorrected); § 6722(d) small
+// business exception; § 6722(e) intentional disregard. § 6721/§ 6722
+// stacking commonly doubles penalty exposure for late or omitted
+// 1099 issuance cycles. § 6724 reasonable cause waiver. Treas. Reg.
+// § 301.6722-1. IRS IRM 20.1.7.
+
+async fn section_6722_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6722::Section6722Input>,
+) -> Result<Json<traderview_expense::section_6722::Section6722Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6722::compute(&b)))
 }
 
 // ── §6851 termination assessment of income tax ──────────────────────
