@@ -825,6 +825,11 @@ use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
 };
+use traderview_expense::rental_oregon_sb_608_sb_611_rent_stabilization::{
+    check as check_rental_oregon_sb_608_sb_611_rent_stabilization,
+    RentalOregonSb608Sb611RentStabilizationInput,
+    RentalOregonSb608Sb611RentStabilizationResult,
+};
 use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
     check as check_rental_nyc_childhood_lead_poisoning_prevention_act,
     NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
@@ -1553,6 +1558,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-nyc-local-law-55-ipm-pest-control", axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route))
         .route("/rental-nyc-coop-conversion-eviction-protection", axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
+        .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
@@ -11326,6 +11332,49 @@ async fn rental_oil_tank_replacement_disclosure_route(
     Json(b): Json<RentalOilTankReplacementDisclosureInput>,
 ) -> Result<Json<RentalOilTankReplacementDisclosureResult>, ApiError> {
     Ok(Json(check_rental_oil_tank_replacement_disclosure(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_oregon_sb_608_sb_611_rent_stabilization: Oregon SB 608 of
+// 2019 + SB 611 of 2023 statewide rent stabilization. FIRST statewide
+// rent control law in U.S. history, predating Washington HB 1217 by
+// six years. SB 608 signed by Governor Kate Brown on February 28,
+// 2019, effective immediately; SB 611 signed by Governor Tina Kotek
+// on July 6, 2023, effective immediately. Amends ORS 90.323 (general
+// residential rent cap), ORS 90.600 (manufactured/floating home park
+// rent cap), ORS 90.427 (just cause termination). Post-SB 611
+// general residential cap: 7 % + CPI OR 10 %, whichever LESS.
+// Manufactured/floating home park cap: 6 % maximum annual percentage
+// rent increase; parks/marinas with 30 or fewer spaces EXEMPT.
+// First-year tenancy: NO rent increase permitted; 'first year of
+// occupancy' includes all periods any tenant has resided in unit.
+// Notice: 90-day written notice (general residential), 7-day notice
+// (week-to-week). 15-year new construction exemption from first
+// certificate of occupancy. Government subsidy exemption. Oregon
+// DAS publishes annual maximum percentage by September 30 based on
+// West Region CPI. Portland City Code 30.01.085 + Milwaukie ordinance
+// additive 90-day no-cause termination notice. Sixteen-mode severity
+// ladder × six property classifications × four tenancy statuses ×
+// five notice categories. Trader-landlord critical because Oregon
+// is the FIRST state with statewide rent control; multi-state
+// portfolio operators must distinguish OR (7 % + CPI / 10 % / 15-yr
+// exempt / 6 % MHP) vs WA HB 1217 (7 % + CPI / 10 % / 12-yr exempt
+// / 5 % MHP) vs CA AB 1482 (5 % + CPI / 10 % / 15-yr exempt) cap
+// structures. Sibling cluster: rental_washington_hb_1217_rent_
+// stabilization (iter 643 — WA companion), rental_california_ab_12_
+// security_deposit_cap (iter 645 — CA companion), rental_rent_
+// control_stabilization (multi-state regime — Oregon = FIRST entry),
+// rental_just_cause_eviction (ORS 90.427 cross-reference), rental_
+// mobile_home_park (ORS 90.600 cross-reference), rental_rent_
+// increase_notice_requirement (90-day notice cross-reference).
+// ---------------------------------------------------------------------------
+
+async fn rental_oregon_sb_608_sb_611_rent_stabilization_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalOregonSb608Sb611RentStabilizationInput>,
+) -> Result<Json<RentalOregonSb608Sb611RentStabilizationResult>, ApiError> {
+    Ok(Json(check_rental_oregon_sb_608_sb_611_rent_stabilization(&b)))
 }
 
 // ---------------------------------------------------------------------------
