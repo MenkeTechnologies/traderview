@@ -190,6 +190,7 @@ pub mod rental_hot_water_temperature;
 pub mod rental_illegal_lockout_self_help_eviction;
 pub mod rental_in_unit_laundry_appliance_provision;
 pub mod rental_junk_fee_transparency;
+pub mod rental_landlord_notice_to_enter;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
 pub mod rental_natural_gas_leak_response;

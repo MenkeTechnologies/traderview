@@ -801,6 +801,11 @@ use traderview_expense::rental_retaliation_prohibition::{
     RentalRetaliationProhibitionInput,
     RentalRetaliationProhibitionResult,
 };
+use traderview_expense::rental_landlord_notice_to_enter::{
+    check as check_rental_landlord_notice_to_enter,
+    RentalLandlordNoticeToEnterInput,
+    RentalLandlordNoticeToEnterResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1278,6 +1283,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
         .route("/rental-illegal-lockout-self-help-eviction", axum::routing::post(rental_illegal_lockout_self_help_eviction_route))
         .route("/rental-retaliation-prohibition", axum::routing::post(rental_retaliation_prohibition_route))
+        .route("/rental-landlord-notice-to-enter", axum::routing::post(rental_landlord_notice_to_enter_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11041,4 +11047,60 @@ async fn rental_retaliation_prohibition_route(
     Json(b): Json<RentalRetaliationProhibitionInput>,
 ) -> Result<Json<RentalRetaliationProhibitionResult>, ApiError> {
     Ok(Json(check_rental_retaliation_prohibition(&b)))
+}
+
+// ── /rental-landlord-notice-to-enter (iter 533) ─────────────────────────────
+// POST endpoint for landlord notice-to-enter requirement compliance across
+// CA + WA + FL + IL Chicago/statewide + CO + TX + NYC + Default jurisdictions.
+// Most US states require landlords to provide advance notice before entering
+// a tenant's occupied rental unit for non-emergency purposes (necessary
+// repairs, routine inspection, showing to prospective buyers/tenants/
+// appraisers, court-ordered access). Unannounced entry breaches the implied
+// covenant of quiet enjoyment under common law and creates a statutory
+// violation in jurisdictions with codified entry rules.
+//
+// CA Civ. Code § 1954: 24 hours WRITTEN notice (48 hours for initial
+// moveout inspection under § 1950.5(f)). Three permissible purposes only:
+// necessary repairs, showing to prospective buyers/tenants/appraisers,
+// court-ordered.
+//
+// WA RCW 59.18.150: 48 hours notice generally; 24 hours for showing to
+// prospective buyers/tenants/appraisers.
+//
+// FL Stat. § 83.53: "reasonable notice" required; 12 hours recognized as
+// reasonable for tenant-requested repairs. Oral notice permitted.
+//
+// IL Chicago RLTO § 5-12-050: 2 days (48 hours) WRITTEN notice required.
+// Illinois statewide has no codified notice statute — common-law
+// reasonable-notice standard applies (24-hour default).
+//
+// CO Rev. Stat. § 38-12-510 (HB 23-1095, effective Aug 7 2023): 48 hours
+// WRITTEN notice required.
+//
+// TX Prop. Code: NO statewide notice statute; lease terms control. Many
+// local ordinances impose 24-hour requirements.
+//
+// NYC Admin Code § 27-2008 + DHCR rent-stab regs: reasonable advance
+// notice; common-law standard.
+//
+// Eight entry purposes (NecessaryRepairsOrMaintenance, InspectionRoutine-
+// OrAnnual, ShowingToProspectiveBuyersTenantsOrAppraisers, InitialMoveOut-
+// InspectionCaSection1950_5F, EmergencyImmediateThreat, TenantAbandonedUnit,
+// CourtOrderedEntry, UnpermittedOrPretextual) plus four notice methods
+// (WrittenAdvanceNotice, OralAdvanceNotice, NoNoticeGiven,
+// NoticeReceivedAfterEntry).
+//
+// Nine-mode severity ladder: NotApplicable, EmergencyEntryNoNoticeRequired,
+// TenantAbandonedUnitNoNoticeRequired, CourtOrderedEntryAuthorized,
+// CompliantWrittenNoticeWithinWindow, CompliantOralNoticeWithinWindow,
+// UnpermittedPurposeQuietEnjoymentBreach,
+// InsufficientNoticeTimeStatutoryViolation,
+// NoNoticeGivenStatutoryViolationPlusQuietEnjoymentBreach.
+
+async fn rental_landlord_notice_to_enter_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalLandlordNoticeToEnterInput>,
+) -> Result<Json<RentalLandlordNoticeToEnterResult>, ApiError> {
+    Ok(Json(check_rental_landlord_notice_to_enter(&b)))
 }
