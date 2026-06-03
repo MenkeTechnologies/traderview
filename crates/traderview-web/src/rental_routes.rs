@@ -1050,6 +1050,11 @@ use traderview_expense::rental_waste_recycling_collection_mandate::{
     RentalWasteRecyclingCollectionMandateInput,
     RentalWasteRecyclingCollectionMandateResult,
 };
+use traderview_expense::rental_washington_hb_1217_rent_stabilization::{
+    check as check_rental_washington_hb_1217_rent_stabilization,
+    RentalWashingtonHb1217RentStabilizationInput,
+    RentalWashingtonHb1217RentStabilizationResult,
+};
 use traderview_expense::rental_domestic_violence_lock_change_lease_termination::{
     check as check_rental_domestic_violence_lock_change_lease_termination,
     RentalDomesticViolenceLockChangeLeaseTerminationInput,
@@ -1601,6 +1606,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-estoppel-certificate", axum::routing::post(rental_tenant_estoppel_certificate_route))
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
+        .route("/rental-washington-hb-1217-rent-stabilization", axum::routing::post(rental_washington_hb_1217_rent_stabilization_route))
         .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
         .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
         .route("/rental-drone-overflight-surveillance-privacy", axum::routing::post(rental_drone_overflight_surveillance_privacy_route))
@@ -13172,6 +13178,48 @@ async fn rental_waste_recycling_collection_mandate_route(
     Json(b): Json<RentalWasteRecyclingCollectionMandateInput>,
 ) -> Result<Json<RentalWasteRecyclingCollectionMandateResult>, ApiError> {
     Ok(Json(check_rental_waste_recycling_collection_mandate(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_washington_hb_1217_rent_stabilization: Washington HB 1217 of
+// 2025 statewide rent stabilization. First statewide rent cap law in
+// Washington history; signed by Governor Bob Ferguson on May 7, 2025
+// and effective immediately. Amends RCW 59.18 Residential Landlord-
+// Tenant Act and RCW 59.20 Manufactured/Mobile Home Landlord-Tenant
+// Act. General residential cap: 7 % + CPI OR 10 %, whichever LESS in
+// any 12-month period after first year of tenancy. Manufactured/
+// mobile home park space cap: 5 % maximum annual percentage. First-
+// year tenancy: NO rent increase permitted during first 12 months of
+// tenancy regardless of lease type (month-to-month or fixed term).
+// Notice: minimum 90-day written notice (increased from prior 60-day
+// RCW 59.18.140 requirement). New construction exemption: 12 years
+// from first certificate of occupancy. Sunset: most provisions
+// expire July 1, 2040 (15-year sunset). Single-family home exemption
+// NOT in final law — Senate version proposed exemption for non-
+// corporate single-family homes plus 10 % + CPI cap; both provisions
+// stripped in conference committee April 27, 2025. WA Attorney
+// General independent enforcement authority plus tenant private
+// civil action with actual + statutory damages + attorney fees for
+// excessive increases. Thirteen-mode severity ladder × four property
+// classifications × four tenancy statuses × four notice categories.
+// Trader-landlord critical because Washington is the SECOND state
+// after Oregon (SB 608 of 2019) to enact statewide rent stabilization
+// — first West Coast state with new-construction-exempt rolling 12-
+// year cap structure. Sibling cluster: rental_rent_control_
+// stabilization (multi-state regime; WA HB 1217 = newest entry),
+// rental_rent_increase_notice_requirement (90-day RCW 59.18.140
+// notice cross-reference), rental_just_cause_eviction (parallel
+// tenant protection overlay), rental_pre_foreclosure_tenant_
+// notification (WA RCW 61.24.143/.146 cross-reference; iter 627),
+// rental_mobile_home_park (RCW 59.20 cross-reference).
+// ---------------------------------------------------------------------------
+
+async fn rental_washington_hb_1217_rent_stabilization_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWashingtonHb1217RentStabilizationInput>,
+) -> Result<Json<RentalWashingtonHb1217RentStabilizationResult>, ApiError> {
+    Ok(Json(check_rental_washington_hb_1217_rent_stabilization(&b)))
 }
 
 // ── /rental-dog-bite-liability (iter 567) ───────────────────────────────────
