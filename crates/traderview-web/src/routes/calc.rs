@@ -156,6 +156,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1234a",         post(section_1234a_route))
         .route("/calc/section-1234b",         post(section_1234b_route))
         .route("/calc/section-263g",          post(section_263g_route))
+        .route("/calc/section-265",           post(section_265_route))
         .route("/calc/section-1276",          post(section_1276_route))
         .route("/calc/section-1277",          post(section_1277_route))
         .route("/calc/section-1278",          post(section_1278_route))
@@ -6187,6 +6188,64 @@ async fn section_263g_route(
         ));
     }
     Ok(Json(traderview_expense::section_263g::compute(&b)))
+}
+
+// ── § 265 Expenses + Interest Relating to Tax-Exempt Income ──────────
+// Mounted at /api/calc/section-265 (iter 532). Pure compute. § 265
+// disallows deductions for expenses (§ 265(a)(1)) and interest
+// (§ 265(a)(2)) allocable to wholly tax-exempt income, preventing
+// double-dipping when a taxpayer borrows to acquire or carry tax-exempt
+// obligations (municipal bonds, exempt-interest dividends from RIC under
+// § 852(b)(5)) while claiming an interest deduction that would offset
+// taxable income.
+//
+// § 265(a)(2) tracing test (Wisconsin Cheeseman v. United States,
+// 7th Cir. 1968): disallowance applies when debt is "incurred or
+// continued" to purchase or carry tax-exempt obligations. Direct-tracing
+// standard for individuals + non-financial corporations; IRS bears
+// burden of proving the tracing connection. Mere co-existence of debt
+// and tax-exempt holdings is insufficient. Rev. Proc. 72-18 sets out
+// the framework + safe harbors; Rev. Proc. 87-53 amplifies for
+// non-financial corporations.
+//
+// § 265(b) BANK / FINANCIAL INSTITUTION REGIME (Tax Reform Act of 1986
+// effective Aug 7 1986): MECHANICAL pro-rata disallowance based on
+// ratio of average adjusted bases of tax-exempt obligations to average
+// adjusted bases of all taxpayer assets. NO tracing test — formula
+// applies regardless of debt source. Effective only for obligations
+// acquired AFTER Aug 7 1986; pre-Aug-7-1986 obligations grandfathered.
+//
+// § 265(b)(3) BANK-QUALIFIED OBLIGATIONS ("qualified tax-exempt
+// obligations"): issuer must reasonably anticipate issuing no more than
+// $10,000,000 of tax-exempt obligations during the calendar year.
+// § 291(e) reduces the bank-qualified disallowance to 20% (vs 100% for
+// non-bank-qualified). Bank-qualified bonds are attractive small-issuer
+// securities sold at lower rates than non-bank-qualified.
+//
+// Dealer-in-tax-exempt-obligations safe harbor (Rev. Proc. 72-18 § 7):
+// dealers carrying inventory of tax-exempt obligations are EXEMPT from
+// § 265 disallowance for interest expense on inventory-line debt.
+//
+// Nine-mode severity ladder: NotApplicable, NoTaxExemptIncomeNoDisallow-
+// ance, UnrelatedDebtNoSectionTwoSixFiveADisallowance, IndividualDirect-
+// TracedFullDisallowance, NonFinancialCorpDirectTracedFullDisallowance,
+// BankNonBankQualifiedHundredPctProRataDisallowance,
+// BankQualifiedTwentyPctSection291EDisallowance,
+// BankPreAugust1986GrandfatheredNoDisallowance,
+// DealerInTaxExemptObligationsSafeHarborNoDisallowance.
+//
+// Coordinates with § 163(j) interest-deduction limitation (excess
+// business interest expense), § 246A debt-financed-portfolio-stock DRD
+// reduction (iter 530 — parallel debt-financing disallowance logic),
+// § 291(e) bank preference items (20% bank-qualified disallowance),
+// § 852(b)(5) RIC exempt-interest dividends, § 103 municipal bond
+// interest exclusion (source of the tax-exempt income).
+
+async fn section_265_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_265::Section265TaxExemptInterestDisallowanceInput>,
+) -> Result<Json<traderview_expense::section_265::Section265TaxExemptInterestDisallowanceOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_265::check(&b)))
 }
 
 // ── §1276 market-discount-bond ordinary-income recharacterization ─
