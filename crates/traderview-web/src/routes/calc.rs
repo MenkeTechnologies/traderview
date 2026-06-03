@@ -42,6 +42,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cost-basis",            post(cost_basis_route))
         .route("/calc/section-1244",          post(section_1244_route))
         .route("/calc/section-1248",          post(section_1248_route))
+        .route("/calc/section-1252",          post(section_1252_route))
         .route("/calc/section-1254",          post(section_1254_route))
         .route("/calc/section-1245-1250",     post(section_1245_1250_route))
         .route("/calc/section-1202",          post(section_1202_route))
@@ -2912,6 +2913,27 @@ async fn section_1248_route(
     Json(b): Json<traderview_expense::section_1248::Section1248Input>,
 ) -> Result<Json<traderview_expense::section_1248::Section1248Result>, ApiError> {
     Ok(Json(traderview_expense::section_1248::compute(&b)))
+}
+
+// ── §1252 farm land disposition soil/water conservation recapture ────
+// Mounted at /api/calc/section-1252. § 1252(a)(1) gain on farm land
+// held < 10 years recharacterized as ordinary income to extent of
+// lesser of applicable percentage × § 175 soil and water
+// conservation deductions OR gain recognized. Sliding scale:
+// 100 % < 5 years; 80 % 6th; 60 % 7th; 40 % 8th; 20 % 9th; 0 %
+// at 10+ years. § 1252(a)(2) formerly § 182 land clearing —
+// REPEALED for taxable years beginning after Dec 31, 1985 by Tax
+// Reform Act of 1986 (P.L. 99-514). § 1252(b) applies before
+// § 1245. § 1252(c) farm land = any land with § 175 deductions
+// allowed. Treas. Reg. § 1.1252-1 + § 1.1252-2. Trader-critical
+// for farm/ranch LPs + MLPs, family-office farm portfolios,
+// agricultural REIT exits, family-farm estate liquidations.
+
+async fn section_1252_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1252::Section1252Input>,
+) -> Result<Json<traderview_expense::section_1252::Section1252Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1252::compute(&b)))
 }
 
 // ── §1254 oil/gas/mineral property natural-resource recapture ────────
