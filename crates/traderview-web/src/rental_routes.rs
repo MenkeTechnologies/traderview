@@ -811,6 +811,11 @@ use traderview_expense::rental_security_deposit_return_notice::{
     RentalSecurityDepositReturnNoticeInput,
     RentalSecurityDepositReturnNoticeResult,
 };
+use traderview_expense::rental_late_fee_cap::{
+    check as check_rental_late_fee_cap,
+    RentalLateFeeCapInput,
+    RentalLateFeeCapResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1290,6 +1295,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-retaliation-prohibition", axum::routing::post(rental_retaliation_prohibition_route))
         .route("/rental-landlord-notice-to-enter", axum::routing::post(rental_landlord_notice_to_enter_route))
         .route("/rental-security-deposit-return-notice", axum::routing::post(rental_security_deposit_return_notice_route))
+        .route("/rental-late-fee-cap", axum::routing::post(rental_late_fee_cap_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11158,4 +11164,53 @@ async fn rental_security_deposit_return_notice_route(
     Json(b): Json<RentalSecurityDepositReturnNoticeInput>,
 ) -> Result<Json<RentalSecurityDepositReturnNoticeResult>, ApiError> {
     Ok(Json(check_rental_security_deposit_return_notice(&b)))
+}
+
+// ── /rental-late-fee-cap (iter 537) ─────────────────────────────────────────
+// POST endpoint for late-fee cap + grace-period compliance across ten
+// jurisdictions. State law sharply constrains residential late-fee
+// charges, both as to maximum amount and minimum grace period before a
+// fee may attach. Excessive late fees are unenforceable under common-law
+// liquidated-damages doctrine (must be reasonable estimate of actual
+// damages, not penalty) and create statutory exposure under consumer-
+// protection statutes (deceptive-practices, unconscionability).
+//
+// NY RPL § 238-a (HSTPA 2019): LESSER of $50 OR 5% of monthly rent; 5-day
+// grace period.
+//
+// WA RCW 59.18.170: no statewide dollar cap, but landlord may not charge
+// any late fee until rent is more than 5 days late.
+//
+// CO Rev. Stat. § 38-12-105 (HB 23-1099): GREATER of $50 OR 5% of monthly
+// rent; 7-day grace period.
+//
+// IL Chicago RLTO § 5-12-140(h): $10 + 5% per month for rent over $500.
+//
+// TX Prop. Code § 92.019: statutory safe-harbor cap of 10% for properties
+// with 4 or fewer units, 12% for properties with 5 or more units; 2-day
+// grace period.
+//
+// CA Civ. Code § 1671: reasonable-estimate-of-damages standard; no
+// statutory dollar cap; industry standard 5% or $50.
+//
+// MA Gen. L. ch. 186 § 15B(1)(c): NO late fee for first 30 days after
+// rent due (longest grace period of surveyed states).
+//
+// FL: NO statewide cap or grace period for residential tenancies (Fla.
+// Stat. § 83.808 covers only mobile-home tenancies).
+//
+// Seven-mode severity ladder: NotApplicable,
+// LateFeeWithinCapAndGraceCompliant,
+// LateFeeChargedBeforeGracePeriodExpired,
+// LateFeeExceedsStatutoryCap,
+// NoStatutoryCapCommonLawReasonablenessTest,
+// NoLateFeeChargedCompliant,
+// LongestGracePeriodMassachusettsThirtyDays.
+
+async fn rental_late_fee_cap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalLateFeeCapInput>,
+) -> Result<Json<RentalLateFeeCapResult>, ApiError> {
+    Ok(Json(check_rental_late_fee_cap(&b)))
 }
