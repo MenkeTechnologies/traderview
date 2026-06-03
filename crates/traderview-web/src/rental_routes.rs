@@ -910,6 +910,11 @@ use traderview_expense::rental_oakland_measure_ee_just_cause_omc_8_22::{
     RentalOaklandMeasureEeJustCauseOmc822Input,
     RentalOaklandMeasureEeJustCauseOmc822Result,
 };
+use traderview_expense::rental_ohio_revised_code_chapter_5321_landlord_tenant_act::{
+    check as check_rental_ohio_revised_code_chapter_5321_landlord_tenant_act,
+    RentalOhioRevisedCodeChapter5321LandlordTenantActInput,
+    RentalOhioRevisedCodeChapter5321LandlordTenantActResult,
+};
 use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
@@ -1702,6 +1707,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-nyc-local-law-18-str-registration", axum::routing::post(rental_nyc_local_law_18_str_registration_route))
         .route("/rental-nyc-coop-conversion-eviction-protection", axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route))
         .route("/rental-oakland-measure-ee-just-cause-omc-8-22", axum::routing::post(rental_oakland_measure_ee_just_cause_omc_8_22_route))
+        .route("/rental-ohio-revised-code-chapter-5321-landlord-tenant-act", axum::routing::post(rental_ohio_revised_code_chapter_5321_landlord_tenant_act_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
@@ -12413,6 +12419,33 @@ async fn rental_oakland_measure_ee_just_cause_omc_8_22_route(
     Json(b): Json<RentalOaklandMeasureEeJustCauseOmc822Input>,
 ) -> Result<Json<RentalOaklandMeasureEeJustCauseOmc822Result>, ApiError> {
     Ok(Json(check_rental_oakland_measure_ee_just_cause_omc_8_22(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_ohio_revised_code_chapter_5321_landlord_tenant_act: Ohio
+// Landlord-Tenant Act. Codified at O.R.C. §§ 5321.01 through
+// 5321.21. Enacted as 1974 Am. H.B. 144, effective November 4,
+// 1974. § 5321.04 landlord obligations; § 5321.04(A)(8) 24-hour
+// entry notice; § 5321.05 tenant obligations; § 5321.07 tenant
+// remedies (rent escrow + court reduction + termination); § 5321.09
+// landlord application for release of escrowed rent; § 5321.12
+// treble damages for wrongful retention; § 5321.13 retaliation
+// prohibited; § 5321.16(A) 5 % annual interest on deposit above
+// greater of $50 or 1 month's rent if held 6+ months; § 5321.16(B)
+// 30-day deposit return + itemized statement; § 5321.16(C) double
+// damages + attorney fees; § 5321.17(A) 30-day month-to-month
+// termination; § 5321.17(B) 7-day week-to-week termination;
+// § 5321.17(C) 3-day pre-eviction notice; § 5321.18 written
+// agreement required for terms over 90 days; § 1923.02 forcible
+// entry and detainer jurisdiction; § 1923.04 3-day notice service.
+// ---------------------------------------------------------------------------
+
+async fn rental_ohio_revised_code_chapter_5321_landlord_tenant_act_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalOhioRevisedCodeChapter5321LandlordTenantActInput>,
+) -> Result<Json<RentalOhioRevisedCodeChapter5321LandlordTenantActResult>, ApiError> {
+    Ok(Json(check_rental_ohio_revised_code_chapter_5321_landlord_tenant_act(&b)))
 }
 
 async fn rental_oil_tank_replacement_disclosure_route(
