@@ -204,6 +204,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-1283",          post(section_1283_route))
+        .route("/calc/section-1286",          post(section_1286_route))
         .route("/calc/section-1287",          post(section_1287_route))
         .route("/calc/section-1282",          post(section_1282_route))
         .route("/calc/section-7704",          post(section_7704_route))
@@ -8515,6 +8516,62 @@ async fn section_1283_route(
         ));
     }
     Ok(Json(traderview_expense::section_1283::compute(&b)))
+}
+
+// ── §1286 tax treatment of stripped bonds / coupon-stripping OID ──
+// Mounted at /api/calc/section-1286. § 1286 was enacted as successor
+// to predecessor § 1232B by the Tax Equity and Fiscal Responsibility
+// Act of 1982 (Public Law 97-248) and applies to stripped bonds and
+// stripped coupons PURCHASED AFTER JULY 1, 1982. § 1286(a) treats
+// the purchaser of a stripped bond or coupon as having received a
+// bond ORIGINALLY ISSUED on the purchase date with ORIGINAL ISSUE
+// DISCOUNT equal to (STATED REDEMPTION PRICE AT MATURITY − RATABLE
+// SHARE OF PURCHASE PRICE). § 1286(b) requires the person stripping
+// coupons to include in gross income immediately before disposition
+// (1) interest accrued on the bond while held by such person and not
+// previously included AND (2) accrued market discount; basis is
+// increased by the amount included then ALLOCATED between bond and
+// coupons in proportion to FAIR MARKET VALUES at the time of
+// disposition. § 1286(c)/(d) tax-exempt stripped obligation rules,
+// added by Tax Reform Act of 1986 § 1879 effective for any purchase
+// or sale AFTER JUNE 10, 1987, split the OID into a TAX-EXEMPT
+// PORTION limited to the OID accruing at a YIELD equal to the LOWER
+// of (A) the coupon rate or (B) the stripped obligation's yield to
+// maturity, and a NON-EXEMPT PORTION subject to ordinary OID
+// inclusion. § 1273(a)(3) DE MINIMIS OID RULE (incorporated by
+// § 1286): if OID is LESS THAN 0.25 % × STATED REDEMPTION PRICE AT
+// MATURITY × NUMBER OF COMPLETE YEARS TO MATURITY, OID is treated
+// as ZERO and no current inclusion is required — a narrow escape
+// for trivial OID amounts that does NOT apply to zero-coupon
+// Treasury STRIPS or TIPS strips where OID is the entire return.
+// 13-mode severity ladder × 3 taxpayer roles (stripper / purchaser /
+// uninvolved) × 4 obligation types × 2 purchase-date statuses ×
+// 3 tax-exempt amendment-date statuses × 4 stripper actions ×
+// 5 purchaser actions × variable SRPM / purchase price / years to
+// maturity inputs. Computes both the OID amount (SRPM − ratable
+// share) and the § 1273(a)(3) de minimis threshold using u128
+// saturating arithmetic. Sibling cluster: section_1271 (treatment
+// of amounts received on retirement of debt instrument), section_
+// 1272 (current OID inclusion mechanics), section_1273 (general
+// OID determination + de minimis rule incorporated by § 1286),
+// section_1274 (issue price determination for debt-for-property
+// exchanges), section_1276 (market discount accrual), section_
+// 1277 (deferred deduction on market-discount bond holding costs),
+// section_1278 (market discount definitions), section_1281
+// (current inclusion of interest on short-term obligations),
+// section_1282 (deferred deductions on short-term obligation
+// holding costs), section_1283 (definitions for net-direct-
+// interest carry), section_1287 (anti-bearer-bond ordinary-income
+// rule for registration-required obligations — TEFRA companion
+// to § 4701 issuer excise tax), section_4701 (TEFRA issuer excise
+// tax on registration-required obligations not in registered
+// form).
+
+async fn section_1286_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1286::Section1286Input>,
+) -> Result<Json<traderview_expense::section_1286::Section1286Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1286::compute(&b)))
 }
 
 // ── §1287 anti-bearer-bond rule / denial of capital gain treatment ────
