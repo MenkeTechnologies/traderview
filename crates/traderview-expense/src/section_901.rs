@@ -5,7 +5,7 @@
 //! taxpayers to claim a CREDIT (dollar-for-dollar reduction of US tax)
 //! rather than a deduction for foreign income, war profits, and excess
 //! profits taxes paid or accrued to foreign governments or US possessions.
-//! § 904 (see [[section_904]] iter 516) caps the credit; § 901 establishes
+//! § 904 (see `section_904` iter 516) caps the credit; § 901 establishes
 //! the basic creditability.
 //!
 //! § 901(a) general rule: domestic corp + US citizen / resident alien

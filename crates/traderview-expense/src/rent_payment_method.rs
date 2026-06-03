@@ -239,6 +239,7 @@ fn default_check(_input: &RentPaymentMethodInput) -> RentPaymentMethodResult {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

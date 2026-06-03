@@ -209,6 +209,7 @@ fn default_check(input: &PrevailingPartyFeesInput, fees: i64) -> PrevailingParty
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

@@ -6,11 +6,11 @@
 //! and common areas where children under 6 reside) plus state-specific
 //! habitability frameworks.
 //!
-//! Distinct from sibling [[rental_chimney_fireplace_inspection_disclosure]]
-//! (solid-fuel heating framework), [[rental_pellet_stove_disclosure]]
-//! (iter 499 pellet stove framework), [[rental_natural_gas_leak_response]]
-//! (gas-system leak framework), [[rental_oil_tank_replacement_disclosure]]
-//! (oil-heat fuel-storage framework), [[heat_requirements]] (general
+//! Distinct from sibling `rental_chimney_fireplace_inspection_disclosure`
+//! (solid-fuel heating framework), `rental_pellet_stove_disclosure`
+//! (iter 499 pellet stove framework), `rental_natural_gas_leak_response`
+//! (gas-system leak framework), `rental_oil_tank_replacement_disclosure`
+//! (oil-heat fuel-storage framework), `heat_requirements` (general
 //! heat-temperature habitability).
 //!
 //! Trader-landlord critical because (1) NYC steam radiators reach 250°F at

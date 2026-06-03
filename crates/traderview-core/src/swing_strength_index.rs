@@ -2,7 +2,7 @@
 //! relative to the prior swing.
 //!
 //! Given a ZigZag-style swing series (alternating pivot highs/lows):
-//!   swing_magnitude_t = |pivot[t].price - pivot[t-1].price|
+//!   swing_magnitude_t = |pivot`[t]`.price - pivot[t-1].price|
 //!   strength_ratio_t  = swing_magnitude_t / swing_magnitude_{t-1}
 //!     (ratio > 1.0 = current swing stronger than prior)
 //!   strength_z_t      = (strength_ratio_t - SMA(ratios, z_period))

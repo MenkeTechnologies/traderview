@@ -4,8 +4,8 @@
 //! trader-landlord must conduct dust-wipe sampling before tenant re-occupancy
 //! after renovation work on pre-1978 housing.
 //!
-//! Distinct from sibling [[rental_lead_pipe_disclosure]] (lead-in-drinking-
-//! water disclosure) and [[rental_lead_paint_disclosure]] (initial Title X
+//! Distinct from sibling `rental_lead_pipe_disclosure` (lead-in-drinking-
+//! water disclosure) and `rental_lead_paint_disclosure` (initial Title X
 //! § 1018 pre-lease lead-based paint disclosure if separate).
 //!
 //! Federal framework:

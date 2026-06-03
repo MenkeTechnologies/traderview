@@ -280,6 +280,10 @@ pub fn compute(input: &Section1278Input) -> Section1278Result {
 }
 
 #[cfg(test)]
+// `face − cost_basis` accruals are written with the explicit `.max(0)` clamp
+// to mirror IRC § 1278 wording. With compile-time positive deltas clippy
+// flags `unnecessary_min_or_max`; the clamp documents the statutory floor.
+#[allow(clippy::unnecessary_min_or_max)]
 mod tests {
     use super::*;
 

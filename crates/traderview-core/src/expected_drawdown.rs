@@ -7,7 +7,7 @@
 //!   mdd: max((HWM_t − P_t) / HWM_t) over t = 1..horizon
 //!
 //! Outputs:
-//!   - E[MDD]                 (Expected Drawdown)
+//!   - E`[MDD]`                 (Expected Drawdown)
 //!   - median MDD
 //!   - 5th / 95th percentile of MDD distribution
 //!   - VaR_95 of MDD (95th percentile = 5%-tail-loss MDD)

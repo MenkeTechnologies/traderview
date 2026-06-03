@@ -1,7 +1,7 @@
 //! Expectancy Per Trade — average profit per trade weighted by
 //! win/loss probabilities.
 //!
-//!   E[trade] = win_rate · avg_win + (1 − win_rate) · avg_loss
+//!   E`[trade]` = win_rate · avg_win + (1 − win_rate) · avg_loss
 //!
 //! Where avg_loss is signed (i.e. negative for losing trades). Reports
 //! both:

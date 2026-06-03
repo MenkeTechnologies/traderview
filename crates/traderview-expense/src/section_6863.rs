@@ -240,6 +240,7 @@ pub fn check(input: &Section6863Input) -> Section6863Result {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

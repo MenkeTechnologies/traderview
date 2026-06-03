@@ -164,6 +164,7 @@ pub const PHASEOUT_THRESHOLD_2026_CENTS: i64 = 409_00000000;
 pub const SUV_SUBLIMIT_2026_CENTS: i64 = 3200000;
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

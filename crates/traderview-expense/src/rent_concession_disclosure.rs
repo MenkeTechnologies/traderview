@@ -478,7 +478,7 @@ mod tests {
 
     #[test]
     fn ny_stabilized_uniquely_prohibits_revocation_invariant() {
-        let mut ny_st = ny_stabilized_compliant();
+        let ny_st = ny_stabilized_compliant();
         let r_ny_st = check(&ny_st);
         assert!(r_ny_st.ny_preferential_rent_revocation_prohibited);
 

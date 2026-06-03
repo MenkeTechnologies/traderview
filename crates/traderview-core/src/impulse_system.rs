@@ -118,6 +118,7 @@ fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 
@@ -268,8 +269,8 @@ mod tests {
         // bar onward (k * c + (1-k) * c = c).
         let s = vec![42.0_f64; 10];
         let out = ema(&s, 4);
-        for i in 3..10 {
-            let v = out[i].unwrap();
+        for (i, slot) in out.iter().enumerate().skip(3) {
+            let v = slot.unwrap();
             let diff = (v - 42.0).abs();
             assert!(
                 diff < 1e-9,

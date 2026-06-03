@@ -202,6 +202,7 @@ fn tpso_regime_for_year(year: u32) -> (ThresholdRegime, i64, u32, &'static str) 
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

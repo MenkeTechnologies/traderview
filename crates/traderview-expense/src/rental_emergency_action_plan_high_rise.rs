@@ -3,8 +3,8 @@
 //! emergency planning and preparedness requirements for high-rise
 //! residential buildings.
 //!
-//! Distinct from sibling [[rental_elevator_safety_inspection]] (elevator
-//! inspection framework), [[rental_fire_extinguisher_requirement]] (NFPA 10
+//! Distinct from sibling `rental_elevator_safety_inspection` (elevator
+//! inspection framework), `rental_fire_extinguisher_requirement` (NFPA 10
 //! fire extinguisher framework), [[rental_chimney_fireplace_inspection_
 //! disclosure]] (chimney inspection — distinct), [[rental_grill_propane_
 //! bbq_restriction]] (iter 515 NFPA 1 balcony grilling framework), [[rental_

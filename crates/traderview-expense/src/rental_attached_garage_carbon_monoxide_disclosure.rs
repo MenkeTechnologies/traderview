@@ -4,11 +4,11 @@
 //! (vehicle-exhaust CO migration pathway), regardless of presence of gas
 //! appliances within the unit.
 //!
-//! Distinct from sibling [[rental_natural_gas_leak_response]] (gas-line
+//! Distinct from sibling `rental_natural_gas_leak_response` (gas-line
 //! leak protocol — distinct from CO detection), [[rental_pellet_stove_
 //! disclosure]] (iter 499 — solid-fuel appliance with separate CO concern),
-//! [[rental_chimney_fireplace_inspection_disclosure]] (chimney-vented
-//! appliance CO), [[rental_oil_tank_replacement_disclosure]] (iter 493 —
+//! `rental_chimney_fireplace_inspection_disclosure` (chimney-vented
+//! appliance CO), `rental_oil_tank_replacement_disclosure` (iter 493 —
 //! oil-heat fuel-storage framework), [[rental_in_unit_laundry_appliance_
 //! provision]] (iter 501 — gas dryer CO concern subset), [[rental_radiator_
 //! steam_heat_safety]] (iter 517 — distinct steam-heat framework).

@@ -3,8 +3,8 @@
 //! enrolled in a state ACP as a survivor of domestic violence, sexual assault,
 //! stalking, or human trafficking. Distinct from sibling [[tenant_smart_lock_
 //! biometric_consent]] (biometric privacy at unit access), [[security_camera_
-//! disclosure]] (landlord-installed surveillance), [[tenant_data_privacy]]
-//! (general tenant data handling), [[landlord_tenant_recording_consent]]
+//! disclosure]] (landlord-installed surveillance), `tenant_data_privacy`
+//! (general tenant data handling), `landlord_tenant_recording_consent`
 //! (audio recording consent).
 //!
 //! Trader-landlord critical because (1) ACP enrollment provides a state-

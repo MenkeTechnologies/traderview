@@ -5,7 +5,7 @@
 //! restrictions, insurance breed-ban interaction, and disclosure
 //! requirements.
 //!
-//! Distinct from sibling [[rental_pet_deposit_separate_security]] (pet
+//! Distinct from sibling `rental_pet_deposit_separate_security` (pet
 //! deposit framework — distinct from breed restriction), [[fair_housing_
 //! reasonable_modification]] (broader FHA modification framework), [[tenant_
 //! emotional_distress_damages]] (IIED claim for wrongful denial of

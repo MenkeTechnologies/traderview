@@ -314,7 +314,7 @@ mod tests {
             acquisition_discount_cents: acq_disc,
             ratable_short_term_accrual_cents: ratable,
             purchased_at_premium: premium,
-            tax_exempt: tax_exempt,
+            tax_exempt,
         }
     }
 

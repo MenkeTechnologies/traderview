@@ -666,7 +666,7 @@ mod tests {
 
     #[test]
     fn il_uniquely_3_year_cap_invariant() {
-        let mut il = il_compliant_common_area();
+        let il = il_compliant_common_area();
         let r_il = check(&il);
         assert_eq!(r_il.recommended_retention_max_days, 1095);
 

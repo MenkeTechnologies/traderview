@@ -6,8 +6,8 @@
 //!   high-pass ψ:  [1/√2, -1/√2]   (differencing)
 //!
 //! At each level k:
-//!   approximation_k[i] = (a_{k-1}[2i] + a_{k-1}[2i+1]) / √2
-//!   detail_k[i]        = (a_{k-1}[2i] - a_{k-1}[2i+1]) / √2
+//!   approximation_k`[i]` = (a_{k-1}`[2i]` + a_{k-1}[2i+1]) / √2
+//!   detail_k`[i]`        = (a_{k-1}`[2i]` - a_{k-1}[2i+1]) / √2
 //!
 //! Returns the final approximation plus the detail coefficients for
 //! each level (level 1 = highest frequency, level N = lowest).

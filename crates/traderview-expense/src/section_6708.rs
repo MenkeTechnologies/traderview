@@ -577,7 +577,9 @@ mod tests {
         extension.business_days_since_irs_request = 100;
         let r_ext = check(&extension);
         assert!(r_ext.extension_engaged);
-        assert!(!r_ext.reasonable_cause_defense_available || r_ext.reasonable_cause_defense_available);
+        // `reasonable_cause_defense_available` is independent of the extension
+        // path in this fixture — the invariant pinned here is the extension
+        // flag, not the reasonable-cause flag.
 
         let mut rc_only = within_20_days_compliant();
         rc_only.list_production_status = ListProductionStatus::NotProvided;

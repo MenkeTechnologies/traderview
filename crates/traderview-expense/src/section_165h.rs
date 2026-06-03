@@ -202,6 +202,7 @@ fn eligibility_explanation(year: u32, dt: DisasterType) -> &'static str {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

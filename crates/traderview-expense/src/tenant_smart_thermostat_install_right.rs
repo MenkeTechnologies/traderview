@@ -1,8 +1,8 @@
 //! Tenant smart-thermostat installation right and landlord-permission
-//! framework. Parallel to [[tenant_solar_installation]] (right-to-install
-//! rooftop solar), [[tenant_ev_charging_installation_right]] (right-to-
-//! charge EV), [[tenant_clothesline_drying_right]] (utility-conservation
-//! right), [[tenant_window_air_conditioner_install_right]] (cooling
+//! framework. Parallel to `tenant_solar_installation` (right-to-install
+//! rooftop solar), `tenant_ev_charging_installation_right` (right-to-
+//! charge EV), `tenant_clothesline_drying_right` (utility-conservation
+//! right), `tenant_window_air_conditioner_install_right` (cooling
 //! provision and bracket safety).
 //!
 //! Smart thermostats (Nest, Ecobee, Honeywell Lyric, Wyse, Sensi) replace

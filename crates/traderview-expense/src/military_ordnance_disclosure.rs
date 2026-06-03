@@ -223,6 +223,7 @@ pub fn check(input: &Input) -> CheckResult {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

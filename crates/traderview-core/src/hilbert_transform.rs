@@ -5,9 +5,9 @@
 //!
 //!   - **In-phase (I)** and **Quadrature (Q)** components, computed
 //!     via Ehlers' 4-bar FIR Hilbert filter:
-//!     det = 0.0962·x + 0.5769·x[2] − 0.5769·x[4] − 0.0962·x[6]
+//!     det = 0.0962·x + 0.5769·x`[2]` − 0.5769·x`[4]` − 0.0962·x`[6]`
 //!     q  = det · period_factor
-//!     i  = x[3]
+//!     i  = x`[3]`
 //!   - **Instantaneous phase**: φ = arctan(Q / I)
 //!   - **Dominant Cycle Period**: estimated from the rate of change of
 //!     phase using Ehlers' smoothing rules

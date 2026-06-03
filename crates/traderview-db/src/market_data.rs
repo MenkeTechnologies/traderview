@@ -235,7 +235,7 @@ pub async fn quote_summary(symbol: &str, modules: &[&str]) -> anyhow::Result<ser
 /// defaultKeyStatistics, financialData, assetProfile, ...]` backend
 /// returned 401 "Invalid Crumb" since late 2023.
 ///
-/// Adapter [`finnhub_rest::fundamentals_yahoo_shape`] composes a JSON
+/// Adapter `finnhub_rest::fundamentals_yahoo_shape` composes a JSON
 /// envelope that matches Yahoo's nested `{raw, fmt}` shape so the
 /// existing frontend extractor in `research.js::renderFund` works
 /// unchanged. Falls back to Yahoo `quoteSummary` if no Finnhub key is
@@ -274,7 +274,7 @@ async fn fundamentals_yahoo_legacy(symbol: &str) -> anyhow::Result<serde_json::V
 ///
 /// **Backend:** Finnhub `/stock/eps-surprise` (history) + `/calendar/earnings`
 /// (next-quarter date + estimates). Adapter
-/// [`finnhub_rest::earnings_yahoo_shape`] returns Yahoo's
+/// `finnhub_rest::earnings_yahoo_shape` returns Yahoo's
 /// `{earningsHistory.history[], calendarEvents.earnings.{earningsDate,
 /// earningsAverage, revenueAverage}}` shape so the existing extractor in
 /// `research.js::renderEarnings` works unchanged. Falls back to broken
@@ -305,7 +305,7 @@ pub async fn earnings(symbol: &str) -> anyhow::Result<serde_json::Value> {
 /// Analyst recommendations.
 ///
 /// **Backend:** Finnhub `/stock/recommendation` (free tier). Adapter
-/// [`finnhub_rest::recommendations_yahoo_shape`] returns Yahoo's
+/// `finnhub_rest::recommendations_yahoo_shape` returns Yahoo's
 /// `{recommendationTrend.trend[]}` envelope. Falls back to broken Yahoo
 /// `quoteSummary` only when no Finnhub key is configured.
 pub async fn recommendations(symbol: &str) -> anyhow::Result<serde_json::Value> {

@@ -2,7 +2,7 @@
 //!
 //! Adapts smoothing speed to noise: trends fast, chops slow.
 //!
-//!   ER = (close − close[−n]) / sum(|close[i] − close[i−1]|, n)
+//!   ER = (close − close[−n]) / sum(|close`[i]` − close[i−1]|, n)
 //!   fast_α = 2/(fast_n+1)         (default fast_n=2 → 0.6667)
 //!   slow_α = 2/(slow_n+1)         (default slow_n=30 → 0.0645)
 //!   SC = (|ER| · (fast_α − slow_α) + slow_α)²

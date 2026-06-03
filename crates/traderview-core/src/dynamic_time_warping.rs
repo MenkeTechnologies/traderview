@@ -2,9 +2,9 @@
 //! tolerates non-linear time-axis stretches and compressions.
 //!
 //! Builds an n×m cost matrix D where:
-//!   D[i][j] = |a_i - b_j| + min(D[i-1][j], D[i][j-1], D[i-1][j-1])
+//!   `D[i][j] = |a_i - b_j| + min(D[i-1][j], D[i][j-1], D[i-1][j-1])`
 //!
-//! The bottom-right cell D[n-1][m-1] is the DTW distance. The optimal
+//! The bottom-right cell `D[n-1][m-1]` is the DTW distance. The optimal
 //! warping path is recovered by backtracking through the argmin
 //! predecessors.
 //!

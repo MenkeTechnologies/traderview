@@ -4,7 +4,7 @@
 //! Allows an eligible employee of an eligible private corporation to
 //! defer FEDERAL INCOME TAX (only — NOT FICA) on income from
 //! non-qualified stock option exercise or RSU vesting for up to 5
-//! years. Companion to [`section_83b`]: where §83(b) accelerates
+//! years. Companion to `section_83b`: where §83(b) accelerates
 //! income to grant date to lock in lower FMV, §83(i) defers income
 //! away from vest date to wait out the private→public transition.
 //!

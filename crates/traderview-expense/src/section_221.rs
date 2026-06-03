@@ -147,6 +147,7 @@ fn phaseout_range(year: u32, fs: FilingStatus) -> (i64, i64) {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

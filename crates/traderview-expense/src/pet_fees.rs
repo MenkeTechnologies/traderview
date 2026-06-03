@@ -37,8 +37,8 @@
 //! § 12101 et seq.), service animals AND emotional support animals
 //! are NOT pets. No pet deposit, no pet rent, no pet fee may be
 //! charged for an ESA/service animal in any state. This is the
-//! federal-floor pattern shared with [`lead_disclosure`],
-//! [`bedbug_disclosure`], etc.
+//! federal-floor pattern shared with `lead_disclosure`,
+//! `bedbug_disclosure`, etc.
 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};

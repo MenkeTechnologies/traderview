@@ -1,7 +1,7 @@
 //! IRC §121(d)(2) + §121(d)(3) — Divorce special rules for the
 //! § 121 principal-residence-sale exclusion.
 //!
-//! Companion to [`section_121`] (the general exclusion). When a
+//! Companion to `section_121` (the general exclusion). When a
 //! married couple divorces and one ex-spouse acquires or remains in
 //! the principal residence, two §121(d) special rules let BOTH
 //! spouses (or just one) preserve §121 exclusion eligibility

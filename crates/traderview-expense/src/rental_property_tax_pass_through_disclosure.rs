@@ -4,9 +4,9 @@
 //! local-improvement-district fees) to tenants under state and local rent-
 //! control / rent-stabilization regimes.
 //!
-//! Distinct from sibling [[rental_property_registration]] (registration
+//! Distinct from sibling `rental_property_registration` (registration
 //! framework — distinct compliance pathway), [[rental_hoa_disclosure_at_
-//! lease]] (HOA fees framework), [[rental_solar_panel_disclosure]] (iter
+//! lease]] (HOA fees framework), `rental_solar_panel_disclosure` (iter
 //! 495 PPA pass-through analog), [[rental_in_unit_laundry_appliance_
 //! provision]] (iter 501 appliance maintenance — distinct), [[tenant_late_
 //! fee_cap]] (late-fee framework — distinct charge), [[rental_junk_fee_

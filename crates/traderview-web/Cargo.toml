@@ -56,3 +56,6 @@ futures-util = { workspace = true }
 # PDF text-layer extraction works regardless.
 default = []
 ocr-engine = ["traderview-ocr/engine"]
+
+[lints]
+workspace = true

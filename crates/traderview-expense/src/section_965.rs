@@ -54,7 +54,7 @@
 //! wealth taxes, mark-to-market taxes, or taxes on appreciation.
 //!
 //! Inclusion creates § 959(c)(2) PTEP — distributions of § 965-included
-//! E&P qualify for § 959(a)(1) exclusion (see [[section_959]] iter 512
+//! E&P qualify for § 959(a)(1) exclusion (see `section_959` iter 512
 //! sixteen-basket framework — § 965 PTEP is one of the seven § 959(c)(2)
 //! groups).
 

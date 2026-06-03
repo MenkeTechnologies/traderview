@@ -691,9 +691,13 @@ mod tests {
         let r_ent = check(&ent);
         assert!(r_ent.fully_disallowed);
 
-        let mut meal = business_meal_compliant();
+        let meal = business_meal_compliant();
         let r_meal = check(&meal);
-        meal.category = ExpenseCategory::BusinessMeal;
+        // `business_meal_compliant()` already sets `category` to BusinessMeal;
+        // the prior `meal.category =` assignment was dead and was flagged by
+        // clippy. Keep the explicit check that the constructor's default
+        // category survives a round-trip through `check`.
+        assert_eq!(meal.category, ExpenseCategory::BusinessMeal);
         assert!(!r_meal.fully_disallowed);
     }
 

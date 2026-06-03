@@ -48,7 +48,7 @@
 //! - § 960(d) deemed-paid FTC rises from 80% to 90% (10% haircut down from
 //!   20%).
 //!
-//! Coordination: § 904 baskets carry through PTEP groups under [[section_959]]
+//! Coordination: § 904 baskets carry through PTEP groups under `section_959`
 //! sixteen-basket framework — § 959 PTEP groups are maintained within EACH
 //! § 904(d) basket category.
 

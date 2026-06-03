@@ -3,8 +3,8 @@
 //! California AB 628 (effective January 1, 2026) plus parallel state
 //! habitability frameworks. Distinct from sibling [[tenant_in_unit_
 //! appliance_repair_responsibility]] (broader landlord-provided appliance
-//! repair duty), [[rental_in_unit_laundry_appliance_provision]] (iter 501
-//! W/D framework), [[rental_gas_appliance_ban]] (electrification mandate
+//! repair duty), `rental_in_unit_laundry_appliance_provision` (iter 501
+//! W/D framework), `rental_gas_appliance_ban` (electrification mandate
 //! context for gas-stove replacement).
 //!
 //! Trader-landlord critical because (1) California AB 628 (Cal. Civ. Code

@@ -5,9 +5,9 @@
 //! Gardens apartments. AB 2579 (signed 2024) extended the SB 721 first-cycle
 //! deadline from January 1, 2025 to January 1, 2026.
 //!
-//! Distinct from sibling [[rental_basement_water_intrusion_disclosure]]
-//! (basement water disclosure), [[rental_window_guard_installation]] (fall
-//! protection from windows), [[tenant_window_air_conditioner_install_right]]
+//! Distinct from sibling `rental_basement_water_intrusion_disclosure`
+//! (basement water disclosure), `rental_window_guard_installation` (fall
+//! protection from windows), `tenant_window_air_conditioner_install_right`
 //! (iter ... — falling AC bracket safety), [[rental_storage_unit_lease_
 //! disclosure]] (iter 509 storage disclosure).
 //!

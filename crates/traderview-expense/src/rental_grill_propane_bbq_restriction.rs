@@ -5,12 +5,12 @@
 //! inside residential units) plus state-specific fire code amendments plus
 //! tenant lease enforcement plus insurance coverage exclusions.
 //!
-//! Distinct from sibling [[rental_chimney_fireplace_inspection_disclosure]]
-//! (indoor solid-fuel framework), [[rental_natural_gas_leak_response]] (gas
+//! Distinct from sibling `rental_chimney_fireplace_inspection_disclosure`
+//! (indoor solid-fuel framework), `rental_natural_gas_leak_response` (gas
 //! line leak protocol — distinct from LP-gas cylinder), [[rental_propane_
 //! tank_lease_disclosure]] (large stationary propane tank disclosure
-//! framework), [[rental_pellet_stove_disclosure]] (iter 499 wood-pellet
-//! appliance separate framework), [[rental_balcony_inspection_seismic_safety]]
+//! framework), `rental_pellet_stove_disclosure` (iter 499 wood-pellet
+//! appliance separate framework), `rental_balcony_inspection_seismic_safety`
 //! (iter 511 EEE inspection — balcony structural framework cross-reference).
 //!
 //! Trader-landlord critical because (1) **NFPA 1 § 10.10.5** prohibits

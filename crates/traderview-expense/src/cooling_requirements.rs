@@ -642,7 +642,7 @@ mod tests {
         // AZ-Phoenix + AZ-Tucson: evaporative bumps threshold to
         // 86°F. Other regimes ignore the flag.
         for &regime in &[Regime::ArizonaPhoenix, Regime::ArizonaTucson] {
-            let mut std = base(regime);
+            let std = base(regime);
             let mut evap = base(regime);
             evap.is_evaporative_cooler = true;
             assert_eq!(check(&std).maximum_temperature_threshold_f, Some(82));
@@ -655,7 +655,7 @@ mod tests {
             Regime::California,
             Regime::Default,
         ] {
-            let mut std = base(regime);
+            let std = base(regime);
             let mut evap = base(regime);
             evap.is_evaporative_cooler = true;
             assert_eq!(

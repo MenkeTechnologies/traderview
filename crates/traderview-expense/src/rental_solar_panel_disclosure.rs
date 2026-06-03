@@ -1,5 +1,5 @@
 //! Rental rooftop solar PV disclosure framework — distinct from sibling
-//! [[tenant_solar_installation]] (tenant right-to-install). Covers landlord
+//! `tenant_solar_installation` (tenant right-to-install). Covers landlord
 //! disclosure of EXISTING rooftop solar arrangement at lease signing: owned
 //! vs leased panel ownership, PPA (Power Purchase Agreement) third-party
 //! financing structure, net-metering credit allocation, SREC (Solar Renewable

@@ -5,12 +5,12 @@
 //! cannabis reasonable-accommodation doctrine, and mold + moisture damage
 //! liability from indoor cultivation operations.
 //!
-//! Distinct from sibling [[tenant_cannabis_use_protection]] (smoking and
+//! Distinct from sibling `tenant_cannabis_use_protection` (smoking and
 //! consumption protection framework — distinct from cultivation),
-//! [[rental_smoke_free_housing_disclosure]] (smoke-free designation
-//! framework), [[rental_basement_water_intrusion_disclosure]] (mold-
+//! `rental_smoke_free_housing_disclosure` (smoke-free designation
+//! framework), `rental_basement_water_intrusion_disclosure` (mold-
 //! infiltration framework — coordinates with grow-room moisture),
-//! [[rental_in_unit_laundry_appliance_provision]] (iter 501 high-humidity
+//! `rental_in_unit_laundry_appliance_provision` (iter 501 high-humidity
 //! appliance framework — distinct ventilation analog).
 //!
 //! Trader-landlord critical because (1) **as of 2025, at least 16 states +

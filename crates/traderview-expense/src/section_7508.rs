@@ -392,7 +392,8 @@ mod tests {
         i.hospitalization_inside_united_states = true;
         let r = check(&i);
         assert!(!r.hospitalization_capped);
-        assert_eq!(r.total_postponement_days, 365 + 0 + 180);
+        // 365 base + 0 hospitalization (zeroed above) + 180 combat-zone bonus.
+        assert_eq!(r.total_postponement_days, 365 + 180);
     }
 
     #[test]

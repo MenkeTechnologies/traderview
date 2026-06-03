@@ -642,7 +642,7 @@ mod tests {
     #[test]
     fn lcrr_and_lcri_engaged_invariant_across_regimes() {
         for regime in [Regime::Federal, Regime::Illinois, Regime::NewJersey] {
-            let mut i = match regime {
+            let i = match regime {
                 Regime::Federal => fed_clean(),
                 Regime::Illinois => il_clean(),
                 Regime::NewJersey => nj_clean(),

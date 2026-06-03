@@ -195,6 +195,7 @@ pub fn compute(input: &Section6654Input) -> Section6654Result {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

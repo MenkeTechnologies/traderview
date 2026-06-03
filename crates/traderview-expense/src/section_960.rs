@@ -15,12 +15,12 @@
 //! § 960(b) PREVIOUSLY TAXED E&P (PTEP) distribution credit: foreign taxes
 //! paid in the year of an actual § 959 distribution of PTEP (typically
 //! foreign withholding tax) are deemed paid by the receiving US shareholder.
-//! Coordinates with [[section_959]] sixteen-basket PTEP framework.
+//! Coordinates with `section_959` sixteen-basket PTEP framework.
 //!
 //! § 960(c) DOMESTIC CORPORATION INCLUSIONS RULE: deemed-paid mechanism
 //! applies only to domestic C corporations; individuals + S corps +
 //! partnerships ineligible UNLESS § 962 election in place (see
-//! [[section_962]] iter 510).
+//! `section_962` iter 510).
 //!
 //! § 960(d) GILTI / NCTI DEEMED-PAID CREDIT: US shareholder including a
 //! § 951A amount is deemed to have paid foreign income taxes equal to

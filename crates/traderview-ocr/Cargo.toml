@@ -33,3 +33,6 @@ pure-onnx-ocr-sync = { version = "0.1", optional = true }
 # The PDF text-layer fast path works regardless of this feature.
 default = []
 engine = ["dep:pure-onnx-ocr-sync"]
+
+[lints]
+workspace = true

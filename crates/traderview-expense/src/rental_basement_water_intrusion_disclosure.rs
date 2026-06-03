@@ -706,7 +706,7 @@ mod tests {
         let r_nyc = check(&i_nyc);
         assert!(!r_nyc.disclosure_compliant);
 
-        let mut i_md = md_clean();
+        let i_md = md_clean();
         let r_md = check(&i_md);
         assert!(r_md.disclosure_compliant);
         let _ = i_md.nyc_multi_unit_building;

@@ -232,6 +232,12 @@ fn citation() -> &'static str {
 }
 
 #[cfg(test)]
+// Wage-garnishment tests mirror the statutory `min(25% × disposable,
+// disposable − 30 × min_wage)` and `max(…, 0)` shapes so the formulas read
+// the same as the CFR rule. With compile-time constant test fixtures one
+// branch dominates and clippy flags `unnecessary_min_or_max`; keep the
+// shape for documentation.
+#[allow(clippy::unnecessary_min_or_max)]
 mod tests {
     use super::*;
 

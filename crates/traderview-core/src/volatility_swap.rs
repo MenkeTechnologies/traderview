@@ -14,7 +14,7 @@
 //!
 //! For zero vol-of-vol the strike collapses to √K_var. The convexity
 //! adjustment accounts for the fact that vol is a concave function of
-//! variance (E[√X] ≤ √E[X] by Jensen).
+//! variance (E[√X] ≤ √E`[X]` by Jensen).
 //!
 //! Pure compute. Caller supplies the fair variance-swap strike (from
 //! `variance_swap_strike`) and a vol-of-vol estimate. Companion to

@@ -6,12 +6,12 @@
 //! alongside dwelling — governed by landlord-tenant law plus state-specific
 //! lien limits on tenant property).
 //!
-//! Distinct from sibling [[rental_basement_water_intrusion_disclosure]]
+//! Distinct from sibling `rental_basement_water_intrusion_disclosure`
 //! (basement water disclosure for storage area), [[rental_chimney_fireplace_
 //! inspection_disclosure]] (chimney near attic storage), [[rental_propane_
 //! tank_lease_disclosure]] (lease-pass-through analog), [[rental_in_unit_
 //! laundry_appliance_provision]] (iter 501 in-unit appliance framework),
-//! [[tenant_voting_address_protection]] (iter 505 confidentiality).
+//! `tenant_voting_address_protection` (iter 505 confidentiality).
 //!
 //! Trader-landlord critical because (1) **California SB 709 effective
 //! January 1, 2026** amends Cal. Bus. & Prof. Code § 21712 to require

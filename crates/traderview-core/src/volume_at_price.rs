@@ -7,8 +7,8 @@
 //! overlaps (proportional to the overlap).
 //!
 //! Output:
-//!   bins[i].center: midpoint of bin i
-//!   bins[i].volume: cumulative volume in bin i
+//!   bins`[i]`.center: midpoint of bin i
+//!   bins`[i]`.volume: cumulative volume in bin i
 //!   poc_index: index of bin with highest volume (Point of Control)
 //!   value_area_high / value_area_low: bin centers covering 70% of
 //!     total volume centered on POC

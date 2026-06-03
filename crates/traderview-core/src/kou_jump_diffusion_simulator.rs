@@ -9,7 +9,7 @@
 //!   ln(J) ~ asymmetric Laplace:
 //!     up   with prob p,   exponential(η1), mean 1/η1   (positive tail)
 //!     down with prob 1-p, -exponential(η2), mean -1/η2 (negative tail)
-//!   E[J] = p · η1/(η1-1) + (1-p) · η2/(η2+1)
+//!   E`[J]` = p · η1/(η1-1) + (1-p) · η2/(η2+1)
 //!   κ = E[J - 1]
 //!
 //! Constraint: η1 > 1 (so the up-jump mean is finite). Typical defaults

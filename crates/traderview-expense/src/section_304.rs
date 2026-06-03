@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn brother_sister_full_dividend_within_combined_eep() {
-        let mut input = base_brother_sister();
+        let input = base_brother_sister();
         // Combined E&P = $600K + $200K = $800K
         // Property $1M > combined E&P $800K → $800K dividend + $200K post-E&P
         // Post-E&P $200K - basis $150K = $50K capital gain after $150K basis recovery

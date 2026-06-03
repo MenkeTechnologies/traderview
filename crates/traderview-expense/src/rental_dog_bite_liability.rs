@@ -43,7 +43,7 @@
 //! - codes.findlaw.com/ny/agriculture-and-markets-law/agm-sect-123/
 //! - app.leg.wa.gov/rcw/default.aspx?cite=16.08.040
 //! - flsenate.gov/Laws/Statutes/2021/767.04
-//! - https://recordinglaw.com/dog-laws/dog-bite-laws-summary-by-state/illinois-dog-bite-laws/
+//! - <https://recordinglaw.com/dog-laws/dog-bite-laws-summary-by-state/illinois-dog-bite-laws/>
 
 use serde::{Deserialize, Serialize};
 

@@ -35,7 +35,7 @@
 //! "securities" for purposes of § 354 per Treas. Reg. § 1.354-1(e).
 //!
 //! Coordination: § 354 nonrecognition OVERRIDDEN by § 367 (foreign corp
-//! exchanges — see [[section_367]] iter 524). Basis preserved per § 358
+//! exchanges — see `section_367` iter 524). Basis preserved per § 358
 //! substituted basis. Boot recognized via § 356. Holding period tacked per
 //! § 1223(1).
 

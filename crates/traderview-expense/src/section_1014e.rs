@@ -1,7 +1,7 @@
 //! IRC §1014(e) — Appreciated property acquired by decedent by gift
 //! within 1 year of death.
 //!
-//! Anti-abuse companion to [`section_1014`] (general death basis
+//! Anti-abuse companion to `section_1014` (general death basis
 //! step-up). Closes the "deathbed gift" loophole: without §1014(e), a
 //! healthy person could gift appreciated property to a terminally ill
 //! relative, who would then bequeath it back, generating a basis

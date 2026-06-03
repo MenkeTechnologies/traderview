@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     fn nyc_uniquely_engages_dhcr_invariant() {
-        let mut nyc = nyc_stabilized_baseline();
+        let nyc = nyc_stabilized_baseline();
         let r_nyc = check(&nyc);
         assert!(r_nyc.nyc_dhcr_rent_reduction_available);
 

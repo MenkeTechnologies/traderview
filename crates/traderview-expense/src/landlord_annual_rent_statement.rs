@@ -211,6 +211,7 @@ fn check_default(_input: &LandlordAnnualRentStatementInput) -> LandlordAnnualRen
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use super::*;
 

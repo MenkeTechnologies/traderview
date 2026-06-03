@@ -13,7 +13,7 @@
 //! tail risk — required for risk-budgeting trade decisions.
 //!
 //! Pure compute. Caller supplies the covariance matrix in row-major
-//! Vec<Vec<f64>> form and matching weights. z-score for confidence α
+//! `Vec<Vec<f64>>` form and matching weights. z-score for confidence α
 //! supplied directly (1.645 for 95%, 2.326 for 99%).
 
 use serde::{Deserialize, Serialize};

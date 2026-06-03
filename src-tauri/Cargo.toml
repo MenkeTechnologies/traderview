@@ -53,3 +53,6 @@ tempfile = "3"
 # in the desktop app. Heavy first-time compile (~5 min) — leave off until needed.
 default = []
 ocr-engine = ["traderview-web/ocr-engine"]
+
+[lints]
+workspace = true

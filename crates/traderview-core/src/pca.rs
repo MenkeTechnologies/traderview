@@ -24,7 +24,7 @@ pub struct PcaReport {
     /// Eigenvalues sorted descending.
     pub eigenvalues: Vec<f64>,
     /// Eigenvectors as columns of a n×n matrix; column k matches
-    /// eigenvalues[k]. Each column is unit-length.
+    /// eigenvalues`[k]`. Each column is unit-length.
     pub eigenvectors: Vec<Vec<f64>>,
     /// Fraction of total variance explained by each component.
     pub explained_variance_ratio: Vec<f64>,

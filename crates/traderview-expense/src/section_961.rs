@@ -39,7 +39,7 @@
 //! 2024) implement § 959 sixteen-basket PTEP framework + § 961 basis
 //! tracking + § 962 election + currency translation + S corp PTEP +
 //! consolidated group PTEP + anti-avoidance rules. Coordinates with
-//! [[section_959]] iter 512 + [[section_960]] iter 520 + [[section_962]]
+//! `section_959` iter 512 + `section_960` iter 520 + `section_962`
 //! iter 510.
 
 use serde::{Deserialize, Serialize};

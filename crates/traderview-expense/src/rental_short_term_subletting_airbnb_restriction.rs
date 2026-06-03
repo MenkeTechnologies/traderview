@@ -6,11 +6,11 @@
 //! (4) lease-clause enforceability under state-mandatory disclosure rules,
 //! and (5) landlord enforcement remedies including unlawful detainer.
 //!
-//! Distinct from sibling [[rental_lease_guarantor_disclosure]] (lease
-//! cosigner separate framework), [[tenant_voting_address_protection]]
+//! Distinct from sibling `rental_lease_guarantor_disclosure` (lease
+//! cosigner separate framework), `tenant_voting_address_protection`
 //! (iter 505 ACP confidentiality during STR enforcement), [[tenant_smart_
 //! lock_biometric_consent]] (STR-installed smart locks separate framework),
-//! [[rental_storage_unit_lease_disclosure]] (iter 509 storage lease
+//! `rental_storage_unit_lease_disclosure` (iter 509 storage lease
 //! pattern).
 //!
 //! Trader-landlord critical because (1) **NYC Local Law 18 of 2021**
