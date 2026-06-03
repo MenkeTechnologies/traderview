@@ -282,6 +282,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
+        .route("/calc/section-383",           post(section_383_route))
         .route("/calc/section-384",           post(section_384_route))
         .route("/calc/section-83i",           post(section_83i_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
@@ -2823,6 +2824,46 @@ async fn section_382_route(
         ));
     }
     Ok(Json(traderview_expense::section_382::compute(&b)))
+}
+
+// ── § 383 Special Limitations on Certain Excess Credits + Capital Loss ─
+// Mounted at /api/calc/section-383 (iter 540). Pure compute. § 383
+// extends the § 382 ownership-change annual limitation regime to four
+// categories of corporate carryover attributes outside § 382: (1)
+// general business credits under § 39, (2) minimum tax credits under
+// § 53, (3) net capital loss carryovers under § 1212, (4) excess
+// foreign tax credits under § 904(c). Mechanic: compute tax that
+// WOULD have been due on taxable income equal to the § 382 limit,
+// then cap pre-change credit/loss usage against that ceiling.
+//
+// § 383(a) general business credit + minimum tax credit regime:
+// post-change use limited to tax attributable to income within § 382
+// limit. § 383(b) net capital loss carryover: § 1212(a) carryover
+// limited under regulations based on § 382 principles, with
+// anti-stuffing rule (capital loss used in post-change year REDUCES
+// the § 382 limit applied to pre-change NOLs in that same year).
+// § 383(c) excess foreign tax credit: § 904(c) excess FTC carryover
+// limited consistent with § 382 + § 383 principles. § 383(d) ordering:
+// terms used in § 383 have same meaning as § 382 with adjustments.
+//
+// Six-mode severity ladder: NotApplicable,
+// NoOwnershipChangeFullAttributeUsageAllowed,
+// Section383CreditLimitationApplied,
+// Section383BCapitalLossLimitationAppliedAntiStuffing,
+// Section383CExcessFtcLimitationApplied,
+// AttributeFullyUsedWithinSection383Limit.
+//
+// Coordinates with § 382 (NOL annual cap parent regime), § 384
+// (iter 538 — preacquisition-loss built-in-gain disallowance), § 269
+// (iter 536 — discretionary disallowance), § 1212 (capital loss
+// carryover), § 39 (general business credit), § 53 (minimum tax
+// credit), § 904(c) (FTC carryover).
+
+async fn section_383_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_383::Section383ExcessCreditLimitationInput>,
+) -> Result<Json<traderview_expense::section_383::Section383ExcessCreditLimitationOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_383::check(&b)))
 }
 
 // ── § 384 Limitation on Preacquisition Losses to Offset Built-In Gain ─
