@@ -289,6 +289,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-752",           post(section_752_route))
         .route("/calc/section-1235",          post(section_1235_route))
         .route("/calc/section-754",           post(section_754_route))
+        .route("/calc/section-755",           post(section_755_route))
         .route("/calc/section-871m",          post(section_871m_route))
         .route("/calc/section-901",           post(section_901_route))
         .route("/calc/section-903",           post(section_903_route))
@@ -2854,6 +2855,37 @@ async fn section_754_route(
         ));
     }
     Ok(Json(traderview_expense::section_754::compute(&b)))
+}
+
+// ── § 755 allocation of § 743(b) and § 734(b) basis adjustments ──
+// Mounted at /api/calc/section-755. Downstream allocation regime
+// that determines how § 743(b) transferee-side basis adjustments
+// (iter 576) and § 734(b) distribution-side basis adjustments (iter
+// 578) are spread across partnership properties. § 755(a) general
+// rule: adjustments allocated to preserve partner economic position
+// based on hypothetical-sale income/gain/loss. § 755(b) two-class
+// rule: capital gain property class (§ 1221 capital assets + § 1231
+// (b) depreciable trade-or-business property) vs ordinary income
+// property class (§ 751 hot assets + § 1245 recapture potential +
+// inventory). Within-class allocation per net unrealized appreciation
+// or depreciation. § 743(b) class attribution: amount to ordinary
+// income class = total ordinary income/gain/loss that would be
+// allocated to transferee on hypothetical sale of all ordinary
+// income property; remainder to capital gain class. § 734(b) class
+// attribution: follows character of distributee gain/loss under
+// § 731. TD 9059 (June 9, 2003) finalized coordination with § 1060
+// residual method. Sibling cluster: § 754 (election that triggers
+// § 755 allocation downstream), § 743 (iter 576 — transferee
+// adjustment subject to § 755 allocation), § 734 (iter 578 —
+// distributee adjustment subject to § 755 allocation), § 751
+// (iter 572 — hot assets define ordinary income class composition),
+// § 1221 + § 1231(b) (capital gain class composition).
+
+async fn section_755_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_755::Section755Input>,
+) -> Result<Json<traderview_expense::section_755::Section755Output>, ApiError> {
+    Ok(Json(traderview_expense::section_755::check(&b)))
 }
 
 // ── §465 at-risk rules ───────────────────────────────────────────────
