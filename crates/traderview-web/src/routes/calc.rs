@@ -179,6 +179,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6621",          post(section_6621_route))
         .route("/calc/section-6651",          post(section_6651_route))
         .route("/calc/section-6654",          post(section_6654_route))
+        .route("/calc/section-6655",          post(section_6655_route))
         .route("/calc/section-6662",          post(section_6662_route))
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-446",           post(section_446_route))
@@ -7680,6 +7681,52 @@ async fn section_6654_route(
         }
     }
     Ok(Json(traderview_expense::section_6654::compute(&b)))
+}
+
+// ── §6655 corporate estimated tax underpayment penalty ─────────────
+// Mounted at /api/calc/section-6655. § 6655 is the corporate
+// parallel to § 6654 (individual estimated tax) and uses the § 6621
+// underpayment rate determined by § 6621(b) federal short-term rate
+// + 3 pp (or + 5 pp for large corporate underpayment > $100,000
+// under § 6621(c)) — see section_6621 (built iter 674). § 6655(a)
+// imposes the addition to tax computed by applying the § 6621
+// underpayment rate to the underpayment for the underpayment period
+// (from installment due date until earlier of April 15 of following
+// year or payment date). § 6655(c) four required installments due
+// April 15, June 15, September 15, and December 15. § 6655(d)(1)(A)
+// each installment = 25 PERCENT of required annual payment; required
+// annual payment = LESSER of (i) 100 % current-year tax or (ii)
+// 100 % preceding-year tax (subject to availability). § 6655(d)(2)
+// LARGE CORPORATION (taxable income ≥ $1,000,000 in any of 3
+// preceding taxable years under § 6655(g)(2)) may NOT use prior-year
+// safe harbor after the first installment; large corp must pay
+// 100 % current-year tax through installments 2-4 but may use
+// prior-year for installment 1. § 6655(e) annualized income
+// installment method (using 3, 3, 6, 9-month annualization) and
+// adjusted seasonal installment method (70 %+ income in same 6
+// months in each of 3 preceding years) provide alternative lower-
+// installment safe harbors. § 6655(f) small-underpayment exception:
+// no penalty if total tax shown on return is LESS THAN $500 (strict
+// less-than statutory boundary). § 6655(g)(1) "tax" includes regular
+// income tax under § 11, AMT under § 55, and BEAT under § 59A,
+// reduced by applicable credits. § 6655(h) excessive § 6425
+// quick-refund interest at § 6621 rate. Nine-mode severity ladder
+// × 2 corporation types × 4 installment quarters × 4 safe-harbor
+// methods × variable current-year tax / preceding-year tax / payment /
+// FSTR / underpayment-period inputs. Sibling cluster: section_6621
+// (underpayment rate; primary input to § 6655 penalty computation
+// — built iter 674), section_6601 (general underpayment interest),
+// section_6611 (overpayment interest), section_6622 (daily
+// compounding cross-reference), section_6651 (failure-to-file /
+// failure-to-pay penalty — independent civil penalty layer),
+// section_6654 (individual estimated tax underpayment — parallel
+// individual provision; § 6655 is corporate counterpart).
+
+async fn section_6655_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6655::Section6655Input>,
+) -> Result<Json<traderview_expense::section_6655::Section6655Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6655::compute(&b)))
 }
 
 // ── §6662 accuracy-related penalty ──────────────────────────────────
