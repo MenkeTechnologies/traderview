@@ -651,6 +651,11 @@ use traderview_expense::rental_hardwired_smoke_alarm_responsibility::{
     RentalHardwiredSmokeAlarmResponsibilityInput,
     RentalHardwiredSmokeAlarmResponsibilityResult,
 };
+use traderview_expense::rental_heat_minimum_temperature_season::{
+    check as check_rental_heat_minimum_temperature_season,
+    HeatMinimumTemperatureInput as RentalHeatMinimumTemperatureInput,
+    HeatMinimumTemperatureResult as RentalHeatMinimumTemperatureResult,
+};
 use traderview_expense::rental_hot_water_temperature::{
     check as check_rental_hot_water_temperature, RentalHotWaterTemperatureInput,
     RentalHotWaterTemperatureResult,
@@ -1348,6 +1353,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-garage-door-safety-compliance", axum::routing::post(rental_garage_door_safety_compliance_route))
         .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
         .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
+        .route("/rental-heat-minimum-temperature-season", axum::routing::post(rental_heat_minimum_temperature_season_route))
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
@@ -8058,6 +8064,31 @@ async fn rental_hardwired_smoke_alarm_responsibility_route(
     Json(b): Json<RentalHardwiredSmokeAlarmResponsibilityInput>,
 ) -> Result<Json<RentalHardwiredSmokeAlarmResponsibilityResult>, ApiError> {
     Ok(Json(check_rental_hardwired_smoke_alarm_responsibility(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_heat_minimum_temperature_season: Multi-jurisdiction heat-
+// season minimum-temperature compliance covering NYC Admin Code
+// § 27-2029 (Oct 1 - May 31, 68°F day when outdoor < 55°F, 62°F
+// night), Chicago Municipal Code § 13-196-410 + § 5-12-110 (Sept 15
+// - June 1, 68°F day 8:30am-10:30pm, 66°F night), Boston / MA 105
+// CMR 410.201 (Sept 15 - June 15 longest in country, 68°F day
+// 7am-11pm, 64°F night), Philadelphia PM-602 (Oct 1 - Apr 30 all
+// hours 68°F + May/Sept shoulder when outdoor < 40°F). All four
+// jurisdictions prohibit portable space heaters / ovens / cooking
+// appliances as primary heat source. Sibling cluster:
+// rental_radiator_steam_heat_safety (NYC LL 79/2018 + Ben Z's Law
+// radiator burn prevention), rental_hot_water_temperature (CA 120°F
+// hot water minimum), rental_carbon_monoxide_detector (winter heat
+// season CO risk).
+// ---------------------------------------------------------------------------
+
+async fn rental_heat_minimum_temperature_season_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalHeatMinimumTemperatureInput>,
+) -> Result<Json<RentalHeatMinimumTemperatureResult>, ApiError> {
+    Ok(Json(check_rental_heat_minimum_temperature_season(&b)))
 }
 
 // ---------------------------------------------------------------------------

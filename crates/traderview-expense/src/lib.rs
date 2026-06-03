@@ -191,6 +191,7 @@ pub mod rental_garage_door_safety_compliance;
 pub mod rental_gas_appliance_ban;
 pub mod rental_grill_propane_bbq_restriction;
 pub mod rental_hardwired_smoke_alarm_responsibility;
+pub mod rental_heat_minimum_temperature_season;
 pub mod rental_hoa_disclosure_at_lease;
 pub mod rental_hot_water_temperature;
 pub mod rental_illegal_lockout_self_help_eviction;
