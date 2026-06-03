@@ -217,6 +217,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1031-f",        post(section_1031_f_route))
         .route("/calc/section-1033",          post(section_1033_route))
         .route("/calc/section-481",           post(section_481_route))
+        .route("/calc/section-482",           post(section_482_route))
         .route("/calc/section-514",           post(section_514_route))
         .route("/calc/section-530",           post(section_530_route))
         .route("/calc/section-280f",          post(section_280f_route))
@@ -3969,6 +3970,63 @@ async fn section_481_route(
     Json(b): Json<traderview_expense::section_481::Section481Input>,
 ) -> Result<Json<traderview_expense::section_481::Section481Result>, ApiError> {
     Ok(Json(traderview_expense::section_481::compute(&b)))
+}
+
+// ── § 482 Transfer Pricing Allocation Among Related Taxpayers ────────
+// Mounted at /api/calc/section-482 (iter 566). Pure compute. § 482
+// grants Treasury authority to allocate gross income, deductions,
+// credits, and allowances between or among two or more organizations,
+// trades, or businesses owned or controlled by same interests when
+// necessary to prevent tax evasion or clearly reflect income.
+// Cornerstone of US transfer-pricing enforcement.
+//
+// § 482 arm's-length standard (Treas. Reg. § 1.482-1): controlled
+// transaction satisfies arm's-length if results consistent with
+// uncontrolled taxpayers under same circumstances.
+//
+// § 482 best-method rule (Treas. Reg. § 1.482-1(c)): no strict
+// hierarchy; most reliable method given facts and circumstances.
+//
+// Tangible-property methods (Treas. Reg. § 1.482-3): CUP + Resale
+// Price + Cost Plus. Profit methods (Treas. Reg. § 1.482-5 + § 1.482-6):
+// CPM + Profit Split. Services (Treas. Reg. § 1.482-9): CUSP + Gross
+// Services Margin + Cost-of-Services Plus + CPM-for-services + Profit
+// Split + Services Cost Method (SCM) safe harbor.
+//
+// Intangible property (Treas. Reg. § 1.482-4): Tax Reform Act of 1986
+// commensurate-with-income standard requires periodic adjustments;
+// Comparable Uncontrolled Transaction (CUT) preferred.
+//
+// Cost sharing arrangements (Treas. Reg. § 1.482-7): related parties
+// share R&D costs proportional to expected benefits; Platform
+// Contribution Transaction (PCT) payment required for pre-existing
+// intangibles.
+//
+// § 6662(e) substantial-valuation-misstatement 20% penalty: § 482
+// adjustment > $5M or 10% gross receipts. § 6662(h) gross-valuation-
+// misstatement 40% penalty: 200% / 50% threshold. § 6664(c)
+// reasonable-cause defense requires contemporaneous documentation per
+// § 1.6662-6(d) (best-method + comparability + economic + financial
+// analysis).
+//
+// Seven-mode severity ladder: NotApplicable,
+// Section482WithinArmsLengthRangeNoAdjustment,
+// Section482AdjustmentBelowPenaltyThreshold,
+// Section6662ESubstantialValuationMisstatement20Pct,
+// Section6662HGrossValuationMisstatement40Pct,
+// CostSharingPctPlatformContributionTransactionRequired,
+// CommensurateWithIncomeStandardIntangible.
+//
+// Coordinates with § 367(d) outbound intangible transfer, § 250 FDII,
+// § 6662(e)/(h) accuracy-related penalties, § 6664(c) reasonable
+// cause, Form 5471 + Form 5472 + Form 8975 CbCR reporting (≥ $850M
+// global group revenue).
+
+async fn section_482_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_482::Section482TransferPricingInput>,
+) -> Result<Json<traderview_expense::section_482::Section482TransferPricingOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_482::check(&b)))
 }
 
 // ── § 514 Unrelated Debt-Financed Income (UBTI) ─────────────────────

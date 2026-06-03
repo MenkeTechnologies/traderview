@@ -12534,6 +12534,40 @@ Mounted at `POST /api/calc/section-302`. Twenty tests pin: **substantially dispr
 
 Mounted at `POST /api/calc/section-304`. Seventeen tests pin: **unrelated arm's-length sale § 304 inapplicable** ($1M property - $150K basis = $850K capital gain + § 1001 + § 1222); **not in control of both § 304 inapplicable** (§ 304(b)(1) + § 318); **brother-sister full dividend within combined E&P** ($800K combined E&P → $800K dividend + $150K basis recovery + $50K capital gain); **brother-sister property within combined E&P all dividend** ($500K < $800K E&P → all dividend); **brother-sister property just exceeds E&P basis recovery** ($850K → $800K div + $50K basis recovery); **parent-subsidiary § 304(a)(2) recharacterization**; **zero E&P full basis recovery then capital gain** ($0 E&P → $150K basis + $850K capital gain); **§ 304 control threshold constant pins 50%**; **very large property no overflow** (u64::MAX); **zero property zero distribution** (boundary); **note pins § 245A foreign source**; **note pins § 1248 foreign-corp deemed dividend**; **note pins qualified dividend § 1(h)(11)**; **note pins § 318 constructive ownership companion**; **unrelated arm's-length zero gain when basis exceeds proceeds** (saturating_sub defense); **remaining basis in acquiring-corp stock tracked**; **note pins § 304(b)(2) E&P stacking order**.
 
+`traderview-expense::section_482` is the **IRC § 482 — Allocation of Income and Deductions Among Taxpayers (Transfer Pricing) module** (iter 566) — direct transfer-pricing cornerstone enforcing arm's-length-standard reallocation between commonly-controlled related parties. Direct sibling to `section_269` (iter 536 — anti-tax-avoidance acquisition disallowance parallel), `section_269a` (iter 544 — PSC tax-avoidance allocation parallel), `section_267` (related-party loss-deferral parallel), `section_245a` (foreign-source DRD coordination), `section_367` (cross-border reorganization regime), `section_951a` (GILTI/NCTI). § 482 grants Treasury authority to DISTRIBUTE, APPORTION, or ALLOCATE gross income, deductions, credits, or allowances between or among two or more organizations, trades, or businesses owned or controlled directly or indirectly by the same interests when necessary to PREVENT EVASION OF TAXES or to clearly REFLECT THE INCOME of the controlled taxpayers.
+
+**§ 482 ARM'S-LENGTH STANDARD** (Treas. Reg. § 1.482-1): a controlled transaction satisfies the arm's-length standard if the results are consistent with the results that would have been realized if uncontrolled taxpayers had engaged in the same transaction under the same circumstances.
+
+**§ 482 BEST-METHOD RULE** (Treas. Reg. § 1.482-1(c)): the arm's-length result must be determined under the method that, under the facts and circumstances, provides the most reliable measure of an arm's-length result. NO strict hierarchy.
+
+**TANGIBLE-PROPERTY METHODS** (Treas. Reg. § 1.482-3): (1) Comparable Uncontrolled Price (CUP); (2) Resale Price Method (RPM); (3) Cost Plus Method.
+
+**PROFIT METHODS** (Treas. Reg. § 1.482-5 + § 1.482-6): (4) Comparable Profits Method (CPM); (5) Profit Split Method.
+
+**SERVICES** (Treas. Reg. § 1.482-9): comparable uncontrolled services price + gross services margin + cost-of-services-plus + CPM-for-services + profit split + **Services Cost Method (SCM)** safe harbor for low-margin services.
+
+**INTANGIBLE-PROPERTY TRANSFERS**: Tax Reform Act of 1986 amendment requires consideration for intangible property in a controlled transaction be **COMMENSURATE WITH THE INCOME** attributable to the intangible. **Comparable Uncontrolled Transaction (CUT)** method preferred under Treas. Reg. § 1.482-4. Periodic adjustments mandated when actual income materially differs from projections.
+
+**COST SHARING ARRANGEMENTS** (Treas. Reg. § 1.482-7): related parties may share R&D costs proportional to expected benefits; **Platform Contribution Transaction (PCT)** payment required for pre-existing intangibles contributed by any participant.
+
+**§ 6662(e) SUBSTANTIAL VALUATION MISSTATEMENT PENALTY**: 20% of underpayment if § 482 adjustment exceeds greater of **$5 million** or **10% of gross receipts**.
+
+**§ 6662(h) GROSS VALUATION MISSTATEMENT PENALTY**: **40%** — if claimed value 200% of correct value (overvaluation) OR 25% (or less) of correct (undervaluation).
+
+**§ 6664(c) REASONABLE-CAUSE DEFENSE** requires contemporaneous documentation per **Treas. Reg. § 1.6662-6(d)** (best-method selection + comparable analysis + economic analysis + financial data). Defense NOT available for § 6662(h) gross valuation misstatement per § 6664(c)(3).
+
+**Reporting**: Form 5471 (US shareholder of CFC) + Form 5472 (US corp 25%-foreign-owned + foreign branch) + Form 8975 Country-by-Country reporting (≥ $850M global group revenue).
+
+**Five transaction types**: TangiblePropertyTransfer, IntangiblePropertyTransfer, ServiceProvision, CostSharingArrangementSection1482Dash7, LoanOrFinancialTransaction.
+
+**Eight transfer-pricing methods**: ComparableUncontrolledPriceCup, ResalePriceMethodRpm, CostPlusMethod, ComparableProfitsMethodCpm, ProfitSplitMethod, ServicesCostMethodSafeHarbor, ComparableUncontrolledTransactionCut, UnspecifiedMethod.
+
+**Four adjustment-magnitude statuses**: WithinArmsLengthRangeNoAdjustment, AdjustmentBelowSection6662EThreshold, Section6662ESubstantialValuationMisstatement, Section6662HGrossValuationMisstatement.
+
+**Seven-mode severity ladder**: NotApplicable, Section482WithinArmsLengthRangeNoAdjustment, Section482AdjustmentBelowPenaltyThreshold, Section6662ESubstantialValuationMisstatement20Pct, Section6662HGrossValuationMisstatement40Pct, CostSharingPctPlatformContributionTransactionRequired, CommensurateWithIncomeStandardIntangible.
+
+Mounted at `POST /api/calc/section-482`. Twenty tests pin: **within arm's-length range no adjustment** (§ 1.482-1 + § 1.6662-6(d) documentation); **adjustment below threshold no penalty**; **substantial valuation misstatement 20% penalty** (20% × $10M = $2M + § 6662(e) + § 1.6662-6(d)); **gross valuation misstatement 40% penalty** (40% × $5M = $2M + § 6664(c)(3) defense unavailable); **cost sharing arrangement PCT required** (§ 1.482-7 + § 367(d) + § 250 FDII); **intangible property commensurate with income standard** (Tax Reform Act of 1986 + § 1.482-4); **CUP method label pinned** (§ 1.482-3(b)); **resale price method label pinned** (§ 1.482-3(c) + RPM); **cost plus method label pinned** (§ 1.482-3(d)); **CPM method label pinned** (§ 1.482-5); **profit split method label pinned** (§ 1.482-6); **services cost method safe harbor label pinned** (§ 1.482-9(b)); **CUT method label pinned** (§ 1.482-4 + CUT); **§ 6662(e) threshold constant pins $5M**; **§ 6662(e) penalty rate constant pins 20%**; **§ 6662(h) penalty rate constant pins 40%**; **substantial valuation threshold pins 200%**; **gross valuation threshold pins 200%**; **very large adjustment no overflow** (u64::MAX + u128 intermediate); **zero adjustment zero penalty** (boundary).
+
 `traderview-expense::section_357` is the **IRC § 357 — Assumption of Liability in Tax-Free Transfers module** (iter 564) — direct liability-rule cornerstone completing the basis-preservation cluster with `section_358` (iter 560 — shareholder basis side) and `section_362` (iter 562 — corporation basis side). Direct sibling to `section_351` (transfer parent regime), `section_354` (basis in reorganization stock), `section_311` (iter 550 — corp-level distribution recognition). § 357 governs how the assumption of liabilities by a transferee corporation affects gain recognition by the transferor in § 351 transfers and § 368 reorganizations, containing the critical rules that determine whether liability assumption preserves non-recognition (§ 357(a)) or triggers gain recognition due to tax-avoidance purpose (§ 357(b)) or liabilities-exceed-basis mechanic (§ 357(c)(1)).
 
 **§ 357(a) GENERAL RULE**: assumption of a liability of the transferor by the transferee corporation does NOT cause the assumed liability to be treated as money or other property received — liability assumption preserves non-recognition.
