@@ -239,6 +239,7 @@ pub mod rental_nyc_local_law_18_str_registration;
 pub mod rental_nyc_local_law_55_ipm_pest_control;
 pub mod rental_nyc_loft_law_article_7c;
 pub mod rental_nyc_scrie_drie_rent_freeze;
+pub mod rental_oakland_measure_ee_just_cause_omc_8_22;
 pub mod rental_oil_tank_replacement_disclosure;
 pub mod rental_oregon_sb_608_sb_611_rent_stabilization;
 pub mod rental_organic_waste_collection_disclosure;

@@ -885,6 +885,11 @@ use traderview_expense::rental_ny_rpl_235f_roommate_law::{
     NyRpl235FRoommateLawInput as RentalNyRpl235FRoommateLawInput,
     NyRpl235FRoommateLawResult as RentalNyRpl235FRoommateLawResult,
 };
+use traderview_expense::rental_oakland_measure_ee_just_cause_omc_8_22::{
+    check as check_rental_oakland_measure_ee_just_cause_omc_8_22,
+    RentalOaklandMeasureEeJustCauseOmc822Input,
+    RentalOaklandMeasureEeJustCauseOmc822Result,
+};
 use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
@@ -1647,6 +1652,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-nyc-local-law-55-ipm-pest-control", axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route))
         .route("/rental-nyc-local-law-18-str-registration", axum::routing::post(rental_nyc_local_law_18_str_registration_route))
         .route("/rental-nyc-coop-conversion-eviction-protection", axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route))
+        .route("/rental-oakland-measure-ee-just-cause-omc-8-22", axum::routing::post(rental_oakland_measure_ee_just_cause_omc_8_22_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
@@ -12156,6 +12162,65 @@ async fn rent_roll(
 // sibling), rental_lead_pipe_disclosure (legacy infrastructure pattern),
 // rental_pesticide_application_notification (chemical-exposure pattern).
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_oakland_measure_ee_just_cause_omc_8_22: Oakland Just Cause
+// for Eviction Ordinance (Measure EE), adopted by voters of Oakland
+// in November 2002; codified at Oakland Municipal Code Title 8
+// Chapter 8.22 Article II (§§ 8.22.300 through 8.22.470).
+// Substantially amended in November 2022 by voter approval of
+// Measure V (broadened protected-tenant categories to include
+// catastrophic illness; increased civil penalties; added anti-
+// harassment protections). Coverage scope under OMC § 8.22.350:
+// buildings with 2 OR MORE UNITS with certificate of occupancy
+// issued BEFORE JANUARY 1, 1983; exemptions include hospitals,
+// nonprofit-operated housing, owner-occupied buildings, units with
+// certificate of occupancy after 1983 (or after 2003 for new-
+// construction carve-outs), state/federal preemption, and transient
+// hotel occupancy. 11 just-cause grounds under OMC § 8.22.360:
+// (1) non-payment after 3-day notice; (2) breach of lease or refused
+// renewal with materially identical terms; (3) willful damage;
+// (4) disorderly conduct; (5) illegal use; (6) denial of landlord
+// access after written notice; (7) substantial repairs requiring
+// temporary relocation; (8) owner / relative move-in (owner, spouse,
+// domestic partner, child, parent, grandparent); (9) Ellis Act
+// withdrawal under California Government Code § 7060; (10) demolition
+// with valid permits; (11) end of temporary tenancy or other narrow
+// specified ground. Protected tenants under § 8.22.360(8): age 60+
+// with at least 5 years' tenure, disabled tenants, OR (Measure V
+// 2022) tenants with catastrophic illness — all protected from
+// owner / relative move-in evictions. Ellis Act withdrawal notice
+// periods under California Government Code § 7060.4: 120 DAYS
+// standard; 365 DAYS (1 year) extended notice for senior (62+) or
+// disabled tenants with at least 1 year tenure. Remedies under
+// OMC § 8.22.370: statutory damages + actual damages + treble
+// damages for willful violations + reasonable attorney's fees +
+// injunctive relief (Measure V increased penalty structure).
+// Seventeen-mode severity ladder × 2 property jurisdictions ×
+// variable unit count × 4 unit types × 6 exemption statuses ×
+// 2 certificate-of-occupancy date statuses × 3 compliance aspects ×
+// 12 just-cause grounds × 5 protected-tenant statuses × variable
+// Ellis Act notice days. Sibling cluster: rental_san_francisco_
+// rent_ordinance_chapter_37 (iter 677 — SF 1979 OLDEST CA municipal
+// regime), rental_berkeley_rent_stabilization_ordinance_bmc_chapter_
+// 13_76 (iter 679 — Berkeley 1980 SECOND OLDEST), rental_seattle_
+// smc_22_206_160_just_cause_eviction (iter 669 — Seattle JCEO 1980),
+// rental_california_sb_567_no_fault_eviction_amendments (iter 673
+// — CA AB 1482 + SB 567 statewide overlay), rental_california_ab_12_
+// security_deposit_cap (iter 645), rental_california_ab_2347_unlawful_
+// detainer_response (iter 667), rental_just_cause_eviction (multi-
+// state base), rental_owner_move_in_eviction (OMI cross-reference),
+// rental_demolition_tenant_notice (cross-reference), rental_rent_
+// control_stabilization (multi-state regime).
+// ---------------------------------------------------------------------------
+
+async fn rental_oakland_measure_ee_just_cause_omc_8_22_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalOaklandMeasureEeJustCauseOmc822Input>,
+) -> Result<Json<RentalOaklandMeasureEeJustCauseOmc822Result>, ApiError> {
+    Ok(Json(check_rental_oakland_measure_ee_just_cause_omc_8_22(&b)))
+}
 
 async fn rental_oil_tank_replacement_disclosure_route(
     _s: State<AppState>,
