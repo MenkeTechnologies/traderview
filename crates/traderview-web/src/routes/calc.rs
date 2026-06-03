@@ -154,6 +154,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-448",           post(section_448_route))
         .route("/calc/section-444",           post(section_444_route))
         .route("/calc/section-3406",          post(section_3406_route))
+        .route("/calc/section-304",           post(section_304_route))
         .route("/calc/section-305",           post(section_305_route))
         .route("/calc/section-311",           post(section_311_route))
         .route("/calc/section-318",           post(section_318_route))
@@ -6251,6 +6252,57 @@ async fn section_305_route(
     Json(b): Json<traderview_expense::section_305::Section305Input>,
 ) -> Result<Json<traderview_expense::section_305::Section305Result>, ApiError> {
     Ok(Json(traderview_expense::section_305::compute(&b)))
+}
+
+// ── § 304 Redemption Through Use of Related Corporations ────────────
+// Mounted at /api/calc/section-304 (iter 554). Pure compute. § 304
+// prevents brother-sister and parent-subsidiary stock sales between
+// commonly-controlled corporations from being recharacterized as
+// capital-gain sales when the substance of the transaction is a
+// dividend distribution from accumulated E&P. Closes the "extraction"
+// tactic where a controlling shareholder converts what is economically
+// a dividend into a § 1001 exchange.
+//
+// § 304(a)(1) brother-sister acquisitions: if one or more persons is
+// in control of each of two corporations and sells stock of the
+// issuing corp to the acquiring corp for property, the transaction is
+// recharacterized as a § 301 distribution by acquiring corp.
+//
+// § 304(a)(2) parent-subsidiary acquisitions: subsidiary purchases
+// parent stock from parent's shareholder → § 301 distribution from
+// subsidiary.
+//
+// § 304(b)(1) control: 50% vote OR value (with § 318 constructive
+// ownership applied).
+//
+// § 304(b)(2) E&P stacking order: distribution treated as first paid
+// by acquiring corp E&P, then by issuing corp E&P. § 301(c)
+// dividend/basis-recovery/capital-gain split applies.
+//
+// § 304(b)(3) foreign-corporation rules: § 1248 deemed-dividend rules
+// coordinate with § 304. § 304(b)(4) anti-avoidance rules (Notice
+// 2006-85 + Notice 2007-9 + 2012 final regs) prevent partnership-
+// interposition circumvention.
+//
+// Six-mode severity ladder: NotApplicable,
+// Section304InapplicableUnrelatedArmsLengthSale,
+// Section304InapplicableNotInControlOfBothCorporations,
+// Section304ARecharacterizationDividendUpToTotalEep,
+// Section304BasisRecoveryAfterEepExhausted,
+// Section304CapitalGainAfterBasisRecovered.
+//
+// Coordinates with § 318 (iter 552 — constructive ownership driving
+// control determination), § 301 (distribution character + basis +
+// capital gain split), § 311 (iter 550 — corp-level recognition on
+// distribution), § 312 E&P computation, § 1(h)(11) qualified-dividend
+// rate, § 1222 holding-period capital-gain character, § 1248 foreign-
+// corp deemed-dividend, § 245A foreign-source DRD where applicable.
+
+async fn section_304_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_304::Section304RelatedCorpRedemptionInput>,
+) -> Result<Json<traderview_expense::section_304::Section304RelatedCorpRedemptionOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_304::check(&b)))
 }
 
 // ── § 311 Taxability of Corporation on Distribution in Kind ─────────
