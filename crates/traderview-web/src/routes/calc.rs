@@ -297,6 +297,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-751",           post(section_751_route))
         .route("/calc/section-752",           post(section_752_route))
         .route("/calc/section-1235",          post(section_1235_route))
+        .route("/calc/section-1239",          post(section_1239_route))
         .route("/calc/section-754",           post(section_754_route))
         .route("/calc/section-755",           post(section_755_route))
         .route("/calc/section-871m",          post(section_871m_route))
@@ -2856,6 +2857,28 @@ async fn section_1235_route(
         ));
     }
     Ok(Json(traderview_expense::section_1235::compute(&b)))
+}
+
+// ── §1239 ordinary-income recharacterization on related-party sales ──
+// Mounted at /api/calc/section-1239. § 1239(a) all gain on sale or
+// exchange of property between related persons treated as ORDINARY
+// INCOME if property is depreciable under § 167 in the hands of the
+// TRANSFEREE (not transferor). § 1239(b) related persons = (1)
+// controlled entities under § 1239(c)(1) (corp > 50 % by value;
+// partnership > 50 % capital or profits; § 267(b)(3)/(10)/(11)/(12)
+// related); (2) taxpayer + trust where taxpayer/spouse is non-
+// remote-contingent beneficiary; (3) executor + non-pecuniary-
+// bequest beneficiary. § 1239(c)(2) constructive ownership under
+// § 267(c) applies. § 1239(d) employer + owner-employee pension
+// plan related. Treas. Reg. § 1.1239-1 (post-Oct-4-1976). Defeats
+// tax arbitrage of repeatedly stepping up basis via related-party
+// sales to re-depreciate at capital-gains cost.
+
+async fn section_1239_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1239::Section1239Input>,
+) -> Result<Json<traderview_expense::section_1239::Section1239Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1239::compute(&b)))
 }
 
 // ── §754 election + §743(b) inside basis adjustment ─────────────────
