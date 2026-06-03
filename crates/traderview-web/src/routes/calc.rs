@@ -72,6 +72,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-25c",           post(section_25c_route))
         .route("/calc/section-25d",           post(section_25d_route))
         .route("/calc/section-25e",           post(section_25e_route))
+        .route("/calc/section-30c",           post(section_30c_route))
         .route("/calc/section-30d",           post(section_30d_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1258",          post(section_1258_route))
@@ -10571,6 +10572,32 @@ async fn section_25e_route(
 // payment ≤ 2025-09-30 preserves credit even if vehicle placed in
 // service later. Out of scope: §25E used clean vehicle credit (also
 // terminated 2025-09-30); §30D(g) transfer-to-dealer election.
+
+// ── §30C Alternative Fuel Vehicle Refueling Property Credit ────────
+// Mounted at /api/calc/section-30c. Originally added by Section
+// 1342 of the Energy Policy Act of 2005 (Public Law 109-58, 119
+// Stat. 594), signed by President Bush on August 8, 2005.
+// Substantially expanded by Section 13404 of the Inflation
+// Reduction Act of 2022 (Public Law 117-169, 136 Stat. 1818),
+// signed by President Biden on August 16, 2022. 6 % base rate /
+// 30 % with PWA (prevailing wage + apprenticeship) via 5×
+// multiplier under § 30C(g)(1) for business property (or BOC
+// exception). $100,000 per-item cap for depreciable business
+// property under § 30C(e)(6); $1,000 for residential property.
+// Eligible census tract requirement under § 30C(c) (low-income
+// community per § 45D(e) NMTC definition OR non-urban per
+// Treasury guidance under Notice 2024-20). Treas. Reg. § 1.30C-1
+// final regulations published September 19, 2024. TERMINATED by
+// One Big Beautiful Bill Act of 2025 (Public Law 119-21, 139
+// Stat. 72, signed July 4, 2025) for property placed in service
+// after June 30, 2026 (accelerating original IRA 2032 sunset by
+// more than 6 years).
+async fn section_30c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_30c::Section30CInput>,
+) -> Result<Json<traderview_expense::section_30c::Section30CResult>, ApiError> {
+    Ok(Json(traderview_expense::section_30c::check(&b)))
+}
 
 async fn section_30d_route(
     _u: AuthUser,
