@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-165g",          post(section_165g_route))
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-274",           post(section_274_route))
+        .route("/calc/section-279",           post(section_279_route))
         .route("/calc/section-988",           post(section_988_route))
         .route("/calc/section-1296",          post(section_1296_route))
         .route("/calc/section-1341",          post(section_1341_route))
@@ -7867,6 +7868,54 @@ async fn section_274_route(
     Json(b): Json<traderview_expense::section_274::Section274Input>,
 ) -> Result<Json<traderview_expense::section_274::Section274Result>, ApiError> {
     Ok(Json(traderview_expense::section_274::check(&b)))
+}
+
+// ── § 279 Interest on Corporate Acquisition Indebtedness ─────────────
+// Mounted at /api/calc/section-279 (iter 534). Pure compute. § 279(a)
+// disallows the corporate interest deduction for amounts exceeding
+// $5,000,000 per tax year on "corporate acquisition indebtedness" —
+// debt incurred to acquire stock or assets of another corporation that
+// satisfies all four § 279(b) statutory criteria. Targets debt-financed
+// leveraged-buyout (LBO) transactions and "junk-bond" subordinated
+// convertible takeover financings of the 1970s-1980s. Disallowance is
+// PERMANENT (not capitalized, no carryforward).
+//
+// § 279(b) FOUR-PRONG DEFINITION (all four must be satisfied):
+//   (1) ISSUED AFTER Oct 9, 1969 to provide consideration for acquisition
+//       of stock or assets of another corporation;
+//   (2) SUBORDINATED to claims of trade creditors generally OR expressly
+//       subordinated to a substantial amount of unsecured indebtedness;
+//   (3) CONVERTIBLE into stock of the issuer OR issued as part of an
+//       investment unit with stock-purchase warrants or options;
+//   (4) Issuer DEBT:EQUITY > 2:1 OR projected EBITDA fails 3:1
+//       INTEREST-COVERAGE test for three-taxable-year averaging period.
+//
+// § 279(d) PRE-1969 EXEMPTION: obligations issued on or before Oct 9,
+// 1969 grandfathered. § 279(g) SMALL-ISSUER SAFE HARBOR: applies only to
+// issuer with total acquisition interest above $5M. § 279(h)
+// COMPENSATION-STOCK SAFE HARBOR: stock acquired as compensation
+// (employee stock-purchase plan, § 83 transfer for services) NOT an
+// acquisition for § 279.
+//
+// Eight-mode severity ladder: NotApplicable,
+// PreOctober1969GrandfatheredNoDisallowance,
+// Section279HCompensationStockSafeHarborNoDisallowance,
+// NotSubordinatedFailsSection279DefinitionNoDisallowance,
+// NeitherConvertibleNorWarrantPackagedFailsSection279DefinitionNoDisallowance,
+// DebtEquityAndCoverageSafeHarborPassesNoDisallowance,
+// SmallIssuerUnderFiveMillionThresholdNoDisallowance,
+// Section279AInterestDisallowanceApplied.
+//
+// Coordinates with § 163(j) business-interest limit (separate cap on
+// remaining interest), § 385 debt-equity classification (whether the
+// instrument is debt vs equity), § 269 acquisitions-to-evade-tax
+// disallowance, § 7874 anti-inversion.
+
+async fn section_279_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_279::Section279CorporateAcquisitionIndebtednessInput>,
+) -> Result<Json<traderview_expense::section_279::Section279CorporateAcquisitionIndebtednessOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_279::check(&b)))
 }
 
 // ── §469(c)(7) Real Estate Professional Status qualification ─────────
