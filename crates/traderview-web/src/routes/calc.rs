@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-165g",          post(section_165g_route))
         .route("/calc/section-267",           post(section_267_route))
         .route("/calc/section-269",           post(section_269_route))
+        .route("/calc/section-269a",          post(section_269a_route))
         .route("/calc/section-274",           post(section_274_route))
         .route("/calc/section-279",           post(section_279_route))
         .route("/calc/section-988",           post(section_988_route))
@@ -8039,6 +8040,61 @@ async fn section_269_route(
     Json(b): Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxInput>,
 ) -> Result<Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxOutput>, ApiError> {
     Ok(Json(traderview_expense::section_269::check(&b)))
+}
+
+// ── § 269A Personal Service Corporation Tax-Avoidance Allocation ─────
+// Mounted at /api/calc/section-269a (iter 544). Pure compute. § 269A
+// gives Treasury authority to ALLOCATE income, deductions, credits,
+// exclusions, and other allowances between a personal service
+// corporation (PSC) and its employee-owner(s) when the corporation is
+// formed or used to avoid or evade federal income tax. Targets the
+// classic "incorporate-and-zero-out" tactic where an individual
+// provides services to a single client, forms a wholly-owned PSC to
+// receive the income, then zeroes out the PSC's taxable income via
+// fringe benefits, deferred compensation, and qualified retirement
+// contributions that the individual could not claim if reporting the
+// income directly on Schedule C.
+//
+// § 269A(a) STATUTORY TEST — both conditions must be satisfied:
+//   (1) SUBSTANTIALLY ALL of the PSC's services performed for ONE
+//       other corporation, partnership, or entity;
+//   (2) The principal purpose of forming or availing of the PSC is to
+//       AVOID or EVADE federal income tax by securing the benefit of
+//       any expense, deduction, credit, exclusion, or other allowance
+//       the employee-owner could not otherwise claim.
+//
+// § 269A(b)(1) PSC DEFINITION: corporation whose principal activity is
+// performance of personal services AND those services are substantially
+// performed by employee-owners.
+//
+// § 269A(b)(2) EMPLOYEE-OWNER DEFINITION: any employee who owns, on any
+// day during the taxable year, MORE THAN 10% of the outstanding stock
+// of the PSC.
+//
+// § 269A(b)(3) RELATED-PERSONS aggregation: all related persons within
+// the meaning of § 144(a)(3) are treated as one entity for the "one
+// entity" test under § 269A(a)(1). Effective for taxable years
+// beginning after December 31, 1982.
+//
+// Six-mode severity ladder: NotApplicable,
+// NotPersonalServiceCorporationSection269AInapplicable,
+// MultipleClientsFailsOneEntityTestNoAllocation,
+// BonaFideBusinessPurposeNoAllocation,
+// NoEmployeeOwnerThresholdSatisfiedNoAllocation,
+// Section269AAllocationApplied.
+//
+// Coordinates with § 269 (iter 536 — broader anti-tax-avoidance
+// acquisition disallowance), § 482 (related-party transfer pricing),
+// § 162 (reasonable compensation reallocation), § 444 (PSC fiscal-year
+// election restrictions), § 280H (PSC accumulated earnings + minimum
+// distribution rules), § 199A (Specified Service Trade or Business
+// limitation parallel).
+
+async fn section_269a_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_269a::Section269APersonalServiceCorpAllocationInput>,
+) -> Result<Json<traderview_expense::section_269a::Section269APersonalServiceCorpAllocationOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_269a::check(&b)))
 }
 
 // ── § 274 Meals, Entertainment, Gift, Travel deduction limits ────────
