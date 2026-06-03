@@ -74,13 +74,14 @@ pub async fn toggle(pool: &PgPool, user_id: Uuid, id: Uuid, enabled: bool) -> an
     Ok(r.rows_affected() > 0)
 }
 
-pub async fn mark_fired(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
-    sqlx::query(
+pub async fn mark_fired(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
+    let r = sqlx::query(
         "UPDATE alert_rules SET triggered_at = now(), trigger_count = trigger_count + 1
-          WHERE id = $1",
+          WHERE id = $1 AND user_id = $2",
     )
     .bind(id)
+    .bind(user_id)
     .execute(pool)
     .await?;
-    Ok(())
+    Ok(r.rows_affected() > 0)
 }

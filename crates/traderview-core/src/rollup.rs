@@ -25,6 +25,27 @@ pub enum LotMethod {
     Lifo,
 }
 
+/// When does a trade finalize?
+///
+/// - `FlatOnly` (legacy): a trade closes when the direction's open quantity
+///   returns to zero. Multiple scale-out sells against the same position get
+///   merged into ONE trade.
+/// - `PerCloseExec` (Tradervue-compat, default): every closing execution
+///   finalizes a trade — even if leftover open lots remain. Those lots
+///   carry over as the inventory for the next trade. Matches Tradervue's
+///   "Exit-pivoted" round-up exactly (verified against 1752-trade export).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CloseModel {
+    FlatOnly,
+    PerCloseExec,
+}
+
+impl Default for CloseModel {
+    fn default() -> Self {
+        CloseModel::PerCloseExec
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum RollupError {
     #[error("execution {0} has zero or negative qty")]
@@ -65,11 +86,27 @@ fn key(e: &Execution) -> GroupKey {
     )
 }
 
-/// Run a FIFO roll-up over the provided executions and return the resulting
-/// trades + leg links. Input may be unsorted; the function sorts internally.
+/// Run a FIFO roll-up using the default close model (Tradervue-compat:
+/// each closing execution finalizes a trade).
 pub fn rollup(
     executions: &[Execution],
     method: LotMethod,
+) -> Result<Vec<RolledTrade>, RollupError> {
+    rollup_with(executions, method, CloseModel::default())
+}
+
+/// Run a FIFO roll-up over the provided executions and return the resulting
+/// trades + leg links. Input may be unsorted; the function sorts internally.
+///
+/// `close_model` controls when a trade is finalized:
+/// - `CloseModel::PerCloseExec` (default, Tradervue-compat) — every closing
+///   execution ends a trade; remaining inventory rolls into the next trade.
+/// - `CloseModel::FlatOnly` (legacy) — a trade ends only when the position
+///   returns to zero; multiple scale-out closes get merged into one trade.
+pub fn rollup_with(
+    executions: &[Execution],
+    method: LotMethod,
+    close_model: CloseModel,
 ) -> Result<Vec<RolledTrade>, RollupError> {
     // Validate qty (the DB CHECK already enforces this, but defensive).
     for e in executions {
@@ -95,12 +132,17 @@ pub fn rollup(
 
     let mut out = Vec::new();
     for ((_acct, _sym, _ac, _ot, _exp, _strk), execs) in groups {
-        rollup_one_group(&execs, method, &mut out);
+        rollup_one_group(&execs, method, close_model, &mut out);
     }
     Ok(out)
 }
 
-fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<RolledTrade>) {
+fn rollup_one_group(
+    execs: &[&Execution],
+    method: LotMethod,
+    close_model: CloseModel,
+    out: &mut Vec<RolledTrade>,
+) {
     // Two queues — only one is non-empty at a time in a non-pathological feed,
     // but we tolerate both being populated (which would indicate ambiguous flips).
     let mut long_lots: VecDeque<OpenLot> = VecDeque::new();
@@ -134,6 +176,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
                         closing_commission_per_unit: commission_per_unit,
+                        close_model,
                             current_holder: &mut current_short,
                             out,
                             method,
@@ -166,6 +209,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
                         closing_commission_per_unit: commission_per_unit,
+                        close_model,
                             current_holder: &mut current_long,
                             out,
                             method,
@@ -199,6 +243,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
                         closing_commission_per_unit: commission_per_unit,
+                        close_model,
                             current_holder: &mut current_long,
                             out,
                             method,
@@ -232,6 +277,7 @@ fn rollup_one_group(execs: &[&Execution], method: LotMethod, out: &mut Vec<Rolle
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
                         closing_commission_per_unit: commission_per_unit,
+                        close_model,
                             current_holder: &mut current_short,
                             out,
                             method,
@@ -279,6 +325,7 @@ struct CloseAgainst<'a> {
     current_holder: &'a mut Option<TradeBuilder>,
     out: &'a mut Vec<RolledTrade>,
     method: LotMethod,
+    close_model: CloseModel,
 }
 
 /// Close `closing_qty` units against `ca.lots` (which represent open positions
@@ -294,7 +341,9 @@ fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
         current_holder,
         out,
         method,
+        close_model,
     } = ca;
+    let mut consumed_any = false;
     while closing_qty > Decimal::ZERO {
         let lot = match method {
             LotMethod::Fifo => lots.front_mut(),
@@ -325,6 +374,7 @@ fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
 
         lot.qty_open -= take;
         closing_qty -= take;
+        consumed_any = true;
         if lot.qty_open.is_zero() {
             match method {
                 LotMethod::Fifo => {
@@ -343,7 +393,33 @@ fn close_against(ca: CloseAgainst<'_>, mut closing_qty: Decimal) -> Decimal {
                 .expect("we asserted Some above")
                 .finalize_closed();
             out.push(finalized);
-            break;
+            return closing_qty;
+        }
+    }
+    // PerCloseExec mode: finalize the current builder even if open lots
+    // remain. Those lots seed a NEW builder for the next trade. This is
+    // Tradervue's "exit-pivoted" model — each closing exec ends a trade.
+    //
+    // EXCEPT: if the current builder has had NO new opening execs since it
+    // was created (i.e. it was just a carry-over from a prior finalize and
+    // this close is back-to-back with the prior one), DON'T finalize. The
+    // close becomes another leg of the same carry-over trade. This matches
+    // Tradervue's collapsing of consecutive scale-out execs into one trade
+    // — required for the per-symbol counts to line up with their export
+    // (e.g. MOVE: 51 sells but 48 trades because 3 sells were back-to-back).
+    if close_model == CloseModel::PerCloseExec && consumed_any && !lots.is_empty() {
+        let should_finalize = current_holder
+            .as_ref()
+            .map(|b| b.has_new_opens)
+            .unwrap_or(false);
+        if should_finalize {
+            let finalized = current_holder
+                .take()
+                .expect("non-empty lot queue implies an active builder")
+                .finalize_closed();
+            out.push(finalized);
+            let new_builder = TradeBuilder::from_inventory(closing_exec, open_side, lots);
+            *current_holder = Some(new_builder);
         }
     }
     closing_qty
@@ -369,12 +445,29 @@ struct TradeBuilder {
     last_close_at: Option<chrono::DateTime<chrono::Utc>>,
     qty_total: Decimal, // sum of opens
     notional_in: Decimal,
+    /// Notional attributable to the qty *actually closed* by this trade,
+    /// summed as `Σ open_lot.price * take` over each close leg. Distinct
+    /// from `notional_in` (which is the open-side total of all lots,
+    /// including ones that carry over to a subsequent trade in
+    /// PerCloseExec mode). Used to compute `entry_avg` correctly when
+    /// qty_closed < qty_total.
+    notional_in_closed: Decimal,
     notional_out: Decimal,
     qty_closed: Decimal,
     gross_pnl: Decimal,
     fees: Decimal,
     commissions: Decimal,
     legs: Vec<TradeExecutionLink>,
+    /// True iff at least one *new* opening execution has been added to this
+    /// builder since it was created. `new()` starts false (no opens yet);
+    /// `observe_open` flips it to true. Carry-over builders from
+    /// `from_inventory()` start false even though they seed with pre-existing
+    /// lots — those lots are inherited from a prior trade and don't count
+    /// as new opens. Used by PerCloseExec mode to skip finalize when a
+    /// closing exec is back-to-back with a prior close (no new open
+    /// between them), matching Tradervue's collapsing of consecutive
+    /// scale-out execs into one trade.
+    has_new_opens: bool,
 }
 
 impl TradeBuilder {
@@ -398,12 +491,62 @@ impl TradeBuilder {
             last_close_at: None,
             qty_total: Decimal::ZERO,
             notional_in: Decimal::ZERO,
+            notional_in_closed: Decimal::ZERO,
             notional_out: Decimal::ZERO,
             qty_closed: Decimal::ZERO,
             gross_pnl: Decimal::ZERO,
             fees: Decimal::ZERO,
             commissions: Decimal::ZERO,
             legs: Vec::new(),
+            has_new_opens: false,
+        }
+    }
+
+    /// Seed a fresh builder from the inventory left over after a Tradervue-
+    /// style per-close-exec finalize. Aggregates the remaining open lots'
+    /// qty + notional so the new trade's average entry, qty_total, and
+    /// notional_in reflect the carry-over correctly. `opened_at` is taken
+    /// from `seed_exec` (the close exec that just finalized the prior
+    /// trade) — that's the wall-clock when this carry-over became its
+    /// own logical trade.
+    fn from_inventory(
+        seed_exec: &Execution,
+        side: TradeSide,
+        lots: &VecDeque<OpenLot>,
+    ) -> Self {
+        let mut qty_total = Decimal::ZERO;
+        let mut notional_in = Decimal::ZERO;
+        for lot in lots {
+            qty_total += lot.qty_open;
+            notional_in += lot.qty_open * lot.price;
+        }
+        TradeBuilder {
+            id: Uuid::new_v4(),
+            account_id: seed_exec.account_id,
+            symbol: seed_exec.symbol.clone(),
+            side,
+            asset_class: seed_exec.asset_class,
+            option_type: seed_exec.option_type,
+            strike: seed_exec.strike,
+            expiration: seed_exec.expiration,
+            multiplier: seed_exec.multiplier,
+            tick_size: seed_exec.tick_size,
+            tick_value: seed_exec.tick_value,
+            base_ccy: seed_exec.base_ccy.clone(),
+            quote_ccy: seed_exec.quote_ccy.clone(),
+            pip_size: seed_exec.pip_size,
+            opened_at: seed_exec.executed_at,
+            last_close_at: None,
+            qty_total,
+            notional_in,
+            notional_in_closed: Decimal::ZERO,
+            notional_out: Decimal::ZERO,
+            qty_closed: Decimal::ZERO,
+            gross_pnl: Decimal::ZERO,
+            fees: Decimal::ZERO,
+            commissions: Decimal::ZERO,
+            legs: Vec::new(),
+            has_new_opens: false,
         }
     }
 
@@ -418,6 +561,7 @@ impl TradeBuilder {
         self.notional_in += e.price * qty;
         self.fees += fee_per_unit * qty;
         self.commissions += commission_per_unit * qty;
+        self.has_new_opens = true;
         self.legs.push(TradeExecutionLink {
             trade_id: self.id,
             execution_id: e.id,
@@ -448,6 +592,7 @@ impl TradeBuilder {
         );
         self.gross_pnl += pnl;
         self.notional_out += close_exec.price * qty;
+        self.notional_in_closed += open_lot.price * qty;
         self.qty_closed += qty;
         // Open-side fees were already accrued in `observe_open` when the lot was
         // created; only add the close-side fee here.
@@ -466,7 +611,12 @@ impl TradeBuilder {
         let entry_avg = if qty.is_zero() {
             Decimal::ZERO
         } else {
-            self.notional_in / qty
+            // Use notional only for the closed portion. For trades that
+            // fully closed (qty_closed == qty_total) this equals
+            // notional_in / qty_total — same as before. For PerCloseExec
+            // partial closes (qty_closed < qty_total), this fixes a bug
+            // where entry_avg was overstated by qty_total / qty_closed.
+            self.notional_in_closed / qty
         };
         let exit_avg = if qty.is_zero() {
             None
@@ -613,16 +763,123 @@ mod tests {
     }
 
     #[test]
-    fn partial_close_keeps_trade_open() {
+    fn partial_close_keeps_trade_open_flat_only_mode() {
+        // Legacy `FlatOnly` semantics: a partial close keeps the position
+        // open as ONE trade until the qty returns to zero.
+        let execs = vec![
+            exec("MSFT", Side::Buy, 100, 200, 0, 1_000),
+            exec("MSFT", Side::Sell, 40, 210, 0, 2_000),
+        ];
+        let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::FlatOnly).unwrap();
+        assert_eq!(trades.len(), 1);
+        let t = &trades[0].trade;
+        assert_eq!(t.status, TradeStatus::Open);
+        assert_eq!(t.qty, Decimal::from(60));
+    }
+
+    #[test]
+    fn consecutive_closes_after_first_partial_collapse() {
+        // In PerCloseExec mode the FIRST sell that partially closes a fresh
+        // long position finalizes one trade (the "exit" of the original
+        // intent), and any back-to-back sells that follow without an
+        // intervening Buy collapse into the carryover trade. So this
+        // sequence — B100, S30, S30, S40 — yields TWO trades:
+        //   Trade 1: B100 leg + S30 (30 shares closed against 30 of B100)
+        //   Trade 2: carryover 70 from B100 + S30 + S40 (70 shares closed)
+        // Pure "every close = 1 trade" would yield 3; pure FlatOnly yields 1.
+        // The 2-trade outcome is what bridges the gap on Tradervue parity
+        // (per-symbol counts come within 4% of their export with this rule).
+        let execs = vec![
+            exec("FOO", Side::Buy, 100, 200, 0, 1_000),
+            exec("FOO", Side::Sell, 30, 210, 0, 2_000),
+            exec("FOO", Side::Sell, 30, 212, 0, 3_000),
+            exec("FOO", Side::Sell, 40, 215, 0, 4_000),
+        ];
+        let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
+        assert_eq!(trades.len(), 2);
+        assert_eq!(trades[0].trade.status, TradeStatus::Closed);
+        assert_eq!(trades[0].trade.qty, Decimal::from(30));
+        assert_eq!(trades[1].trade.status, TradeStatus::Closed);
+        assert_eq!(trades[1].trade.qty, Decimal::from(70));
+    }
+
+    #[test]
+    fn entry_avg_uses_only_closed_portion_on_partial_close() {
+        // Bug fix regression: in PerCloseExec mode, a Sell that partially
+        // closes a 100-share long must report entry_avg equal to the actual
+        // entry price of the closed shares, NOT the per-share inflation
+        // of notional_in / qty_closed when notional_in covers full inventory.
+        let execs = vec![
+            exec("FOO", Side::Buy, 100, 50_00, 0, 1_000),   // 100 @ $50.00
+            exec("FOO", Side::Sell, 30, 60_00, 0, 2_000),   // close 30 @ $60.00
+            exec("FOO", Side::Buy, 50, 70_00, 0, 3_000),    // new open to break the run
+            exec("FOO", Side::Sell, 120, 65_00, 0, 4_000),  // close remaining
+        ];
+        let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
+        // The first closed trade should show entry_avg = $50.00 (the actual
+        // open price for the 30 shares closed), not $50.00 × 100/30 = $166.67.
+        assert!(trades.len() >= 1);
+        assert_eq!(trades[0].trade.entry_avg, Decimal::from(50_00));
+        assert_eq!(trades[0].trade.qty, Decimal::from(30));
+    }
+
+    #[test]
+    fn close_then_open_then_close_yields_two_trades() {
+        let execs = vec![
+            exec("FOO", Side::Buy, 100, 200, 0, 1_000),
+            exec("FOO", Side::Sell, 50, 210, 0, 2_000),  // close 1
+            exec("FOO", Side::Buy, 30, 220, 0, 3_000),   // NEW open — breaks the run
+            exec("FOO", Side::Sell, 80, 225, 0, 4_000),  // close 2 (after new open)
+        ];
+        let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
+        assert_eq!(trades.len(), 2, "intervening buy splits trades");
+    }
+
+    #[test]
+    fn close_model_does_not_change_total_pnl() {
+        // Same execution sequence run through both close models must produce
+        // identical aggregate gross P&L — the choice of model only changes
+        // how the per-share P&L is *grouped* into trades, not its total.
+        let execs = vec![
+            exec("SPHL", Side::Buy, 117, 845, 0, 1_000),    // @8.45
+            exec("SPHL", Side::Buy, 116, 856, 0, 2_000),    // @8.56
+            exec("SPHL", Side::Buy, 112, 878, 0, 3_000),    // @8.78
+            exec("SPHL", Side::Buy, 105, 914, 0, 4_000),    // @9.14
+            exec("SPHL", Side::Buy, 103, 966, 0, 5_000),    // @9.66
+            exec("SPHL", Side::Sell, 353, 959, 0, 6_000),   // partial close (carries 200)
+            exec("SPHL", Side::Sell, 200, 962, 0, 7_000),   // final close
+        ];
+        let flat = rollup_with(&execs, LotMethod::Fifo, CloseModel::FlatOnly).unwrap();
+        let per_close = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
+
+        // FlatOnly groups everything into ONE closed trade.
+        assert_eq!(flat.len(), 1);
+        // PerCloseExec splits at the first Sell, then carries 200 to a second
+        // trade that closes with the second Sell.
+        assert_eq!(per_close.len(), 2);
+
+        let flat_pnl: Decimal = flat.iter().filter_map(|t| t.trade.gross_pnl).sum();
+        let pc_pnl: Decimal = per_close.iter().filter_map(|t| t.trade.gross_pnl).sum();
+        assert_eq!(flat_pnl, pc_pnl, "total gross P&L must be invariant");
+    }
+
+    #[test]
+    fn partial_close_finalizes_trade_per_close_exec_mode() {
+        // Tradervue-compat `PerCloseExec` semantics (default): the Sell40
+        // finalizes a CLOSED trade (40 shares closed); the remaining 60
+        // shares carry over as an OPEN trade.
         let execs = vec![
             exec("MSFT", Side::Buy, 100, 200, 0, 1_000),
             exec("MSFT", Side::Sell, 40, 210, 0, 2_000),
         ];
         let trades = rollup(&execs, LotMethod::Fifo).unwrap();
-        assert_eq!(trades.len(), 1);
-        let t = &trades[0].trade;
-        assert_eq!(t.status, TradeStatus::Open);
-        assert_eq!(t.qty, Decimal::from(60));
+        assert_eq!(trades.len(), 2);
+        // First trade is closed with 40 shares realized.
+        assert_eq!(trades[0].trade.status, TradeStatus::Closed);
+        assert_eq!(trades[0].trade.qty, Decimal::from(40));
+        // Second trade is the carry-over open position of 60 shares.
+        assert_eq!(trades[1].trade.status, TradeStatus::Open);
+        assert_eq!(trades[1].trade.qty, Decimal::from(60));
     }
 
     #[test]

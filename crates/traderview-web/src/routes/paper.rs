@@ -1,5 +1,6 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
+use crate::routes::helpers::ensure_account_owner;
 use crate::state::AppState;
 use axum::extract::{Path, Query, State};
 use axum::routing::{get, post};
@@ -72,10 +73,11 @@ fn default_limit() -> i64 {
 
 async fn orders(
     State(s): State<AppState>,
-    _user: AuthUser,
+    user: AuthUser,
     Path(id): Path<Uuid>,
     Query(q): Query<OrdersQ>,
 ) -> Result<Json<Vec<PaperOrder>>, ApiError> {
+    ensure_account_owner(&s, user.id, id).await?;
     Ok(Json(
         traderview_db::paper::list_orders(&s.pool, id, q.limit)
             .await
@@ -148,9 +150,10 @@ async fn submit(
 
 async fn positions(
     State(s): State<AppState>,
-    _user: AuthUser,
+    user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<PaperPosition>>, ApiError> {
+    ensure_account_owner(&s, user.id, id).await?;
     Ok(Json(
         traderview_db::paper::positions(&s.pool, id)
             .await

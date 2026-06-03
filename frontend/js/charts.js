@@ -114,7 +114,14 @@ export function barChart(el, labels, values, opts = {}) {
     const barsPath = (u) => {
         const ctx = u.ctx;
         ctx.save();
-        const bw = Math.max(2, (u.bbox.width / xs.length) * 0.7);
+        // Cap bar width so a single-element dataset doesn't render a giant
+        // slab that covers the X axis (e.g. Year/Month/Day's "Trade
+        // Distribution By Year" with one year of data was rendering a
+        // 70%-wide bar that hid the axis labels).
+        const bw = Math.min(
+            Math.max(2, (u.bbox.width / xs.length) * 0.7),
+            Math.max(24, u.bbox.width * 0.12),
+        );
         const yZero = u.valToPos(0, 'y', true);
         for (let i = 0; i < xs.length; i++) {
             const x = u.valToPos(xs[i], 'x', true);
@@ -144,9 +151,17 @@ export function barChart(el, labels, values, opts = {}) {
         title: opts.title || '',
         width: w,
         height: h,
-        scales: { x: {}, y: {} },
+        // x.time:false — categorical (index) axis, NOT a time axis. uPlot's
+        // default treats the x series as a Unix timestamp, which is why the
+        // legend was showing "1969-12-31 7:00pm" (epoch 0) on the Year /
+        // Month / Day bar charts. Forcing time:false makes the legend
+        // value formatter below take over.
+        scales: { x: { time: false }, y: {} },
         series: [
-            { label: t('chart.series.idx') },
+            {
+                label: t('chart.series.idx'),
+                value: (_u, raw) => labels[Math.round(Number(raw))] || '—',
+            },
             { label: opts.seriesLabel || t('chart.series.value'), stroke: 'transparent', paths: barsPath },
         ],
         axes: [{

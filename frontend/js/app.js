@@ -724,6 +724,15 @@ async function boot() {
 
 async function loadAccounts() {
     state.accounts = await api.accounts();
+    // If the previously-active account UUID is no longer in the list (the
+    // user deleted it from the Accounts page), drop the stale pointer.
+    // Otherwise downstream calls — Import, Trades, Reports — would attach
+    // it to requests and the backend returns NotFound ("error: not found"
+    // in the import widget). Re-seed to the first available account so
+    // the app continues to work without a manual page refresh.
+    if (state.accountId && !state.accounts.some(a => a.id === state.accountId)) {
+        state.accountId = '';
+    }
     if (state.accounts.length && !state.accountId) state.accountId = state.accounts[0].id;
 }
 

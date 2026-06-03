@@ -109,6 +109,19 @@ export async function renderReports(mount, state, sub) {
 
     const filter = loadFilter();
     const style  = loadStyle();
+    // If sessionStorage carries a stale tag_id (the tag was deleted from the
+    // Tags page after this filter was saved), drop it before the next request
+    // — otherwise /reports/by-tag?tag_id=X returns 404 / "not found" and the
+    // user sees an error toast on a page they didn't change.
+    if (filter.tag_id) {
+        try {
+            const tags = await api.tags();
+            if (!tags.some(t => t.id === filter.tag_id)) {
+                filter.tag_id = '';
+                saveFilter(filter);
+            }
+        } catch (_) { /* tags fetch failed; leave filter untouched */ }
+    }
 
     mount.innerHTML = `
         <h1 data-i18n="view.reports.h1.reports" class="view-title">// REPORTS</h1>

@@ -90,11 +90,14 @@ async fn toggle(
 
 async fn fired(
     State(s): State<AppState>,
-    _user: AuthUser,
+    user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<bool>, ApiError> {
-    traderview_db::alerts::mark_fired(&s.pool, id)
+    let ok = traderview_db::alerts::mark_fired(&s.pool, user.id, id)
         .await
         .map_err(ApiError::Internal)?;
+    if !ok {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(true))
 }

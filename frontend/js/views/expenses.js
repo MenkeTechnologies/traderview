@@ -119,6 +119,14 @@ export async function renderExpensesView(mount) {
         if (!viewIsCurrent(tok)) return;
         state.accounts = accts;
         state.categories = cats;
+        // If the previously-active expense account was deleted, drop the
+        // stale pointer so subsequent `api.expenseTransactions({account_id})`
+        // calls don't 404 on a now-gone UUID (same class of bug as the
+        // trader-account stale-id fix in app.js:loadAccounts).
+        if (state.currentAccountId
+            && !state.accounts.some(a => a.id === state.currentAccountId)) {
+            state.currentAccountId = '';
+        }
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         mount.innerHTML = `<p class="boot">${esc(t('view.expenses.empty.load_failed', { err: e.message }))}</p>`;

@@ -60,12 +60,18 @@ pub async fn list_for_trade(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Vec
     Ok(rows.into_iter().map(Into::into).collect())
 }
 
-pub async fn get_bytes(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<(String, Vec<u8>)>> {
-    let row: Option<(String, Vec<u8>)> =
-        sqlx::query_as("SELECT mime_type, bytes FROM screenshots WHERE id = $1")
-            .bind(id)
-            .fetch_optional(pool)
-            .await?;
+pub async fn get_bytes(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+) -> anyhow::Result<Option<(String, Vec<u8>)>> {
+    let row: Option<(String, Vec<u8>)> = sqlx::query_as(
+        "SELECT mime_type, bytes FROM screenshots WHERE id = $1 AND user_id = $2",
+    )
+    .bind(id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
     Ok(row)
 }
 

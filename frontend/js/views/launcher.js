@@ -9,6 +9,7 @@ import { matchesQuery } from '../_pure.js';
 import * as favs from '../_favorites_storage.js';
 import * as dashStore from '../_dashboards_storage.js';
 import * as recents from '../_recents_storage.js';
+import { showToast } from '../toast.js';
 
 // (view-id, label, glyph, description, badge | null)
 // `badge` shows a small chip — "LIVE" for streaming tiles, etc.
@@ -781,6 +782,10 @@ function renderGrid() {
             let f = favs.loadState();
             f = favs.toggleFavorite(f, id);
             favs.saveState(f);
+            const nowFav = favs.isFavorite(f, id);
+            showToast(
+                t(nowFav ? 'toast.favorite_added' : 'toast.favorite_removed', { view: id }),
+                { level: 'success' });
             renderGrid();
             window.dispatchEvent(new CustomEvent('tv:favorites-changed'));
         });

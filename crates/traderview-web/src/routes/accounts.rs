@@ -1,5 +1,6 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
+use crate::routes::helpers::ensure_account_owner;
 use crate::state::AppState;
 use axum::extract::{Path, State};
 use axum::routing::{delete, get, post};
@@ -26,9 +27,10 @@ struct RebuildResp {
 /// trades table referencing the inflated pre-dedup count.
 async fn rebuild_trades(
     State(s): State<AppState>,
-    _user: AuthUser,
+    user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<RebuildResp>, ApiError> {
+    ensure_account_owner(&s, user.id, id).await?;
     let n = traderview_db::trades::rollup_account(&s.pool, id)
         .await
         .map_err(ApiError::Internal)?;

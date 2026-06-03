@@ -92,8 +92,12 @@ async fn upload(
     ))
 }
 
-async fn get_bytes(State(s): State<AppState>, Path(id): Path<Uuid>) -> Result<Response, ApiError> {
-    let (mime, bytes) = traderview_db::screenshots::get_bytes(&s.pool, id)
+async fn get_bytes(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Response, ApiError> {
+    let (mime, bytes) = traderview_db::screenshots::get_bytes(&s.pool, user.id, id)
         .await
         .map_err(ApiError::Internal)?
         .ok_or(ApiError::NotFound)?;
