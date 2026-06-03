@@ -790,6 +790,11 @@ use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
     NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
     NycChildhoodLeadPoisoningPreventionActResult as RentalNycChildhoodLeadPoisoningPreventionActResult,
 };
+use traderview_expense::rental_nyc_loft_law_article_7c::{
+    check as check_rental_nyc_loft_law_article_7c,
+    NycLoftLawArticle7CInput as RentalNycLoftLawArticle7CInput,
+    NycLoftLawArticle7CResult as RentalNycLoftLawArticle7CResult,
+};
 use traderview_expense::rental_solar_panel_disclosure::{
     check as check_rental_solar_panel_disclosure,
     RentalSolarPanelDisclosureInput, RentalSolarPanelDisclosureResult,
@@ -1416,6 +1421,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
+        .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
@@ -9174,6 +9180,36 @@ async fn rental_nyc_childhood_lead_poisoning_prevention_act_route(
     Json(b): Json<RentalNycChildhoodLeadPoisoningPreventionActInput>,
 ) -> Result<Json<RentalNycChildhoodLeadPoisoningPreventionActResult>, ApiError> {
     Ok(Json(check_rental_nyc_childhood_lead_poisoning_prevention_act(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_nyc_loft_law_article_7c: NYC Loft Law (NY Multiple Dwelling
+// Law Article 7-C, MDL §§ 280-287). Enacted 1982 (NY Laws of 1982, c.
+// 349). Creates Interim Multiple Dwelling (IMD) classification for
+// commercial/manufacturing buildings residentially occupied during
+// specified eligibility windows. MDL § 281: IMD criteria (former
+// commercial/manufacturing + 12 consecutive months residential use
+// + 3 or more independent families + not previously legal residential
+// w/ CofO). MDL § 281(5) (2010 expansion): added 2008-2009 residential
+// occupation window. MDL § 284 code compliance timetable: 12/18/36/48
+// months for alteration application + alteration permit + Article 7-B
+// safety compliance + residential CofO. MDL § 286 Protected Occupant
+// — protection from eviction except good cause + rent stabilization
+// after legalization. 29 RCNY Subchapter B (Loft Board Rules) +
+// § 2-01.1 Narrative Statement process + § 2-12 civil penalties
+// ($500-$1,000+ per violation per day). Subsequent amendments: NY
+// Laws of 2013 c. 4 + 2019. Sibling cluster: rental_rent_control_
+// stabilization (NY RSL parallel), rental_facade_inspection_fisp_
+// local_law_11 (iter 583 NYC LL 11), rental_just_cause_eviction
+// (iter 573 — NY Good Cause separate regime).
+// ---------------------------------------------------------------------------
+
+async fn rental_nyc_loft_law_article_7c_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNycLoftLawArticle7CInput>,
+) -> Result<Json<RentalNycLoftLawArticle7CResult>, ApiError> {
+    Ok(Json(check_rental_nyc_loft_law_article_7c(&b)))
 }
 
 // ---------------------------------------------------------------------------
