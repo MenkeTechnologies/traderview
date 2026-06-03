@@ -1003,6 +1003,11 @@ use traderview_expense::rental_in_unit_laundry_appliance_provision::{
     check as check_rental_in_unit_laundry_appliance_provision,
     RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
 };
+use traderview_expense::rental_positive_rent_payment_credit_reporting::{
+    check as check_rental_positive_rent_payment_credit_reporting,
+    RentalPositiveRentPaymentCreditReportingInput,
+    RentalPositiveRentPaymentCreditReportingResult,
+};
 use traderview_expense::rental_post_construction_lead_dust_clearance::{
     check as check_rental_post_construction_lead_dust_clearance,
     RentalPostConstructionLeadDustClearanceInput, RentalPostConstructionLeadDustClearanceResult,
@@ -1468,6 +1473,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
         .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
         .route("/rental-post-construction-lead-dust-clearance", axum::routing::post(rental_post_construction_lead_dust_clearance_route))
+        .route("/rental-positive-rent-payment-credit-reporting", axum::routing::post(rental_positive_rent_payment_credit_reporting_route))
         .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
@@ -9035,6 +9041,35 @@ async fn rental_pesticide_application_notification_route(
 // siblings pet_fees, security_deposit_caps, rental_application_
 // denial_disclosure.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_positive_rent_payment_credit_reporting: California AB 2747
+// (Cal. Civ. Code § 1954.06) — effective Jan 1, 2025; key offer
+// requirements begin Apr 1, 2025. Covered landlords must OFFER
+// tenants the option of positive rental payment information
+// reporting to at least one nationwide consumer reporting agency.
+// Small-landlord exemption: ≤ 15 dwelling units; exemption
+// disappears if landlord owns > 1 building AND is REIT, corporation,
+// or LLC with at least one corporate member. New leases on/after
+// Apr 1, 2025: offer at lease + annually. Pre-existing leases
+// outstanding Jan 1, 2025: offer no later than Apr 1, 2025 +
+// annually. Fee cap: LESSER of $10/month OR actual landlord cost;
+// no fee if landlord incurs no actual cost. Thirteen-mode severity
+// ladder × two jurisdictions × four ownership structures × two
+// lease timings × four tenant election states. Trader-landlord
+// critical because California's largest residential markets
+// (SF / LA / SD) are dominated by ≥ 16-unit buildings or
+// REIT/corporate-LLC multi-building owners — most California
+// trader-landlords are covered.
+// ---------------------------------------------------------------------------
+
+async fn rental_positive_rent_payment_credit_reporting_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPositiveRentPaymentCreditReportingInput>,
+) -> Result<Json<RentalPositiveRentPaymentCreditReportingResult>, ApiError> {
+    Ok(Json(check_rental_positive_rent_payment_credit_reporting(&b)))
+}
 
 async fn rental_pet_deposit_separate_security_route(
     _s: State<AppState>,
