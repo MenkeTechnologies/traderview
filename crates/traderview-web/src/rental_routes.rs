@@ -659,6 +659,11 @@ use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
     RentalJunkFeeTransparencyResult,
 };
+use traderview_expense::rental_just_cause_eviction::{
+    check as check_rental_just_cause_eviction,
+    JustCauseEvictionInput as RentalJustCauseEvictionInput,
+    JustCauseEvictionResult as RentalJustCauseEvictionResult,
+};
 use traderview_expense::rental_water_submetering_disclosure::{
     check as check_rental_water_submetering_disclosure,
     RentalWaterSubmeteringDisclosureInput, RentalWaterSubmeteringDisclosureResult,
@@ -1346,6 +1351,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
+        .route("/rental-just-cause-eviction", axum::routing::post(rental_just_cause_eviction_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-paint-disclosure", axum::routing::post(rental_lead_paint_disclosure_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
@@ -7475,6 +7481,33 @@ async fn rental_junk_fee_transparency_route(
     Json(b): Json<RentalJunkFeeTransparencyInput>,
 ) -> Result<Json<RentalJunkFeeTransparencyResult>, ApiError> {
     Ok(Json(check_rental_junk_fee_transparency(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_just_cause_eviction: Multi-state just-cause / good-cause
+// eviction compliance covering NJ Anti-Eviction Act of 1974
+// (N.J.S.A. 2A:18-61.1 — 18 enumerated grounds, no rent cap),
+// CA Tenant Protection Act of 2019 (Cal. Civ. Code § 1946.2 +
+// § 1947.12 — 5% + CPI rent cap, hard ceiling 10%), OR SB 608
+// (ORS 90.323 + § 90.427 — 7% + CPI, 15-year new-construction
+// exemption), NY Good Cause Eviction Law of 2024 (Part HH of
+// L. 2024, c. 56 + RPL § 226-c — local rent standard = CPI + 5%,
+// hard ceiling 10%, exempts ≤ 10-unit small landlords, post-2009
+// construction, owner-occupied < 11 units, rent-stabilized/
+// subsidized/condo-co-op), WA HB 2114 (RCW 59.18.650 — 7% + CPI).
+// Three action types (NotApplicable, NonRenewalOrEviction,
+// RentIncrease) × five jurisdictions + Default × ten-mode severity
+// ladder including all four NY exemption modes + OR construction-
+// age exemption + rent-cap-within/exceeds + good-cause-allowed/
+// barred + default-no-regime fallthrough.
+// ---------------------------------------------------------------------------
+
+async fn rental_just_cause_eviction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalJustCauseEvictionInput>,
+) -> Result<Json<RentalJustCauseEvictionResult>, ApiError> {
+    Ok(Json(check_rental_just_cause_eviction(&b)))
 }
 
 // ---------------------------------------------------------------------------
