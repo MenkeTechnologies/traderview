@@ -635,6 +635,11 @@ use traderview_expense::rental_climate_mobilization_act_ll97_emissions::{
     ClimateMobilizationActLl97EmissionsInput as RentalClimateMobilizationActLl97EmissionsInput,
     ClimateMobilizationActLl97EmissionsResult as RentalClimateMobilizationActLl97EmissionsResult,
 };
+use traderview_expense::rental_cooling_tower_inspection_local_law_77::{
+    check as check_rental_cooling_tower_inspection_local_law_77,
+    CoolingTowerInspectionLocalLaw77Input as RentalCoolingTowerInspectionLocalLaw77Input,
+    CoolingTowerInspectionLocalLaw77Result as RentalCoolingTowerInspectionLocalLaw77Result,
+};
 use traderview_expense::rental_broadband_mte_rules::{
     check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
     RentalBroadbandMteRulesResult,
@@ -1375,6 +1380,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
+        .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
         .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
         .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
         .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
@@ -7664,6 +7670,35 @@ async fn rental_climate_mobilization_act_ll97_emissions_route(
     Json(b): Json<RentalClimateMobilizationActLl97EmissionsInput>,
 ) -> Result<Json<RentalClimateMobilizationActLl97EmissionsResult>, ApiError> {
     Ok(Json(check_rental_climate_mobilization_act_ll97_emissions(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_cooling_tower_inspection_local_law_77: NYC Local Law 77 of
+// 2015 + NYC Admin Code § 17-194.1 + Chapter 8 of Rules of City of
+// New York + NYS 10 NYCRR Subpart 4-1 cooling tower registration,
+// inspection, and Legionella testing compliance. Enacted in response
+// to South Bronx Legionnaires' outbreak (July-August 2015) — 8
+// deaths, 138 cases. Quarterly 90-day inspection by Qualified Person
+// (NY State PE/RA + certified water technologist + environmental
+// consultant 2+ years experience). Legionella culture + heterotrophic
+// plate count testing March/June/September/December. Lab results to
+// DOHMH within 5 days. Annual certification by November 1. NYC Local
+// Law 159 of 2024: monthly Legionella testing effective May 7, 2026.
+// Penalty schedule: first violation $2,000, subsequent $5,000,
+// fatality or serious injury $10,000; no MPP $1,000; incomplete or
+// not on-site $500; late annual certification up to $10,000. Sibling
+// cluster: rental_facade_inspection_fisp_local_law_11 (iter 583),
+// rental_gas_piping_inspection_local_law_152 (iter 585), rental_
+// climate_mobilization_act_ll97_emissions (iter 587 LL 97 emissions),
+// rental_natural_gas_leak_response.
+// ---------------------------------------------------------------------------
+
+async fn rental_cooling_tower_inspection_local_law_77_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalCoolingTowerInspectionLocalLaw77Input>,
+) -> Result<Json<RentalCoolingTowerInspectionLocalLaw77Result>, ApiError> {
+    Ok(Json(check_rental_cooling_tower_inspection_local_law_77(&b)))
 }
 
 // ---------------------------------------------------------------------------
