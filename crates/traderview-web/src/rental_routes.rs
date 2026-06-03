@@ -635,6 +635,11 @@ use traderview_expense::rental_carbon_monoxide_detector::{
     check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
     RentalCarbonMonoxideDetectorResult,
 };
+use traderview_expense::rental_california_ab_12_security_deposit_cap::{
+    check as check_rental_california_ab_12_security_deposit_cap,
+    RentalCaliforniaAb12SecurityDepositCapInput,
+    RentalCaliforniaAb12SecurityDepositCapResult,
+};
 use traderview_expense::rental_chimney_fireplace_inspection_disclosure::{
     check as check_rental_chimney_fireplace_inspection_disclosure,
     RentalChimneyFireplaceInspectionDisclosureInput,
@@ -1514,6 +1519,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
+        .route("/rental-california-ab-12-security-deposit-cap", axum::routing::post(rental_california_ab_12_security_deposit_cap_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
         .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
@@ -7745,6 +7751,48 @@ async fn rental_just_cause_eviction_route(
 // temperature, tenant_fire_safety_plan_disclosure, rental_
 // bedroom_egress_window, rental_gas_appliance_ban.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_california_ab_12_security_deposit_cap: California AB 12 of
+// 2023 (Haney; 2023-2024 Regular Session) — amends Cal. Civ. Code
+// § 1950.5 to reduce residential security deposit cap from prior
+// 2 months' rent (unfurnished) / 3 months' rent (furnished) to a
+// uniform 1 month's rent regardless of furnishing status. Signed
+// by Governor Gavin Newsom on October 11, 2023; effective July 1,
+// 2024 (9-month transition window). Small landlord exception
+// under § 1950.5(c)(4): if owner is BOTH a natural person OR an
+// LLC with all natural-person members AND owns ≤ 2 residential
+// rental properties collectively with ≤ 4 dwelling units, the cap
+// is 2 months' rent. Service member override under § 1950.5(c)(4)(B):
+// military service member tenants ALWAYS subject to strict 1-month
+// cap regardless of landlord size (Cal. Mil. & Vet. Code § 400
+// definition). Transition rule: pre-July 1, 2024 lawful deposits
+// at prior caps remain valid; new cap activates on (1) new tenancy
+// after original tenant vacates, (2) written lease renewal, (3)
+// material lease modification. § 1950.5(l) tenant remedies for
+// excessive deposit: recovery of excess + bad-faith retention up
+// to twice security deposit as statutory damages plus actual
+// damages. Eleven-mode severity ladder × four landlord entity
+// types × two tenant classifications × four lease trigger events
+// × two furnishing statuses. Trader-landlord critical because CA
+// portfolio operators must reset security deposit collection
+// practices for all new/renewed/modified leases post-July 1, 2024;
+// existing high-deposit leases grandfathered but cap activates on
+// renewal. Sibling cluster: rental_security_deposit_interest,
+// rental_security_deposit_return_notice, rental_pet_deposit_
+// separate_security, rental_last_month_rent_offset, rental_
+// massachusetts_security_deposit_statute (analog state-level
+// security deposit regime), military_termination (SCRA cross-
+// reference for service member protection).
+// ---------------------------------------------------------------------------
+
+async fn rental_california_ab_12_security_deposit_cap_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalCaliforniaAb12SecurityDepositCapInput>,
+) -> Result<Json<RentalCaliforniaAb12SecurityDepositCapResult>, ApiError> {
+    Ok(Json(check_rental_california_ab_12_security_deposit_cap(&b)))
+}
 
 async fn rental_carbon_monoxide_detector_route(
     _s: State<AppState>,
