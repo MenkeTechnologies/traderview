@@ -73,6 +73,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-25d",           post(section_25d_route))
         .route("/calc/section-30d",           post(section_30d_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
+        .route("/calc/section-1258",          post(section_1258_route))
         .route("/calc/section-1259",          post(section_1259_route))
         .route("/calc/section-1361",          post(section_1361_route))
         .route("/calc/section-1366",          post(section_1366_route))
@@ -4705,6 +4706,34 @@ async fn section_1033_route(
         ));
     }
     Ok(Json(traderview_expense::section_1033::compute(&b)))
+}
+
+// ── §1258 recharacterization of gain from conversion transactions ────
+// Mounted at /api/calc/section-1258. § 1258(a) recharacterizes capital
+// gain on disposition of position held as part of CONVERSION
+// TRANSACTION as ORDINARY INCOME to extent of APPLICABLE IMPUTED
+// INCOME AMOUNT (120 % of applicable rate × net investment for
+// holding period). § 1258(c)(1) requires substantially all of
+// expected return attributable to TIME VALUE of net investment.
+// § 1258(c)(2) four enumerated categories: (A) applicable straddle
+// within § 1092(c); (B) buy-and-forward-sale; (C) marketed/sold
+// under marketing materials promising overall after-tax economic
+// profit attributable to capital-gain conversion; (D) other
+// transactions specified by regs. § 1258(d) applicable rate: § 1274(d)
+// AFR compounded semiannually (standard term) or § 6621(b) federal
+// short-term rate compounded daily (indefinite term). Treas. Reg.
+// § 1.1258-1 netting rule. Enacted by OBRA 1993 (PL 103-66) § 13206
+// in response to growing time-value-based capital-gain conversion
+// structures. Trader/hedge-fund critical for marketed box spreads,
+// buy-stock-plus-short-forward synthetic loans, calendar spreads
+// with dominant time-decay leg, deep-in-the-money covered-call
+// structures.
+
+async fn section_1258_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1258::Section1258Input>,
+) -> Result<Json<traderview_expense::section_1258::Section1258Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1258::compute(&b)))
 }
 
 // ── §1259 constructive sale of appreciated financial position ────────
