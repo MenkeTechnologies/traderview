@@ -141,6 +141,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
+        .route("/calc/section-6411",          post(section_6411_route))
         .route("/calc/section-6425",          post(section_6425_route))
         .route("/calc/section-7201",          post(section_7201_route))
         .route("/calc/section-7202",          post(section_7202_route))
@@ -7431,6 +7432,56 @@ async fn section_6425_route(
     Json(b): Json<traderview_expense::section_6425::Section6425Input>,
 ) -> Result<Json<traderview_expense::section_6425::Section6425Result>, ApiError> {
     Ok(Json(traderview_expense::section_6425::compute(&b)))
+}
+
+// ── §6411 tentative carryback adjustment Form 1139 / Form 1045 ────
+// Mounted at /api/calc/section-6411. § 6411 is the companion to
+// § 6425 (corporate quick refund for estimated tax overpayments —
+// built iter 684) and follows a similar quick-refund processing
+// model with a 90-day IRS examination window (vs § 6425's 45-day
+// window). Form 1139 (Corporation Application for Tentative Refund)
+// is the operative form for corporations; Form 1045 (Application for
+// Tentative Refund) is the analog for individuals, estates, and
+// trusts. § 6411(a) right to tentative adjustment for NOL carryback
+// (§ 172), net capital loss carryback (§ 1212), or unused business
+// credit carryback (§ 39). Filing deadline: 12 MONTHS after end of
+// taxable year of loss / unused credit; income tax return for loss /
+// credit year must be filed no later than Form 1139 / Form 1045
+// filing date. § 6411(b) IRS examination window: 90 DAYS to make
+// limited examination for omissions and computational errors,
+// determine adjustment, credit / refund. § 6411(c) consolidated
+// return special rules under Treas. Reg. § 1.1502-78. § 6411(d) claim
+// of right tentative refund under § 1341(b)(1) added by Public Law
+// 95-628 of 1978; available within 12 months from last day of
+// taxable year of repayment. NOT a refund claim under § 6511 —
+// distinct procedural track. § 6213(b)(3) subsequent disallowance:
+// excessive tentative refund treated as deficiency assessable
+// WITHOUT normal § 6213(a) Tax Court petition right; interest at
+// § 6601 underpayment rate accrues from original refund date.
+// CARES Act 2020 (Public Law 116-136, March 27, 2020) temporarily
+// allowed corporations to carry back NOLs arising in 2018, 2019, or
+// 2020 to each of 5 preceding taxable years; sunset for losses
+// arising in 2021+. 16-mode severity ladder × 5 taxpayer types × 3
+// application form statuses × 5 carryback categories × 3 income tax
+// return statuses × 6 compliance aspects × variable IRS processing
+// days / consolidated return / subsequent disallowance flags.
+// Sibling cluster: section_6425 (built iter 684; corporate estimated
+// tax quick refund — 45-day vs § 6411's 90-day window), section_6601
+// (general underpayment interest), section_6611 (overpayment
+// interest), section_6621 (built iter 674; underpayment rate),
+// section_6655 (built iter 676; corporate estimated tax penalty),
+// section_6511 (refund claim limitations — DISTINCT from § 6411),
+// section_6213b3 (special rule for tentative carryback assessments),
+// section_172 (NOL), section_1212 (net capital loss), section_39
+// (unused business credit), section_1341 (claim of right),
+// section_6662 (accuracy-related penalty), section_7206 (fraud and
+// false statements; willful fraudulent Form 1139 / 1045 exposure).
+
+async fn section_6411_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6411::Section6411Input>,
+) -> Result<Json<traderview_expense::section_6411::Section6411Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6411::compute(&b)))
 }
 
 // ── §6531 periods of limitation on criminal prosecutions ────────────
