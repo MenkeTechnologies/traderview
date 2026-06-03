@@ -179,6 +179,7 @@ pub mod rental_carbon_monoxide_detector;
 pub mod rental_chimney_fireplace_inspection_disclosure;
 pub mod rental_elevator_safety_inspection;
 pub mod rental_emergency_action_plan_high_rise;
+pub mod rental_ev_charging_accommodation;
 pub mod rental_fair_housing_reasonable_accommodation;
 pub mod rental_fire_extinguisher_requirement;
 pub mod rental_flood_hazard_disclosure;

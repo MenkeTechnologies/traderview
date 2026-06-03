@@ -876,6 +876,11 @@ use traderview_expense::rental_tenant_data_privacy_compliance::{
     RentalTenantDataPrivacyComplianceInput,
     RentalTenantDataPrivacyComplianceResult,
 };
+use traderview_expense::rental_ev_charging_accommodation::{
+    check as check_rental_ev_charging_accommodation,
+    RentalEvChargingAccommodationInput,
+    RentalEvChargingAccommodationResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1368,6 +1373,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
         .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
+        .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11864,4 +11870,52 @@ async fn rental_tenant_data_privacy_compliance_route(
     Json(b): Json<RentalTenantDataPrivacyComplianceInput>,
 ) -> Result<Json<RentalTenantDataPrivacyComplianceResult>, ApiError> {
     Ok(Json(check_rental_tenant_data_privacy_compliance(&b)))
+}
+
+// ── /rental-ev-charging-accommodation (iter 563) ────────────────────────────
+// POST endpoint for EV charging accommodation compliance across seven
+// jurisdictions. Most states with significant EV adoption enacted
+// right-to-charge statutes prohibiting landlords from unreasonably
+// restricting tenant installation of EV charging stations.
+//
+// CA Cal. Civ. Code § 1947.6 (AB 2565 + AB 2863): right-to-charge
+// applies to leases executed/renewed/extended after July 1, 2015;
+// tenant pays installation + electrical + reasonable conditions.
+//
+// IL 765 ILCS 1085 Electric Vehicle Charging Act: effective Jan 1,
+// 2024 + new-construction EV-capable parking-space mandate.
+//
+// CO C.R.S. § 38-12-601: Level 1/2 at tenant expense; no landlord
+// fee except actual electricity or reasonable access; safety + 30-day
+// registration + reasonable aesthetic permitted.
+//
+// HI Haw. Rev. Stat. § 196-7.5: lease provisions prohibiting EV
+// charging at multi-family residential dwelling or townhouse parking
+// stalls VOID and unenforceable.
+//
+// NY RPL § 234 + state energy law: HOA / condo association
+// restrictions on EV charging in assigned parking prohibited.
+//
+// FL Fla. Stat. § 718.113(8): applies to CONDOMINIUM OWNERS only
+// (NOT tenants of rentals).
+//
+// Federal § 30C alternative fuel vehicle refueling property credit:
+// up to 30% of cost (max $1,000 residential / $30,000 commercial);
+// IRA 2022 (Pub. L. 117-169) extended through 2032.
+//
+// Eight-mode severity ladder: NotApplicable,
+// CompliantLandlordApprovalWithReasonableConditions,
+// OutrightDenialViolatesRightToChargeStatute,
+// UnreasonableConditionsViolation,
+// NoTimelyResponseViolatesStatutoryWindow,
+// TenantRefusedBonaFideSafetyOrCostConditionsDeniedReasonably,
+// FloridaCondoOnlyRentalNotProtected,
+// DefaultJurisdictionNoRightToChargeStatute.
+
+async fn rental_ev_charging_accommodation_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalEvChargingAccommodationInput>,
+) -> Result<Json<RentalEvChargingAccommodationResult>, ApiError> {
+    Ok(Json(check_rental_ev_charging_accommodation(&b)))
 }
