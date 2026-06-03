@@ -334,6 +334,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-199a",          post(section_199a_route))
         .route("/calc/section-83b",           post(section_83b_route))
         .route("/calc/section-83c",           post(section_83c_route))
+        .route("/calc/section-1059",          post(section_1059_route))
         .route("/calc/section-1091",          post(section_1091_route))
         .route("/calc/section-1231",          post(section_1231_route))
         .route("/calc/section-1233",          post(section_1233_route))
@@ -2453,6 +2454,31 @@ async fn section_1014e_route(
 // (sale_date ±30 days inclusive), FIFO basis allocation to replacement
 // lots under §1091(d), Rev. Rul. 2008-5 IRA permanent-loss carve-out,
 // and §475(f)(1)(C) MTM elector exemption.
+
+// ── § 1059 extraordinary dividend basis reduction ────────────────
+// Mounted at /api/calc/section-1059. Anti-abuse for corporate
+// shareholders claiming dividends-received deduction (§ 243 +
+// § 245 + § 245A) on dividends exceeding 10% of common stock basis
+// (5% preferred) within 2-year holding period. Basis reduced (not
+// below zero) by nontaxed portion; excess recognized as gain from
+// sale or exchange of stock. § 1059(e)(1) per se extraordinary
+// dividends override threshold and holding period: non-pro-rata
+// redemptions, partial liquidations, § 318(a)(4) options-attribution
+// redemptions. § 1059(c)(3) aggregation: 85-day short window, 365-
+// day long window. TCJA 2017 § 14101 added § 245A (100% DRD for
+// foreign-source income from 10%-owned foreign corporations) —
+// significantly expanded § 1059 cross-border scope. Sibling cluster:
+// § 243 / § 245 / § 245A (DRD definitions populating nontaxed
+// portion), § 301 (dividend distribution rules), § 318 (constructive
+// ownership), § 1059(d)(6) (entire-existence-of-corporation exception
+// inapplicable to § 1059(e)(1)).
+
+async fn section_1059_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1059::Section1059Input>,
+) -> Result<Json<traderview_expense::section_1059::Section1059Output>, ApiError> {
+    Ok(Json(traderview_expense::section_1059::check(&b)))
+}
 
 async fn section_1091_route(
     _u: AuthUser,
