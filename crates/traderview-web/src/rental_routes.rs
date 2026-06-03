@@ -771,6 +771,11 @@ use traderview_expense::rental_pet_deposit_separate_security::{
     check as check_rental_pet_deposit_separate_security,
     RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
 };
+use traderview_expense::rental_pre_foreclosure_tenant_notification::{
+    check as check_rental_pre_foreclosure_tenant_notification,
+    RentalPreForeclosureTenantNotificationInput,
+    RentalPreForeclosureTenantNotificationResult,
+};
 use traderview_expense::rental_propane_tank_lease_disclosure::{
     check as check_rental_propane_tank_lease_disclosure,
     RentalPropaneTankLeaseDisclosureInput, RentalPropaneTankLeaseDisclosureResult,
@@ -1505,6 +1510,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-post-construction-lead-dust-clearance", axum::routing::post(rental_post_construction_lead_dust_clearance_route))
         .route("/rental-positive-rent-payment-credit-reporting", axum::routing::post(rental_positive_rent_payment_credit_reporting_route))
         .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
+        .route("/rental-pre-foreclosure-tenant-notification", axum::routing::post(rental_pre_foreclosure_tenant_notification_route))
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
         .route("/rental-renters-insurance-requirement", axum::routing::post(rental_renters_insurance_requirement_route))
@@ -9216,6 +9222,35 @@ async fn rental_pet_deposit_separate_security_route(
 // underground_storage_tank_disclosure (UST/LUST petroleum),
 // mid_tenancy_temporary_relocation, tenant_emotional_distress_damages.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_pre_foreclosure_tenant_notification: multi-state pre-
+// foreclosure tenant notification compliance. CA Civ Code § 2924.85
+// + § 2923.5 (Homeowner Bill of Rights AB 278 of 2012) — 30-day
+// pre-foreclosure servicer contact; § 2924.8 trustee tenant notice
+// within 5 business days of NOTS. NY RPAPL § 1304 (90-day pre-
+// foreclosure notice to borrower) + § 1303 (10-day tenant notice
+// after summons and complaint). Illinois 735 ILCS 5/15-1701
+// (Foreclosure Fairness Act) — possessory order requirements +
+// bona fide lease protection. Washington RCW 61.24.143 (trustee
+// sale notice 90+ days before sale) + § 61.24.146 (60-day notice
+// to vacate). Massachusetts G.L. c. 244 § 35C (new-owner notice
+// posting; 30-day wait before rent-nonpayment eviction; 90-day
+// notice to quit). Federal PTFA (P.L. 111-22 of 2009; made
+// permanent by Dodd-Frank 2018) 90-day federal floor. Seventeen-
+// mode severity ladder × six jurisdictions × six foreclosure
+// stages × three lease statuses. Trader-landlord critical: cross-
+// state leveraged portfolios face multi-state foreclosure-tenant-
+// notification cascade with non-uniform notice windows + content.
+// ---------------------------------------------------------------------------
+
+async fn rental_pre_foreclosure_tenant_notification_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalPreForeclosureTenantNotificationInput>,
+) -> Result<Json<RentalPreForeclosureTenantNotificationResult>, ApiError> {
+    Ok(Json(check_rental_pre_foreclosure_tenant_notification(&b)))
+}
 
 async fn rental_propane_tank_lease_disclosure_route(
     _s: State<AppState>,
