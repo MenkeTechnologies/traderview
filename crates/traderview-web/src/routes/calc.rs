@@ -78,6 +78,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1375",          post(section_1375_route))
         .route("/calc/section-1411",          post(section_1411_route))
         .route("/calc/section-475c2",         post(section_475c2_route))
+        .route("/calc/section-475f",          post(section_475f_route))
         .route("/calc/section-213",           post(section_213_route))
         .route("/calc/section-170",           post(section_170_route))
         .route("/calc/section-219",           post(section_219_route))
@@ -4366,6 +4367,30 @@ async fn section_475c2_route(
     Json(b): Json<traderview_expense::section_475c2::Section475c2Input>,
 ) -> Result<Json<traderview_expense::section_475c2::Section475c2Result>, ApiError> {
     Ok(Json(traderview_expense::section_475c2::compute(&b)))
+}
+
+// ── §475(f) trader mark-to-market election mechanics ────────────────
+// Mounted at /api/calc/section-475f. Companion to §475(c)(2) classifier:
+// pins the ELECTION mechanics for trader-tax-status filers — April-15
+// individual / March-15 entity election-statement deadline (unextended
+// per IRS Topic 429), mandatory Form 3115 (Application for Change in
+// Accounting Method) on year-of-election return under Rev. Proc.
+// 2025-23 § 24.01, full §1091 wash-sale-rule exemption, removal of the
+// $3,000 §1211(b) capital-loss cap with unlimited ordinary-loss
+// passthrough, and the 5-year revocation lockout under Rev. Proc.
+// 99-17 + Rev. Proc. 2025-23 § 24.02. Trader-tax-status floors
+// (substantial + regular + continuous test per Endicott v. Commissioner
+// T.C. Memo. 2013-199 + IRS Pub. 550): ~720 trades/year and ~4 hours
+// per trading day. Severity ladder: optimal (timely election + Form
+// 3115), missed-deadline-fatal, election-without-3115, TTS-floor-miss,
+// prior-revocation-5-year-lock, newly-formed-entity-internal-books
+// 2.5-month window.
+
+async fn section_475f_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_475f::Section475fInput>,
+) -> Result<Json<traderview_expense::section_475f::Section475fOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_475f::check(&b)))
 }
 
 // ── §213 medical expense deduction ──────────────────────────────────
