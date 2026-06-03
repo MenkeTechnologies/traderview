@@ -202,6 +202,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1273",          post(section_1273_route))
         .route("/calc/section-1281",          post(section_1281_route))
         .route("/calc/section-1283",          post(section_1283_route))
+        .route("/calc/section-1287",          post(section_1287_route))
         .route("/calc/section-1282",          post(section_1282_route))
         .route("/calc/section-7704",          post(section_7704_route))
         .route("/calc/section-6045b",         post(section_6045b_route))
@@ -8423,6 +8424,35 @@ async fn section_1283_route(
         ));
     }
     Ok(Json(traderview_expense::section_1283::compute(&b)))
+}
+
+// ── §1287 anti-bearer-bond rule / denial of capital gain treatment ────
+// Mounted at /api/calc/section-1287. § 1287(a) converts capital gain
+// on disposition of registration-required obligation NOT in registered
+// form to ORDINARY INCOME (unless issuer paid § 4701 tax). Enacted
+// as part of TEFRA (Public Law 97-248 § 310) effective for obligations
+// issued after December 31, 1982. § 1287(b)(1) "registration-required
+// obligation" defined per § 163(f)(2) — exempts obligations with
+// maturity ≤ 1 year, not offered to public, or foreign-targeted
+// meeting Treasury conditions. § 1287(b)(2) "registered form"
+// defined per § 163(f). § 4701 separate 1 % per year issuer excise
+// tax on face amount; if paid, § 1287(a) parenthetical exception
+// applies. Treas. Reg. § 1.165-12(c) holder exception requires no
+// actual knowledge of registration failure with reasonable care.
+// Pre-TEFRA obligations issued before Jan 1, 1983 grandfathered
+// outside § 1287 regardless of registration status. September 2017
+// Treasury Proposed Regulations (Federal Register 82 FR 43773)
+// updated registered form definition. Cross-reference with § 1276
+// market discount ordinary income treatment. Trader-relevant for
+// family offices and international portfolio operators with legacy
+// bearer bond holdings, off-shore-issued bonds, or non-registered
+// debt instruments.
+
+async fn section_1287_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1287::Section1287Input>,
+) -> Result<Json<traderview_expense::section_1287::Section1287Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1287::compute(&b)))
 }
 
 // ── §1282 short-term obligation interest-deduction deferral ──────
