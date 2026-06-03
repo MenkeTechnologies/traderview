@@ -98,6 +98,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-250",           post(section_250_route))
         .route("/calc/section-56a",           post(section_56a_route))
         .route("/calc/section-59a",           post(section_59a_route))
+        .route("/calc/section-643",           post(section_643_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
         .route("/calc/section-6042",          post(section_6042_route))
@@ -5374,6 +5375,34 @@ async fn section_59a_route(
         ));
     }
     Ok(Json(traderview_expense::section_59a::compute(&b)))
+}
+
+// ── §643 trust/estate DNI + accounting income definition ────────────
+// Mounted at /api/calc/section-643. § 643(a) DNI definition: trust
+// taxable income modified by — (1) no distribution deduction; (2)
+// no personal exemption; (3) capital gains EXCLUDED from DNI when
+// allocated to corpus and not distributed/required-to-be-distributed/
+// set aside for § 642(c) charity; (5) tax-exempt income INCLUDED in
+// DNI net of allocable expenses; (6) foreign trust modifications;
+// (7) deemed-distributed amounts excluded. § 643(b) trust accounting
+// income (FAI) defined for §§ 651/661 distribution limits + marital
+// deduction + pooled income funds + charitable remainder trusts.
+// § 643(c) beneficiary definition. § 643(d) coordination with
+// §§ 651/661. § 643(e) property distributed in kind. § 643(f)
+// multiple trusts aggregated for tax-avoidance principal purpose.
+// § 643(g) estimated tax election. § 643(h) foreign trust
+// distributions. Treas. Reg. § 1.643(b)-1 final regs (Dec 30, 2003)
+// allow POWER TO ADJUST under state Uniform Principal and Income
+// Act equivalents. DNI ceiling: tier-1 mandatory + tier-2
+// discretionary; excess = tax-free corpus return. Trader-critical
+// because 2025 trust top bracket 37 % at ~$15,650 makes DNI
+// optimization the single most impactful trust planning decision.
+
+async fn section_643_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_643::Section643Input>,
+) -> Result<Json<traderview_expense::section_643::Section643Result>, ApiError> {
+    Ok(Json(traderview_expense::section_643::compute(&b)))
 }
 
 // ── §67(g) TCJA misc itemized deduction suspension ────────────────────
