@@ -227,6 +227,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-530",           post(section_530_route))
         .route("/calc/section-280f",          post(section_280f_route))
         .route("/calc/section-280b",          post(section_280b_route))
+        .route("/calc/section-280c",          post(section_280c_route))
         .route("/calc/section-280e",          post(section_280e_route))
         .route("/calc/section-280g",          post(section_280g_route))
         .route("/calc/section-280h",          post(section_280h_route))
@@ -4245,6 +4246,29 @@ async fn section_280b_route(
         ));
     }
     Ok(Json(traderview_expense::section_280b::compute(&b)))
+}
+
+// ── §280C credits-for-which-expenses-disallowed (anti-double-dip) ────
+// Mounted at /api/calc/section-280c. § 280C(a) wage credits (§ 45A
+// Indian Employment, § 45P Military Differential Wage, § 45S Paid
+// Family Medical Leave, § 51 WOTC, § 1396 Empowerment Zone) require
+// MANDATORY deduction disallowance equal to credit determined; no
+// reduced-credit election available. § 280C(b) orphan drug § 45C
+// permits § 280C(b)(3) reduced-credit election cross-referencing
+// § 280C(c)(2)/(3) procedure. § 280C(c)(1) default rule for § 41
+// research credit: § 174 deduction reduced by credit determined;
+// § 280C(c)(2) election: credit × (1 − 21 %) = credit × 79 % and
+// taxpayer keeps full § 174 deduction; § 280C(c)(3) election must
+// be on ORIGINAL return (cannot be made on amended). Tax Court:
+// § 280C applies to credit DETERMINED not credit ALLOWED — § 38
+// general business credit limitation does NOT reduce § 280C
+// disallowance.
+
+async fn section_280c_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_280c::Section280cInput>,
+) -> Result<Json<traderview_expense::section_280c::Section280cResult>, ApiError> {
+    Ok(Json(traderview_expense::section_280c::compute(&b)))
 }
 
 // ── §280E controlled-substance trafficking deduction disallowance ────
