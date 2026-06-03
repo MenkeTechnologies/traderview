@@ -705,6 +705,11 @@ use traderview_expense::rental_window_guard_installation::{
     check as check_rental_window_guard_installation,
     RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
 };
+use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
+    check as check_rental_vehicle_towing_notice_sign_requirements,
+    RentalVehicleTowingNoticeSignRequirementsInput,
+    RentalVehicleTowingNoticeSignRequirementsResult,
+};
 use traderview_expense::rental_vacant_property_registration::{
     check as check_rental_vacant_property_registration,
     RentalVacantPropertyRegistrationInput,
@@ -1556,6 +1561,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
         .route("/rental-vacant-property-registration", axum::routing::post(rental_vacant_property_registration_route))
+        .route("/rental-vehicle-towing-notice-sign-requirements", axum::routing::post(rental_vehicle_towing_notice_sign_requirements_route))
         .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
         .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
         .route("/rental-window-blind-cord-safety", axum::routing::post(rental_window_blind_cord_safety_route))
@@ -8677,6 +8683,34 @@ async fn rental_vacant_property_registration_route(
     Json(b): Json<RentalVacantPropertyRegistrationInput>,
 ) -> Result<Json<RentalVacantPropertyRegistrationResult>, ApiError> {
     Ok(Json(check_rental_vacant_property_registration(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_vehicle_towing_notice_sign_requirements: multi-state
+// residential vehicle towing notice + sign compliance. CA Veh Code
+// § 22658 — sign at all entrances ≥ 17×22 inches; lettering ≥ 1
+// inch; owner-expense language; local law enforcement phone; towing
+// company name + phone with written general towing authorization
+// agreement; tenant vehicle written notice except (a) in someone
+// else's assigned space and reported OR (b) blocking fire lane.
+// § 22658(e) non-compliance exposes landlord to DOUBLE the towing +
+// storage charges. LA Mun Code § 80.71.4 — minimum sign 24×24
+// inches + LAPD phone. Tex Occ Code § 2308 — sign + 24-hour
+// storage facility access. Fla Stat § 715.07 — sign + 30-day
+// storage. NJ Predatory Towing Prevention Act (P.L. 2007 c.193)
+// — sign + max charges + 24-hour access. Illinois 625 ILCS 5/18a
+// — ICC-regulated rates + sign. Eighteen-mode severity ladder ×
+// seven jurisdictions × five tow scenarios. Trader-landlord
+// critical because non-compliant towing exposes landlord to double
+// charges + tenant damages + state-AG enforcement.
+// ---------------------------------------------------------------------------
+
+async fn rental_vehicle_towing_notice_sign_requirements_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalVehicleTowingNoticeSignRequirementsInput>,
+) -> Result<Json<RentalVehicleTowingNoticeSignRequirementsResult>, ApiError> {
+    Ok(Json(check_rental_vehicle_towing_notice_sign_requirements(&b)))
 }
 
 // ---------------------------------------------------------------------------

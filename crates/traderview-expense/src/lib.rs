@@ -264,6 +264,7 @@ pub mod rental_tenant_right_to_counsel_eviction;
 pub mod rental_underground_storage_tank_disclosure;
 pub mod rental_unpermitted_unit_disclosure;
 pub mod rental_vacant_property_registration;
+pub mod rental_vehicle_towing_notice_sign_requirements;
 pub mod rental_video_surveillance_retention;
 pub mod rental_waste_recycling_collection_mandate;
 pub mod rental_water_submetering_disclosure;
