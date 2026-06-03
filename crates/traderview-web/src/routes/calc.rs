@@ -274,6 +274,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-457a",          post(section_457a_route))
         .route("/calc/section-457b",          post(section_457b_route))
         .route("/calc/section-461g",          post(section_461g_route))
+        .route("/calc/section-461h",          post(section_461h_route))
         .route("/calc/section-461l",          post(section_461l_route))
         .route("/calc/section-465",           post(section_465_route))
         .route("/calc/section-691",           post(section_691_route))
@@ -1512,6 +1513,30 @@ async fn section_461g_route(
     Json(b): Json<traderview_expense::section_461g::Section461gInput>,
 ) -> Result<Json<traderview_expense::section_461g::Section461gResult>, ApiError> {
     Ok(Json(traderview_expense::section_461g::check(&b)))
+}
+
+// ── § 461(h) economic performance rule ──────────────────────────
+// Mounted at /api/calc/section-461h. Enacted by DRA 1984 (Pub. L.
+// 98-369). § 461(h)(1) economic performance general rule. § 461(h)
+// (2) when economic performance occurs: (A) services/property
+// provided to taxpayer = as provided; (B) services/property
+// provided by taxpayer = as taxpayer provides; (C) workers comp/
+// tort/breach/violation of law = as payments made; (D) other
+// liabilities = at time per regulations. § 461(h)(3) recurring
+// item exception: 8.5 months after close of taxable year + all-
+// events test + recurring + immaterial-or-better-matching. § 461(h)
+// (4) reserves for estimated expenses prohibited. Three-prong all-
+// events test per Treas. Reg. § 1.461-1(a)(2): fact of liability +
+// determinable amount + economic performance. Sibling cluster:
+// § 446(c)(2) accrual method, § 461(g) prepaid interest timing,
+// § 461(l) excess business loss limitation, § 162 ordinary and
+// necessary business expense, § 165(d) wagering losses limit.
+
+async fn section_461h_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_461h::Section461hInput>,
+) -> Result<Json<traderview_expense::section_461h::Section461hOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_461h::check(&b)))
 }
 
 // ── § 457(b) Governmental and Tax-Exempt Deferred Compensation ───────
