@@ -71,6 +71,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-165h",          post(section_165h_route))
         .route("/calc/section-25c",           post(section_25c_route))
         .route("/calc/section-25d",           post(section_25d_route))
+        .route("/calc/section-25e",           post(section_25e_route))
         .route("/calc/section-30d",           post(section_30d_route))
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1258",          post(section_1258_route))
@@ -10510,6 +10511,28 @@ async fn section_25d_route(
         ));
     }
     Ok(Json(traderview_expense::section_25d::compute(&b)))
+}
+
+// ── §25E Previously-Owned Clean Vehicle Credit (IRA 2022 / OBBBA) ──
+// Mounted at /api/calc/section-25e. Added by Section 13402 of the
+// Inflation Reduction Act of 2022 (Public Law 117-169, 136 Stat.
+// 1818), signed by President Biden on August 16, 2022. Credit equal
+// to LESSER of $4,000 or 30 % of sale price for previously-owned
+// clean vehicles meeting statutory requirements (sale price
+// ≤ $25,000; model year ≥ 2 years older than purchase year;
+// battery capacity ≥ 7 kWh; GVWR < 14,000 lbs; purchased from
+// licensed dealer; first transfer since August 16, 2022 to non-
+// original-owner; modified AGI ≤ filing-status threshold of $75K
+// single / $112.5K HoH / $150K MFJ; once-per-3-years limit). Credit
+// transfer election to dealer for vehicles acquired after December
+// 31, 2023 under § 25E(f). TERMINATED by One Big Beautiful Bill Act
+// of 2025 (Public Law 119-21, 139 Stat. 72, signed July 4, 2025) —
+// available ONLY for vehicles acquired before October 1, 2025.
+async fn section_25e_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_25e::Section25EInput>,
+) -> Result<Json<traderview_expense::section_25e::Section25EResult>, ApiError> {
+    Ok(Json(traderview_expense::section_25e::check(&b)))
 }
 
 // ── §30D Clean Vehicle Credit (post-OBBBA termination 2025-09-30) ────
