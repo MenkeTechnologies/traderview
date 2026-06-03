@@ -282,6 +282,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-401a9",         post(section_401a9_route))
         .route("/calc/section-409a",          post(section_409a_route))
         .route("/calc/section-382",           post(section_382_route))
+        .route("/calc/section-384",           post(section_384_route))
         .route("/calc/section-83i",           post(section_83i_route))
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
@@ -2822,6 +2823,54 @@ async fn section_382_route(
         ));
     }
     Ok(Json(traderview_expense::section_382::compute(&b)))
+}
+
+// ── § 384 Limitation on Preacquisition Losses to Offset Built-In Gain ─
+// Mounted at /api/calc/section-384 (iter 538). Pure compute. § 384
+// prevents a "loss corporation" from offsetting "recognized built-in
+// gain" of an acquired profitable corporation (the "gain corporation")
+// during a 5-year recognition period. The provision plugs the converse
+// hole § 382 leaves open: § 382 stops a loss-corp from absorbing the
+// profitable-corp's POST-acquisition income; § 384 stops the loss-corp
+// from absorbing the gain-corp's PRE-acquisition built-in gain that
+// happens to be recognized within the 5-year window.
+//
+// § 384(a) general rule: if a corporation acquires control of another
+// corporation OR the assets of a corporation are acquired in a § 368
+// reorganization AND either corporation is a "gain corporation," income
+// attributable to RECOGNIZED BUILT-IN GAIN cannot be offset by any
+// "preacquisition loss" — except the gain corp's OWN preacquisition
+// loss (statutory carveout).
+//
+// § 384(a)(1) recognition period: 5 years beginning on the acquisition
+// date. § 384(b)(2) control threshold: § 1504(a)(2) standard — at least
+// 80% voting power AND 80% value. § 384(b)(3) common-control exception:
+// inapplicable where loss corp and gain corp were in same controlled
+// group (more than 50% per § 384(b)(3) modified § 1563(a)) for the
+// 5-year period ending on the acquisition date.
+//
+// § 384(c)(8) preacquisition-loss definition: NOL carryforward to year
+// of acquisition + NOL for year of acquisition allocable to
+// pre-acquisition portion + capital loss carryover + general business
+// credit carryforward + foreign tax credit carryover.
+//
+// Six-mode severity ladder: NotApplicable,
+// NoQualifyingAcquisitionSection384Inapplicable,
+// CommonControlExceptionAppliesSection384bThreeNoDisallowance,
+// BuiltInGainRecognizedAfterFiveYearWindowNoDisallowance,
+// NoPreacquisitionLossNoDisallowance,
+// Section384APreacquisitionLossOffsetDisallowed.
+//
+// Coordinates with § 382 (annual NOL cap post-ownership-change), § 383
+// (general-business-credit cap), § 269 (discretionary disallowance on
+// principal-purpose-of-tax-avoidance), § 381 (carryover-attribute
+// transferee rules), § 1504 (affiliated-group control standard).
+
+async fn section_384_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_384::Section384PreacquisitionLossDisallowanceInput>,
+) -> Result<Json<traderview_expense::section_384::Section384PreacquisitionLossDisallowanceOutput>, ApiError> {
+    Ok(Json(traderview_expense::section_384::check(&b)))
 }
 
 // ── §83(i) qualified equity grant 5-year income-tax deferral ────────
