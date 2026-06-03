@@ -1000,6 +1000,11 @@ use traderview_expense::rental_smoke_free_cannabis_restriction::{
     RentalSmokeFreeCannabisRestrictionInput,
     RentalSmokeFreeCannabisRestrictionResult,
 };
+use traderview_expense::rental_rent_to_own_lease_purchase_disclosures::{
+    check as check_rental_rent_to_own_lease_purchase_disclosures,
+    RentalRentToOwnLeasePurchaseDisclosuresInput,
+    RentalRentToOwnLeasePurchaseDisclosuresResult,
+};
 use traderview_expense::rental_rent_increase_notice_requirement::{
     check as check_rental_rent_increase_notice_requirement,
     RentalRentIncreaseNoticeRequirementInput,
@@ -1578,6 +1583,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
         .route("/rental-rent-increase-notice-requirement", axum::routing::post(rental_rent_increase_notice_requirement_route))
+        .route("/rental-rent-to-own-lease-purchase-disclosures", axum::routing::post(rental_rent_to_own_lease_purchase_disclosures_route))
         .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
         .route("/rental-tenant-estoppel-certificate", axum::routing::post(rental_tenant_estoppel_certificate_route))
@@ -12834,6 +12840,40 @@ async fn rental_rent_increase_notice_requirement_route(
     Json(b): Json<RentalRentIncreaseNoticeRequirementInput>,
 ) -> Result<Json<RentalRentIncreaseNoticeRequirementResult>, ApiError> {
     Ok(Json(check_rental_rent_increase_notice_requirement(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_rent_to_own_lease_purchase_disclosures: multi-state
+// residential rent-to-own / lease-purchase executory contract
+// disclosure regimes. Texas Property Code Subchapter D
+// §§ 5.061-5.085 — contract for deed, lease option, or purchase
+// option > 180 days = executory contract; § 5.069 requires extensive
+// disclosures (survey + liens + covenants + easements + statutory
+// disclosure + non-subdivision notice + tax certificates + insurance
+// + 7-day notice letter + annual accounting); § 5.072 14-day right
+// of rescission; § 5.074 14-day unilateral cancellation; § 5.077
+// annual accounting; § 5.079 30-day recording requirement.
+// California Civ Code § 2985 installment land contract.
+// Maryland Real Property Code § 10-101 executory contract.
+// Illinois 765 ILCS 71/ Residential Real Property Lease-Purchase
+// Act effective Jan 1, 2025. SAFE Act (12 U.S.C. § 5101 et seq.) +
+// T-SAFE — RMLO license required for non-homestead non-family
+// owner finance. Dodd-Frank §§ 1402-1403 owner-financing exception:
+// 3 or fewer properties per year + fixed-rate ≥ 5 years + no
+// negative amortization. CFPB Reg Z treats lease-purchase as
+// consumer credit. Sixteen-mode severity ladder × five
+// jurisdictions × five contract types × four seller types. Trader-
+// landlord critical for owner-finance / rent-to-own portfolio
+// operators; missing 7-day notice or annual accounting voids
+// contract.
+// ---------------------------------------------------------------------------
+
+async fn rental_rent_to_own_lease_purchase_disclosures_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalRentToOwnLeasePurchaseDisclosuresInput>,
+) -> Result<Json<RentalRentToOwnLeasePurchaseDisclosuresResult>, ApiError> {
+    Ok(Json(check_rental_rent_to_own_lease_purchase_disclosures(&b)))
 }
 
 // ── /rental-tenant-relocation-assistance (iter 559) ─────────────────────────

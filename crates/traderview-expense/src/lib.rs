@@ -241,6 +241,7 @@ pub mod rental_radon_mitigation_disclosure;
 pub mod rental_renters_insurance_requirement;
 pub mod rental_rent_control_stabilization;
 pub mod rental_rent_increase_notice_requirement;
+pub mod rental_rent_to_own_lease_purchase_disclosures;
 pub mod rental_retaliation_prohibition;
 pub mod rental_satellite_dish_installation_right;
 pub mod rental_security_deposit_interest;
