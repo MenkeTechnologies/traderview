@@ -881,6 +881,11 @@ use traderview_expense::rental_ev_charging_accommodation::{
     RentalEvChargingAccommodationInput,
     RentalEvChargingAccommodationResult,
 };
+use traderview_expense::rental_waste_recycling_collection_mandate::{
+    check as check_rental_waste_recycling_collection_mandate,
+    RentalWasteRecyclingCollectionMandateInput,
+    RentalWasteRecyclingCollectionMandateResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1374,6 +1379,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
         .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
+        .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11918,4 +11924,49 @@ async fn rental_ev_charging_accommodation_route(
     Json(b): Json<RentalEvChargingAccommodationInput>,
 ) -> Result<Json<RentalEvChargingAccommodationResult>, ApiError> {
     Ok(Json(check_rental_ev_charging_accommodation(&b)))
+}
+
+// ── /rental-waste-recycling-collection-mandate (iter 565 milestone) ─────────
+// POST endpoint for waste collection + recycling + organic-composting
+// compliance across nine jurisdictions. Multifamily landlords face
+// increasingly comprehensive waste-diversion mandates requiring
+// separate streams for trash, recycling, and organic/compostable
+// waste.
+//
+// CA SB 1383 (Cal. Pub. Res. Code §§ 42652-42653): collection effective
+// Jan 1, 2022; penalties effective Jan 1, 2024. Multifamily 3+ units
+// (5+ in some cities). 75% diversion goal by Jan 1, 2025. CA AB 939
+// (1989) foundational 50%-diversion framework. Tenant education at
+// move-in + 2-weeks-pre-move-out + annual.
+//
+// NYC LL 87/2009 + NYC RCNY § 16 + Mandatory Curbside Composting Law
+// (staged rollout). NYC LL 142/2013 textile recycling. NYC LL 199/2017
+// commercial waste zones.
+//
+// VT Universal Recycling Act 2012 (Act 148): bans recyclables + yard
+// debris + food scraps from landfill. Multifamily food scrap diversion
+// since Jul 1, 2020.
+//
+// MA Mass. Gen. Laws ch. 21A + 310 CMR 16.00: organic-waste ban
+// effective Oct 1, 2014; threshold lowered Nov 1, 2022 to 0.5 ton/week.
+//
+// WA HB 1799 (2023) organic-waste-diversion. OR HB 2065. CO HB 22-1355
+// Producer Responsibility Program. NJ A4416 Food Waste Recycling Act
+// + N.J.A.C. 7:26-2A.13.
+//
+// Eight-mode severity ladder: NotApplicable,
+// BelowJurisdictionalThresholdNoMandate,
+// CompliantAllStreamsAndEducationProvided,
+// OrganicWasteBinNotProvidedSb1383Violation,
+// RecyclingBinNotProvidedViolation,
+// TenantEducationProtocolNotFollowed,
+// SignageOrContaminationMonitoringMissing,
+// DefaultJurisdictionStandardMunicipalCollectionOnly.
+
+async fn rental_waste_recycling_collection_mandate_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWasteRecyclingCollectionMandateInput>,
+) -> Result<Json<RentalWasteRecyclingCollectionMandateResult>, ApiError> {
+    Ok(Json(check_rental_waste_recycling_collection_mandate(&b)))
 }
