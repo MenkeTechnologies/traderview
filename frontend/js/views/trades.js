@@ -15,6 +15,19 @@ let lastPageRows = 0;  // rows returned on the last page (to detect last page)
 // the user toggles direction or column.
 let sortKey = '';      // '' = backend order, else one of trade keys
 let sortDir = 'desc';  // 'asc' | 'desc'
+// View mode mirrors Tradervue's Table / Charts(large) / Charts(small) toggle.
+// Persisted in sessionStorage so the user's preference survives refresh.
+const VIEW_MODE_KEY = 'tv-trades-view-mode';
+const PNL_MODE_KEY  = 'tv-trades-pnl-mode';
+function getViewMode() {
+    const v = sessionStorage.getItem(VIEW_MODE_KEY);
+    return (v === 'charts-large' || v === 'charts-small') ? v : 'table';
+}
+function setViewMode(m) { sessionStorage.setItem(VIEW_MODE_KEY, m); }
+function getPnlMode() {
+    return sessionStorage.getItem(PNL_MODE_KEY) === 'gross' ? 'gross' : 'net';
+}
+function setPnlMode(m) { sessionStorage.setItem(PNL_MODE_KEY, m); }
 
 export async function renderTradesView(mount, state) {
     const tok = currentViewToken();
@@ -50,6 +63,25 @@ export async function renderTradesView(mount, state) {
             <button data-i18n="view.trades.btn.apply" data-tip="view.trades.tip.apply" class="primary" id="apply-bulk" disabled>Apply</button>
             <a href="${api.exportTradesUrl(state.accountId)}" download class="btn btn-secondary btn-compact trades-export-link"
                data-i18n="view.trades.export.csv">Export CSV</a>
+            <div class="trades-view-toggle" role="tablist" aria-label="View mode">
+                <button type="button" data-mode="table"
+                        class="${getViewMode() === 'table' ? 'active' : ''}"
+                        data-i18n="view.trades.view.table">Table</button>
+                <button type="button" data-mode="charts-large"
+                        class="${getViewMode() === 'charts-large' ? 'active' : ''}"
+                        data-i18n="view.trades.view.charts_large">Charts (large)</button>
+                <button type="button" data-mode="charts-small"
+                        class="${getViewMode() === 'charts-small' ? 'active' : ''}"
+                        data-i18n="view.trades.view.charts_small">Charts (small)</button>
+            </div>
+            <div class="trades-pnl-toggle" role="tablist" aria-label="P&amp;L mode">
+                <button type="button" data-pnl="gross"
+                        class="${getPnlMode() === 'gross' ? 'active' : ''}"
+                        data-i18n="view.trades.pnl.gross">Gross</button>
+                <button type="button" data-pnl="net"
+                        class="${getPnlMode() === 'net' ? 'active' : ''}"
+                        data-i18n="view.trades.pnl.net">Net</button>
+            </div>
         </div>
         <div id="trades-table"></div>
         <div id="trades-pagination" class="trades-pagination" hidden>
@@ -146,6 +178,43 @@ export async function renderTradesView(mount, state) {
         return {};
     }
 
+    function applyViewMode() {
+        const mode = getViewMode();
+        const tableEl = mount.querySelector('#trades-table');
+        const pagerEl = mount.querySelector('#trades-pagination');
+        const pnlPanel = mount.querySelector('#trades-chart')?.closest('.chart-panel');
+        const cumPanel = mount.querySelector('#trades-cum-chart')?.closest('.chart-panel');
+        const showTable = mode === 'table';
+        if (tableEl) tableEl.style.display = showTable ? '' : 'none';
+        if (pagerEl) pagerEl.hidden = !showTable;
+        // 'charts-large' keeps the chart height; 'charts-small' shrinks them.
+        if (pnlPanel) {
+            const inner = pnlPanel.querySelector('#trades-chart');
+            if (inner) inner.className = mode === 'charts-small' ? 'chart-h-160' : 'chart-h-240';
+        }
+        if (cumPanel) {
+            const inner = cumPanel.querySelector('#trades-cum-chart');
+            if (inner) inner.className = mode === 'charts-small' ? 'chart-h-140' : 'chart-h-220';
+        }
+    }
+
+    mount.querySelectorAll('.trades-view-toggle button[data-mode]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setViewMode(btn.dataset.mode);
+            mount.querySelectorAll('.trades-view-toggle button').forEach(b =>
+                b.classList.toggle('active', b.dataset.mode === btn.dataset.mode));
+            applyViewMode();
+        });
+    });
+    mount.querySelectorAll('.trades-pnl-toggle button[data-pnl]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            setPnlMode(btn.dataset.pnl);
+            mount.querySelectorAll('.trades-pnl-toggle button').forEach(b =>
+                b.classList.toggle('active', b.dataset.pnl === btn.dataset.pnl));
+            await refresh();
+        });
+    });
+
     async function refresh() {
         const offset = (currentPage - 1) * PAGE_SIZE;
         let trades = await api.trades(state.accountId, {
@@ -157,6 +226,7 @@ export async function renderTradesView(mount, state) {
         renderPager(mount);
         renderPnlChart(trades);
         renderCumChart(trades);
+        applyViewMode();
         const tableEl = mount.querySelector('#trades-table');
         if (!tableEl) return;
         if (!trades.length) { tableEl.innerHTML = '<p data-i18n="view.trades.hint.no_trades_match" class="boot">No trades match.</p>'; return; }
@@ -178,7 +248,7 @@ export async function renderTradesView(mount, state) {
                     ${th('qty',         'view.trades.th.qty',     'Qty')}
                     ${th('entry_avg',   'view.trades.th.entry',   'Entry')}
                     ${th('exit_avg',    'view.trades.th.exit',    'Exit')}
-                    ${th('net_pnl',     'view.trades.th.net_p_l', 'Net P&L')}
+                    ${th('net_pnl', getPnlMode() === 'gross' ? 'view.trades.th.gross_p_l' : 'view.trades.th.net_p_l', getPnlMode() === 'gross' ? 'Gross P&L' : 'Net P&L')}
                     ${th('r_multiple',  'view.trades.th.r',       'R')}
                     ${th('hold',        'view.trades.th.hold',    'Hold')}
                     ${th('opened_at',   'view.trades.th.opened',  'Opened')}
@@ -195,7 +265,7 @@ export async function renderTradesView(mount, state) {
                         <td>${fmt(t.qty, 0)}</td>
                         <td>${fmt(t.entry_avg)}</td>
                         <td>${t.exit_avg !== null ? fmt(t.exit_avg) : '—'}</td>
-                        <td class="${pnlClass(t.net_pnl)}">${t.net_pnl !== null ? fmtMoney(t.net_pnl) : '—'}</td>
+                        <td class="${pnlClass(getPnlMode() === 'gross' ? t.gross_pnl : t.net_pnl)}">${(getPnlMode() === 'gross' ? t.gross_pnl : t.net_pnl) != null ? fmtMoney(getPnlMode() === 'gross' ? t.gross_pnl : t.net_pnl) : '—'}</td>
                         <td>${t.r_multiple ?? '—'}</td>
                         <td>${fmtSecs(holdSeconds(t))}</td>
                         <td>${fmtDateTime(t.opened_at)}</td>
@@ -203,6 +273,7 @@ export async function renderTradesView(mount, state) {
                         <td><button data-i18n="view.trades.btn.delete" class="link" data-del="${t.id}">delete</button></td>
                     </tr>`).join('')}
                 </tbody>
+                ${tradesFooter(trades)}
             </table>
             <p class="muted">${trades.length} trade${trades.length === 1 ? '' : 's'}</p>
         `;
@@ -289,6 +360,50 @@ function renderPager(mount) {
 function holdSeconds(t) {
     if (!t.closed_at) return null;
     return Math.round((new Date(t.closed_at) - new Date(t.opened_at)) / 1000);
+}
+
+// Footer with TOTAL and AVERAGE rows over the rendered trades. Tradervue's
+// trades table shows these pinned under the body; we mirror the pattern so
+// users can spot the bottom-line P&L without scrolling back to summary
+// cards. Columns that don't aggregate naturally (symbol, side, status, etc.)
+// stay blank in the footer rows.
+function tradesFooter(trades) {
+    if (!Array.isArray(trades) || trades.length === 0) return '';
+    let totalQty = 0, totalNet = 0, holdSum = 0, holdN = 0, netN = 0;
+    for (const tr of trades) {
+        if (Number.isFinite(Number(tr.qty))) totalQty += Number(tr.qty);
+        if (tr.net_pnl !== null && tr.net_pnl !== undefined) {
+            totalNet += Number(tr.net_pnl) || 0;
+            netN++;
+        }
+        const h = holdSeconds(tr);
+        if (h !== null) { holdSum += h; holdN++; }
+    }
+    const avgQty = totalQty / trades.length;
+    const avgNet = netN ? totalNet / netN : 0;
+    const avgHold = holdN ? holdSum / holdN : null;
+    return `
+        <tfoot class="trades-foot">
+            <tr class="trades-foot-total">
+                <td></td>
+                <td colspan="4">${esc(t('view.trades.foot.total'))}</td>
+                <td>${fmt(totalQty, 0)}</td>
+                <td></td><td></td>
+                <td class="${pnlClass(totalNet)}">${fmtMoney(totalNet)}</td>
+                <td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr class="trades-foot-avg">
+                <td></td>
+                <td colspan="4">${esc(t('view.trades.foot.average'))}</td>
+                <td>${fmt(avgQty, 0)}</td>
+                <td></td><td></td>
+                <td class="${pnlClass(avgNet)}">${fmtMoney(avgNet)}</td>
+                <td></td>
+                <td>${avgHold !== null ? fmtSecs(avgHold) : '—'}</td>
+                <td></td><td></td><td></td>
+            </tr>
+        </tfoot>
+    `;
 }
 
 /**

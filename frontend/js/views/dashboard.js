@@ -178,6 +178,63 @@ function tagBreakdownWidget(tags) {
     `));
 }
 
+function perfByBucketsWidget(rows, options = {}) {
+    if (!Array.isArray(rows) || !rows.length) {
+        return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
+    }
+    const limit = options.limit || 12;
+    const sorter = options.preserveOrder
+        ? (rs) => rs
+        : (rs) => [...rs].sort((a, b) => Math.abs(Number(b.net_pnl) || 0) - Math.abs(Number(a.net_pnl) || 0));
+    const top = sorter(rows).slice(0, limit);
+    const maxAbs = Math.max(...top.map(r => Math.abs(Number(r.net_pnl) || 0)), 1);
+    return compareWidget(top.map(r => {
+        const v = Number(r.net_pnl) || 0;
+        return `
+            <div class="dash-tv-compare-row">
+                <div class="dash-tv-compare-label">${esc(String(r.key))}</div>
+                <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${v >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(v) / maxAbs * 100).toFixed(0)}"></div></div>
+                <div class="dash-tv-compare-value ${pnlClass(v)}">${fmtMoney(v)}</div>
+            </div>
+        `;
+    }));
+}
+
+function openTradesWidget(trades) {
+    if (!Array.isArray(trades) || trades.length === 0) {
+        return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_open_trades'))}</div>`;
+    }
+    return `
+        <table class="open-trades">
+            <thead><tr>
+                <th>${esc(t('view.dashboard.tv.open.symbol'))}</th>
+                <th>${esc(t('view.dashboard.tv.open.side'))}</th>
+                <th>${esc(t('view.dashboard.tv.open.qty'))}</th>
+                <th>${esc(t('view.dashboard.tv.open.entry'))}</th>
+                <th>${esc(t('view.dashboard.tv.open.opened'))}</th>
+            </tr></thead>
+            <tbody>${trades.map(o => `
+                <tr>
+                    <td><a href="#trade/${esc(o.id)}">${esc(o.symbol)}</a></td>
+                    <td>${esc(o.side)}</td>
+                    <td>${Number(o.qty || 0).toLocaleString()}</td>
+                    <td>${fmtMoney(o.entry_avg)}</td>
+                    <td>${(o.opened_at || '').slice(0, 10)}</td>
+                </tr>
+            `).join('')}</tbody>
+        </table>
+    `;
+}
+
+function heroStat(value, klass = 'hero-num-cyan', sub = '') {
+    return `
+        <div class="hero-stat hero-stat-band">
+            <div class="hero-num hero-num-md ${klass}">${esc(String(value))}</div>
+            ${sub ? `<div class="muted small">${esc(sub)}</div>` : ''}
+        </div>
+    `;
+}
+
 function perfDayTypeWidget(cal) {
     if (!Array.isArray(cal) || !cal.length) {
         return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
@@ -522,6 +579,35 @@ const WIDGETS = [
         html: (d) => tagBreakdownWidget(d.tags) },
     { id: 'perf_day_type', titleKey: 'view.dashboard.tv.perf_day_type',
         html: (d) => perfDayTypeWidget(d.cal) },
+    { id: 'perf_month', titleKey: 'view.dashboard.tv.perf_month',
+        html: (d) => perfByBucketsWidget(d.byMonth, { preserveOrder: true }) },
+    { id: 'perf_symbol', titleKey: 'view.dashboard.tv.perf_symbol',
+        html: (d) => perfByBucketsWidget(d.bySymbol, { limit: 10 }) },
+    { id: 'total_trades', titleKey: 'view.dashboard.tv.total_trades',
+        html: (d) => heroStat(d.summary.trade_count, 'hero-num-cyan') },
+    { id: 'avg_daily_volume', titleKey: 'view.dashboard.tv.avg_daily_volume',
+        html: (d) => heroStat(fmtMoney(d.summary.avg_daily_volume), 'hero-num-cyan',
+                              `${d.summary.trading_days || 0} ${t('view.dashboard.tv.trading_days_suffix')}`) },
+    { id: 'avg_position_mae', titleKey: 'view.dashboard.tv.avg_position_mae',
+        html: (d) => heroStat(fmtMoney(d.summary.avg_mae), 'hero-num-warn') },
+    { id: 'avg_position_mfe', titleKey: 'view.dashboard.tv.avg_position_mfe',
+        html: (d) => heroStat(fmtMoney(d.summary.avg_mfe), 'hero-num-cyan') },
+    { id: 'max_consec_wins', titleKey: 'view.dashboard.tv.max_consec_wins_widget',
+        html: (d) => heroStat(d.summary.max_consec_wins, 'hero-num-cyan') },
+    { id: 'max_consec_losses', titleKey: 'view.dashboard.tv.max_consec_losses_widget',
+        html: (d) => heroStat(d.summary.max_consec_losses, 'hero-num-warn') },
+    { id: 'perf_opening_gap', titleKey: 'view.dashboard.tv.perf_opening_gap',
+        html: (d) => perfByBucketsWidget(d.byOpeningGap, { preserveOrder: true }) },
+    { id: 'perf_instrument_volume', titleKey: 'view.dashboard.tv.perf_instrument_volume',
+        html: (d) => perfByBucketsWidget(d.byInstrumentVolume, { preserveOrder: true }) },
+    { id: 'perf_movement', titleKey: 'view.dashboard.tv.perf_movement',
+        html: (d) => perfByBucketsWidget(d.byMovement, { preserveOrder: true }) },
+    { id: 'perf_r_bucket', titleKey: 'view.dashboard.tv.perf_r_bucket',
+        html: (d) => perfByBucketsWidget(d.byRBucket, { preserveOrder: true }) },
+    { id: 'perf_duration_coarse', titleKey: 'view.dashboard.tv.perf_duration_coarse',
+        html: (d) => perfByBucketsWidget(d.byDurationCoarse, { preserveOrder: true }) },
+    { id: 'open_trades', titleKey: 'view.dashboard.tv.open_trades', spans2: true,
+        html: (d) => openTradesWidget(d.openTrades) },
 ];
 const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
 const DEFAULT_LAYOUT = WIDGETS.map(w => w.id);
@@ -616,7 +702,9 @@ export async function renderDashboard(mount, state) {
         return;
     }
 
-    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags, layout] = await Promise.all([
+    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags,
+           byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
+           byInstrumentVolume, byMovement, openTrades, layout] = await Promise.all([
         api.summary(state.accountId, interval),
         api.equity(state.accountId, undefined, interval),
         api.calendar(state.accountId, interval),
@@ -627,10 +715,20 @@ export async function renderDashboard(mount, state) {
         api.byPrice(state.accountId, interval).catch(() => []),
         api.dailySeries(state.accountId, interval).catch(() => []),
         api.byTag(state.accountId, interval).catch(() => []),
+        api.byMonth(state.accountId, interval).catch(() => []),
+        api.bySymbol(state.accountId, interval).catch(() => []),
+        api.byDurationCoarse(state.accountId, interval).catch(() => []),
+        api.byRBucket(state.accountId, interval).catch(() => []),
+        api.byOpeningGap(state.accountId, interval).catch(() => []),
+        api.byInstrumentVolume(state.accountId, interval).catch(() => []),
+        api.byMovement(state.accountId, interval).catch(() => []),
+        api.trades(state.accountId, { status: 'open', limit: 100 }).catch(() => []),
         loadLayout(),
     ]);
     if (!viewIsCurrent(tok)) return;
-    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily, tags, cal };
+    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily, tags, cal,
+                   byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
+                   byInstrumentVolume, byMovement, openTrades };
 
     mount.innerHTML = `
         <div class="dash-tv-header">

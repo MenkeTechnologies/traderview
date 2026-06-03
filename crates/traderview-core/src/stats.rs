@@ -607,6 +607,205 @@ pub fn by_month(trades: &[Trade]) -> Vec<Bucket> {
     })
 }
 
+/// Tradervue parity: 2-bucket pivot — intraday vs multiday.
+/// A trade is intraday when `opened_at.date == closed_at.date` (UTC).
+pub fn by_duration_coarse(trades: &[Trade]) -> Vec<Bucket> {
+    let buckets = bucket_from(trades, |t| {
+        let close = t.closed_at?;
+        let key = if close.date_naive() == t.opened_at.date_naive() {
+            "Intraday"
+        } else {
+            "Multiday"
+        };
+        Some(key.to_string())
+    });
+    // Stable ordering.
+    let order = ["Intraday", "Multiday"];
+    let mut sorted: Vec<Bucket> = order
+        .iter()
+        .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
+        .collect();
+    for b in &buckets {
+        if !order.contains(&b.key.as_str()) {
+            sorted.push(b.clone());
+        }
+    }
+    sorted
+}
+
+/// Tradervue parity: bucket trades by R-multiple range.
+/// Buckets mirror the fixed edges used by `r_distribution` so the
+/// dashboard's "Performance By R" can be plotted alongside the count
+/// histogram from r-dist.
+pub fn by_r_bucket(trades: &[Trade]) -> Vec<Bucket> {
+    let buckets = bucket_from(trades, |t| {
+        let r = t.r_multiple()?;
+        let rf = decimal_to_f64(r);
+        Some(r_bucket_label(rf))
+    });
+    let order = [
+        "≤ -3R",
+        "-3R to -2R",
+        "-2R to -1R",
+        "-1R to 0R",
+        "0R to 1R",
+        "1R to 2R",
+        "2R to 3R",
+        "≥ 3R",
+    ];
+    let mut sorted: Vec<Bucket> = order
+        .iter()
+        .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
+        .collect();
+    for b in &buckets {
+        if !order.contains(&b.key.as_str()) {
+            sorted.push(b.clone());
+        }
+    }
+    sorted
+}
+
+fn r_bucket_label(r: f64) -> String {
+    if r <= -3.0 { "≤ -3R" }
+    else if r <= -2.0 { "-3R to -2R" }
+    else if r <= -1.0 { "-2R to -1R" }
+    else if r <= 0.0 { "-1R to 0R" }
+    else if r <= 1.0 { "0R to 1R" }
+    else if r <= 2.0 { "1R to 2R" }
+    else if r <= 3.0 { "2R to 3R" }
+    else { "≥ 3R" }
+    .to_string()
+}
+
+/// Tradervue parity: bucket trades by their *opening gap* — the percentage
+/// move between the prior-day close and the current-day open for each
+/// trade's symbol. The caller looks up the prior close from `price_bars`
+/// and passes it in as `prior_close_by_trade[trade_id]`. Trades whose
+/// symbol has no prior bar are skipped.
+pub fn by_opening_gap(
+    trades: &[Trade],
+    prior_close_by_trade: &std::collections::HashMap<uuid::Uuid, Decimal>,
+) -> Vec<Bucket> {
+    let buckets = bucket_from(trades, |t| {
+        let prior = prior_close_by_trade.get(&t.id)?;
+        if prior.is_zero() {
+            return None;
+        }
+        let entry_f = decimal_to_f64(t.entry_avg);
+        let prior_f = decimal_to_f64(*prior);
+        if prior_f == 0.0 || !prior_f.is_finite() {
+            return None;
+        }
+        let gap_pct = (entry_f - prior_f) / prior_f * 100.0;
+        Some(opening_gap_label(gap_pct))
+    });
+    let order = [
+        "< -7%",
+        "-7% to -2%",
+        "-2% to 0%",
+        "0% to +2%",
+        "+2% to +7%",
+        "> +7%",
+    ];
+    let mut sorted: Vec<Bucket> = order
+        .iter()
+        .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
+        .collect();
+    for b in &buckets {
+        if !order.contains(&b.key.as_str()) {
+            sorted.push(b.clone());
+        }
+    }
+    sorted
+}
+
+fn opening_gap_label(g: f64) -> String {
+    if g < -7.0 { "< -7%" }
+    else if g < -2.0 { "-7% to -2%" }
+    else if g < 0.0 { "-2% to 0%" }
+    else if g < 2.0 { "0% to +2%" }
+    else if g < 7.0 { "+2% to +7%" }
+    else { "> +7%" }
+    .to_string()
+}
+
+/// Bucket trades by the *symbol's average daily volume* (ADV) range.
+/// Caller passes a precomputed ADV per symbol (from `price_bars` daily
+/// bars). Symbols missing from the map are excluded.
+pub fn by_instrument_volume(
+    trades: &[Trade],
+    adv_by_symbol: &std::collections::HashMap<String, Decimal>,
+) -> Vec<Bucket> {
+    let buckets = bucket_from(trades, |t| {
+        let adv = adv_by_symbol.get(&t.symbol)?;
+        Some(instrument_volume_label(decimal_to_f64(*adv)))
+    });
+    let order = [
+        "< 1M",
+        "1M - 10M",
+        "10M - 100M",
+        "100M - 500M",
+        "≥ 500M",
+    ];
+    let mut sorted: Vec<Bucket> = order
+        .iter()
+        .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
+        .collect();
+    for b in &buckets {
+        if !order.contains(&b.key.as_str()) {
+            sorted.push(b.clone());
+        }
+    }
+    sorted
+}
+
+fn instrument_volume_label(v: f64) -> String {
+    if v < 1_000_000.0 { "< 1M" }
+    else if v < 10_000_000.0 { "1M - 10M" }
+    else if v < 100_000_000.0 { "10M - 100M" }
+    else if v < 500_000_000.0 { "100M - 500M" }
+    else { "≥ 500M" }
+    .to_string()
+}
+
+/// Bucket trades by the *symbol's average daily range* (high - low) as a
+/// percent of close. Caller passes precomputed average range pct per symbol.
+pub fn by_movement(
+    trades: &[Trade],
+    range_pct_by_symbol: &std::collections::HashMap<String, f64>,
+) -> Vec<Bucket> {
+    let buckets = bucket_from(trades, |t| {
+        let r = range_pct_by_symbol.get(&t.symbol)?;
+        Some(movement_label(*r))
+    });
+    let order = [
+        "< 1%",
+        "1% - 3%",
+        "3% - 5%",
+        "5% - 10%",
+        "≥ 10%",
+    ];
+    let mut sorted: Vec<Bucket> = order
+        .iter()
+        .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
+        .collect();
+    for b in &buckets {
+        if !order.contains(&b.key.as_str()) {
+            sorted.push(b.clone());
+        }
+    }
+    sorted
+}
+
+fn movement_label(r: f64) -> String {
+    if r < 1.0 { "< 1%" }
+    else if r < 3.0 { "1% - 3%" }
+    else if r < 5.0 { "3% - 5%" }
+    else if r < 10.0 { "5% - 10%" }
+    else { "≥ 10%" }
+    .to_string()
+}
+
 /// Tradervue parity: bucket trades by entry-price range.
 pub fn by_price_bucket(trades: &[Trade]) -> Vec<Bucket> {
     let buckets = bucket_from(trades, |t| Some(price_range(t.entry_avg)));

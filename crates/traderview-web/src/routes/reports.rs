@@ -25,6 +25,11 @@ pub fn router() -> Router<AppState> {
         .route("/reports/by-month", get(by_month))
         .route("/reports/by-price", get(by_price))
         .route("/reports/by-tag", get(by_tag))
+        .route("/reports/by-duration-coarse", get(by_duration_coarse))
+        .route("/reports/by-r-bucket", get(by_r_bucket))
+        .route("/reports/by-opening-gap", get(by_opening_gap))
+        .route("/reports/by-instrument-volume", get(by_instrument_volume))
+        .route("/reports/by-movement", get(by_movement))
         .route("/reports/daily-series", get(daily_series))
         .route("/reports/win-loss-days", get(win_loss_days))
         .route("/reports/r-distribution", get(r_distribution))
@@ -217,6 +222,136 @@ async fn by_price(
     Ok(Json(stats::by_price_bucket(
         &load(&s, user.id, &q).await?,
     )))
+}
+async fn by_duration_coarse(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    Ok(Json(stats::by_duration_coarse(
+        &load(&s, user.id, &q).await?,
+    )))
+}
+async fn by_r_bucket(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    Ok(Json(stats::by_r_bucket(
+        &load(&s, user.id, &q).await?,
+    )))
+}
+
+/// Look up prior-day closes for each trade from `price_bars` (1d interval).
+/// Trades whose symbol has no cached prior daily bar are excluded from
+/// the bucketing. Cache-only — does NOT trigger Yahoo fetches; if the
+/// price bar table is empty the response is an empty bucket set.
+async fn by_opening_gap(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    let trades = load(&s, user.id, &q).await?;
+    type Row = (Uuid, Option<Decimal>);
+    let mut prior_by_trade: HashMap<Uuid, Decimal> = HashMap::new();
+    for t in &trades {
+        let row: Option<Row> = sqlx::query_as(
+            "SELECT $1::uuid, (
+                SELECT close FROM price_bars
+                WHERE symbol = $2 AND interval = '1d'::bar_interval_t
+                  AND bar_time < $3
+                ORDER BY bar_time DESC LIMIT 1
+            )",
+        )
+        .bind(t.id)
+        .bind(&t.symbol)
+        .bind(t.opened_at)
+        .fetch_optional(&s.pool)
+        .await
+        .map_err(|e| ApiError::Internal(e.into()))?;
+        if let Some((id, Some(prior))) = row {
+            prior_by_trade.insert(id, prior);
+        }
+    }
+    Ok(Json(stats::by_opening_gap(&trades, &prior_by_trade)))
+}
+
+/// Average daily volume per unique symbol, computed over the most recent
+/// 60 cached daily bars. Cache-only.
+async fn by_instrument_volume(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    let trades = load(&s, user.id, &q).await?;
+    let symbols: Vec<String> = trades
+        .iter()
+        .map(|t| t.symbol.clone())
+        .collect::<std::collections::HashSet<_>>()
+        .into_iter()
+        .collect();
+    type Row = (String, Option<Decimal>);
+    let rows: Vec<Row> = sqlx::query_as(
+        "WITH recent AS (
+            SELECT symbol, volume,
+                   ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY bar_time DESC) AS rn
+              FROM price_bars
+             WHERE interval = '1d'::bar_interval_t
+               AND symbol = ANY($1)
+         )
+         SELECT symbol, AVG(volume)::numeric
+           FROM recent
+          WHERE rn <= 60
+          GROUP BY symbol",
+    )
+    .bind(&symbols)
+    .fetch_all(&s.pool)
+    .await
+    .map_err(|e| ApiError::Internal(e.into()))?;
+    let adv: HashMap<String, Decimal> = rows
+        .into_iter()
+        .filter_map(|(sym, v)| v.map(|d| (sym, d)))
+        .collect();
+    Ok(Json(stats::by_instrument_volume(&trades, &adv)))
+}
+
+/// Average intraday range as a percent of close per unique symbol, over
+/// the most recent 60 cached daily bars. Cache-only.
+async fn by_movement(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
+    let trades = load(&s, user.id, &q).await?;
+    let symbols: Vec<String> = trades
+        .iter()
+        .map(|t| t.symbol.clone())
+        .collect::<std::collections::HashSet<_>>()
+        .into_iter()
+        .collect();
+    type Row = (String, Option<f64>);
+    let rows: Vec<Row> = sqlx::query_as(
+        "WITH recent AS (
+            SELECT symbol, high, low, close,
+                   ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY bar_time DESC) AS rn
+              FROM price_bars
+             WHERE interval = '1d'::bar_interval_t
+               AND symbol = ANY($1)
+         )
+         SELECT symbol, AVG(((high - low) / NULLIF(close, 0)) * 100)::float8
+           FROM recent
+          WHERE rn <= 60
+          GROUP BY symbol",
+    )
+    .bind(&symbols)
+    .fetch_all(&s.pool)
+    .await
+    .map_err(|e| ApiError::Internal(e.into()))?;
+    let range_pct: HashMap<String, f64> = rows
+        .into_iter()
+        .filter_map(|(sym, v)| v.map(|x| (sym, x)))
+        .collect();
+    Ok(Json(stats::by_movement(&trades, &range_pct)))
 }
 async fn daily_series(
     State(s): State<AppState>,

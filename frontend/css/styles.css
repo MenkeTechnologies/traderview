@@ -216,6 +216,36 @@ body:not(.no-neon-glow) .chart-panel {
 .dist-fill.zero    { background:rgba(255,255,255,0.12) }
 .dist-value { font-family:'JetBrains Mono',monospace; text-align:right }
 
+table.open-trades { width:100%; border-collapse:collapse; font-size:11px }
+table.open-trades th {
+    text-align:left; color:var(--text-muted);
+    font-family:'Orbitron',sans-serif; letter-spacing:1px;
+    font-size:9.5px; padding:4px 6px; border-bottom:1px solid var(--border);
+}
+table.open-trades td {
+    padding:4px 6px; border-bottom:1px dashed rgba(255,255,255,0.06);
+    font-family:'JetBrains Mono',monospace;
+}
+table.open-trades a { color:var(--cyan); text-decoration:none }
+table.open-trades a:hover { text-decoration:underline }
+
+.trades-view-toggle, .trades-pnl-toggle {
+    display:inline-flex; gap:1px; border:1px solid var(--border); border-radius:2px;
+    overflow:hidden; margin-left:8px;
+}
+.trades-view-toggle button, .trades-pnl-toggle button {
+    background:transparent; border:none; color:var(--text-muted);
+    padding:5px 10px; font-family:'Orbitron',sans-serif; font-size:10px;
+    letter-spacing:1px; cursor:pointer;
+}
+.trades-view-toggle button.active, .trades-pnl-toggle button.active {
+    background:rgba(0,229,255,0.12); color:var(--cyan);
+}
+.trades-view-toggle button:hover:not(.active),
+.trades-pnl-toggle button:hover:not(.active) {
+    color:var(--text);
+}
+
 .dash-tv-header { display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap }
 .dash-tv-header h1 { margin:0 }
 .dash-tv-range { color: var(--text-muted); font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:2px; margin:8px 0 12px }
@@ -571,6 +601,15 @@ table.trades th.sortable.active { color:var(--cyan) }
 
 /* ---- table ----------------------------------------------------- */
 table.trades { width: 100%; border-collapse: collapse; background: var(--bg-card); }
+table.trades tfoot.trades-foot td {
+    border-top: 2px solid var(--cyan); border-bottom: 1px solid var(--border);
+    background: rgba(0,229,255,0.04); font-weight: 700; letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+}
+table.trades tfoot.trades-foot .trades-foot-avg td {
+    background: transparent; font-weight: 500;
+    border-top: 1px dashed rgba(255,255,255,0.08);
+}
 table.trades th, table.trades td {
     text-align: left; padding: 5px 8px;
     border-bottom: 1px solid var(--border); font-size: 11.5px;

@@ -172,17 +172,29 @@ export async function renderReports(mount, state, sub) {
 
     try {
         if (primary === 'overview') {
-            const [s, dow, hour] = await Promise.all([
+            const [s, dow, hour, byMonth, byHold, byDurationCoarse, byRBucket] = await Promise.all([
                 api.overview(acct, apiF),
                 api.byDow(acct, apiF),
                 api.byHour(acct, apiF),
+                api.byMonth(acct, apiF).catch(() => []),
+                api.byHold(acct, apiF).catch(() => []),
+                api.byDurationCoarse(acct, apiF).catch(() => []),
+                api.byRBucket(acct, apiF).catch(() => []),
             ]);
             if (!viewIsCurrent(tok)) return;
             setBody(overviewHtml(s, style));
-            renderDistBars(mount.querySelector('#rep-dist-dow'),  dow,  'trades');
-            renderDistBars(mount.querySelector('#rep-perf-dow'),  dow,  'net_pnl');
-            renderDistBars(mount.querySelector('#rep-dist-hour'), hour, 'trades');
-            renderDistBars(mount.querySelector('#rep-perf-hour'), hour, 'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-dow'),       dow,              'trades');
+            renderDistBars(mount.querySelector('#rep-perf-dow'),       dow,              'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-hour'),      hour,             'trades');
+            renderDistBars(mount.querySelector('#rep-perf-hour'),      hour,             'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-month'),     byMonth,          'trades');
+            renderDistBars(mount.querySelector('#rep-perf-month'),     byMonth,          'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-hold'),      byHold,           'trades');
+            renderDistBars(mount.querySelector('#rep-perf-hold'),      byHold,           'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-duration'),  byDurationCoarse, 'trades');
+            renderDistBars(mount.querySelector('#rep-perf-duration'),  byDurationCoarse, 'net_pnl');
+            renderDistBars(mount.querySelector('#rep-dist-rbucket'),   byRBucket,        'trades');
+            renderDistBars(mount.querySelector('#rep-perf-rbucket'),   byRBucket,        'net_pnl');
             applyBarWidths(mount);
         } else if (primary === 'detailed') {
             await renderDetailedTab(mount, state, detailedSub || 'by-symbol', apiF, style, tok);
@@ -438,6 +450,38 @@ function overviewHtml(s, style) {
         <div class="chart-panel">
             <h2 data-i18n="view.reports.perf.by_hour">Performance by hour of day</h2>
             <div id="rep-perf-hour" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.dist.by_month">Trade distribution by month of year</h2>
+            <div id="rep-dist-month" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.perf.by_month">Performance by month of year</h2>
+            <div id="rep-perf-month" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.dist.by_hold">Trade distribution by intraday duration</h2>
+            <div id="rep-dist-hold" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.perf.by_hold">Performance by intraday duration</h2>
+            <div id="rep-perf-hold" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.dist.by_duration">Trade distribution by duration</h2>
+            <div id="rep-dist-duration" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.perf.by_duration">Performance by duration</h2>
+            <div id="rep-perf-duration" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.dist.by_rbucket">Trade distribution by R</h2>
+            <div id="rep-dist-rbucket" class="dist-bars"></div>
+        </div>
+        <div class="chart-panel">
+            <h2 data-i18n="view.reports.perf.by_rbucket">Performance by R</h2>
+            <div id="rep-perf-rbucket" class="dist-bars"></div>
         </div>
     </div>`;
 }
