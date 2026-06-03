@@ -105,6 +105,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-643",           post(section_643_route))
         .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
+        .route("/calc/section-671",           post(section_671_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
         .route("/calc/section-6042",          post(section_6042_route))
@@ -5561,6 +5562,33 @@ async fn section_661_route(
     Json(b): Json<traderview_expense::section_661::Section661Input>,
 ) -> Result<Json<traderview_expense::section_661::Section661Result>, ApiError> {
     Ok(Json(traderview_expense::section_661::compute(&b)))
+}
+
+// ── §671 grantor trust general attribution rule ──────────────────────
+// Mounted at /api/calc/section-671. § 671 general rule: when
+// grantor (or another person under § 678) treated as owner of any
+// portion of a trust under §§ 673-679, items of income, deductions,
+// and credits attributable to that portion are INCLUDED in
+// grantor's/owner's taxable income and credits — trust transparent
+// for income tax purposes while separately respected for gift/
+// estate tax (the "intentionally defective" feature). § 672
+// definitions. § 673 reversionary interest > 5 % triggers (post-
+// 1986; Tax Reform Act of 1986). § 674 power to control beneficial
+// enjoyment (broad + § 674(b)/(c) exceptions). § 675 administrative
+// powers — § 675(4)(C) substitution power is most common modern
+// IDGT trigger. § 676 power to revoke. § 677 income for grantor's
+// or spouse's benefit. § 678 person other than grantor treated as
+// owner (BDIT); § 678(b)(2) 5x5 safe harbor — lapse up to greater
+// of $5,000 or 5 % of corpus not treated as release. § 679 foreign
+// trusts with US beneficiaries (anti-deferral). 26 CFR Part 1
+// Subpart E implementing regs. IRS Rev. Rul. 2023-2 confirms
+// grantor's death does NOT trigger basis step-up on IDGT assets.
+
+async fn section_671_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_671::Section671Input>,
+) -> Result<Json<traderview_expense::section_671::Section671Result>, ApiError> {
+    Ok(Json(traderview_expense::section_671::compute(&b)))
 }
 
 // ── §67(g) TCJA misc itemized deduction suspension ────────────────────
