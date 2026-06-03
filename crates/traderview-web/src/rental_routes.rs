@@ -1084,6 +1084,11 @@ use traderview_expense::rental_fair_housing_reasonable_accommodation::{
     RentalFairHousingReasonableAccommodationInput,
     RentalFairHousingReasonableAccommodationResult,
 };
+use traderview_expense::rental_fair_housing_amendments_act_of_1988_fhaa::{
+    check as check_rental_fair_housing_amendments_act_of_1988_fhaa,
+    RentalFairHousingAmendmentsActOf1988FhaaInput,
+    RentalFairHousingAmendmentsActOf1988FhaaResult,
+};
 use traderview_expense::rental_facade_inspection_fisp_local_law_11::{
     check as check_rental_facade_inspection_fisp_local_law_11,
     FacadeInspectionFispInput as RentalFacadeInspectionFispLocalLaw11Input,
@@ -1721,6 +1726,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
+        .route("/rental-fair-housing-amendments-act-of-1988-fhaa", axum::routing::post(rental_fair_housing_amendments_act_of_1988_fhaa_route))
         .route("/rental-facade-inspection-fisp-local-law-11", axum::routing::post(rental_facade_inspection_fisp_local_law_11_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
@@ -13826,6 +13832,30 @@ async fn rental_fair_housing_reasonable_accommodation_route(
     Json(b): Json<RentalFairHousingReasonableAccommodationInput>,
 ) -> Result<Json<RentalFairHousingReasonableAccommodationResult>, ApiError> {
     Ok(Json(check_rental_fair_housing_reasonable_accommodation(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_fair_housing_amendments_act_of_1988_fhaa: Fair Housing
+// Amendments Act of 1988 (Public Law 100-430). Signed by President
+// Ronald Reagan on September 13, 1988; generally effective March 12,
+// 1989 (180 days after enactment); design and construction
+// requirements effective March 13, 1991 (30 months after enactment).
+// Added HANDICAP / DISABILITY and FAMILIAL STATUS as protected
+// classes under the Fair Housing Act (42 USC §§ 3601-3619).
+// Sibling cluster: rental_housing_for_older_persons_act_hopa_1995
+// (HOPA — senior housing carve-out from familial status protections);
+// rental_hud_section_504_rehabilitation_act_24_cfr_part_8 (HUD §504
+// — disability nondiscrimination for federally assisted housing);
+// rental_fair_housing_reasonable_accommodation (operational
+// reasonable accommodation duty under § 3604(f)(3)(B)).
+// ---------------------------------------------------------------------------
+
+async fn rental_fair_housing_amendments_act_of_1988_fhaa_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalFairHousingAmendmentsActOf1988FhaaInput>,
+) -> Result<Json<RentalFairHousingAmendmentsActOf1988FhaaResult>, ApiError> {
+    Ok(Json(check_rental_fair_housing_amendments_act_of_1988_fhaa(&b)))
 }
 
 // ---------------------------------------------------------------------------
