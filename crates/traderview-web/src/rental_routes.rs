@@ -799,6 +799,11 @@ use traderview_expense::rental_underground_storage_tank_disclosure::{
     RentalUndergroundStorageTankDisclosureInput,
     RentalUndergroundStorageTankDisclosureResult,
 };
+use traderview_expense::rental_san_francisco_rent_ordinance_chapter_37::{
+    check as check_rental_san_francisco_rent_ordinance_chapter_37,
+    RentalSanFranciscoRentOrdinanceChapter37Input,
+    RentalSanFranciscoRentOrdinanceChapter37Result,
+};
 use traderview_expense::rental_satellite_dish_installation_right::{
     check as check_rental_satellite_dish_installation_right,
     RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
@@ -1649,6 +1654,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
         .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
         .route("/rental-renters-insurance-requirement", axum::routing::post(rental_renters_insurance_requirement_route))
+        .route("/rental-san-francisco-rent-ordinance-chapter-37", axum::routing::post(rental_san_francisco_rent_ordinance_chapter_37_route))
         .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
         .route("/rental-seattle-smc-22-206-160-just-cause-eviction", axum::routing::post(rental_seattle_smc_22_206_160_just_cause_eviction_route))
         .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
@@ -9702,6 +9708,62 @@ async fn rental_underground_storage_tank_disclosure_route(
 // siblings rental_broadband_mte_rules (cable/broadband building
 // access), rental_carbon_monoxide_detector, tenant_data_privacy.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// rental_san_francisco_rent_ordinance_chapter_37: SF Residential Rent
+// Stabilization and Arbitration Ordinance — one of the strictest and
+// most-litigated rent-control regimes in the US, enacted 1979 by SF
+// Board of Supervisors (Ordinance 276-79) after Proposition R.
+// Codified at SF Administrative Code Chapter 37. Combines (a) annual
+// rent-increase cap = LESSER of 60% × published SF CPI increase OR 7%
+// absolute ceiling, AND (b) 16-ground just-cause eviction regime
+// under § 37.9(a), administered by the SF Rent Board. Coverage shaped
+// by certificate-of-occupancy cutoff of June 13, 1979 (post-cutoff
+// buildings exempt from rent-price control but covered by just-cause
+// eviction) and by Costa-Hawkins Rental Housing Act of 1995 (CA state
+// law) which exempts single-family homes and condominium units from
+// local rent-price control on tenancy initiation. 16 just-cause
+// grounds: non-payment / breach / nuisance / illegal use / refused
+// lease extension / denied access / unapproved subtenant / owner-
+// move-in / condo conversion / demolition / capital improvement /
+// substantial rehab / Ellis Act / lead abatement / Chapter 56 dev
+// agreement demolition / Planning Code § 317 demolition. § 37.9(c)
+// requires termination notice to be filed with Rent Board within 10
+// days of service on tenant; failure invalidates the termination
+// notice. § 37.7 capital improvement passthrough cap of 5-10% of base
+// rent depending on property size; Rent Board petition + approval
+// required. § 37.9F prohibits circumvention via harassment /
+// constructive eviction / threats / refusal to accept rent with
+// separate civil cause of action including attorney fees and treble
+// damages for willful conduct. 15-mode severity ladder × 2 property
+// jurisdictions × 2 certificate-of-occupancy date statuses × 4 unit
+// types × 6 compliance aspects × 17 just-cause grounds (16 + none) ×
+// variable rent / CPI / passthrough / notice-filing inputs.
+// Sibling cluster: rental_just_cause_eviction (multi-state base
+// regime; SF = strictest US local just-cause regime), rental_
+// seattle_smc_22_206_160_just_cause_eviction (iter 669 — Seattle JCEO
+// = OLDEST municipal counterpart, 1980), rental_california_sb_567_
+// no_fault_eviction_amendments (iter 673 — CA AB 1482 + SB 567
+// statewide overlay; SF Chapter 37 retains local supremacy in SF
+// itself), rental_california_ab_12_security_deposit_cap (iter 645 —
+// CA security deposit cap), rental_california_ab_2347_unlawful_
+// detainer_response (iter 667 — CA UD response time), rental_new_
+// jersey_anti_eviction_act (iter 651 — NJ statewide companion),
+// rental_rent_control_stabilization (multi-state regime), rental_
+// owner_move_in_eviction (OMI cross-reference), rental_demolition_
+// tenant_notice (demolition cross-reference; SF Chapter 37 includes
+// 4 distinct demolition just-cause categories: § 37.9(a)(10), (15),
+// (16), and substantial rehab (12)), rental_condominium_conversion_
+// protection (condo conversion cross-reference).
+// ---------------------------------------------------------------------------
+
+async fn rental_san_francisco_rent_ordinance_chapter_37_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSanFranciscoRentOrdinanceChapter37Input>,
+) -> Result<Json<RentalSanFranciscoRentOrdinanceChapter37Result>, ApiError> {
+    Ok(Json(check_rental_san_francisco_rent_ordinance_chapter_37(&b)))
+}
 
 async fn rental_satellite_dish_installation_right_route(
     _s: State<AppState>,
