@@ -141,6 +141,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6334",          post(section_6334_route))
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
+        .route("/calc/section-6425",          post(section_6425_route))
         .route("/calc/section-7201",          post(section_7201_route))
         .route("/calc/section-7202",          post(section_7202_route))
         .route("/calc/section-7203",          post(section_7203_route))
@@ -7386,6 +7387,50 @@ async fn section_6404_route(
     Json(b): Json<traderview_expense::section_6404::Section6404Input>,
 ) -> Result<Json<traderview_expense::section_6404::Section6404Result>, ApiError> {
     Ok(Json(traderview_expense::section_6404::check(&b)))
+}
+
+// ── §6425 corporate quick-refund procedure Form 4466 ──────────────
+// Mounted at /api/calc/section-6425. § 6425 is the procedural
+// companion to § 6655 (corporate estimated tax underpayment penalty
+// — built iter 676) and § 6621 (interest rate determination — built
+// iter 674). Allows C corporation that has overpaid quarterly
+// estimated taxes to obtain ACCELERATED REFUND (within 45 days)
+// rather than waiting for standard tax-return refund cycle. § 6425(a)
+// right to adjustment via Form 4466 (Corporation Application for
+// Quick Refund of Overpayment of Estimated Tax). § 6425(b) filing
+// deadline: 15th day of 4th month after close of taxable year AND
+// before tax return filed (whichever earlier); April 15 for calendar-
+// year corps. § 6425(b)(2) computation: adjustment = estimated tax
+// PAID − estimated income tax LIABILITY. § 6425(b)(3) MINIMUM
+// THRESHOLD: adjustment must meet BOTH (a) 10 PERCENT of estimated
+// income tax liability AND (b) $500 (conjunctive double-test).
+// § 6425(c) IRS PROCESSING WINDOW: 45 DAYS to examine, determine
+// adjustment, credit, refund. Not a refund claim under § 6511 —
+// distinct procedural track. § 6655(h) EXCESSIVE ADJUSTMENT INTEREST
+// CHARGE: if quick refund proves excessive, interest at § 6621
+// underpayment rate accrues from refund date through 15th day of 4th
+// month following year-end. Applies only to C corporations; S corps,
+// partnerships, individuals, trusts, estates not eligible. 14-mode
+// severity ladder × 2 corporation types × 4 application statuses × 4
+// compliance aspects × 3 excessive-adjustment statuses × variable
+// estimated tax / liability / adjustment / IRS processing days / FSTR
+// inputs. Sibling cluster: section_6621 (built iter 674; underpayment
+// rate cited by § 6655(h)), section_6601 (general underpayment
+// interest), section_6611 (overpayment interest), section_6622 (daily
+// compounding), section_6655 (built iter 676; corporate estimated
+// tax underpayment penalty + § 6655(h) excessive-adjustment interest
+// cross-reference), section_6654 (individual estimated tax — parallel
+// individual provision; no individual analog to § 6425 quick refund),
+// section_6511 (refund-claim limitations period — DISTINCT from
+// § 6425), section_6662 (accuracy-related penalty), section_7206
+// (fraud and false statements; willful fraudulent Form 4466
+// exposure).
+
+async fn section_6425_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6425::Section6425Input>,
+) -> Result<Json<traderview_expense::section_6425::Section6425Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6425::compute(&b)))
 }
 
 // ── §6531 periods of limitation on criminal prosecutions ────────────
