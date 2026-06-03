@@ -107,6 +107,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-671",           post(section_671_route))
         .route("/calc/section-673",           post(section_673_route))
+        .route("/calc/section-674",           post(section_674_route))
         .route("/calc/section-675",           post(section_675_route))
         .route("/calc/section-676",           post(section_676_route))
         .route("/calc/section-677",           post(section_677_route))
@@ -5630,6 +5631,41 @@ async fn section_673_route(
     Json(b): Json<traderview_expense::section_673::Section673Input>,
 ) -> Result<Json<traderview_expense::section_673::Section673Result>, ApiError> {
     Ok(Json(traderview_expense::section_673::compute(&b)))
+}
+
+// ── §674 power to control beneficial enjoyment ────────────────────────
+// Mounted at /api/calc/section-674. § 674 is the SECOND substantive
+// grantor-trust trigger in §§ 671-679 progression (after § 673
+// reversionary — iter 648). Completes the grantor-trust suite
+// alongside § 675 (administrative — iter 644), § 676 (revocation —
+// iter 646), § 677 (income for benefit — iter 642), § 678 (BDIT —
+// iter 640), § 679 (foreign trusts — iter 650). § 674(a) general
+// rule: grantor treated as owner where beneficial enjoyment subject
+// to power of disposition exercisable by grantor or nonadverse
+// party without adverse-party consent. § 674 is the BROADEST single
+// Subpart E statute — its sweeping general rule is mitigated by
+// three layers of exceptions: § 674(b) eight enumerated exceptions
+// exercisable by any person (support of dependent; after-event;
+// testamentary; charitable beneficiaries; distribute corpus;
+// withhold income temporarily; withhold during legal disability;
+// allocate corpus and income); § 674(c) independent trustee
+// exception (at least HALF of trustees independent + grantor not a
+// trustee); § 674(d) ascertainable standard exception (trustee not
+// grantor or spouse + power limited by HEMS or similar). § 672(c)
+// related or subordinate party definition controls § 674(c)
+// independent trustee analysis (spouse if living with grantor;
+// father/mother/issue/brother/sister; employee of grantor;
+// corporation/employee where grantor + trust hold significant
+// voting control; subordinate employee where grantor is executive).
+// § 674(b)(5)/(6)/(7) + § 674(c) + § 674(d) exceptions DEFEATED by
+// any power to add beneficiaries (except after-born/after-adopted
+// children).
+
+async fn section_674_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_674::Section674Input>,
+) -> Result<Json<traderview_expense::section_674::Section674Result>, ApiError> {
+    Ok(Json(traderview_expense::section_674::compute(&b)))
 }
 
 // ── §675 administrative powers / IDGT substitution power ──────────────
