@@ -975,6 +975,11 @@ use traderview_expense::rental_boiler_inspection_compliance::{
     RentalBoilerInspectionComplianceInput,
     RentalBoilerInspectionComplianceResult,
 };
+use traderview_expense::rental_tree_removal_dangerous_tree_disclosure::{
+    check as check_rental_tree_removal_dangerous_tree_disclosure,
+    RentalTreeRemovalDangerousTreeDisclosureInput,
+    RentalTreeRemovalDangerousTreeDisclosureResult,
+};
 use traderview_expense::rental_tenant_rent_escrow_habitability_dispute::{
     check as check_rental_tenant_rent_escrow_habitability_dispute,
     RentalTenantRentEscrowHabitabilityDisputeInput,
@@ -1567,6 +1572,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-facade-inspection-fisp-local-law-11", axum::routing::post(rental_facade_inspection_fisp_local_law_11_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
+        .route("/rental-tree-removal-dangerous-tree-disclosure", axum::routing::post(rental_tree_removal_dangerous_tree_disclosure_route))
         .route("/rental-tenant-right-to-counsel-eviction", axum::routing::post(rental_tenant_right_to_counsel_eviction_route))
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
@@ -12610,6 +12616,39 @@ async fn rental_tenant_rent_escrow_habitability_dispute_route(
     Json(b): Json<RentalTenantRentEscrowHabitabilityDisputeInput>,
 ) -> Result<Json<RentalTenantRentEscrowHabitabilityDisputeResult>, ApiError> {
     Ok(Json(check_rental_tenant_rent_escrow_habitability_dispute(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_tree_removal_dangerous_tree_disclosure: multi-state tree
+// removal liability + dangerous tree disclosure. Hawaii Rule
+// (Whitesell v. Houlton, 63 Haw. 532, 632 P.2d 1077 (1981)) —
+// overhanging branches/protruding roots are nuisance when actually
+// cause OR imminently endanger sensible harm; neighbor may self-
+// help cut OR require owner to pay damages + cut back.
+// Massachusetts Rule (Michalson v. Nutting 1931; reaffirmed Ponte
+// v. DaSilva 1985) — libertarian; self-help to property line is
+// exclusive remedy; no landlord liability for natural processes.
+// California Booska v. Patel (24 Cal.App.4th 1786, 30 Cal.Rptr.2d
+// 241 (1994)) — self-help NOT absolute; must exercise ORDINARY
+// CARE; cannot damage or kill tree. Cal Civ § 833 trunk ownership;
+// § 834 boundary tree joint ownership; § 836 nuisance abatement.
+// Restatement (Second) of Torts § 363 (natural condition) + § 364
+// (artificial condition) + § 840 (encroaching trees) — modern
+// majority adopts Hawaii Rule. Landlord premises liability:
+// duty of care + foreseeability + warranty of habitability.
+// Eleven-mode severity ladder × four jurisdictions × six tree
+// scenarios × eight landlord actions. Trader-landlord critical
+// because tree-fall liability + dangerous-tree premises liability
+// compounds at scale; single diseased oak on 50-unit property
+// creates catastrophic third-party injury exposure.
+// ---------------------------------------------------------------------------
+
+async fn rental_tree_removal_dangerous_tree_disclosure_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTreeRemovalDangerousTreeDisclosureInput>,
+) -> Result<Json<RentalTreeRemovalDangerousTreeDisclosureResult>, ApiError> {
+    Ok(Json(check_rental_tree_removal_dangerous_tree_disclosure(&b)))
 }
 
 // ---------------------------------------------------------------------------
