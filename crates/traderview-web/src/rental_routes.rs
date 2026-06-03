@@ -851,6 +851,11 @@ use traderview_expense::rental_tenant_rent_escrow_habitability_dispute::{
     RentalTenantRentEscrowHabitabilityDisputeInput,
     RentalTenantRentEscrowHabitabilityDisputeResult,
 };
+use traderview_expense::rental_ada_accessible_parking_compliance::{
+    check as check_rental_ada_accessible_parking_compliance,
+    RentalAdaAccessibleParkingComplianceInput,
+    RentalAdaAccessibleParkingComplianceResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1338,6 +1343,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
         .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
+        .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11610,4 +11616,48 @@ async fn rental_tenant_rent_escrow_habitability_dispute_route(
     Json(b): Json<RentalTenantRentEscrowHabitabilityDisputeInput>,
 ) -> Result<Json<RentalTenantRentEscrowHabitabilityDisputeResult>, ApiError> {
     Ok(Json(check_rental_tenant_rent_escrow_habitability_dispute(&b)))
+}
+
+// ── /rental-ada-accessible-parking-compliance (iter 553) ────────────────────
+// POST endpoint for ADA + FHA accessible-parking compliance across four
+// regime categories. Multifamily rental properties subject to two distinct
+// accessible-parking regimes: (1) ADA Title III for places of public
+// accommodation (rental office, leasing center, common amenities) and
+// (2) FHA reasonable-modification provision (42 U.S.C. § 3604(f)(3)(A))
+// for individualized tenant accommodation requests.
+//
+// 2010 ADA Standards § 502 + § 208.2 minimum-table: 1 accessible per 25
+// spaces (first 100); sliding scale thereafter (2 per 50; 3 per 75; 4
+// per 100; 5 per 150; 6 per 200; 7 per 300; 8 per 400; 9 per 500;
+// 1 per 50 thereafter; 1 per 100 above 1,000). § 208.2.4 van-accessible
+// ratio: at least 1 of every 6 accessible (rounded up). § 502.3 access
+// aisle width: 60-inch minimum car / 96-inch van. § 502.7 vertical
+// clearance: 98 inches for van-accessible. § 502.6 signage with
+// International Symbol of Accessibility.
+//
+// FHA § 3604(f)(3)(C) covered-multifamily design+construction (post-March-
+// 13-1991 first occupancy; 4+ units with elevator OR 4+ without with
+// ground-floor coverage): 2% of parking spaces accessible (minimum 1).
+//
+// FHA § 3604(f)(3)(A) + (B) reasonable-modification + reasonable-
+// accommodation duty: individualized tenant requests at landlord
+// expense unless undue burden; HUD/DOJ Joint Statement Reasonable
+// Modifications March 5, 2008.
+//
+// Nine-mode severity ladder: NotApplicable,
+// NotCoveredByAdaOrFhaNoComplianceRequirement,
+// Compliant2010AdaStandardsSection502,
+// InsufficientAccessibleSpaceCountAdaViolation,
+// VanAccessibleRatioViolationOnePerSixRule,
+// AccessAisleWidthOrSignageViolation,
+// FhaCoveredMultifamilyTwoPercentRequirementViolation,
+// FhaReasonableAccommodationGranted,
+// FhaReasonableAccommodationDeniedSection3604F3aViolation.
+
+async fn rental_ada_accessible_parking_compliance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalAdaAccessibleParkingComplianceInput>,
+) -> Result<Json<RentalAdaAccessibleParkingComplianceResult>, ApiError> {
+    Ok(Json(check_rental_ada_accessible_parking_compliance(&b)))
 }

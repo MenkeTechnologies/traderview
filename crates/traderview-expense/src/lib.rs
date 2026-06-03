@@ -167,6 +167,7 @@ pub mod rent_stabilized_mci_iai_passthrough;
 pub mod repair_and_deduct;
 pub mod retaliation_windows;
 pub mod rental_depreciation;
+pub mod rental_ada_accessible_parking_compliance;
 pub mod rental_application_denial_disclosure;
 pub mod rental_attached_garage_carbon_monoxide_disclosure;
 pub mod rental_balcony_inspection_seismic_safety;
