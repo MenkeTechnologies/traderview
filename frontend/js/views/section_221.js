@@ -4,8 +4,6 @@
 // Loan must be qualified — for taxpayer / spouse / dependent's qualified education
 // at qualified institution. Voluntary payments + capitalized interest both eligible.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const CAP_2024 = 2_500;

@@ -4,7 +4,6 @@
 // Single thresholds: $25k (50%) / $34k (85%); MFJ: $32k / $44k.
 // NOT indexed to inflation since 1983/1993. Highly criticized.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

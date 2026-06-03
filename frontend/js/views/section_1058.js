@@ -3,8 +3,6 @@
 // "Securities loan" requires: identical securities returned + lender retains economic position + agreement at FMV.
 // Pairs with § 871(m) (dividend equivalents) + § 263(g) carrying charges.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

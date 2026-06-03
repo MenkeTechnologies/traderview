@@ -4,8 +4,6 @@
 // Result: effective tax rates can EXCEED 70%. Caregiving (Olive v. Comm'r) treated
 // as trafficking. Pre-2018 Champ v. Comm'r: separate non-cannabis activity OK.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

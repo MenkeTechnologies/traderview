@@ -4,7 +4,6 @@
 // § 6723 Failure to comply with other info reporting ($60/failure, $250 cap).
 // § 6724 Reasonable cause waiver. De minimis: 10 or 0.5% of forms cured by Aug 1.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

@@ -3,8 +3,6 @@
 // Each conversion has a 5-year seasoning period before principal can be
 // withdrawn penalty-free (under 59½). Strategic for FIRE / early retirement.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const BRACKETS_2024_SINGLE = [

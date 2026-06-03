@@ -3,7 +3,6 @@
 // Surfaces which states would save you $ if relocating.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 // Simplified marginal-rate brackets (2024 — Single filer).

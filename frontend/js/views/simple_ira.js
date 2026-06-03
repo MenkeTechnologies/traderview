@@ -4,8 +4,6 @@
 // for some employers. 25% early-withdrawal penalty (within 2 yrs of first contribution).
 // Must establish by Oct 1.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const EMPLOYEE_LIMIT_2024 = 16_000;

@@ -4,7 +4,6 @@
 // 5 categories: listed, confidential, contractual protection, loss, transactions of interest.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

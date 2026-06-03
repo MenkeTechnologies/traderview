@@ -4,8 +4,6 @@
 // Investment income: interest, dividends, capital gains, rental, passive K-1.
 // EXCLUDED: § 475(f) MTM ordinary, active S-corp / partnership earnings, qualified plans.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const THRESHOLDS = {

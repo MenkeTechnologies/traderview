@@ -3,8 +3,6 @@
 // § 475(f) — qualified TRADER (in securities or commodities) can ELECT MTM (gain ordinary + no § 1091 wash sale).
 // Election due BY April 15 (or unextended due date) BEFORE the tax year starts.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

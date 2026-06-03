@@ -4,7 +4,6 @@
 // (a)(6) Qualified Moving (military only post-TCJA), (a)(7) Retirement Planning, (a)(8) Athletic.
 // Non-discrimination rules limit highly-compensated.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

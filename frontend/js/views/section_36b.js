@@ -3,7 +3,6 @@
 // Pre-IRA cap: 400% FPL. ARPA / IRA 2022-2025: extended to ALL incomes when premium > 8.5% of MAGI.
 // Reconciliation on Form 8962. Cliff effect pre-ARPA at 400% FPL — important to traders bunching gains.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

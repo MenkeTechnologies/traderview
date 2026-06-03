@@ -3,8 +3,6 @@
 // substantial valuation, substantial overstatement of pension liability, substantial estate or gift tax valuation.
 // 40% gross valuation misstatement (200%+) + 40% undisclosed foreign financial asset § 6662(j).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -3,7 +3,6 @@
 // methods: RMD, Amortization, Annuitization. Must continue ≥5 yrs OR until 59½
 // (whichever later). MODIFY and you owe the 10% back to year 1 + interest.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

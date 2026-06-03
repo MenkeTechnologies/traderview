@@ -4,7 +4,6 @@
 // Pairs with § 6707 ($50K-$200K civil + greater of $200K or 75% gross income) + § 6707A taxpayer.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

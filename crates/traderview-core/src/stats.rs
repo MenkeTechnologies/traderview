@@ -1310,6 +1310,7 @@ mod tests {
             exit_avg: Some(dec("10") + net_pnl / dec("100")),
             gross_pnl: Some(net_pnl),
             fees: Decimal::ZERO,
+            commissions: Decimal::ZERO,
             net_pnl: Some(net_pnl),
             asset_class: AssetClass::Stock,
             option_type: None,

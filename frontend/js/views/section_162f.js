@@ -4,8 +4,6 @@
 // Exceptions: (1) restitution, (2) amounts paid for governmental investigation/inquiry compliance.
 // § 6050X reporting: government MUST report payments to IRS (Form 1098-F).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

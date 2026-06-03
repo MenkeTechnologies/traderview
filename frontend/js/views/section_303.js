@@ -3,7 +3,6 @@
 // Pairs with § 6166 (estate tax installment) for closely-held business succession.
 // Requires stock value > 35% of adjusted gross estate.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

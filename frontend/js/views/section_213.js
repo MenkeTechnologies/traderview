@@ -3,8 +3,6 @@
 // Includes LTC services, prescription drugs, capital expenditures (e.g. wheelchair ramp).
 // Cosmetic surgery, gym, vitamins generally NOT deductible. HSA-paid amounts NOT deductible (double-dip).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const AGI_FLOOR = 0.075;

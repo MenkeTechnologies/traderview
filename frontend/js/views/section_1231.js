@@ -3,8 +3,6 @@
 // Asymmetric "best of both worlds" treatment for depreciable real + personal business property.
 // § 1231(c) 5-year look-back: prior net § 1231 losses recapture current gain as ordinary.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

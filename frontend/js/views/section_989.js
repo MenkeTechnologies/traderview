@@ -4,7 +4,6 @@
 // § 989(b): QBU = separate, clearly identified set of activities + books in foreign currency.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

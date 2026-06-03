@@ -3,8 +3,6 @@
 // 2024 max credit: $7,830 (3+ kids) / $6,960 (2 kids) / $4,213 (1 kid) / $632 (no kids).
 // Computed on Schedule EIC + complex earned income + AGI phase-in/phase-out.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -3,8 +3,6 @@
 // 2024 thresholds (single/MFJ): $50K end-year or $75K anytime / $100K or $150K (US res); $200K/$300K or $400K/$600K (foreign).
 // $10,000 base penalty + $10K/30-day continuation (up to $50K) for failure to report.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

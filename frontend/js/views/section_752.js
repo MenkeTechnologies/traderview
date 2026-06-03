@@ -3,8 +3,6 @@
 // § 752(b) decrease in partner's share of liabilities = deemed distribution.
 // Distinction between recourse (Reg § 1.752-2) + nonrecourse (Reg § 1.752-3) crucial.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

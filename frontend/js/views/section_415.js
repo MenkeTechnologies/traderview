@@ -4,8 +4,6 @@
 // Compensation cap (§ 401(a)(17)): $345,000 (2024).
 // HCE threshold (§ 414(q)): $155,000 (2024).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const DEFINED_CONTRIBUTION_2024 = 69_000;

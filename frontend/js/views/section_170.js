@@ -4,8 +4,6 @@
 // 30% AGI for cash to private foundations.
 // 30% AGI for appreciated long-term capital gain property to public charities (20% to PFs).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

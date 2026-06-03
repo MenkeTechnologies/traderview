@@ -4,8 +4,6 @@
 // Independent producers + royalty owners: 100% deductible. Integrated oil cos: 70% deductible / 30% amortized 60 months.
 // AMT preference item: excess IDC over 65% of net oil + gas income.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

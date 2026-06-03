@@ -4,8 +4,6 @@
 // S-corp specific: premiums must be paid by S-corp + reported on W-2 box 1 + Box 14.
 // Cannot deduct if eligible for spouse's subsidized employer plan.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

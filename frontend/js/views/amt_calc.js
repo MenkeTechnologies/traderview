@@ -4,7 +4,6 @@
 // Pay greater of regular tax or AMT. ISO exercise = single biggest AMT trigger
 // (bargain element is AMT preference but not regular income at exercise).
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

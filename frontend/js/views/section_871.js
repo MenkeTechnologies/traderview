@@ -4,7 +4,6 @@
 // § 871(m) — dividend equivalents on equity-linked instruments.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

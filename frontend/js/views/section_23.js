@@ -4,7 +4,6 @@
 // Special needs adoption: FULL credit regardless of actual expenses incurred.
 // § 137: employer-paid adoption assistance up to $16,810 excluded from income (separate from credit, not double-dip).
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

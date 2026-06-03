@@ -3,8 +3,6 @@
 // Pre-Feb 18, 2009: 50%; Feb 18 2009 - Sept 27 2010: 75%.
 // Cap: greater of $10M or 10× basis per issuer.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -4,7 +4,6 @@
 // 10% excise on disqualified person + 5% on foundation manager who knowingly participated.
 // 200% on disqualified person + 50% on manager if not corrected within taxable period.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

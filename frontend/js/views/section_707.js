@@ -5,7 +5,6 @@
 // § 707(a)(2)(B) — disguised sales: 2-year contribution + distribution presumption.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

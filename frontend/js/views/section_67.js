@@ -3,8 +3,6 @@
 // TCJA § 67(g): SUSPENDED misc itemized deductions entirely for 2018-2025.
 // Sunsets Dec 31, 2025 — reverts to 2% AGI floor unless OBBBA extension.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

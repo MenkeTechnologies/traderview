@@ -3,7 +3,6 @@
 // Coordinates with § 112 (combat pay) + § 121(d)(9) (home sale 5-yr → 10-yr extension for service).
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

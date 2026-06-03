@@ -3,8 +3,6 @@
 // Box 1: federal wages (taxable). Box 3 + 5: Social Security + Medicare wages. Boxes 12: codes for retirement, HSA, dep care, group life > $50K, etc.
 // Form W-3 transmittal. Due January 31 (employee + SSA, regardless of paper/electronic).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

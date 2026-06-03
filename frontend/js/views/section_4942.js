@@ -4,8 +4,6 @@
 // "Distributable amount" = minimum investment return - tax + carryover.
 // "Qualifying distributions" = grants, program expenses, set-asides, direct charitable activities.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PAYOUT_RATE = 0.05;

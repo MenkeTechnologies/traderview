@@ -578,6 +578,7 @@ mod tests {
             qty: Decimal::from(qty),
             price: Decimal::from(price),
             fee: Decimal::from(fee),
+            commission: Decimal::ZERO,
             executed_at: Utc.timestamp_opt(ts, 0).unwrap(),
             broker_order_id: None,
             raw: serde_json::json!({}),

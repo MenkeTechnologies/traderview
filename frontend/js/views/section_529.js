@@ -3,8 +3,6 @@
 // 5-year super-funding: $90k single / $180k MFJ at once (counted ratably). State deductions vary.
 // Post-2018: $10k/yr K-12 tuition. Post-2024: Roth IRA rollover up to $35k lifetime (15-yr account).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const SUPER_FUNDING_SINGLE = 90_000;

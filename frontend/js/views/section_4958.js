@@ -4,7 +4,6 @@
 // Sister-tier penalty: 200% if not corrected within timely period.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

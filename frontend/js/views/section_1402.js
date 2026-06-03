@@ -4,8 +4,6 @@
 // Additional 0.9% Medicare > $200k single / $250k MFJ.
 // Half-SE-tax deduction § 164(f) above-the-line on Schedule 1.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const SS_BASE_2024 = 168_600;

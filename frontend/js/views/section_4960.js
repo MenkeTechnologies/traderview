@@ -5,7 +5,6 @@
 // Form 4720. Universities, hospitals, foundations, large nonprofits at risk.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const EXCISE_RATE = 0.21;

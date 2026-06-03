@@ -4,7 +4,6 @@
 // Pairs with § 269 (acquisition of corp for tax avoidance) + § 482 (related-party allocation).
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

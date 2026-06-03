@@ -4,7 +4,6 @@
 // Election to treat as capital under § 988(a)(1)(B) for forwards/futures/options.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

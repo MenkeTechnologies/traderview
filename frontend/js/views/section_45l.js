@@ -3,8 +3,6 @@
 // / $5,000 (ZERH manuf) / $500-$1,000 per unit multifamily; up to $2,500 / $5,000 with prevailing wage.
 // Builder/eligible contractor claims. Through 12/31/2032.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const SF_ENERGY_STAR = 2_500;

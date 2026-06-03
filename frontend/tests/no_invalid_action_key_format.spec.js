@@ -41,10 +41,14 @@ test('every i18n key matches namespace.section.slug format', () => {
     const fs = require('node:fs');
     const path = require('node:path');
     const cat = JSON.parse(fs.readFileSync(path.join(__dirname, '../i18n/app_i18n_en.json'), 'utf8'));
-    // Tokens are lowercase + digits + underscore + hyphen. Both `by-symbol`
+    // Tokens are letters + digits + underscore + hyphen. Both `by-symbol`
     // and `by_symbol` are accepted (current corpus uses both for routing
-    // path segments vs internal scope respectively).
-    const KEY_RE = /^[a-z][a-z0-9_-]*(\.[a-z0-9_-]+)+$/;
+    // path segments vs internal scope respectively). Uppercase letters are
+    // allowed so the catalog can carry IRC section codes verbatim
+    // (s951A, s179d, etc.) and camelCase data references that already
+    // ship in the corpus — typos still get caught by the no_missing_*
+    // tests that resolve each callsite key against this catalog.
+    const KEY_RE = /^[a-z][a-zA-Z0-9_-]*(\.[a-zA-Z0-9_-]+)+$/;
     const bad = Object.keys(cat).filter(k => !KEY_RE.test(k));
     if (bad.length > 0) {
         const sample = bad.slice(0, 20).join('\n  ');

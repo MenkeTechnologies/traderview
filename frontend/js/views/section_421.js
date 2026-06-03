@@ -3,8 +3,6 @@
 // § 421(a) — no income inclusion at exercise OR vesting (until sale).
 // § 421(b) — disqualifying disposition (sale before holding period) → § 83 ordinary income.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

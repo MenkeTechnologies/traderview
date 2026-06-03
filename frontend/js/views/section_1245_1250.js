@@ -3,8 +3,6 @@
 // § 1250 (real property): only EXCESS depreciation over straight-line is recapture; balance
 // = "unrecaptured § 1250 gain" capped at 25%. § 291 corp-only adds 20% of would-be-1245 excess.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const UNRECAP_1250_MAX_RATE = 0.25;

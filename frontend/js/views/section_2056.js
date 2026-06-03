@@ -4,8 +4,6 @@
 // QTIP § 2056(b)(7): qualifying income interest for life → first spouse uses exemption,
 // surviving spouse gets income, remainder per first spouse's wishes.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const NON_CITIZEN_ANNUAL_EXCLUSION_2024 = 185_000;

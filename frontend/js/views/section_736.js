@@ -3,8 +3,6 @@
 // § 736(b) — payments IN exchange for partnership property: capital gain/loss (under § 731 + § 741).
 // Allocation crucial for partner's tax + partnership's deduction.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

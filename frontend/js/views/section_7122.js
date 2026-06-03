@@ -5,8 +5,6 @@
 // Reasonable Collection Potential (RCP) = current equity + future income (12 or 24 mo).
 // $205 application fee + Form 656 + Form 433-A(OIC) / 433-B(OIC).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const APPLICATION_FEE_2024 = 205;

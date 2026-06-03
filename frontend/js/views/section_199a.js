@@ -3,8 +3,6 @@
 // Wages + UBIA limit for higher-income taxpayers ($241K single / $483K joint 2024).
 // SSTB (specified service trade or business) phase-out for high-income (lawyers / doctors / consultants).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -4,8 +4,6 @@
 // § 105(h) discrimination: self-insured medical plans — discriminatory amounts taxable to HCEs.
 // SE health insurance deduction: § 162(l) covered; HRA / HSA / FSA exclusion governed by § 105.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

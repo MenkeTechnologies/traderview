@@ -3,7 +3,6 @@
 // § 362(b) — basis on reorganization receipts.
 // § 362(e)(2) — anti-loss-duplication: limit basis to FMV when net built-in loss + multiple properties.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

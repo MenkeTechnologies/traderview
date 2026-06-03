@@ -188,6 +188,7 @@ mod tests {
             exit_avg: Some(d("60")),
             gross_pnl: Some(d(gross)),
             fees: Decimal::ZERO,
+            commissions: Decimal::ZERO,
             net_pnl: Some(d(gross)),
             asset_class: AssetClass::Stock,
             option_type: None,

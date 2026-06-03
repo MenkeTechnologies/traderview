@@ -3,7 +3,6 @@
 // Coordinates with § 6045 broker reporting (Form 1099-B) + § 1012 average cost basis rules.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

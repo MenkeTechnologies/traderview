@@ -4,8 +4,6 @@
 // IRA holder is the "disqualified person" — most PTs disqualify IRA entirely (deemed distributed).
 // Roll-your-own RE / business with IRA funds = high audit risk.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const EXCISE_INITIAL = 0.15;

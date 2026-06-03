@@ -4,8 +4,6 @@
 // No SOL limit (§ 6501(c)(1) unlimited assessment period for fraud returns).
 // 50% interest add-on prior to 1989 returns. Not deductible.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const FRAUD_RATE = 0.75;

@@ -4,7 +4,6 @@
 // Target gets step-up to AGUB (Aggregate Grossed-Up Basis) — buyer's basis in assets.
 // Trade-off: immediate gain to seller's group vs buyer's step-up + amortization.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

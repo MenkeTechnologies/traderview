@@ -3,8 +3,6 @@
 // Born ≤ 6/30/1949: age 70½. Born 7/1/1949 → 12/31/1950: age 72. Born 1951-1959: age 73.
 // Born 1960+: age 75. Uniform Lifetime Table (most account holders).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const UNIFORM_LIFETIME_TABLE_2022 = {

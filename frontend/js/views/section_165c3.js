@@ -4,8 +4,6 @@
 // Reduce by (a) $100 per casualty (b) 10% of AGI.
 // § 165(i): elect to claim loss in PRIOR year (faster refund).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const PER_CASUALTY_REDUCTION = 100;

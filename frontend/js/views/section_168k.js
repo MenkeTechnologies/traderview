@@ -4,7 +4,6 @@
 // "Qualified Improvement Property" (QIP) eligible after CARES Act fix.
 // Election OUT made class-by-class (3-yr / 5-yr / 7-yr / ...) on timely return.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

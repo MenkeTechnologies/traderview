@@ -4,8 +4,6 @@
 // § 904 limitation: FTC capped at (foreign source TI / worldwide TI) × US tax.
 // Separate baskets: passive, GILTI, foreign branch, general, treaty resourced.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

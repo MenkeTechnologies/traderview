@@ -4,8 +4,6 @@
 // No loss on depreciated property (asymmetric — same as § 351 boot rule).
 // Liabilities assumed by shareholder: treated as cash → FMV = greater of FMV or liab.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

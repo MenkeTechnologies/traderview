@@ -3,8 +3,6 @@
 // § 1245 property: depreciable personal property + certain real property components.
 // Contrast § 1250 (real property — only excess over straight-line recaptured).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

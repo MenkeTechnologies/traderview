@@ -360,6 +360,7 @@ mod tests {
             qty: Decimal::from(10),
             price: Decimal::from(100),
             fee: Decimal::ZERO,
+            commission: Decimal::ZERO,
             executed_at: Utc.with_ymd_and_hms(2026, 1, 1, 9, 30, 0).unwrap(),
             broker_order_id: None,
             raw: json!({}),

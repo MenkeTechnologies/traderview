@@ -3,8 +3,6 @@
 // exchange SOLELY for stock + (immediately after) transferors collectively control ≥ 80%.
 // § 358 carryover basis + § 362 carryover basis for property to corp.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -4,8 +4,6 @@
 // combined cap $69,000 ($76,500 catch-up). Roth deferrals + Mega Backdoor.
 // CRITICAL: must establish by Dec 31; can FUND through return due date.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const LIMITS_2024 = {

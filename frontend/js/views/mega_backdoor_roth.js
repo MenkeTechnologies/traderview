@@ -4,7 +4,6 @@
 // $69k - $23k employee deferral - employer match = available after-tax space.
 // Up to $46,000/yr extra Roth space ON TOP of regular limits.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

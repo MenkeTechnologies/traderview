@@ -3,8 +3,6 @@
 // 2024 thresholds: $305,000 single / $610,000 MFJ.
 // Excess business loss carries forward as NOL under § 172.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

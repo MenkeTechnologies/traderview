@@ -4,8 +4,6 @@
 // Imputed cost = (Coverage − $50K) / 1,000 × IRS rate per $1K × months covered.
 // Reported on Form W-2 Box 12 code C.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

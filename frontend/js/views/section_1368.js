@@ -4,8 +4,6 @@
 // AAA = Accumulated Adjustments Account (post-S-corp income/loss net of distributions).
 // PTI = Previously Taxed Income (pre-1983 carryover). OAA = Other Adjustments Account.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

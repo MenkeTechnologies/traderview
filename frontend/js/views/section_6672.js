@@ -3,7 +3,6 @@
 // "Trust fund taxes" = withheld income + employee FICA + collected excise taxes.
 // Personal liability — pierces corp veil; joint + several with corp.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

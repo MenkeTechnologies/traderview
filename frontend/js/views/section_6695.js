@@ -5,8 +5,6 @@
 // § 6695(c): failure to maintain list of returns prepared ($60 / return).
 // § 6695(g): failure to perform due diligence on EITC, CTC, AOTC, HoH ($635 / failure).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

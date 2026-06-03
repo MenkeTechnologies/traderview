@@ -4,8 +4,6 @@
 // Holding period TOLLED during straddle. Capitalized interest + carrying charges (§ 263(g)).
 // § 1092(b)(2) MIXED-STRADDLE ELECTION: identify positions for § 1256 60/40 + non-§ 1256 treatment.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

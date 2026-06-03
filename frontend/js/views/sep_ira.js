@@ -4,7 +4,6 @@
 // Easiest plan; setup AND fund by tax return due date (incl. extensions).
 // Must cover ALL eligible employees (3 of last 5 yrs, age 21+, $750+ wages).
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

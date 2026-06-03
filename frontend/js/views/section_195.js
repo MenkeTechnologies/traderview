@@ -3,8 +3,6 @@
 // Phase-out: $5k cap reduced $1-for-$1 starting at $50,000 total start-up; zero at $55,000.
 // § 248 (organizational) follows same rule for corps/partnerships.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const IMMEDIATE_DEDUCTION_CAP = 5_000;

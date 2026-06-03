@@ -3,8 +3,6 @@
 // § 280C(a) general rule + § 280C(b) reduced credit election + § 280C(c) R&D credit interaction.
 // Key example: § 41 R&D credit — must reduce § 174 R&D deduction by credit amount OR elect § 280C(b) reduced credit.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

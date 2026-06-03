@@ -3,8 +3,6 @@
 // Combine with 401(k) for stack: $69k + $275k = $344k+ tax-deductible per year.
 // Requires actuary + Form 5500. Generally for owner-employees age 45+ with low employee headcount.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const ANNUAL_BENEFIT_CAP_2024 = 275_000;

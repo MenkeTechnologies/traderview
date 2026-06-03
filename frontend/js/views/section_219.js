@@ -4,7 +4,6 @@
 // No income limit if neither spouse covered by employer plan.
 // Roth IRA contributions covered by § 408A (different MAGI limits + no deduction).
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

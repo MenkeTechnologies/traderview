@@ -3,7 +3,6 @@
 // for medical. Use as a stealth retirement account — pay medical out-of-pocket
 // while keeping receipts, reimburse decades later tax-free.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

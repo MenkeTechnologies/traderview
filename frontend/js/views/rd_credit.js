@@ -5,8 +5,6 @@
 // experimentation, (4) technological in nature. Also: payroll tax offset
 // for startups (<5 yr) up to $500k/yr against employer FICA.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const ASC_RATE = 0.14;

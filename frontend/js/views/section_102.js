@@ -3,8 +3,6 @@
 // § 102(b) — INCOME from gift property is taxable to recipient.
 // § 102(c) — employer-employee transfers presumed compensation (NOT gift).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -3,8 +3,6 @@
 // Must produce within 20 business days of IRS written request.
 // § 6708 penalty: $10,000/day after day 21 (NO CAP).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

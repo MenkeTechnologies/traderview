@@ -4,8 +4,6 @@
 // Individual US shareholder: dividend rate (qualified if treaty country + holding pd).
 // Post-2017 PTI (PTEP) excluded — already taxed under GILTI / Subpart F.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

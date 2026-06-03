@@ -3,8 +3,6 @@
 // "Substantial built-in loss" = adjusted basis of partnership property > FMV by > $250,000.
 // Adjusts INSIDE basis to reflect transferee's OUTSIDE basis paid.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

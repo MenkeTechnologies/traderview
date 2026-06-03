@@ -4,6 +4,8 @@ import { barChart, equityChart } from '../charts.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
+import { showToast } from '../toast.js';
+import { tPrompt } from '../dialog.js';
 
 // Tradervue-style primary tabs (top-level reports). Each maps to a render
 // function below. Detailed and Drawdown delegate to the original detailed
@@ -892,14 +894,14 @@ async function populateSavedSets(mount, state) {
 }
 
 async function saveCurrentFilterSet(mount, state, filter) {
-    const name = prompt(t('view.reports.filter.save_prompt'));
+    const name = await tPrompt('view.reports.filter.save_prompt');
     if (!name) return;
     try {
         await api.saveFilter?.(name, filter, false);
         // Re-render so the set picker shows the new entry.
         renderReports(mount, state, currentPrimary());
     } catch (e) {
-        alert(t('view.reports.filter.save_err', { msg: e.message }));
+        showToast(t('view.reports.filter.save_err', { msg: e.message }), { level: 'error' });
     }
 }
 

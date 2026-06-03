@@ -3,8 +3,6 @@
 // Taxpayer entitled to CDP hearing with IRS Office of Appeals (independent of original determination).
 // Tax Court jurisdiction over CDP determination.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

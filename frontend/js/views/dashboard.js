@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { fmtMoney, fmtPct, fmtSecs, pnlClass, applyBarWidths } from '../util.js';
+import { fmtMoney, fmtSecs, pnlClass, applyBarWidths } from '../util.js';
 import { equityChart } from '../charts.js';
 import { renderWorldMarkets } from './world_map.js';
 import { t } from '../i18n.js';
@@ -144,6 +144,69 @@ function largestGainLoss(s) {
     return compareWidget([
         compareRow(t('view.dashboard.tv.gain'), fmtMoney(lw),  lw / max, 'pos'),
         compareRow(t('view.dashboard.tv.loss'), fmtMoney(-ll), ll / max, 'neg'),
+    ]);
+}
+
+function avgMfeMae(s) {
+    const mfe = Number(s.avg_mfe) || 0;
+    const mae = Math.abs(Number(s.avg_mae) || 0);
+    if (mfe === 0 && mae === 0) {
+        return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
+    }
+    const max = Math.max(mfe, mae, 1);
+    return compareWidget([
+        compareRow(t('view.dashboard.tv.mfe'), fmtMoney(mfe),  mfe / max, 'pos'),
+        compareRow(t('view.dashboard.tv.mae'), fmtMoney(-mae), mae / max, 'neg'),
+    ]);
+}
+
+function tagBreakdownWidget(tags) {
+    if (!Array.isArray(tags) || !tags.length) {
+        return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
+    }
+    const top = [...tags]
+        .map(t => ({ ...t, net: Number(t.net_pnl) || 0 }))
+        .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
+        .slice(0, 8);
+    const maxAbs = Math.max(...top.map(t => Math.abs(t.net)), 1);
+    return compareWidget(top.map(b => `
+        <div class="dash-tv-compare-row">
+            <div class="dash-tv-compare-label">${esc(String(b.key))}</div>
+            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${b.net >= 0 ? 'pos' : 'neg'}" data-bar-pct="${(Math.abs(b.net) / maxAbs * 100).toFixed(0)}"></div></div>
+            <div class="dash-tv-compare-value ${pnlClass(b.net)}">${fmtMoney(b.net)}</div>
+        </div>
+    `));
+}
+
+function perfDayTypeWidget(cal) {
+    if (!Array.isArray(cal) || !cal.length) {
+        return `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`;
+    }
+    // Bucket each calendar day by sign of net P&L; sum per bucket. "Trading
+    // day" classification matches how Tradervue's "Performance by Day Type"
+    // groups results.
+    let winSum = 0, lossSum = 0, scratchSum = 0;
+    let winN = 0, lossN = 0, scratchN = 0;
+    for (const c of cal) {
+        const v = Number(c.net_pnl) || 0;
+        const tr = Number(c.trades) || 0;
+        if (tr === 0) continue;
+        if (v > 0) { winSum += v; winN++; }
+        else if (v < 0) { lossSum += v; lossN++; }
+        else { scratchSum += v; scratchN++; }
+    }
+    const maxAbs = Math.max(Math.abs(winSum), Math.abs(lossSum), Math.abs(scratchSum), 1);
+    const row = (label, sum, n, sign) => `
+        <div class="dash-tv-compare-row">
+            <div class="dash-tv-compare-label">${esc(label)}</div>
+            <div class="dash-tv-compare-track"><div class="dash-tv-compare-fill ${sign}" data-bar-pct="${(Math.abs(sum) / maxAbs * 100).toFixed(0)}"></div></div>
+            <div class="dash-tv-compare-value ${pnlClass(sum)}">${fmtMoney(sum)} <span class="muted cmp-pct-muted">${n} ${n === 1 ? 'day' : 'days'}</span></div>
+        </div>
+    `;
+    return compareWidget([
+        row(t('view.dashboard.tv.winning_days'), winSum, winN, 'pos'),
+        row(t('view.dashboard.tv.losing_days'),  lossSum, lossN, 'neg'),
+        row(t('view.dashboard.tv.scratch_days'), scratchSum, scratchN, 'pos'),
     ]);
 }
 
@@ -432,7 +495,7 @@ const WIDGETS = [
     { id: 'perf_dow', titleKey: 'view.dashboard.tv.perf_dow',
         html: (d) => dayOfWeekWidget(d.dow) },
     { id: 'mfe_mae', titleKey: 'view.dashboard.tv.mfe_mae',
-        html: () => `<div class="dash-tv-na">${esc(t('view.dashboard.tv.mfe_mae_unavailable'))}</div>` },
+        html: (d) => avgMfeMae(d.summary) },
     { id: 'perf_duration', titleKey: 'view.dashboard.tv.perf_duration',
         html: (d) => durationWidget(d.hold) },
     { id: 'perf_hour', titleKey: 'view.dashboard.tv.perf_hour',
@@ -455,6 +518,10 @@ const WIDGETS = [
     { id: 'avg_trade_pnl', titleKey: 'view.dashboard.tv.avg_trade_pnl', spans2: true,
         html: (d) => `<div id="dash-avg-pnl-chart" class="chart-h-260">${d.daily && d.daily.length ? '' : `<div class="dash-tv-na">${esc(t('view.dashboard.empty.no_data'))}</div>`}</div>`,
         mount: (d) => { if (d.daily && d.daily.length) lineChart('dash-avg-pnl-chart', d.daily, 'running_avg_pnl', '#00e5ff'); } },
+    { id: 'tag_breakdown', titleKey: 'view.dashboard.tv.tag_breakdown',
+        html: (d) => tagBreakdownWidget(d.tags) },
+    { id: 'perf_day_type', titleKey: 'view.dashboard.tv.perf_day_type',
+        html: (d) => perfDayTypeWidget(d.cal) },
 ];
 const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
 const DEFAULT_LAYOUT = WIDGETS.map(w => w.id);
@@ -549,7 +616,7 @@ export async function renderDashboard(mount, state) {
         return;
     }
 
-    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, layout] = await Promise.all([
+    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags, layout] = await Promise.all([
         api.summary(state.accountId, interval),
         api.equity(state.accountId, undefined, interval),
         api.calendar(state.accountId, interval),
@@ -559,10 +626,11 @@ export async function renderDashboard(mount, state) {
         api.drawdown(state.accountId, undefined, interval).catch(() => null),
         api.byPrice(state.accountId, interval).catch(() => []),
         api.dailySeries(state.accountId, interval).catch(() => []),
+        api.byTag(state.accountId, interval).catch(() => []),
         loadLayout(),
     ]);
     if (!viewIsCurrent(tok)) return;
-    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily };
+    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily, tags, cal };
 
     mount.innerHTML = `
         <div class="dash-tv-header">

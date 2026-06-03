@@ -4,7 +4,6 @@
 // Apply to: 401(k), 403(b), 457(b), Traditional IRAs (NOT Roth IRAs while owner alive).
 // RBD (Required Beginning Date): April 1 of year after age 73 (SECURE 2.0).
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

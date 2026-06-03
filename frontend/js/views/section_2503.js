@@ -5,8 +5,6 @@
 // § 2503(c): minor's trusts (Crummey trusts).
 // § 2503(e): unlimited medical / educational direct payments.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

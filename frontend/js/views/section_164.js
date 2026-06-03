@@ -3,8 +3,6 @@
 // TCJA $10,000 SALT cap (2018-2025) — sunsets to no-cap pre-TCJA rules absent extension.
 // Foreign income taxes: choose deduction OR § 27 foreign tax credit (FTC is usually better).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

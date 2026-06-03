@@ -3,8 +3,6 @@
 // Specific caps: $600 windows, $250 doors ($500 total), $150 home energy audit.
 // Through 12/31/2032. PIN reporting required from 2025.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const CREDIT_RATE = 0.30;

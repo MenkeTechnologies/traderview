@@ -4,7 +4,6 @@
 // Correction methods: timely removal (by tax-filing deadline) avoids penalty + earnings withdrawn.
 // Late removal: 6% excise tax on excess + earnings stay in account taxable.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

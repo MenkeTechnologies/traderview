@@ -4,8 +4,6 @@
 // Pass-through tracked daily — per-day allocation if mid-year change.
 // Loss limited to OUTSIDE BASIS (§ 1366(d)) + AT-RISK (§ 465) + PAL (§ 469).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

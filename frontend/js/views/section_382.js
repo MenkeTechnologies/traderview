@@ -3,8 +3,6 @@
 // "Ownership change" = > 50 percentage point increase by 5%+ shareholders over 3-year testing period.
 // § 383 — applies analogous limit to credits + capital loss carryforwards.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

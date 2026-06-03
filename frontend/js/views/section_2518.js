@@ -5,7 +5,6 @@
 // predeceased decedent — interest passes to next-in-line beneficiary.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

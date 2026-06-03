@@ -4,7 +4,6 @@
 // MAGI phase-out: $200K single / $400K MFJ — $50 reduction per $1,000 over.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

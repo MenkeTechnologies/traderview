@@ -4,8 +4,6 @@
 // § 250 deduction: 50% × GILTI inclusion (FDII complement); 37.5% × FDII.
 // § 960(d) deemed-paid credit: 80% of foreign tax on tested income.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

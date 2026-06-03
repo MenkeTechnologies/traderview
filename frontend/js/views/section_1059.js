@@ -3,8 +3,6 @@
 // "Extraordinary dividend" = dividend ≥ 5% of basis (common) / 10% (preferred), 85-day window.
 // If basis reduced below $0: excess = capital gain in year of subsequent disposition.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

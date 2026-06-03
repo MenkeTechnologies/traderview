@@ -4,7 +4,6 @@
 // Employer must furnish to employee by Jan 31 + IRS copy by Feb 28 paper / Mar 31 e-file.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

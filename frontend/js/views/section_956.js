@@ -4,7 +4,6 @@
 // Post-TCJA: § 956 still applies but coordinates with § 245A foreign DRD; reg § 1.956-1(a)(2) provides hybrid relief.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

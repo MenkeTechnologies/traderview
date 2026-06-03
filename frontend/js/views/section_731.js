@@ -3,8 +3,6 @@
 // § 731(a)(2) — loss only on liquidating distribution of cash + receivables + inventory.
 // § 731(c) — distribution of marketable securities treated as money (post-1994).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

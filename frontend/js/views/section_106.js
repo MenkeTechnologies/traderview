@@ -4,8 +4,6 @@
 // 2%+ S-corp shareholders: NOT excluded — must include on W-2 Box 1 (W-2 exception for SE health deduction).
 // Cafeteria plan § 125 + § 106: allows pre-tax salary contribution.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

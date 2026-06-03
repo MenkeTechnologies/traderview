@@ -5,7 +5,6 @@
 // Quarterly contributions required for at-risk plans.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

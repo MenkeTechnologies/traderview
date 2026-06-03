@@ -4,8 +4,6 @@
 // Each spouse can create one for the OTHER (reciprocal-trust trap: must be sufficiently
 // different terms / timing to survive IRS scrutiny).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const LIFETIME_2024 = 13_610_000;

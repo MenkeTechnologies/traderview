@@ -4,8 +4,6 @@
 // Contributor's AGI matters, not beneficiary's. Beneficiary must use by age 30 (or roll to family).
 // Coverdell ESA + 529 plan can be used together; less popular than 529 due to low contribution cap.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const CONTRIBUTION_CAP = 2_000;

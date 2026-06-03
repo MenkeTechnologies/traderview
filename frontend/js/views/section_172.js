@@ -3,8 +3,6 @@
 // Post-2017 NOLs: NO carryback (except CARES 2018-2020 5-yr), INDEFINITE forward,
 // LIMITED TO 80% of taxable income. Excess business loss limit § 461(l) layered on top.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const POST_2017_OFFSET_LIMIT = 0.80;

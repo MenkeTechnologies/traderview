@@ -3,8 +3,6 @@
 // § 481(a) adjustment = cumulative difference between current method and new method.
 // Spread: 4 years for unfavorable (taxpayer to IRS) / 1 year for favorable (IRS to taxpayer).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

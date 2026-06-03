@@ -3,7 +3,6 @@
 // MAGI phase-out: $146K-$161K single / $230K-$240K MFJ.
 // Backdoor Roth + Mega backdoor Roth + Roth conversion.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

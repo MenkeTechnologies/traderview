@@ -4,8 +4,6 @@
 // Plans: 401(k), profit-sharing, SEP-IRA, money purchase, defined benefit pension.
 // Form 5330 reports + due by last day of 7th month after plan year end.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

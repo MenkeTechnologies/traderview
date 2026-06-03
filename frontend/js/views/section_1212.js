@@ -3,7 +3,6 @@
 // Character preserved (ST/LT). C-corps: 3-yr CARRYBACK + 5-yr CARRYFORWARD, all ST character.
 // Death of taxpayer: unused carryforward LOST (does not pass to estate / heirs).
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

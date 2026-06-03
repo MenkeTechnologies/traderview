@@ -5,8 +5,6 @@
 // § 904(g) high-tax kick-out: high-taxed passive income moves to general basket.
 // § 904(j) de minimis exception: ≤ $300/$600 MFJ — no Form 1116 required.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

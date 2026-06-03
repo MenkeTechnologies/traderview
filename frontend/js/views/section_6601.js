@@ -4,7 +4,6 @@
 // "Hot interest" § 6621(c): large corporate underpayments ≥ $100K → +2pp = +5pp total.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

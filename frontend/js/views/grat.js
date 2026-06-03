@@ -3,8 +3,6 @@
 // All appreciation above the IRS 7520 rate passes to remainder beneficiaries
 // gift-tax free. Survivor risk: if grantor dies during term, assets back to estate.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

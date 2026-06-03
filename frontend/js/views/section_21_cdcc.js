@@ -3,8 +3,6 @@
 // AGI > $43k: minimum 20% rate. Care to ENABLE work / job search.
 // ARPA 2021 boost (refundable, up to $8k) expired. Form 2441.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const EXPENSES_CAP_ONE = 3_000;

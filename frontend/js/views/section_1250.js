@@ -3,8 +3,6 @@
 // Post-1986 (MACRS) real property uses straight-line only — § 1250 recapture effectively ZERO.
 // BUT § 1(h)(6) "unrecaptured § 1250 gain" taxed at MAX 25% capital gain rate.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

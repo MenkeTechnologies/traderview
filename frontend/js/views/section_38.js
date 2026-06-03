@@ -4,8 +4,6 @@
 // Carryback 1-yr; Carryforward 20-yr. § 39.
 // Form 3800. § 6417 direct pay (partial); § 6418 transferability (specified credits only).
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -4,8 +4,6 @@
 // Demand loan: blended-rate revisited monthly. Gift loan: $10,000 / $100,000 safe harbors.
 // Common use: child first-home loan, family business, sale to IDGT.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const SAFE_HARBOR_GIFT = 10_000;

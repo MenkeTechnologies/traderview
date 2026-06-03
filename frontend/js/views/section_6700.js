@@ -4,8 +4,6 @@
 // Distinct from § 6701 aid + abet penalty (anyone who helps reduce tax via misstatement).
 // IRS Notice 2008-7 + Notice 2014-2 + Listed Transactions disclosure.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

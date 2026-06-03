@@ -3,7 +3,6 @@
 // § 6404(e) — abatement of interest attributable to IRS error/delay (limited).
 // § 6404(f) — abatement of interest + penalty arising from erroneous written IRS advice.
 
-import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 

@@ -4,7 +4,6 @@
 // Coordination with § 21 Child & Dependent Care Credit (no double dipping).
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {

@@ -3,8 +3,6 @@
 // 5 attribution rules: family + entity-to-owner + owner-to-entity + option + reattribution.
 // Used by § 302/303/304 redemptions, § 267 related party, § 1361 S-corp eligibility, etc.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 let state = {
