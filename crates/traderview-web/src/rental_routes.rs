@@ -885,6 +885,11 @@ use traderview_expense::rental_local_law_87_energy_audit_retro_commissioning::{
     LocalLaw87EnergyAuditRetroCommissioningInput as RentalLocalLaw87EnergyAuditRetroCommissioningInput,
     LocalLaw87EnergyAuditRetroCommissioningResult as RentalLocalLaw87EnergyAuditRetroCommissioningResult,
 };
+use traderview_expense::rental_local_law_88_lighting_upgrades_sub_metering::{
+    check as check_rental_local_law_88_lighting_upgrades_sub_metering,
+    LocalLaw88LightingUpgradesSubMeteringInput as RentalLocalLaw88LightingUpgradesSubMeteringInput,
+    LocalLaw88LightingUpgradesSubMeteringResult as RentalLocalLaw88LightingUpgradesSubMeteringResult,
+};
 use traderview_expense::rental_tenant_criminal_background_screening::{
     check as check_rental_tenant_criminal_background_screening,
     RentalTenantCriminalBackgroundScreeningInput,
@@ -1424,6 +1429,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
         .route("/rental-lead-paint-disclosure", axum::routing::post(rental_lead_paint_disclosure_route))
         .route("/rental-local-law-87-energy-audit-retro-commissioning", axum::routing::post(rental_local_law_87_energy_audit_retro_commissioning_route))
+        .route("/rental-local-law-88-lighting-upgrades-sub-metering", axum::routing::post(rental_local_law_88_lighting_upgrades_sub_metering_route))
         .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
@@ -11764,6 +11770,33 @@ async fn rental_local_law_87_energy_audit_retro_commissioning_route(
     Json(b): Json<RentalLocalLaw87EnergyAuditRetroCommissioningInput>,
 ) -> Result<Json<RentalLocalLaw87EnergyAuditRetroCommissioningResult>, ApiError> {
     Ok(Json(check_rental_local_law_87_energy_audit_retro_commissioning(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_local_law_88_lighting_upgrades_sub_metering: NYC Local Law
+// 88 of 2009. Part of Greener, Greater Buildings Plan (GGBP) with
+// LL 84 (benchmarking), LL 87 (energy audits), LL 97 (emissions).
+// Enacted Dec 28, 2009. NYC Admin Code § 28-310 (lighting upgrades)
+// + § 28-311 (sub-metering). Covers buildings ≥ 25,000 sqft (lowered
+// from original 50,000 threshold). Two compliance vectors: (1)
+// lighting upgrades to current NYCECC standards by Jan 1, 2025; (2)
+// electrical sub-meters in each commercial tenant space > 5,000
+// sqft by Jan 1, 2025. § 28-311.4 monthly tenant billing statements
+// + reports filed by May 1, 2025 with $115 filing fee. Exemptions:
+// R-2 multifamily + R-3 1-2 family + already-metered tenant spaces.
+// § 28-311.5 penalty schedule: $500/year per tenant space without
+// submeter + $1,500/year per unfiled report. Sibling cluster:
+// rental_energy_benchmarking (LL 84), rental_local_law_87_energy_
+// audit_retro_commissioning (iter 599 LL 87), rental_climate_
+// mobilization_act_ll97_emissions (iter 587 LL 97).
+// ---------------------------------------------------------------------------
+
+async fn rental_local_law_88_lighting_upgrades_sub_metering_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalLocalLaw88LightingUpgradesSubMeteringInput>,
+) -> Result<Json<RentalLocalLaw88LightingUpgradesSubMeteringResult>, ApiError> {
+    Ok(Json(check_rental_local_law_88_lighting_upgrades_sub_metering(&b)))
 }
 
 // ── /rental-tenant-criminal-background-screening (iter 539) ─────────────────

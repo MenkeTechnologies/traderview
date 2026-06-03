@@ -208,6 +208,7 @@ pub mod rental_landlord_notice_to_enter;
 pub mod rental_late_fee_cap;
 pub mod rental_lead_paint_disclosure;
 pub mod rental_local_law_87_energy_audit_retro_commissioning;
+pub mod rental_local_law_88_lighting_upgrades_sub_metering;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
 pub mod rental_massachusetts_security_deposit_statute;
