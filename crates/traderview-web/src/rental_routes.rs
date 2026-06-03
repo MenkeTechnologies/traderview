@@ -990,6 +990,11 @@ use traderview_expense::rental_waste_recycling_collection_mandate::{
     RentalWasteRecyclingCollectionMandateInput,
     RentalWasteRecyclingCollectionMandateResult,
 };
+use traderview_expense::rental_domestic_violence_lock_change_lease_termination::{
+    check as check_rental_domestic_violence_lock_change_lease_termination,
+    RentalDomesticViolenceLockChangeLeaseTerminationInput,
+    RentalDomesticViolenceLockChangeLeaseTerminationResult,
+};
 use traderview_expense::rental_dog_bite_liability::{
     check as check_rental_dog_bite_liability,
     RentalDogBiteLiabilityInput,
@@ -1523,6 +1528,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
         .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
         .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
+        .route("/rental-domestic-violence-lock-change-lease-termination", axum::routing::post(rental_domestic_violence_lock_change_lease_termination_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -12795,4 +12801,37 @@ async fn rental_dog_bite_liability_route(
     Json(b): Json<RentalDogBiteLiabilityInput>,
 ) -> Result<Json<RentalDogBiteLiabilityResult>, ApiError> {
     Ok(Json(check_rental_dog_bite_liability(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_domestic_violence_lock_change_lease_termination: multi-
+// jurisdictional DV lock-change + early lease termination
+// compliance. CA Civ Code § 1941.5 (24-hour lock change when
+// restrained person NOT tenant; tenant pays cost); § 1941.6
+// (24-hour lock change when restrained person IS tenant; LANDLORD
+// pays cost; tenant may self-change if landlord fails 24-hour
+// window). CA Civ Code § 1946.7 (early termination; 14-day post-
+// notice rent obligation). Texas Property Code § 92.016 (lock
+// change within 3 business days; landlord charges actual cost;
+// 30-day notice early termination; required statutory rights lease
+// language or tenant NOT liable for unpaid rent; zero notice if
+// abuser is co-tenant). NY RPL § 227-c (≥ 30-day termination
+// notice + ≤ 25-day proof; 30-day notice period rent). Arizona Rev
+// Stat § 33-1318. VAWA federally subsidized housing (Section 8,
+// public housing, LIHTC, HOME): 1994 enactment + 2013/2022
+// Reauthorization — bars DV-related eviction + permits lease
+// bifurcation + emergency transfer plans. Sixteen-mode severity
+// ladder × six jurisdictions × three scenarios × four documentation
+// types. Trader-landlord critical because DV-related lock-change
+// failures expose landlords to statutory damages, treble damages
+// (AZ), and tenant safety claims; § 1941.6 violation can trigger
+// punitive damages in California.
+// ---------------------------------------------------------------------------
+
+async fn rental_domestic_violence_lock_change_lease_termination_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalDomesticViolenceLockChangeLeaseTerminationInput>,
+) -> Result<Json<RentalDomesticViolenceLockChangeLeaseTerminationResult>, ApiError> {
+    Ok(Json(check_rental_domestic_violence_lock_change_lease_termination(&b)))
 }
