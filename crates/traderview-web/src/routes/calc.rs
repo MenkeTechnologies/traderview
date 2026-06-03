@@ -116,6 +116,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-679",           post(section_679_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
+        .route("/calc/section-6109",          post(section_6109_route))
         .route("/calc/section-6042",          post(section_6042_route))
         .route("/calc/section-6045",          post(section_6045_route))
         .route("/calc/section-6049",          post(section_6049_route))
@@ -5936,6 +5937,35 @@ async fn section_6041_route(
     Json(b): Json<traderview_expense::section_6041::Section6041Input>,
 ) -> Result<Json<traderview_expense::section_6041::Section6041Result>, ApiError> {
     Ok(Json(traderview_expense::section_6041::compute(&b)))
+}
+
+// ── §6109 identifying numbers / TIN / EIN / ITIN / SSN ────────────────
+// Mounted at /api/calc/section-6109. § 6109(a)(1) payer required to
+// file information return must include payee's correct TIN. § 6109(a)(2)
+// payee must furnish correct TIN to payer when payment is reportable
+// on information return. § 6109(a)(3) person making return or
+// statement under § 6011 must include identifying number assigned to
+// such person. TIN types: SSN issued by Social Security Administration
+// to US citizens/residents eligible to work; EIN issued by IRS to
+// entities + sole proprietors; ITIN issued by IRS to foreign persons
+// not eligible for SSN; ATIN issued by IRS during pending US-domestic
+// adoptions. Form W-9 (US persons), Form W-8BEN (foreign individuals),
+// Form W-8BEN-E (foreign entities), Form W-8IMY (intermediaries),
+// Form W-8ECI (effectively connected income). § 3406 backup withholding
+// at 24 % when payee fails to furnish valid TIN, after B-Notice TIN
+// mismatch, IRS notification of underreporting, or W-9 exemption
+// certification failure. § 6721 information return penalty: $50 per
+// return ($250,000 large filer max / $100,000 small business max);
+// $100 per return with NO MAXIMUM for intentional disregard. B-Notice
+// cure process: first B-Notice 30 business days; second B-Notice
+// requires IRS or SSA validation document within 3-year lookback.
+// Treas. Reg. § 301.6109-1. IRS IRM 5.19.3 Backup Withholding Program.
+
+async fn section_6109_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6109::Section6109Input>,
+) -> Result<Json<traderview_expense::section_6109::Section6109Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6109::compute(&b)))
 }
 
 // ── §6042 returns regarding payments of dividends (1099-DIV) ────────
