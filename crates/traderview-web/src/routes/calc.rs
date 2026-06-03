@@ -44,6 +44,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1248",          post(section_1248_route))
         .route("/calc/section-1252",          post(section_1252_route))
         .route("/calc/section-1254",          post(section_1254_route))
+        .route("/calc/section-1255",          post(section_1255_route))
         .route("/calc/section-1245-1250",     post(section_1245_1250_route))
         .route("/calc/section-1202",          post(section_1202_route))
         .route("/calc/section-1045",          post(section_1045_route))
@@ -2961,6 +2962,30 @@ async fn section_1254_route(
     Json(b): Json<traderview_expense::section_1254::Section1254Input>,
 ) -> Result<Json<traderview_expense::section_1254::Section1254Result>, ApiError> {
     Ok(Json(traderview_expense::section_1254::compute(&b)))
+}
+
+// ── §1255 § 126 property conservation cost-sharing recapture ─────────
+// Mounted at /api/calc/section-1255. § 1255(a)(1) gain on
+// disposition of § 126 property recharacterized as ordinary income
+// to extent of lesser of applicable percentage × § 126 excluded
+// payments OR gain recognized. Sliding scale: 100 % through year
+// 10; -10 % per full year thereafter; 0 % at 20+ years. § 1255(b)
+// special rules + cross-reference to § 126. § 126 excluded payments
+// = USDA Agricultural Conservation Program / Conservation Reserve
+// Program / Environmental Quality Incentives Program; Forest
+// Service Forestry Incentives Program; designated state programs.
+// Treas. Reg. § 16A.1255-1 + 26 CFR Part 16A temporary regs.
+// Completes recapture quartet with § 1245 (personal property) +
+// § 1250 (real property) + § 1252 (farm land — iter 634) + § 1254
+// (oil/gas/mineral — iter 622). Anti-double-benefit policy
+// prevents taxpayer from excluding § 126 payment AND getting
+// capital gains on improved property.
+
+async fn section_1255_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1255::Section1255Input>,
+) -> Result<Json<traderview_expense::section_1255::Section1255Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1255::compute(&b)))
 }
 
 // ── §754 election + §743(b) inside basis adjustment ─────────────────

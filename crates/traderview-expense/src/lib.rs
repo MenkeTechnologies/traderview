@@ -381,6 +381,7 @@ pub mod section_1245_1250;
 pub mod section_1248;
 pub mod section_1252;
 pub mod section_1254;
+pub mod section_1255;
 pub mod section_1031;
 pub mod section_1031_f;
 pub mod section_1033;
