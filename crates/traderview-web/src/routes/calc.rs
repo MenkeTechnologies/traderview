@@ -83,6 +83,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-1375",          post(section_1375_route))
+        .route("/calc/section-1400z-2",       post(section_1400z_2_route))
         .route("/calc/section-1402",          post(section_1402_route))
         .route("/calc/section-1411",          post(section_1411_route))
         .route("/calc/section-1445",          post(section_1445_route))
@@ -5102,6 +5103,28 @@ async fn section_1402_route(
     Json(b): Json<traderview_expense::section_1402::Section1402Input>,
 ) -> Result<Json<traderview_expense::section_1402::Section1402Result>, ApiError> {
     Ok(Json(traderview_expense::section_1402::compute(&b)))
+}
+
+// ── §1400Z-2 Special Rules for Capital Gains Invested in QOZs ──────
+// Mounted at /api/calc/section-1400z-2. Originally enacted by
+// Section 13823 of the Tax Cuts and Jobs Act of 2017 (Public Law
+// 115-97), signed December 22, 2017. Capital gain deferral via QOF
+// investment within 180-day reinvestment window; original deferral
+// until December 31, 2026; 15 % combined basis step-up (10 % at
+// 5-year hold + 5 % at 7-year hold); permanent gain exclusion via
+// FMV election at 10-year hold under § 1400Z-2(c). Comprehensively
+// amended by One Big Beautiful Bill Act of 2025 (OBBBA) signed
+// July 4, 2025: permanent program; rolling 5-year deferral period
+// post-December 31, 2026; basis step-up reduced to 10 % regular
+// OZ / 30 % rural QROF; 30-year gain exclusion limit; QROF
+// substantial improvement requirement 50 % over 31 months;
+// enhanced reporting + $50,000 large-fund penalty exposure; new
+// QOZ designations effective January 1, 2027.
+async fn section_1400z_2_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1400z_2::Section1400Z2Input>,
+) -> Result<Json<traderview_expense::section_1400z_2::Section1400Z2Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1400z_2::check(&b)))
 }
 
 // ── §1445 FIRPTA withholding on USRPI dispositions by foreign person ──
