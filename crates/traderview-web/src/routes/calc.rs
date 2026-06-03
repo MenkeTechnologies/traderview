@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-59a",           post(section_59a_route))
         .route("/calc/section-641",           post(section_641_route))
         .route("/calc/section-643",           post(section_643_route))
+        .route("/calc/section-651",           post(section_651_route))
         .route("/calc/section-661",           post(section_661_route))
         .route("/calc/section-67g",           post(section_67g_route))
         .route("/calc/section-6041",          post(section_6041_route))
@@ -5431,6 +5432,33 @@ async fn section_643_route(
     Json(b): Json<traderview_expense::section_643::Section643Input>,
 ) -> Result<Json<traderview_expense::section_643::Section643Result>, ApiError> {
     Ok(Json(traderview_expense::section_643::compute(&b)))
+}
+
+// ── §651 simple trust distribution deduction ────────────────────────
+// Mounted at /api/calc/section-651. § 651(a) simple trust deduction
+// = amount of income required to be distributed currently if
+// THREE requirements satisfied: (1) all income required current
+// distribution; (2) NO § 642(c) charitable provision in trust
+// instrument; (3) NO corpus distribution made during taxable year.
+// § 651(b) deduction CAPPED at DNI (tax-exempt interest portion
+// excluded). § 652(a) beneficiary includes amount required to be
+// distributed WHETHER OR NOT ACTUALLY DISTRIBUTED; if income
+// required > DNI, ratable allocation to beneficiaries per second
+// sentence. § 652(b) character per Treas. Reg. § 1.652(b)-2.
+// § 652(c) different taxable year handling: beneficiary includes
+// based on trust's taxable year ending in beneficiary's taxable
+// year. Treas. Reg. § 1.651(a)-1 + § 1.651(a)-2 + § 1.651(b)-1 +
+// § 1.652(b)-2 implementing regs. Any failure of the three simple-
+// trust requirements converts trust to COMPLEX under § 661.
+// Trader-critical for family-office QPRT remainder + GRAT
+// remainder + CLAT post-charitable phase + income-only family
+// trusts.
+
+async fn section_651_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_651::Section651Input>,
+) -> Result<Json<traderview_expense::section_651::Section651Result>, ApiError> {
+    Ok(Json(traderview_expense::section_651::compute(&b)))
 }
 
 // ── §661 complex trust distribution deduction ────────────────────────
