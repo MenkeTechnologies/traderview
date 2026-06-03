@@ -485,6 +485,7 @@ pub mod section_475c2;
 pub mod section_475f;
 pub mod section_691;
 pub mod section_704c;
+pub mod section_706;
 pub mod section_707;
 pub mod section_709;
 pub mod section_721;

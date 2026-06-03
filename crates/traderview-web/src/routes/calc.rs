@@ -277,6 +277,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-691",           post(section_691_route))
         .route("/calc/section-704d",          post(section_704d_route))
         .route("/calc/section-704c",          post(section_704c_route))
+        .route("/calc/section-706",           post(section_706_route))
         .route("/calc/section-707",           post(section_707_route))
         .route("/calc/section-721",           post(section_721_route))
         .route("/calc/section-731",           post(section_731_route))
@@ -1927,6 +1928,34 @@ async fn section_707_route(
     Json(b): Json<traderview_expense::section_707::Section707Input>,
 ) -> Result<Json<traderview_expense::section_707::Section707Output>, ApiError> {
     Ok(Json(traderview_expense::section_707::check(&b)))
+}
+
+// ── § 706 partnership taxable year + varying interests ───────────
+// Mounted at /api/calc/section-706. § 706(a): partner includes
+// distributive share in year containing partnership year-end.
+// § 706(b) three-tier hierarchy for partnership-year selection:
+// (1) Majority Interest Test § 706(b)(1)(B)(i) — partners holding
+// > 50% profits and capital with same year; (2) Principal Partner
+// Test § 706(b)(1)(B)(ii) — all ≥ 5% partners with same year;
+// (3) Least Aggregate Deferral Test § 706(b)(1)(B)(iii) — fallback
+// with de minimis < 0.5 month exception. § 706(c)(1): partnership
+// year does NOT close on partial interest change. § 706(c)(2):
+// partnership year DOES close with respect to partner whose entire
+// interest terminates (death, complete liquidation, complete sale/
+// exchange). § 706(d) varying-interest allocations: interim closing
+// method (default) vs. proration method (must be elected in writing
+// per Treas. Reg. § 1.706-4(f)). Sibling cluster: § 707
+// (partner-partnership transactions), § 731 (distribution rules),
+// § 736 (retiring/deceased partner payment), § 743 (transferee
+// basis adjustment — triggered by entire-interest termination
+// event under § 706(c)(2)), § 751 (hot assets — character analysis
+// on entire-interest sale).
+
+async fn section_706_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_706::Section706Input>,
+) -> Result<Json<traderview_expense::section_706::Section706Output>, ApiError> {
+    Ok(Json(traderview_expense::section_706::check(&b)))
 }
 
 async fn section_709_route(
