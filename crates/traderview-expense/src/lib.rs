@@ -287,6 +287,7 @@ pub mod rental_source_of_income_discrimination;
 pub mod rental_storage_unit_lease_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_tenant_abandoned_personal_property;
+pub mod rental_tennessee_urlta_tca_66_28_101;
 pub mod rental_texas_hb_2127_state_preemption;
 pub mod rental_texas_property_code_chapter_92_residential_tenancies;
 pub mod rental_tenant_bill_of_rights_handout;

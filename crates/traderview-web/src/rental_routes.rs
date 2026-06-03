@@ -1079,6 +1079,11 @@ use traderview_expense::rental_tenant_abandoned_personal_property::{
     RentalTenantAbandonedPersonalPropertyInput,
     RentalTenantAbandonedPersonalPropertyResult,
 };
+use traderview_expense::rental_tennessee_urlta_tca_66_28_101::{
+    check as check_rental_tennessee_urlta_tca_66_28_101,
+    RentalTennesseeUrltaTca66_28_101Input,
+    RentalTennesseeUrltaTca66_28_101Result,
+};
 use traderview_expense::rental_texas_hb_2127_state_preemption::{
     check as check_rental_texas_hb_2127_state_preemption,
     RentalTexasHb2127StatePreemptionInput,
@@ -1760,6 +1765,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
         .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
         .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
+        .route("/rental-tennessee-urlta-tca-66-28-101", axum::routing::post(rental_tennessee_urlta_tca_66_28_101_route))
         .route("/rental-texas-hb-2127-state-preemption", axum::routing::post(rental_texas_hb_2127_state_preemption_route))
         .route("/rental-texas-property-code-chapter-92-residential-tenancies", axum::routing::post(rental_texas_property_code_chapter_92_residential_tenancies_route))
         .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
@@ -13748,6 +13754,30 @@ async fn rental_tenant_abandoned_personal_property_route(
     Json(b): Json<RentalTenantAbandonedPersonalPropertyInput>,
 ) -> Result<Json<RentalTenantAbandonedPersonalPropertyResult>, ApiError> {
     Ok(Json(check_rental_tenant_abandoned_personal_property(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_tennessee_urlta_tca_66_28_101: Tennessee Uniform Residential
+// Landlord and Tenant Act. Codified at T.C.A. §§ 66-28-101 through
+// 66-28-523 (Title 66 Property, Chapter 28). Adopted 1975 (Public
+// Acts 1975, Ch. 245). Applies ONLY to counties with population >
+// 75,000 (Davidson/Shelby/Knox/Hamilton/Rutherford/Williamson/Sumner
+// /Montgomery/Wilson/Blount). § 66-28-301 security deposit (no cap;
+// separate federally insured account in TN; 30-day return); § 66-28-
+// 302 landlord obligations; § 66-28-403 landlord access (reasonable
+// notice + emergency exception + final-30-days showing with 24-hour
+// notice); § 66-28-502 14-day landlord repair response; § 66-28-
+// 505(a)(2) 14-day cure or quit; § 66-28-505(a)(2)(B) 7-day no-cure
+// for second violation within 6 months; § 66-28-512 30-day periodic
+// tenancy termination; § 66-28-514 retaliation prohibited.
+// ---------------------------------------------------------------------------
+
+async fn rental_tennessee_urlta_tca_66_28_101_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTennesseeUrltaTca66_28_101Input>,
+) -> Result<Json<RentalTennesseeUrltaTca66_28_101Result>, ApiError> {
+    Ok(Json(check_rental_tennessee_urlta_tca_66_28_101(&b)))
 }
 
 // ---------------------------------------------------------------------------
