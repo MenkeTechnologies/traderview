@@ -260,6 +260,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-358",           post(section_358_route))
         .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
+        .route("/calc/section-45l",           post(section_45l_route))
         .route("/calc/section-451b",          post(section_451b_route))
         .route("/calc/section-451c",          post(section_451c_route))
         .route("/calc/section-1031",          post(section_1031_route))
@@ -10243,6 +10244,29 @@ async fn section_351_route(
 // no later than when recognized on AFS; §451(b)(3) AFS hierarchy
 // (SEC-filed > audited > certified); §451(b) cost offset election
 // (TD 9941 eff. 2020-12-21); §451(c) 1-year advance payment deferral.
+
+// ── §45L New Energy Efficient Home Credit (EPAct 2005 + IRA + OBBBA) ─
+// Mounted at /api/calc/section-45l. Originally added by Section 1332
+// of the Energy Policy Act of 2005 (Public Law 109-58, 119 Stat.
+// 594), signed by President Bush on August 8, 2005. Substantially
+// expanded by Section 13304 of the Inflation Reduction Act of 2022
+// (Public Law 117-169, 136 Stat. 1818), signed by President Biden on
+// August 16, 2022; effective for homes acquired after December 31,
+// 2022. Single-family / manufactured: $2,500 (ENERGY STAR) or
+// $5,000 (DOE Zero Energy Ready Home / Efficient New Homes).
+// Multifamily per dwelling unit: $500 base (ENERGY STAR) /
+// $1,000 base (ZERH) → $2,500 / $5,000 with prevailing wage under
+// § 45L(g). § 45L UNIQUE among IRA credits — requires ONLY
+// prevailing wage, NO apprenticeship. Form 8908 (Rev. Dec 2025)
+// required. TERMINATED by One Big Beautiful Bill Act of 2025
+// (Public Law 119-21, signed July 4, 2025) for homes acquired after
+// June 30, 2026 (accelerating original IRA 2032 sunset).
+async fn section_45l_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_45l::Section45LInput>,
+) -> Result<Json<traderview_expense::section_45l::Section45LResult>, ApiError> {
+    Ok(Json(traderview_expense::section_45l::check(&b)))
+}
 
 async fn section_451b_route(
     _u: AuthUser,
