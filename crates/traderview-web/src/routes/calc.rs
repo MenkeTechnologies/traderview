@@ -77,6 +77,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-1368",          post(section_1368_route))
         .route("/calc/section-1374",          post(section_1374_route))
         .route("/calc/section-1375",          post(section_1375_route))
+        .route("/calc/section-1402",          post(section_1402_route))
         .route("/calc/section-1411",          post(section_1411_route))
         .route("/calc/section-1445",          post(section_1445_route))
         .route("/calc/section-1446",          post(section_1446_route))
@@ -4780,6 +4781,33 @@ async fn section_1411_route(
     Json(b): Json<traderview_expense::section_1411::Section1411Input>,
 ) -> Result<Json<traderview_expense::section_1411::Section1411Result>, ApiError> {
     Ok(Json(traderview_expense::section_1411::check(&b)))
+}
+
+// ── §1402 Self-Employment Income Definitions + SECA Tax ─────────────
+// Mounted at /api/calc/section-1402. § 1402(a) net earnings from
+// self-employment = gross trade-or-business income minus
+// attributable deductions plus § 702(a)(8) partnership distributive
+// share. § 1402(a)(1) rental real estate EXCLUDED unless real
+// estate dealer. § 1402(a)(2) interest/dividends EXCLUDED unless
+// securities dealer. § 1402(a)(3)(A) capital asset gain/loss
+// EXCLUDED. § 1402(a)(3)(B) § 1231 property gain/loss EXCLUDED.
+// § 1402(a)(13) limited partner distributive share EXCLUDED except
+// § 707(c) guaranteed payments for services. § 1402(b) SE income
+// definition. § 1401(a) OASDI 12.4 % up to wage base ($176,100 for
+// 2025). § 1401(b)(1) Medicare 2.9 % uncapped. § 1401(b)(2)
+// Additional Medicare 0.9 % on SE income > $200K single / $250K
+// MFJ / $125K MFS. IRS Topic 429: § 475(f) MTM trader gains NOT
+// SE income (sole proprietor TTS). Soroban Capital Partners (T.C.
+// 2023) + Denham Capital (T.C. 2024) + Sirius Solutions (5th Cir.):
+// active limited partner § 1402(a)(13) exclusion contested. Net
+// earnings multiplier 0.9235 reflects employer-equivalent SE tax
+// deduction.
+
+async fn section_1402_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1402::Section1402Input>,
+) -> Result<Json<traderview_expense::section_1402::Section1402Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1402::compute(&b)))
 }
 
 // ── §1445 FIRPTA withholding on USRPI dispositions by foreign person ──
