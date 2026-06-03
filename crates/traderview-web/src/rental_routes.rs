@@ -866,6 +866,11 @@ use traderview_expense::rental_rent_control_stabilization::{
     RentalRentControlStabilizationInput,
     RentalRentControlStabilizationResult,
 };
+use traderview_expense::rental_tenant_relocation_assistance::{
+    check as check_rental_tenant_relocation_assistance,
+    RentalTenantRelocationAssistanceInput,
+    RentalTenantRelocationAssistanceResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1356,6 +1361,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
         .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
         .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
+        .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11760,4 +11766,47 @@ async fn rental_rent_control_stabilization_route(
     Json(b): Json<RentalRentControlStabilizationInput>,
 ) -> Result<Json<RentalRentControlStabilizationResult>, ApiError> {
     Ok(Json(check_rental_rent_control_stabilization(&b)))
+}
+
+// ── /rental-tenant-relocation-assistance (iter 559) ─────────────────────────
+// POST endpoint for tenant relocation assistance compliance across six
+// jurisdictions during no-fault eviction + condo conversion + demolition
+// + substantial rehabilitation displacement.
+//
+// CA AB 1482 (Cal. Civ. Code § 1946.2 + § 1947.12) + SB 567 (effective
+// April 1, 2024): one month's rent for no-fault eviction; SB 567
+// owner-move-in 90-day + 1-year residency + notice disclosure + no
+// other vacant similar unit.
+//
+// NYC RENT-STABILIZED DEMOLITION (NYC RSL § 26-511(c)(9) + 9 NYCRR
+// § 2524.5): NY DHCR approval required + comparable replacement
+// housing + reasonable moving expenses + $5,000 stipend.
+//
+// WA RCW 59.18.440 + RCW 59.18.450: low-income (≤ 50% AMI) tenant
+// relocation assistance for demolition / substantial rehabilitation /
+// change of use / removal of use restrictions.
+//
+// IL Chicago RLTO § 5-12-130 + § 5-14-050: condo conversion = GREATER
+// OF $1,500 OR one month rent capped at $2,500. Keep Chicago Renting
+// Ordinance (KCRO) = $10,600 post-foreclosure if no lease-renewal
+// offer.
+//
+// DC TOPA (D.C. Code § 42-3404.01 et seq.): right of first refusal +
+// relocation assistance capped at lesser of one year rent or $12,000.
+//
+// Eight-mode severity ladder: NotApplicable,
+// AtFaultEvictionNoRelocationDuty,
+// CompliantRelocationAssistancePaid,
+// InsufficientRelocationAssistanceViolation,
+// SbFiveSixSevenOwnerMoveInNonCompliance,
+// NycDhcrApprovalRequiredDemolitionViolation,
+// WashingtonNonLowIncomeNotCovered,
+// DcTopaRightOfFirstRefusalIncludingRelocation.
+
+async fn rental_tenant_relocation_assistance_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantRelocationAssistanceInput>,
+) -> Result<Json<RentalTenantRelocationAssistanceResult>, ApiError> {
+    Ok(Json(check_rental_tenant_relocation_assistance(&b)))
 }
