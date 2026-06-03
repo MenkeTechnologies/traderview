@@ -846,6 +846,11 @@ use traderview_expense::rental_boiler_inspection_compliance::{
     RentalBoilerInspectionComplianceInput,
     RentalBoilerInspectionComplianceResult,
 };
+use traderview_expense::rental_tenant_rent_escrow_habitability_dispute::{
+    check as check_rental_tenant_rent_escrow_habitability_dispute,
+    RentalTenantRentEscrowHabitabilityDisputeInput,
+    RentalTenantRentEscrowHabitabilityDisputeResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1332,6 +1337,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
         .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
+        .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -11553,4 +11559,55 @@ async fn rental_boiler_inspection_compliance_route(
     Json(b): Json<RentalBoilerInspectionComplianceInput>,
 ) -> Result<Json<RentalBoilerInspectionComplianceResult>, ApiError> {
     Ok(Json(check_rental_boiler_inspection_compliance(&b)))
+}
+
+// ── /rental-tenant-rent-escrow-habitability-dispute (iter 551) ──────────────
+// POST endpoint for tenant rent escrow + repair-and-deduct compliance
+// during habitability disputes across seven jurisdictions. State law
+// provides tenants with self-help remedies when landlords fail to maintain
+// habitable premises: rent withholding (escrow deposit pending repair),
+// repair-and-deduct, and lease termination. Each state has specific
+// procedural requirements that govern whether tenant rent withholding is
+// lawful or constitutes nonpayment justifying eviction.
+//
+// CA Civ. Code § 1942 + § 1942.4: repair-and-deduct capped at one month's
+// rent, twice per 12-month period; § 1942.4 prohibits rent collection if
+// landlord knew of substandard conditions 60+ days.
+//
+// NY RPL § 235-b (Warranty of Habitability) + RPL § 235-a + HP
+// proceedings under RPAPL § 110.
+//
+// WA RCW 59.18.115 (rent escrow process — written notice + local-authority
+// certification + approved escrow account required) + RCW 59.18.100
+// (repair-and-deduct cap 2 months rent per repair / per year).
+//
+// IL Chicago RLTO § 5-12-110: 14-day written notice; withholding cap of
+// GREATER of $500 or 50% of monthly rent.
+//
+// TX Prop. Code § 92.0561: repair-and-deduct cap GREATER of one month
+// rent or $500; narrow circumstances only.
+//
+// MA Gen. L. ch. 239 § 8A: IMMEDIATE withholding upon notice (no cure
+// period required); raised as defense or counterclaim in summary process.
+//
+// Default: common-law implied warranty of habitability + constructive-
+// eviction doctrine (Marini v. Ireland 265 A.2d 526 (NJ 1970) + Pugh v.
+// Holmes 384 A.2d 1234 (PA 1979)).
+//
+// Nine-mode severity ladder: NotApplicable,
+// CompliantStatutoryRentEscrowOrRepairDeduct,
+// TenantRemedyCapExceededLandlordEvictionExposure,
+// NoNoticeOrPrematureActionTenantEvictionRisk,
+// EscrowAccountNotEstablishedTenantWaivesDefense,
+// WashingtonRcw59_18_115EscrowProcessNotFollowed,
+// ChicagoRltoWithholdingCapExceededExposure,
+// MassachusettsImmediateWithholdingNoCureRequired,
+// CommonLawWarrantyImpliedDefense.
+
+async fn rental_tenant_rent_escrow_habitability_dispute_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalTenantRentEscrowHabitabilityDisputeInput>,
+) -> Result<Json<RentalTenantRentEscrowHabitabilityDisputeResult>, ApiError> {
+    Ok(Json(check_rental_tenant_rent_escrow_habitability_dispute(&b)))
 }
