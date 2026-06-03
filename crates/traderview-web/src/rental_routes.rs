@@ -865,6 +865,11 @@ use traderview_expense::rental_nyc_local_law_55_ipm_pest_control::{
     RentalNycLocalLaw55IpmPestControlInput,
     RentalNycLocalLaw55IpmPestControlResult,
 };
+use traderview_expense::rental_nyc_local_law_18_str_registration::{
+    check as check_rental_nyc_local_law_18_str_registration,
+    RentalNycLocalLaw18StrRegistrationInput,
+    RentalNycLocalLaw18StrRegistrationResult,
+};
 use traderview_expense::rental_nyc_coop_conversion_eviction_protection::{
     check as check_rental_nyc_coop_conversion_eviction_protection,
     RentalNycCoopConversionEvictionProtectionInput,
@@ -1585,6 +1590,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-nyc-scrie-drie-rent-freeze", axum::routing::post(rental_nyc_scrie_drie_rent_freeze_route))
         .route("/rental-nyc-local-law-55-ipm-pest-control", axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route))
+        .route("/rental-nyc-local-law-18-str-registration", axum::routing::post(rental_nyc_local_law_18_str_registration_route))
         .route("/rental-nyc-coop-conversion-eviction-protection", axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
         .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
@@ -9974,6 +9980,51 @@ async fn rental_nyc_local_law_55_ipm_pest_control_route(
     Json(b): Json<RentalNycLocalLaw55IpmPestControlInput>,
 ) -> Result<Json<RentalNycLocalLaw55IpmPestControlResult>, ApiError> {
     Ok(Json(check_rental_nyc_local_law_55_ipm_pest_control(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_nyc_local_law_18_str_registration: NYC Local Law 18 of 2022
+// — the Short-Term Rental Registration Law administered by the NYC
+// Office of Special Enforcement (OSE) under the Mayor's Office of
+// Criminal Justice. Signed January 9, 2022; enforcement began
+// September 5, 2023; codified at NYC Admin Code § 26-3001 through
+// § 26-3007 with 31 RCNY Part 12 implementing rules. Reduced active
+// NYC STR listings from over 38,000 in early 2023 to approximately
+// 3,000 registered listings by mid-2025 — a ~92 % reduction.
+// STR definition: rental of dwelling unit or part for fewer than 30
+// consecutive days. Hosts must register with OSE BEFORE listing;
+// booking platforms (Airbnb, VRBO, Booking.com) prohibited from
+// processing transactions for unregistered STRs. Host present
+// requirement (§ 26-3001): permanent occupant must be present
+// during guest stay sharing dwelling as "common household";
+// maximum 2 PAYING GUESTS; interior doors cannot deny guest access.
+// Class B Multiple Dwelling exemption (licensed hotels, motels,
+// hostels, B&Bs, permitted rooming houses) under NY MDL § 4(8)(a).
+// Penalties (§ 26-3006): $100-$5,000 per violation against host;
+// up to $1,500 per infraction against booking services; 3× illegal
+// revenue collected as financial penalty; registration revocation
+// for non-compliance. Prohibited Buildings List (PBL) under 31 RCNY
+// Part 12: building owners may apply to add building to PBL
+// preventing all STR registrations. Twelve-mode severity ladder ×
+// three dwelling classifications × two rental durations × three
+// host presence statuses × four registration statuses. Trader-
+// landlord critical for NYC Airbnb/VRBO portfolio operators; ~92 %
+// active STR supply reduction post-LL18 means operators must
+// pivot to long-term (30+ day) rentals or comply with strict host-
+// present registration. Sibling cluster: short_term_rental_
+// conversion (multi-state STR regime referencing LL 18), rental_
+// rent_control_stabilization (long-term rental alternative regime),
+// rental_just_cause_eviction, rental_nyc_coop_conversion_eviction_
+// protection (iter 641 — NYC companion), rental_nyc_local_law_55_
+// ipm_pest_control (sister NYC LL).
+// ---------------------------------------------------------------------------
+
+async fn rental_nyc_local_law_18_str_registration_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNycLocalLaw18StrRegistrationInput>,
+) -> Result<Json<RentalNycLocalLaw18StrRegistrationResult>, ApiError> {
+    Ok(Json(check_rental_nyc_local_law_18_str_registration(&b)))
 }
 
 // ---------------------------------------------------------------------------
