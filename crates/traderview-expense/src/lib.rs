@@ -220,6 +220,7 @@ pub mod rental_local_law_87_energy_audit_retro_commissioning;
 pub mod rental_local_law_88_lighting_upgrades_sub_metering;
 pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
+pub mod rental_massachusetts_homes_act_eviction_sealing;
 pub mod rental_massachusetts_security_deposit_statute;
 pub mod rental_mold_disclosure_remediation;
 pub mod rental_multilingual_lease_translation;

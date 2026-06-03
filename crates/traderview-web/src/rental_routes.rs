@@ -930,6 +930,11 @@ use traderview_expense::rental_massachusetts_security_deposit_statute::{
     MassachusettsSecurityDepositInput as RentalMassachusettsSecurityDepositStatuteInput,
     MassachusettsSecurityDepositResult as RentalMassachusettsSecurityDepositStatuteResult,
 };
+use traderview_expense::rental_massachusetts_homes_act_eviction_sealing::{
+    check as check_rental_massachusetts_homes_act_eviction_sealing,
+    RentalMassachusettsHomesActEvictionSealingInput,
+    RentalMassachusettsHomesActEvictionSealingResult,
+};
 use traderview_expense::rental_attached_garage_carbon_monoxide_disclosure::{
     check as check_rental_attached_garage_carbon_monoxide_disclosure,
     RentalAttachedGarageCarbonMonoxideDisclosureInput,
@@ -1633,6 +1638,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
         .route("/rental-massachusetts-security-deposit-statute", axum::routing::post(rental_massachusetts_security_deposit_statute_route))
+        .route("/rental-massachusetts-homes-act-eviction-sealing", axum::routing::post(rental_massachusetts_homes_act_eviction_sealing_route))
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
@@ -12268,6 +12274,50 @@ async fn rental_massachusetts_security_deposit_statute_route(
     Json(b): Json<RentalMassachusettsSecurityDepositStatuteInput>,
 ) -> Result<Json<RentalMassachusettsSecurityDepositStatuteResult>, ApiError> {
     Ok(Json(check_rental_massachusetts_security_deposit_statute(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_massachusetts_homes_act_eviction_sealing: Massachusetts
+// Affordable Homes Act of 2024 (H.4138 / Chapter 150 of the Acts of
+// 2024) HOMES Act eviction record sealing regime under Section 52.
+// Signed by Governor Maura Healey on August 6, 2024 as part of the
+// $5.16 billion Affordable Homes Act with ~50 policy initiatives;
+// eviction sealing provisions effective May 5, 2025 (270 days after
+// signing). Codified permanently at Mass. Gen. Laws Chapter 239.
+// Eligibility categories: (a) cases dismissed — immediately sealable
+// after appeal period; (b) cases tenant won — immediately sealable;
+// (c) satisfied judgments — immediately sealable; (d) non-payment
+// cases not paid — 4-year waiting period + economic hardship
+// documentation + no intervening lessor action required. Once sealed,
+// eviction case is no longer visible to public or tenant-screening
+// and credit-reporting companies (CoreLogic SafeRent, TransUnion
+// SmartMove, Experian RentBureau). Landlord inquiry prohibition:
+// landlord may not ask prospective tenant about sealed eviction
+// record; tenant has no obligation to disclose; deceptive use by
+// landlord triggers statutory damages. Other Affordable Homes Act
+// provisions: ADUs (Accessory Dwelling Units) legalized as-of-right
+// statewide; public housing modernization; first-time homebuyer
+// programs; low/moderate-income housing investment. Fourteen-mode
+// severity ladder × two property jurisdictions × six eviction case
+// outcomes × three non-payment sealing preconditions × four landlord
+// actions. Trader-landlord critical for MA portfolio operators
+// post-May 5, 2025: tenant-screening workflows must not access
+// sealed records; landlord inquiry forms must be redrafted; denial
+// based on sealed records triggers statutory damages. Sibling
+// cluster: rental_eviction_record_sealing (multi-state cross-
+// reference; MA HOMES Act = recent entry), rental_just_cause_
+// eviction (parallel tenant protection regime), rental_application_
+// denial_disclosure (FCRA-overlapping screening regime), rental_
+// massachusetts_security_deposit_statute (MA companion regime),
+// rental_eviction_notices.
+// ---------------------------------------------------------------------------
+
+async fn rental_massachusetts_homes_act_eviction_sealing_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMassachusettsHomesActEvictionSealingInput>,
+) -> Result<Json<RentalMassachusettsHomesActEvictionSealingResult>, ApiError> {
+    Ok(Json(check_rental_massachusetts_homes_act_eviction_sealing(&b)))
 }
 
 // ---------------------------------------------------------------------------
