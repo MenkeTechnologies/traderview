@@ -187,6 +187,7 @@ pub mod rental_grill_propane_bbq_restriction;
 pub mod rental_hardwired_smoke_alarm_responsibility;
 pub mod rental_hoa_disclosure_at_lease;
 pub mod rental_hot_water_temperature;
+pub mod rental_illegal_lockout_self_help_eviction;
 pub mod rental_in_unit_laundry_appliance_provision;
 pub mod rental_junk_fee_transparency;
 pub mod rental_lead_pipe_disclosure;

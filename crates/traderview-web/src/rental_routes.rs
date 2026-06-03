@@ -791,6 +791,11 @@ use traderview_expense::rental_emergency_action_plan_high_rise::{
     RentalEmergencyActionPlanHighRiseInput,
     RentalEmergencyActionPlanHighRiseResult,
 };
+use traderview_expense::rental_illegal_lockout_self_help_eviction::{
+    check as check_rental_illegal_lockout_self_help_eviction,
+    RentalIllegalLockoutSelfHelpEvictionInput,
+    RentalIllegalLockoutSelfHelpEvictionResult,
+};
 use traderview_expense::rental_pellet_stove_disclosure::{
     check as check_rental_pellet_stove_disclosure,
     RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
@@ -1266,6 +1271,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
+        .route("/rental-illegal-lockout-self-help-eviction", axum::routing::post(rental_illegal_lockout_self_help_eviction_route))
         .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
         .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
         .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
@@ -10915,4 +10921,60 @@ async fn rental_emergency_action_plan_high_rise_route(
     Json(b): Json<RentalEmergencyActionPlanHighRiseInput>,
 ) -> Result<Json<RentalEmergencyActionPlanHighRiseResult>, ApiError> {
     Ok(Json(check_rental_emergency_action_plan_high_rise(&b)))
+}
+
+// ── /rental-illegal-lockout-self-help-eviction (iter 529) ───────────────────
+// POST endpoint for illegal-lockout / self-help-eviction landlord exposure
+// across CA + NY + TX + WA + FL + IL + Default jurisdictions. Self-help
+// eviction (lock change without court order, utility shutoff,
+// door/window removal, belongings dump, bootlock installation) is prohibited
+// in every US jurisdiction with a residential tenancy code. Landlord must use
+// judicial process; the penalty regime varies sharply by state.
+//
+// CA Civ. Code § 789.3 — $100/day continued + $250 statutory floor + actual
+// damages + attorney fees + potential punitive damages. CA AG Bulletin
+// 2022-DLE-05 directs law enforcement to treat lockout as criminal trespass /
+// unlawful detainer interference.
+//
+// NY RPAPL § 853 + RPL § 768 — treble damages on property lost + cost of
+// alternative accommodation + value of permanently lost tenancy. RPL § 768
+// makes unlawful eviction a Class A misdemeanor — criminal exposure in
+// addition to civil. Rent-stabilized / rent-controlled tenancy value often
+// six figures.
+//
+// TX Prop. Code § 92.0081 — $1,000 + one month rent + actual damages + court
+// costs + attorney fees. Three safe-harbor branches: bona-fide
+// repairs/construction/emergency, abandoned-contents removal, OR
+// rent-delinquent door lock change with strict procedural compliance (24/7
+// key availability, no replacement-key fee, written notice on door with
+// statutory disclosures per § 92.0081(c)-(f)). Partial procedural compliance
+// is treated as violation.
+//
+// WA RCW 59.18.290 — greater of actual damages or 3× monthly rent + court
+// costs + attorney fees. Tenant may terminate rental agreement.
+//
+// FL Stat. § 83.67 — greater of actual+consequential damages or 3 months'
+// rent + costs + attorney fees. Statute expressly prohibits bootlocks.
+//
+// IL 735 ILCS 5/9-101 et seq. Forcible Entry and Detainer Act — court
+// process required; common-law wrongful eviction baseline. Chicago RLTO
+// § 5-12-160 adds two months' rent OR twice damages (greater) + attorney
+// fees for Chicago-located rentals.
+//
+// Eleven-mode severity ladder: NotApplicable, NoLockoutLawfulCourtProcess,
+// TexasSafeHarborSatisfiedNoViolation, TexasRentDelinquentLockoutProcedural-
+// FailureViolation, CaliforniaCivCode789_3PerDayPenaltyViolation,
+// NewYorkRpapl853TrebleDamagesViolation,
+// TexasPropCode92_0081MinThousandPlusMonthRentViolation,
+// WashingtonRcw59_18_290TripleMonthlyRentViolation,
+// FloridaStat83_67ThreeMonthsRentViolation,
+// IllinoisForcibleEntryDetainerCommonLawWrongfulEvictionViolation,
+// DefaultJurisdictionStateLawSelfHelpEvictionViolation.
+
+async fn rental_illegal_lockout_self_help_eviction_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalIllegalLockoutSelfHelpEvictionInput>,
+) -> Result<Json<RentalIllegalLockoutSelfHelpEvictionResult>, ApiError> {
+    Ok(Json(check_rental_illegal_lockout_self_help_eviction(&b)))
 }
