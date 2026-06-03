@@ -75,6 +75,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mlp-ubti",              post(mlp_ubti_route))
         .route("/calc/section-1258",          post(section_1258_route))
         .route("/calc/section-1259",          post(section_1259_route))
+        .route("/calc/section-1260",          post(section_1260_route))
         .route("/calc/section-1361",          post(section_1361_route))
         .route("/calc/section-1366",          post(section_1366_route))
         .route("/calc/section-1377",          post(section_1377_route))
@@ -4753,6 +4754,66 @@ async fn section_1259_route(
     Json(b): Json<traderview_expense::section_1259::Section1259Input>,
 ) -> Result<Json<traderview_expense::section_1259::Section1259Result>, ApiError> {
     Ok(Json(traderview_expense::section_1259::compute(&b)))
+}
+
+// ── §1260 constructive ownership transactions pass-thru loophole ──
+// Mounted at /api/calc/section-1260. Added by Public Law 106-170
+// § 534(a) on Dec 17 1999 (Ticket to Work Act) and effective for
+// transactions entered after July 11 1999. § 1260 closes the hedge-
+// fund synthetic-equity loophole that converted ordinary pass-thru
+// income into LTCG via total-return swaps, forwards, or call+put
+// collars referencing pass-thru entity interests (RIC, REIT, S-corp,
+// partnership, trust, common trust fund, PFIC, REMIC — eight
+// enumerated under § 1260(c)(2)). § 1260(a) recharacterizes any LTCG
+// gain that EXCEEDS the "net underlying long-term capital gain"
+// (NULTCG, defined by § 1260(e) — what taxpayer would have had on a
+// direct buy-and-sell of the asset at open/close FMVs, established
+// by clear and convincing evidence) as ORDINARY INCOME. § 1260(b)
+// imposes an interest charge under § 6601 on the ordinary-income
+// portion, computed as if the gain accrued at a CONSTANT RATE equal
+// to the applicable Federal rate (AFR) in effect on the day the
+// transaction closed, compounded semiannually; the interest cannot
+// credit other tax. § 1260(c)(2) flush language M2M EXCEPTION:
+// § 1260 does NOT apply if ALL positions in the transaction are
+// marked to market under another IRC provision (covers § 1256
+// contracts, dealer M2M, § 475(f) trader M2M election — the trader-
+// tax-election bypass route). Four constructive-ownership transaction
+// types under § 1260(d)(1): (A) long position under notional
+// principal contract — taxpayer paid all/substantially-all yield
+// including appreciation AND obligated to reimburse all/substantially-
+// all decline; (B) forward or futures contract to acquire financial
+// asset; (C) call holder + put grantor with substantially equal
+// strike prices AND substantially contemporaneous maturity dates
+// ("collar around zero" / synthetic forward construction); (D) other
+// transactions with substantially the same effect (regulatory).
+// Module computes simple linear AFR interest approximation
+// (excess × afr_bps × years / 10_000) using u128 saturating
+// arithmetic; statutory § 1260(b) uses semi-annual compounding
+// under § 6601, so the module output is an approximation and notes
+// that real-world final amount must be computed against the actual
+// AFR table for each prior year of accrual. Seven-mode severity
+// ladder × nine financial-asset types × five constructive-ownership
+// transaction types × two M2M statuses × four gain statuses ×
+// variable AFR / years inputs. Sibling cluster: section_1259 (built
+// earlier — constructive sale of appreciated financial position
+// targeting different anti-deferral vector — short-against-the-box
+// closure), section_1258 (built iter 654 — conversion transactions
+// closing related capital-vs-ordinary arbitrage), section_1092
+// (straddle rules — partial wash sale + loss deferral coverage of
+// offsetting positions), section_1256 (60/40 mark-to-market for
+// listed contracts — provides the M2M-exception escape hatch for
+// § 1256-listed underlying positions in § 1260 structures),
+// section_475 / section_475f (dealer & trader mark-to-market
+// elections — same M2M-exception bypass for traders who have
+// elected ordinary M2M treatment), section_6601 (interest on
+// underpayments — provides the rate engine cited by § 1260(b)
+// interest charge mechanism).
+
+async fn section_1260_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_1260::Section1260Input>,
+) -> Result<Json<traderview_expense::section_1260::Section1260Result>, ApiError> {
+    Ok(Json(traderview_expense::section_1260::compute(&b)))
 }
 
 // ── §1361 S-corp eligibility 6-prong test ──────────────────────────
