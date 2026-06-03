@@ -786,6 +786,11 @@ use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
     NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
     NyRentReceiptLateNoticeRequirementsResult as RentalNyRentReceiptLateNoticeRequirementsResult,
 };
+use traderview_expense::rental_attorney_fee_clause_reciprocity::{
+    check as check_rental_attorney_fee_clause_reciprocity,
+    RentalAttorneyFeeClauseReciprocityInput,
+    RentalAttorneyFeeClauseReciprocityResult,
+};
 use traderview_expense::rental_ny_rpl_235f_roommate_law::{
     check as check_rental_ny_rpl_235f_roommate_law,
     NyRpl235FRoommateLawInput as RentalNyRpl235FRoommateLawInput,
@@ -1444,6 +1449,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
         .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
         .route("/rental-ny-rpl-235f-roommate-law", axum::routing::post(rental_ny_rpl_235f_roommate_law_route))
+        .route("/rental-attorney-fee-clause-reciprocity", axum::routing::post(rental_attorney_fee_clause_reciprocity_route))
         .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
         .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
@@ -9227,6 +9233,32 @@ async fn rental_ny_rpl_235f_roommate_law_route(
     Json(b): Json<RentalNyRpl235FRoommateLawInput>,
 ) -> Result<Json<RentalNyRpl235FRoommateLawResult>, ApiError> {
     Ok(Json(check_rental_ny_rpl_235f_roommate_law(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_attorney_fee_clause_reciprocity: residential lease attorney
+// fee clause mutualization across CA Civ Code § 1717 (waiver void;
+// automatic bilateral reading of unilateral clauses), FL Stat § 83.48
+// (Residential Landlord and Tenant Act prevailing-party fees; NOT
+// waivable in lease; § 83.51 personal-injury claims EXCLUDED), FL Stat
+// § 57.105(7) (general one-way → bilateral statute), NY RPL § 234
+// (residential landlord-favor clauses mutualized as tenant covenant by
+// landlord), WA RCW 4.84.330 (bilateral reading of unilateral
+// contractual fee provisions), OR ORS 20.096 (reciprocal fee
+// provisions). Texas enforces unilateral clauses as written without
+// statutory mutualization for landlord side. Eight-mode severity
+// ladder × seven jurisdictions × six clause types × three prevailing-
+// party states. Trader-landlord critical because attorney fees often
+// dwarf the underlying claim and the asymmetric drafting reality is
+// that landlord-favor unilateral clauses are common in form leases.
+// ---------------------------------------------------------------------------
+
+async fn rental_attorney_fee_clause_reciprocity_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalAttorneyFeeClauseReciprocityInput>,
+) -> Result<Json<RentalAttorneyFeeClauseReciprocityResult>, ApiError> {
+    Ok(Json(check_rental_attorney_fee_clause_reciprocity(&b)))
 }
 
 // ---------------------------------------------------------------------------

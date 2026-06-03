@@ -172,6 +172,7 @@ pub mod rental_dog_bite_liability;
 pub mod rental_ada_accessible_parking_compliance;
 pub mod rental_application_denial_disclosure;
 pub mod rental_attached_garage_carbon_monoxide_disclosure;
+pub mod rental_attorney_fee_clause_reciprocity;
 pub mod rental_balcony_inspection_seismic_safety;
 pub mod rental_basement_water_intrusion_disclosure;
 pub mod rental_bed_bug_disclosure;
