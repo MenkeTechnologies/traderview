@@ -613,6 +613,11 @@ use traderview_expense::rental_bedroom_egress_window::{
     check as check_rental_bedroom_egress_window, RentalBedroomEgressWindowInput,
     RentalBedroomEgressWindowResult,
 };
+use traderview_expense::rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76::{
+    check as check_rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76,
+    RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Input,
+    RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Result,
+};
 use traderview_expense::rental_elevator_safety_inspection::{
     check as check_rental_elevator_safety_inspection,
     RentalElevatorSafetyInspectionInput, RentalElevatorSafetyInspectionResult,
@@ -1597,6 +1602,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-basement-water-intrusion-disclosure", axum::routing::post(rental_basement_water_intrusion_disclosure_route))
         .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
         .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
+        .route("/rental-berkeley-rent-stabilization-ordinance-bmc-chapter-13-76", axum::routing::post(rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76_route))
         .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
         .route("/rental-california-ab-12-security-deposit-cap", axum::routing::post(rental_california_ab_12_security_deposit_cap_route))
         .route("/rental-california-ab-2347-unlawful-detainer-response", axum::routing::post(rental_california_ab_2347_unlawful_detainer_response_route))
@@ -8650,6 +8656,71 @@ async fn rental_bedroom_egress_window_route(
     Json(b): Json<RentalBedroomEgressWindowInput>,
 ) -> Result<Json<RentalBedroomEgressWindowResult>, ApiError> {
     Ok(Json(check_rental_bedroom_egress_window(&b)))
+}
+
+// ---------------------------------------------------------------------------
+// rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76:
+// Berkeley Rent Stabilization and Good Cause for Eviction Ordinance —
+// second oldest comprehensive California municipal rent-control
+// regime, enacted by voters of Berkeley in June 1980 as Measure I
+// (one year after SF Chapter 37 was enacted in 1979). Codified at
+// Berkeley Municipal Code Chapter 13.76; administered by the
+// Berkeley Rent Stabilization Board (the Rent Board). Four primary
+// components: (1) mandatory registration of all covered rental units
+// with the Rent Board (BMC § 13.76.080); (2) rent control via Annual
+// General Adjustment (AGA) tied to CPI and capped at 5 PERCENT under
+// Measure BB (2020); (3) eviction protection through good-cause
+// requirements (BMC § 13.76.130); (4) tenant's right to annual
+// interest on security deposits (BMC § 13.76.070). Base rent ceiling
+// tied to lawful rent due on or before MAY 31, 1980 under Temporary
+// Rent Stabilization Ordinance No. 5212-N.S. Just cause grounds
+// under BMC § 13.76.130: 11 enumerated grounds after December 2024
+// amendment removed one ground (previously 12). Owner move-in
+// requires 90-day vacancy search among landlord's other Berkeley
+// rental properties before serving OMI termination. Notice-of-
+// termination filing requirement: landlord must file copy with
+// Berkeley Rent Board within 3 BUSINESS DAYS of service on tenant;
+// notice must state just cause, reference Rent Board counseling
+// services, AND allege landlord's compliance with registration and
+// habitability standards. Non-qualifying grounds explicitly NOT
+// valid bases for eviction: property sales, lease expiration,
+// Section 8 status changes, AND foreclosure (the foreclosure
+// carve-out is one of the strongest tenant protections in CA
+// municipal rent-control regimes). Costa-Hawkins Rental Housing Act
+// of 1995 vacancy decontrol overlay applies to single-family homes,
+// condominiums, and post-Feb-1-1995 certificate-of-occupancy
+// buildings. Sixteen-mode severity ladder × 2 property jurisdictions
+// × 5 unit types × 6 compliance aspects × 13 just-cause grounds
+// (11 enumerated + NoJustCauseAsserted + NonQualifyingGround) ×
+// variable AGA / OMI / notice-filing / registration / security
+// deposit inputs. Sibling cluster: rental_san_francisco_rent_
+// ordinance_chapter_37 (iter 677 — SF 1979 OLDEST California
+// municipal regime; Berkeley 1980 SECOND OLDEST), rental_seattle_
+// smc_22_206_160_just_cause_eviction (iter 669 — Seattle JCEO 1980
+// FIRST municipal just-cause-only regime; Berkeley adds rent control
+// PLUS just-cause), rental_california_sb_567_no_fault_eviction_
+// amendments (iter 673 — CA AB 1482 + SB 567 statewide overlay;
+// Berkeley Chapter 13.76 retains local supremacy in Berkeley
+// itself), rental_california_ab_12_security_deposit_cap (iter 645
+// — CA security deposit cap), rental_california_ab_2347_unlawful_
+// detainer_response (iter 667 — CA UD response time), rental_just_
+// cause_eviction (multi-state base regime; Berkeley = strictest US
+// local just-cause + rent-control regime with foreclosure carve-
+// out), rental_owner_move_in_eviction (OMI cross-reference; Berkeley
+// 90-day vacancy search is one of strictest in US), rental_security_
+// deposit_interest (Berkeley BMC § 13.76.070 is one of the few
+// jurisdictions with mandatory rate-set-by-board annual interest),
+// rental_property_registration (Berkeley BMC § 13.76.080 mandatory
+// annual registration is the model for many California cities),
+// rental_rent_control_stabilization (multi-state regime).
+// ---------------------------------------------------------------------------
+
+async fn rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Input>,
+) -> Result<Json<RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Result>, ApiError> {
+    Ok(Json(check_rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76(&b)))
 }
 
 // ---------------------------------------------------------------------------

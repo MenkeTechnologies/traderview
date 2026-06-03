@@ -180,6 +180,7 @@ pub mod rental_balcony_inspection_seismic_safety;
 pub mod rental_basement_water_intrusion_disclosure;
 pub mod rental_bed_bug_disclosure;
 pub mod rental_bedroom_egress_window;
+pub mod rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76;
 pub mod rental_boiler_inspection_compliance;
 pub mod rental_california_ab_12_security_deposit_cap;
 pub mod rental_california_ab_2347_unlawful_detainer_response;
