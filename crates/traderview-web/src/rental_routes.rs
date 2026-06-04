@@ -814,6 +814,11 @@ use traderview_expense::rental_alabama_urlta_ala_code_35_9a::{
     AlLandlordTenantInput as RentalAlabamaUrltaAlaCode359aInput,
     AlLandlordTenantResult as RentalAlabamaUrltaAlaCode359aResult,
 };
+use traderview_expense::rental_nevada_nrs_chapter_118a::{
+    check as check_rental_nevada_nrs_chapter_118a,
+    NvLandlordTenantInput as RentalNevadaNrsChapter118aInput,
+    NvLandlordTenantResult as RentalNevadaNrsChapter118aResult,
+};
 use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
     check as check_rental_vehicle_towing_notice_sign_requirements,
     RentalVehicleTowingNoticeSignRequirementsInput,
@@ -1901,6 +1906,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-kentucky-urlta-krs-chapter-383-subchapter-5", axum::routing::post(rental_kentucky_urlta_krs_chapter_383_subchapter_5_route))
         .route("/rental-iowa-urlta-iowa-code-chapter-562a", axum::routing::post(rental_iowa_urlta_iowa_code_chapter_562a_route))
         .route("/rental-alabama-urlta-ala-code-35-9a", axum::routing::post(rental_alabama_urlta_ala_code_35_9a_route))
+        .route("/rental-nevada-nrs-chapter-118a", axum::routing::post(rental_nevada_nrs_chapter_118a_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
@@ -9705,6 +9711,14 @@ async fn rental_alabama_urlta_ala_code_35_9a_route(
     Json(b): Json<RentalAlabamaUrltaAlaCode359aInput>,
 ) -> Result<Json<RentalAlabamaUrltaAlaCode359aResult>, ApiError> {
     Ok(Json(check_rental_alabama_urlta_ala_code_35_9a(&b)))
+}
+
+async fn rental_nevada_nrs_chapter_118a_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalNevadaNrsChapter118aInput>,
+) -> Result<Json<RentalNevadaNrsChapter118aResult>, ApiError> {
+    Ok(Json(check_rental_nevada_nrs_chapter_118a(&b)))
 }
 
 async fn rental_water_submetering_disclosure_route(

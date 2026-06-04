@@ -247,6 +247,7 @@ pub mod rental_missouri_landlord_tenant_mo_rev_stat_535_534_441;
 pub mod rental_mold_disclosure_remediation;
 pub mod rental_multilingual_lease_translation;
 pub mod rental_natural_gas_leak_response;
+pub mod rental_nevada_nrs_chapter_118a;
 pub mod rental_new_jersey_anti_eviction_act;
 pub mod rental_new_york_hstpa_2019_chapter_36;
 pub mod rental_north_carolina_chapter_42_landlord_tenant;
