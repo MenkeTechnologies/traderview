@@ -16,12 +16,14 @@ import { t } from '../i18n.js';
 import { esc } from '../util.js';
 
 // Layout presets: how many columns + the default timeframe of each pane.
-// Sub-minute intervals (e.g. 10s) are not offered because the backend only
-// buckets bars down to 1m; each pane's own selector still exposes 1m–1w.
+// Each pane's per-pane toolbar still exposes the full 10s / 1m / 5m / 15m
+// / 1h / 1d / 1w set; these are just the starting selection. Defaults match
+// Webull's "scalper's multichart" layout (5m macro, 1m entry, 1d context,
+// 10s tape) — user changes are sticky via `chart_preset.multichart_intervals`.
 const LAYOUTS = {
     '1': { cols: 1, intervals: ['1d'] },
     '2': { cols: 2, intervals: ['5m', '1d'] },
-    '4': { cols: 2, intervals: ['1m', '5m', '1h', '1d'] },
+    '4': { cols: 2, intervals: ['5m', '1m', '1d', '10s'] },
 };
 
 const LAYOUT_LABEL_KEYS = {

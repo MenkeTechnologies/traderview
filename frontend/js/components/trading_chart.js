@@ -13,23 +13,32 @@
 //   const chart = createTradingChart(el, { symbol: 'AAPL', interval: '1d' });
 //   …later…  chart.setSymbol('NVDA');  chart.destroy();
 //
-// NOTE: the backend only buckets bars at 1m / 5m / 15m / 1h / 1d / 1w. Sub-minute
-// intervals (e.g. 10s) are not available until the bar pipeline supports them.
+// NOTE: the backend buckets bars at 10s / 1m / 5m / 15m / 1h / 1d / 1w. 10s rows
+// only land if the live-tick aggregator (Finnhub WS) or a broker CSV import has
+// populated them — Yahoo's free chart endpoint floors at 1m. Cold-start 10s
+// charts will render empty until ticks accumulate for the symbol.
 
 import { api } from '../api.js';
 import { t } from '../i18n.js';
 import { esc } from '../util.js';
 
 // Supported intervals → how far back to load (seconds) for a useful default view.
-const TIMEFRAMES = ['1m', '5m', '15m', '1h', '1d', '1w'];
+const TIMEFRAMES = ['10s', '1m', '5m', '15m', '1h', '1d', '1w'];
 const DAY = 86400;
 const WINDOW_SECONDS = {
+    // 10s: 4 hours = 1,440 bars, comparable to ~5 trading days at 1m. Bigger
+    // windows blow up the canvas without adding signal at this resolution.
+    '10s': 4 * 3600,
     '1m': 2 * DAY,
     '5m': 5 * DAY,
     '15m': 10 * DAY,
     '1h': 60 * DAY,
-    '1d': 730 * DAY,
-    '1w': 8 * 365 * DAY,
+    // 1d / 1w default to "since 1970-01-01" so Yahoo returns the full
+    // ticker history (IPO → now) and stops clipping AAPL at 2018, BRK.A
+    // at 2018, etc. Yahoo silently caps the response at the earliest
+    // available bar so requesting older costs nothing extra.
+    '1d': 56 * 365 * DAY,
+    '1w': 56 * 365 * DAY,
 };
 
 // Overlay indicators share the scalar `{ t:[iso], v:[num|null] }` shape and draw
@@ -155,7 +164,7 @@ export function createTradingChart(container, opts = {}) {
         layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#aab4c2' },
         grid: { vertLines: { color: 'rgba(120,140,160,0.08)' }, horzLines: { color: 'rgba(120,140,160,0.08)' } },
         rightPriceScale: { borderColor: 'rgba(120,140,160,0.25)' },
-        timeScale: { borderColor: 'rgba(120,140,160,0.25)', timeVisible: true, secondsVisible: false },
+        timeScale: { borderColor: 'rgba(120,140,160,0.25)', timeVisible: true, secondsVisible: state.interval === '10s' },
         crosshair: { mode: LWC.CrosshairMode ? LWC.CrosshairMode.Normal : 0 },
         autoSize: false,
     });
@@ -377,6 +386,9 @@ export function createTradingChart(container, opts = {}) {
         if (!TIMEFRAMES.includes(iv) || iv === state.interval) return;
         state.interval = iv;
         container.querySelectorAll('.tv-tf-btn').forEach(b => b.classList.toggle('active', b.dataset.tf === iv));
+        // Show seconds on the x-axis only for sub-minute resolutions; the
+        // 10s bars otherwise collapse into identical "HH:MM" labels.
+        chart.timeScale().applyOptions({ secondsVisible: iv === '10s' });
         loadBars();
         state.onIntervalChange(iv);
     }

@@ -751,8 +751,8 @@ export async function renderDashboard(mount, state) {
                     data-shortcut="dashboard_refresh">⟳ Refresh</button>
             <div class="dash-tv-layout-controls">
                 <div class="dash-tv-add-wrap">
-                    <button type="button" id="dash-add-widget" class="btn btn-secondary btn-compact">+ ${esc(t('view.dashboard.tv.add_widget'))}</button>
-                    <div class="dash-tv-add-menu" id="dash-add-menu" hidden></div>
+                    <button type="button" id="dash-add-widget" class="btn btn-secondary btn-compact">⊞ ${esc(t('view.dashboard.tv.add_widget'))}</button>
+                    <div class="dash-tv-add-menu" id="dash-add-menu" hidden role="menu" aria-label="${esc(t('view.dashboard.tv.add_widget'))}"></div>
                 </div>
                 <button type="button" id="dash-reset-layout" class="btn btn-secondary btn-compact">⟲ ${esc(t('view.dashboard.tv.reset_layout'))}</button>
             </div>
@@ -839,15 +839,26 @@ export async function renderDashboard(mount, state) {
     const addBtn = mount.querySelector('#dash-add-widget');
     const addMenu = mount.querySelector('#dash-add-menu');
     if (addBtn && addMenu) {
+        // Build (or rebuild) the menu body as a single checklist of every
+        // widget — checked = currently in layout, unchecked = available to
+        // add. The previous design only listed "missing" widgets, which on
+        // a fresh dashboard (DEFAULT_LAYOUT = every widget) made the menu
+        // permanently render the "all widgets already shown" empty state
+        // and look like the button was broken.
+        const renderMenu = () => {
+            const inLayout = new Set(layout);
+            addMenu.innerHTML = WIDGETS.map(w => {
+                const on = inLayout.has(w.id);
+                return `<button type="button" class="dash-tv-add-item${on ? ' on' : ''}"
+                                data-toggle-widget="${w.id}"
+                                role="menuitemcheckbox" aria-checked="${on}">
+                            <span class="dash-tv-add-check">${on ? '✓' : ''}</span>${esc(t(w.titleKey))}
+                        </button>`;
+            }).join('');
+        };
         addBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const inLayout = new Set(layout);
-            const missing = WIDGETS.filter(w => !inLayout.has(w.id));
-            addMenu.innerHTML = missing.length
-                ? missing.map(w =>
-                    `<button type="button" class="dash-tv-add-item" data-add-widget="${w.id}">+ ${esc(t(w.titleKey))}</button>`
-                  ).join('')
-                : `<div class="dash-tv-add-empty">${esc(t('view.dashboard.tv.all_widgets_shown'))}</div>`;
+            renderMenu();
             addMenu.hidden = !addMenu.hidden;
         });
         mount.addEventListener('click', (e) => {
@@ -856,11 +867,18 @@ export async function renderDashboard(mount, state) {
             addMenu.hidden = true;
         });
         addMenu.addEventListener('click', async (e) => {
-            const btn = e.target.closest('[data-add-widget]');
+            const btn = e.target.closest('[data-toggle-widget]');
             if (!btn) return;
-            const id = btn.dataset.addWidget;
-            if (!WIDGETS_BY_ID.has(id) || layout.includes(id)) return;
-            await persistAndRerender([...layout, id]);
+            e.stopPropagation();
+            const id = btn.dataset.toggleWidget;
+            if (!WIDGETS_BY_ID.has(id)) return;
+            // Toggle: present → remove; absent → append. Re-renders the
+            // dashboard so the panel grid + the menu's check marks
+            // reflect the new layout in one pass.
+            const next = layout.includes(id)
+                ? layout.filter(x => x !== id)
+                : [...layout, id];
+            await persistAndRerender(next);
         });
     }
 }

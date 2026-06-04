@@ -260,8 +260,21 @@ pub async fn earnings_yahoo_shape(symbol: &str) -> anyhow::Result<Value> {
         eps_surprise(symbol),
         earnings_calendar(&from_str, &to_str, Some(symbol)),
     );
-    let eps_v = eps_v?;
-    let cal_v = cal_v?;
+    // `eps_surprise` and `earnings_calendar` are independent slices: the
+    // first feeds the historical EPS table, the second feeds the
+    // "next earnings" cards. Don't let one failing endpoint blank the
+    // entire Earnings panel — log + fall through with an empty Value so
+    // whichever side succeeded still renders. The calendar is the more
+    // useful slice (next-quarter ETA + estimates), and `eps_surprise`
+    // tends to be the one that rate-limits on Finnhub's free tier.
+    let eps_v = eps_v.unwrap_or_else(|e| {
+        tracing::warn!(symbol, error = %e, "eps_surprise failed; rendering earnings without history");
+        Value::Null
+    });
+    let cal_v = cal_v.unwrap_or_else(|e| {
+        tracing::warn!(symbol, error = %e, "earnings_calendar failed; rendering earnings without next-quarter");
+        Value::Null
+    });
 
     let history: Vec<EpsItem> =
         serde_json::from_value(eps_v.clone()).unwrap_or_default();
@@ -341,6 +354,85 @@ pub async fn recommendations_yahoo_shape(symbol: &str) -> anyhow::Result<Value> 
         })
         .collect();
     Ok(json!({ "recommendationTrend": { "trend": trend } }))
+}
+
+#[derive(Deserialize)]
+struct InsiderTxRow {
+    name: Option<String>,
+    share: Option<i64>,
+    change: Option<i64>,
+    #[serde(rename = "filingDate")]
+    filing_date: Option<String>,
+    #[serde(rename = "transactionDate")]
+    transaction_date: Option<String>,
+    #[serde(rename = "transactionCode")]
+    transaction_code: Option<String>,
+    #[serde(rename = "transactionPrice")]
+    transaction_price: Option<f64>,
+}
+
+/// Wrap Finnhub's `/stock/insider-transactions` (FREE tier) as Yahoo's
+/// `{insiderTransactions: {transactions: [...]}}` shape so
+/// `research.js::renderInsiders` works unchanged. Was previously routed
+/// through Yahoo `quoteSummary[insiderTransactions]` which 401s with
+/// "Invalid Crumb" since late 2023, so the Insider Activity panel
+/// always rendered "no data".
+///
+/// Field mapping (Finnhub → Yahoo):
+///   - `transactionDate`  → `startDate.{raw:unix, fmt:"YYYY-MM-DD"}`
+///   - `name`             → `filerName`
+///   - `filerRelation`    → empty string (Finnhub does not expose role)
+///   - `transactionCode`  → `transactionText` (S=Sale, P=Purchase, …)
+///   - `share` (abs)      → `shares.{raw, fmt}`
+///   - share × price      → `value.{raw, fmt}`
+pub async fn insiders_yahoo_shape(symbol: &str) -> anyhow::Result<Value> {
+    // 90-day window matches Form 4 retention on Finnhub's free tier.
+    let today = chrono::Utc::now().date_naive();
+    let from = (today - chrono::Duration::days(90)).to_string();
+    let to = today.to_string();
+    let v = insider_transactions(symbol, &from, &to).await?;
+    let rows: Vec<InsiderTxRow> = v
+        .get("data")
+        .cloned()
+        .and_then(|d| serde_json::from_value(d).ok())
+        .unwrap_or_default();
+    let mut txs: Vec<Value> = Vec::with_capacity(rows.len());
+    for r in rows {
+        let shares_abs = r.share.unwrap_or(0).abs();
+        let value = match (r.share, r.transaction_price) {
+            (Some(s), Some(p)) if p.is_finite() => Some((s.abs() as f64) * p),
+            _ => None,
+        };
+        // `change > 0` → acquisition; `change < 0` → disposition. Mirror
+        // Yahoo's freeform transactionText so the column reads naturally.
+        let tx_text = match (r.transaction_code.as_deref(), r.change) {
+            (Some(code), _) => code.to_string(),
+            (None, Some(c)) if c > 0 => "Buy".into(),
+            (None, Some(c)) if c < 0 => "Sale".into(),
+            _ => String::new(),
+        };
+        let date_unix = r
+            .transaction_date
+            .as_deref()
+            .or(r.filing_date.as_deref())
+            .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
+            .and_then(|d| d.and_hms_opt(0, 0, 0))
+            .map(|ndt| ndt.and_utc().timestamp());
+        let date_fmt = r
+            .transaction_date
+            .clone()
+            .or(r.filing_date.clone())
+            .unwrap_or_default();
+        txs.push(json!({
+            "startDate":       { "raw": date_unix, "fmt": date_fmt },
+            "filerName":       r.name.unwrap_or_default(),
+            "filerRelation":   "",
+            "transactionText": tx_text,
+            "shares":          { "raw": shares_abs },
+            "value":           raw(value),
+        }));
+    }
+    Ok(json!({ "insiderTransactions": { "transactions": txs } }))
 }
 
 // ──────────────────────────────────────────────────────────────────────

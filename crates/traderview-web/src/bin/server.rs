@@ -75,6 +75,12 @@ async fn main() -> anyhow::Result<()> {
         Err(e) => tracing::warn!(error = %e, "failed to load finnhub key from DB"),
     }
 
+    // Hand the pool to the live-tick store so the 10s tape aggregator can
+    // persist closed buckets into `price_bars` (interval='10s'). Without
+    // this call, incoming trades still update in-memory SymbolState but no
+    // 10s rows ever land in the DB — multichart's 10s pane stays empty.
+    traderview_db::live_ticks::global().set_pool(pool.clone()).await;
+
     // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
     {
         let pool = pool.clone();

@@ -13,14 +13,18 @@
 //! HTTP calls / minute. We honor both: chunk symbols into 25-symbol pages
 //! across multiple parallel WS connections if the user adds more.
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use dashmap::DashMap;
 use futures_util::{SinkExt, StreamExt};
+use rust_decimal::prelude::FromPrimitive;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
+use traderview_core::{BarInterval, PriceBar};
 
 pub const FINNHUB_WS: &str = "wss://ws.finnhub.io";
 const MAX_SYMS_PER_CONN: usize = 25;
@@ -101,12 +105,38 @@ impl SymbolState {
     }
 }
 
+// Bucket size for the tape aggregator. Aligned to BarInterval::S10 — every
+// trade is folded into the 10-second window starting at `floor(ts / 10) * 10`.
+const TAPE_BUCKET_SECS: i64 = 10;
+
+// In-progress 10s OHLC bucket. Each incoming trade either extends `high/low`
+// + advances `close` + accumulates `volume`, or — if it crosses into the next
+// 10s window — first flushes this struct to `price_bars` then starts a fresh
+// one. `start_sec` is the bucket's open epoch second (multiple of 10).
+#[derive(Clone, Debug)]
+struct TapeBucket {
+    start_sec: i64,
+    open: f64,
+    high: f64,
+    low: f64,
+    close: f64,
+    volume: f64,
+}
+
 #[derive(Clone)]
 pub struct LiveTickStore {
     state: Arc<DashMap<String, SymbolState>>,
     tx: broadcast::Sender<SymbolState>,
     api_key: Arc<tokio::sync::RwLock<Option<String>>>,
     subs: Arc<tokio::sync::Mutex<Vec<String>>>,
+    // Per-symbol open 10s OHLC bucket. Closed buckets are flushed to
+    // `price_bars` (interval='10s', source='finnhub-tape') so the
+    // multichart 10s pane can read them back via `/bars/:sym?interval=10s`.
+    buckets: Arc<DashMap<String, TapeBucket>>,
+    // DB pool used by the tape aggregator. Set once at server boot via
+    // `set_pool` so the global() singleton can persist bars without taking
+    // a pool argument on every trade.
+    pool: Arc<tokio::sync::RwLock<Option<PgPool>>>,
 }
 
 impl LiveTickStore {
@@ -117,7 +147,30 @@ impl LiveTickStore {
             tx,
             api_key: Arc::new(tokio::sync::RwLock::new(None)),
             subs: Arc::new(tokio::sync::Mutex::new(Vec::new())),
+            buckets: Arc::new(DashMap::new()),
+            pool: Arc::new(tokio::sync::RwLock::new(None)),
         }
+    }
+
+    /// Wire the DB pool used by the 10s tape aggregator. Called once at
+    /// server boot. When unset, trades still update `SymbolState` but no
+    /// 10s bars are persisted (cold start before pool is ready, tests).
+    pub async fn set_pool(&self, pool: PgPool) {
+        *self.pool.write().await = Some(pool);
+        // Kick off the idle-flush sweeper exactly once per process. Buckets
+        // whose 10s window has fully closed (and then some) but received no
+        // further trades to trigger flush-on-cross will sit indefinitely
+        // otherwise — this guarantees they land in `price_bars` within ~5s
+        // of natural close.
+        let store = self.clone();
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(Duration::from_secs(5));
+            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+            loop {
+                tick.tick().await;
+                store.flush_idle_buckets().await;
+            }
+        });
     }
 
     pub async fn set_api_key(&self, key: impl Into<String>) {
@@ -194,6 +247,105 @@ impl LiveTickStore {
         }
     }
 
+    // ---- 10s tape aggregator ----
+
+    // Fold one trade into the symbol's open 10s bucket. If the trade falls
+    // in a later bucket, flush the existing one to `price_bars` before
+    // opening a fresh bucket for this trade.
+    async fn feed_bucket(&self, t: &Trade) {
+        let bucket_start = (t.ts_ms / 1000 / TAPE_BUCKET_SECS) * TAPE_BUCKET_SECS;
+        let mut closed: Option<(String, TapeBucket)> = None;
+        {
+            // Scope the DashMap guard so the await below doesn't hold it.
+            let mut entry = self
+                .buckets
+                .entry(t.symbol.clone())
+                .or_insert_with(|| TapeBucket {
+                    start_sec: bucket_start,
+                    open: t.price,
+                    high: t.price,
+                    low: t.price,
+                    close: t.price,
+                    volume: 0.0,
+                });
+            if entry.start_sec != bucket_start {
+                // Bucket crossed — extract the closed one and start fresh.
+                let prev = entry.clone();
+                *entry = TapeBucket {
+                    start_sec: bucket_start,
+                    open: t.price,
+                    high: t.price,
+                    low: t.price,
+                    close: t.price,
+                    volume: 0.0,
+                };
+                closed = Some((t.symbol.clone(), prev));
+            }
+            // Always fold the incoming trade into the now-current bucket.
+            if t.price > entry.high { entry.high = t.price; }
+            if t.price < entry.low  { entry.low  = t.price; }
+            entry.close = t.price;
+            entry.volume += t.volume;
+        }
+        if let Some((sym, bucket)) = closed {
+            self.persist_bucket(&sym, &bucket).await;
+        }
+    }
+
+    // Idle sweep — flush any bucket whose window has fully elapsed at
+    // least one full window ago. Without this, a symbol that stops trading
+    // mid-window leaves an in-progress bucket dangling forever.
+    async fn flush_idle_buckets(&self) {
+        let now_sec = Utc::now().timestamp();
+        let mut to_flush: Vec<(String, TapeBucket)> = Vec::new();
+        for entry in self.buckets.iter() {
+            let b = entry.value();
+            // A bucket starting at `start_sec` covers [start_sec, start_sec + 10).
+            // Flush once we're a full window past the close.
+            if now_sec >= b.start_sec + TAPE_BUCKET_SECS * 2 {
+                to_flush.push((entry.key().clone(), b.clone()));
+            }
+        }
+        for (sym, bucket) in &to_flush {
+            self.persist_bucket(sym, bucket).await;
+            self.buckets.remove(sym);
+        }
+    }
+
+    async fn persist_bucket(&self, symbol: &str, b: &TapeBucket) {
+        let pool = { self.pool.read().await.clone() };
+        let Some(pool) = pool else { return };
+        let bar_time = match Utc.timestamp_opt(b.start_sec, 0).single() {
+            Some(t) => t,
+            None => return,
+        };
+        // Decimal::from_f64 returns None on NaN/Inf — drop the bar in that
+        // case rather than persisting garbage that breaks downstream queries.
+        let (Some(open), Some(high), Some(low), Some(close), Some(volume)) = (
+            Decimal::from_f64(b.open),
+            Decimal::from_f64(b.high),
+            Decimal::from_f64(b.low),
+            Decimal::from_f64(b.close),
+            Decimal::from_f64(b.volume),
+        ) else {
+            return;
+        };
+        let bar = PriceBar {
+            symbol: symbol.to_string(),
+            interval: BarInterval::S10,
+            bar_time,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            source: "finnhub-tape".into(),
+        };
+        if let Err(e) = crate::prices::upsert(&pool, std::slice::from_ref(&bar)).await {
+            tracing::warn!(error = %e, symbol, bucket = b.start_sec, "tape 10s persist failed");
+        }
+    }
+
     async fn run_once(&self, api_key: &str, symbols: &[String]) -> anyhow::Result<()> {
         let url = format!("{FINNHUB_WS}?token={api_key}");
         let (ws, _) = tokio_tungstenite::connect_async(&url).await?;
@@ -220,6 +372,11 @@ impl LiveTickStore {
                                     drop(state);
                                     let _ = self.tx.send(snap);
                                 }
+                                // Fold the trade into the 10s OHLC bucket
+                                // and flush on bucket-cross. Fire-and-
+                                // forget: a slow DB shouldn't backpressure
+                                // the WS read loop.
+                                self.feed_bucket(&trade).await;
                             }
                         }
                     }

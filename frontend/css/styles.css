@@ -333,10 +333,16 @@ table.open-trades a:hover { text-decoration:underline }
     z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4);
 }
 .dash-tv-add-menu .dash-tv-add-item {
-    display:block; width:100%; text-align:left; background:transparent; border:0;
-    color:var(--text); padding:6px 10px; font-size:12px; cursor:pointer; border-radius:2px;
+    display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+    background:transparent; border:0; color:var(--text); padding:6px 10px;
+    font-size:12px; cursor:pointer; border-radius:2px;
 }
 .dash-tv-add-menu .dash-tv-add-item:hover { background:rgba(0,229,255,0.12); color:var(--cyan) }
+.dash-tv-add-menu .dash-tv-add-item.on { color:var(--cyan) }
+.dash-tv-add-menu .dash-tv-add-check {
+    display:inline-block; width:14px; flex-shrink:0; text-align:center;
+    color:var(--cyan); font-weight:700;
+}
 .dash-tv-add-empty { padding:8px 10px; color:var(--text-muted); font-style:italic; font-size:11px }
 
 /* ---- reports: filter bar, style bar, primary tabs --------------- */

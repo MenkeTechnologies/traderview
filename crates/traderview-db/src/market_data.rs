@@ -322,7 +322,27 @@ pub async fn recommendations(symbol: &str) -> anyhow::Result<serde_json::Value> 
     quote_summary(symbol, &["recommendationTrend", "upgradeDowngradeHistory"]).await
 }
 
+/// Insider transactions.
+///
+/// **Backend:** Finnhub `/stock/insider-transactions` (FREE tier, last
+/// ~3 months of Form 4 filings). Adapter `finnhub_rest::insiders_yahoo_shape`
+/// wraps the response in Yahoo's `{insiderTransactions: {transactions[]}}`
+/// envelope so `research.js::renderInsiders` keeps working unchanged.
+/// Falls back to Yahoo `quoteSummary[insiderTransactions,…]` when no
+/// Finnhub key is configured — note the Yahoo path returns 401 since
+/// late 2023 ("Invalid Crumb") so without Finnhub the Insider Activity
+/// panel will show "no data".
 pub async fn insiders(symbol: &str) -> anyhow::Result<serde_json::Value> {
+    match crate::finnhub_rest::insiders_yahoo_shape(symbol).await {
+        Ok(v) => return Ok(v),
+        Err(e) => {
+            tracing::warn!(
+                symbol,
+                error = %e,
+                "finnhub insiders failed; falling back to Yahoo quoteSummary"
+            );
+        }
+    }
     quote_summary(
         symbol,
         &[
@@ -430,8 +450,21 @@ pub async fn dividends(symbol: &str) -> anyhow::Result<serde_json::Value> {
     }))
 }
 
+/// Major-holders / institutional-ownership lookup.
+///
+/// **Status:** no free data source. Yahoo `quoteSummary[majorHoldersBreakdown,
+/// institutionOwnership, fundOwnership]` returns 401 ("Invalid Crumb") since
+/// late 2023; Finnhub `/stock/ownership` + `/stock/fund-ownership` are
+/// **premium-tier only** (free tier returns 403). EDGAR Form 13F is a
+/// possible free path but the parser isn't built yet.
+///
+/// When Yahoo fails, return an empty-but-shaped envelope so
+/// `renderHolders` falls through to the empty-cards layout instead of
+/// "no data". Frontend can decide how to surface the "needs premium data
+/// source" message — keeping the contract here as `Result<Value>` so a
+/// future EDGAR-based backend can drop in without changing the route.
 pub async fn holders(symbol: &str) -> anyhow::Result<serde_json::Value> {
-    quote_summary(
+    match quote_summary(
         symbol,
         &[
             "majorHoldersBreakdown",
@@ -440,6 +473,22 @@ pub async fn holders(symbol: &str) -> anyhow::Result<serde_json::Value> {
         ],
     )
     .await
+    {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            tracing::warn!(
+                symbol,
+                error = %e,
+                "holders: Yahoo quoteSummary blocked and no free Finnhub equivalent; returning empty envelope"
+            );
+            Ok(serde_json::json!({
+                "majorHoldersBreakdown": {},
+                "institutionOwnership":  { "ownershipList": [] },
+                "fundOwnership":         { "ownershipList": [] },
+                "_source_note": "holders data requires a premium tier (Finnhub paid, IEX, Polygon) or an EDGAR 13F parser — not available on free providers since Yahoo locked quoteSummary behind crumb auth in late 2023"
+            }))
+        }
+    }
 }
 
 // ===========================================================================
