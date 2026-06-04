@@ -71,6 +71,20 @@ body.popout-mode #app { padding-top: 0 }
     0% { background-position: 0% 0%; }
     100% { background-position: 300% 0%; }
 }
+.tv-version {
+    flex: 0 0 auto;
+    margin-left: -4px; align-self: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; line-height: 1;
+    color: var(--text-muted);
+    padding: 2px 5px;
+    border: 1px solid rgba(120,140,160,0.25);
+    border-radius: 2px;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+.tv-version:hover { color: var(--cyan); border-color: var(--cyan); }
 
 .tabs { display: flex; gap: 2px; flex: 1 1 auto; }
 

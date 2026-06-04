@@ -34,16 +34,11 @@ pub enum LotMethod {
 ///   finalizes a trade — even if leftover open lots remain. Those lots
 ///   carry over as the inventory for the next trade. Matches Tradervue's
 ///   "Exit-pivoted" round-up exactly (verified against 1752-trade export).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CloseModel {
     FlatOnly,
+    #[default]
     PerCloseExec,
-}
-
-impl Default for CloseModel {
-    fn default() -> Self {
-        CloseModel::PerCloseExec
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -818,7 +813,7 @@ mod tests {
         let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
         // The first closed trade should show entry_avg = $50.00 (the actual
         // open price for the 30 shares closed), not $50.00 × 100/30 = $166.67.
-        assert!(trades.len() >= 1);
+        assert!(!trades.is_empty());
         assert_eq!(trades[0].trade.entry_avg, Decimal::from(50_00));
         assert_eq!(trades[0].trade.qty, Decimal::from(30));
     }

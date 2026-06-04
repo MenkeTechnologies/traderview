@@ -707,6 +707,11 @@ async function boot() {
     try {
         const cfg = await api.config();
         state.mode = cfg.mode;
+        // Surface the running backend version in the topbar — the value
+        // comes from `env!("CARGO_PKG_VERSION")` on the server side so it
+        // always matches the deployed binary, not a stale frontend constant.
+        const verEl = document.getElementById('tv-version');
+        if (verEl && cfg.version) verEl.textContent = `v${cfg.version}`;
     } catch (_) { /* server may not be reachable yet */ }
     try {
         const me = await api.me();

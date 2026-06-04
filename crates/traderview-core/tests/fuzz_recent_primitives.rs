@@ -1036,9 +1036,13 @@ fn fuzz_sortino() {
         assert!(r.mean_return.is_finite(), "iter {it} mean");
         assert!(r.downside_deviation.is_finite() && r.downside_deviation >= 0.0,
             "iter {it} dd {}", r.downside_deviation);
-        // Infinite sortino is acceptable (all-positive series); NaN is not.
-        assert!(!r.sortino_ratio.is_nan(),
-            "iter {it} NaN sortino with ann={annualization}");
+        // sortino_ratio is Option<f64>; None is acceptable (degenerate
+        // input — empty series or all-zero downside). When Some, infinite
+        // values are acceptable (all-positive series); NaN is not.
+        if let Some(sr) = r.sortino_ratio {
+            assert!(!sr.is_nan(),
+                "iter {it} NaN sortino with ann={annualization}");
+        }
     }
 }
 
