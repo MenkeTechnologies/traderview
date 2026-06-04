@@ -238,6 +238,7 @@ pub mod rental_massachusetts_security_deposit_statute;
 pub mod rental_michigan_landlord_tenant_mcl_554;
 pub mod rental_minneapolis_renter_protections_ordinance_2020;
 pub mod rental_minnesota_landlord_tenant_act_minn_stat_504b;
+pub mod rental_missouri_landlord_tenant_mo_rev_stat_535_534_441;
 pub mod rental_mold_disclosure_remediation;
 pub mod rental_multilingual_lease_translation;
 pub mod rental_natural_gas_leak_response;
