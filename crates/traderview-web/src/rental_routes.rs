@@ -1242,6 +1242,11 @@ use traderview_expense::rental_in_unit_laundry_appliance_provision::{
     check as check_rental_in_unit_laundry_appliance_provision,
     RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
 };
+use traderview_expense::rental_indiana_landlord_tenant_law_ic_32_31::{
+    check as check_rental_indiana_landlord_tenant_law_ic_32_31,
+    InLandlordTenantInput as RentalIndianaLandlordTenantLawIc3231Input,
+    InLandlordTenantResult as RentalIndianaLandlordTenantLawIc3231Result,
+};
 use traderview_expense::rental_positive_rent_payment_credit_reporting::{
     check as check_rental_positive_rent_payment_credit_reporting,
     RentalPositiveRentPaymentCreditReportingInput,
@@ -1709,6 +1714,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-hud-hotma-income-asset-compliance", axum::routing::post(rental_hud_hotma_income_asset_compliance_route))
         .route("/rental-hud-section-504-rehabilitation-act-24-cfr-part-8", axum::routing::post(rental_hud_section_504_rehabilitation_act_24_cfr_part_8_route))
         .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
+        .route("/rental-indiana-landlord-tenant-law-ic-32-31", axum::routing::post(rental_indiana_landlord_tenant_law_ic_32_31_route))
         .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
         .route("/rental-just-cause-eviction", axum::routing::post(rental_just_cause_eviction_route))
         .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
@@ -12752,6 +12758,14 @@ async fn rental_in_unit_laundry_appliance_provision_route(
     Json(b): Json<RentalInUnitLaundryApplianceProvisionInput>,
 ) -> Result<Json<RentalInUnitLaundryApplianceProvisionResult>, ApiError> {
     Ok(Json(check_rental_in_unit_laundry_appliance_provision(&b)))
+}
+
+async fn rental_indiana_landlord_tenant_law_ic_32_31_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalIndianaLandlordTenantLawIc3231Input>,
+) -> Result<Json<RentalIndianaLandlordTenantLawIc3231Result>, ApiError> {
+    Ok(Json(check_rental_indiana_landlord_tenant_law_ic_32_31(&b)))
 }
 
 // ---------------------------------------------------------------------------

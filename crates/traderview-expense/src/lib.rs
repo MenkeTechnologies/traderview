@@ -222,6 +222,7 @@ pub mod rental_hud_hotma_income_asset_compliance;
 pub mod rental_hud_section_504_rehabilitation_act_24_cfr_part_8;
 pub mod rental_illegal_lockout_self_help_eviction;
 pub mod rental_in_unit_laundry_appliance_provision;
+pub mod rental_indiana_landlord_tenant_law_ic_32_31;
 pub mod rental_junk_fee_transparency;
 pub mod rental_just_cause_eviction;
 pub mod rental_landlord_notice_to_enter;
