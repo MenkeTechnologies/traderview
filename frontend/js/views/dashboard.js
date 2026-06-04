@@ -5,6 +5,8 @@ import { renderWorldMarkets } from './world_map.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
+import * as dashStore from '../_dashboards_storage.js';
+import { showToast } from '../toast.js';
 
 const INTERVAL_KEY = 'dashboard_interval_days';
 const PERIOD_KEY   = 'dashboard_period_key';
@@ -13,6 +15,49 @@ const VALID_INTERVALS = [30, 60, 90];
 // covers the period; 'all' clears the filter. Computed lazily so YTD
 // stretches the right amount each call.
 const PERIOD_KEYS = ['today', 'wtd', 'mtd', 'qtd', 'ytd', 'all'];
+
+// Fetch every analytics-dashboard slice in parallel. Returns the same
+// `data` shape the in-page widgets expect, plus the saved widget order.
+// `failedFetches` (optional) accumulates `{name, msg}` for failed
+// endpoints so the caller can surface a banner without us coupling to
+// that UI here. Exported so views/dashboards.js can render the same
+// graph widgets in pinned-tile context.
+export async function loadAnalyticsBundle(accountId, interval, failedFetches = []) {
+    const swallow = (name, fallback) => (e) => {
+        const msg = e?.message || String(e);
+        failedFetches.push({ name, msg });
+        // eslint-disable-next-line no-console
+        console.warn(`[dashboard] ${name} failed:`, msg);
+        return fallback;
+    };
+    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags,
+           byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
+           byInstrumentVolume, byMovement, openTrades, layout] = await Promise.all([
+        api.summary(accountId, interval),
+        api.equity(accountId, undefined, interval),
+        api.calendar(accountId, interval),
+        api.byDow(accountId, interval).catch(swallow('byDow', [])),
+        api.byHold(accountId, interval).catch(swallow('byHold', [])),
+        api.byHour(accountId, interval).catch(swallow('byHour', [])),
+        api.drawdown(accountId, undefined, interval).catch(swallow('drawdown', null)),
+        api.byPrice(accountId, interval).catch(swallow('byPrice', [])),
+        api.dailySeries(accountId, interval).catch(swallow('dailySeries', [])),
+        api.byTag(accountId, interval).catch(swallow('byTag', [])),
+        api.byMonth(accountId, interval).catch(swallow('byMonth', [])),
+        api.bySymbol(accountId, interval).catch(swallow('bySymbol', [])),
+        api.byDurationCoarse(accountId, interval).catch(swallow('byDurationCoarse', [])),
+        api.byRBucket(accountId, interval).catch(swallow('byRBucket', [])),
+        api.byOpeningGap(accountId, interval).catch(swallow('byOpeningGap', [])),
+        api.byInstrumentVolume(accountId, interval).catch(swallow('byInstrumentVolume', [])),
+        api.byMovement(accountId, interval).catch(swallow('byMovement', [])),
+        api.trades(accountId, { status: 'open', limit: 100 }).catch(swallow('openTrades', [])),
+        loadLayout(),
+    ]);
+    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily, tags, cal,
+                   byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
+                   byInstrumentVolume, byMovement, openTrades };
+    return { data, layout };
+}
 
 function getInterval() {
     const v = Number(localStorage.getItem(INTERVAL_KEY));
@@ -609,7 +654,7 @@ const WIDGETS = [
     { id: 'open_trades', titleKey: 'view.dashboard.tv.open_trades', spans2: true,
         html: (d) => openTradesWidget(d.openTrades) },
 ];
-const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
+export const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
 const DEFAULT_LAYOUT = WIDGETS.map(w => w.id);
 
 function renderLayoutPanels(layout, data) {
@@ -619,6 +664,7 @@ function renderLayoutPanels(layout, data) {
         .map(w => `
             <div class="chart-panel${w.spans2 ? ' dash-tv-span-2' : ''}" data-widget-id="${w.id}">
                 <span class="dash-tv-drag-handle" title="drag to reorder" data-drag-handle>⠿</span>
+                <span class="dash-tv-pin-btn" title="pin to a saved board" data-pin-widget="${w.id}">📌</span>
                 <span class="dash-tv-del-btn" title="remove from layout" data-del-widget="${w.id}">✕</span>
                 <h2 data-i18n="${w.titleKey}">${esc(t(w.titleKey))}</h2>
                 ${w.html(data)}
@@ -648,12 +694,40 @@ function attachLayoutHandlers(mount, layout, _data, persistFn) {
     grid.querySelectorAll('[data-del-widget]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const id = btn.dataset.delWidget;
             const panel = btn.closest('.chart-panel[data-widget-id]');
             if (panel) panel.remove();
             const next = [...grid.querySelectorAll('.chart-panel[data-widget-id]')]
                 .map(el => el.dataset.widgetId);
             persistFn(next).catch((err) => console.warn('layout persist failed', err));
+        });
+    });
+
+    // Pin button — adds this graph widget as a tile on the user's active
+    // saved board (see views/dashboards.js). The graph keeps rendering
+    // here too; pin is additive, not a move.
+    grid.querySelectorAll('[data-pin-widget]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.pinWidget;
+            const widget = WIDGETS_BY_ID.get(id);
+            if (!widget) return;
+            let s = dashStore.loadState();
+            const active = dashStore.getActiveDashboard(s);
+            if (!active) {
+                showToast(t('toast.no_active_dashboard'), { level: 'warning' });
+                return;
+            }
+            s = dashStore.addGraphTile(s, active.id, id);
+            dashStore.saveState(s);
+            btn.textContent = '✓';
+            setTimeout(() => { btn.textContent = '📌'; }, 1200);
+            showToast(
+                t('toast.graph_pinned', {
+                    graph: t(widget.titleKey),
+                    dashboard: active.name || active.id,
+                }),
+                { level: 'success' });
+            window.dispatchEvent(new CustomEvent('tv:dashboards-changed'));
         });
     });
 }
@@ -702,45 +776,9 @@ export async function renderDashboard(mount, state) {
         return;
     }
 
-    // Track which optional endpoints fail so the banner can name them.
-    // Each .catch() falls back so the dashboard still renders for the
-    // healthy endpoints.
     const failedFetches = [];
-    const swallow = (name, fallback) => (e) => {
-        const msg = e?.message || String(e);
-        failedFetches.push({ name, msg });
-        // eslint-disable-next-line no-console
-        console.warn(`[dashboard] ${name} failed:`, msg);
-        return fallback;
-    };
-
-    const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags,
-           byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
-           byInstrumentVolume, byMovement, openTrades, layout] = await Promise.all([
-        api.summary(state.accountId, interval),
-        api.equity(state.accountId, undefined, interval),
-        api.calendar(state.accountId, interval),
-        api.byDow(state.accountId, interval).catch(swallow('byDow', [])),
-        api.byHold(state.accountId, interval).catch(swallow('byHold', [])),
-        api.byHour(state.accountId, interval).catch(swallow('byHour', [])),
-        api.drawdown(state.accountId, undefined, interval).catch(swallow('drawdown', null)),
-        api.byPrice(state.accountId, interval).catch(swallow('byPrice', [])),
-        api.dailySeries(state.accountId, interval).catch(swallow('dailySeries', [])),
-        api.byTag(state.accountId, interval).catch(swallow('byTag', [])),
-        api.byMonth(state.accountId, interval).catch(swallow('byMonth', [])),
-        api.bySymbol(state.accountId, interval).catch(swallow('bySymbol', [])),
-        api.byDurationCoarse(state.accountId, interval).catch(swallow('byDurationCoarse', [])),
-        api.byRBucket(state.accountId, interval).catch(swallow('byRBucket', [])),
-        api.byOpeningGap(state.accountId, interval).catch(swallow('byOpeningGap', [])),
-        api.byInstrumentVolume(state.accountId, interval).catch(swallow('byInstrumentVolume', [])),
-        api.byMovement(state.accountId, interval).catch(swallow('byMovement', [])),
-        api.trades(state.accountId, { status: 'open', limit: 100 }).catch(swallow('openTrades', [])),
-        loadLayout(),
-    ]);
+    const { data, layout } = await loadAnalyticsBundle(state.accountId, interval, failedFetches);
     if (!viewIsCurrent(tok)) return;
-    const data = { equity, summary, dow, hold, hour, byPrice, dd, daily, tags, cal,
-                   byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
-                   byInstrumentVolume, byMovement, openTrades };
 
     mount.innerHTML = `
         <div class="dash-tv-header">
@@ -765,7 +803,7 @@ export async function renderDashboard(mount, state) {
         </div>
         <div class="dash-tv-range">${esc(rangeLabel(interval))}</div>
         ${failedFetches.length > 0 ? `<div class="dash-tv-banner warn" role="alert">${esc(t('view.dashboard.banner.partial_data', { names: failedFetches.map(f => f.name).join(', ') }))}</div>` : ''}
-        <div class="dash-tv-day-strip">${dayStrip(cal)}</div>
+        <div class="dash-tv-day-strip">${dayStrip(data.cal)}</div>
 
         <div class="dash-tv-grid" id="dash-tv-grid">
             ${renderLayoutPanels(layout, data)}

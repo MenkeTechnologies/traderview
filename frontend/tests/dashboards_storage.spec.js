@@ -179,6 +179,49 @@ test('addTile stores per-tile config object', () => {
     expect(s.dashboards.main.tiles[0].config).toEqual({ period: 14 });
 });
 
+test('addTile tags new tiles as kind=view for the discriminated union', () => {
+    const s = store.addTile(store.defaultState(), 'main', 'vpin');
+    // Pins the contract the graph/view dispatch in dashboards.js depends
+    // on — if a future refactor drops the `kind` field, graph tiles will
+    // start rendering through the launcher view path and silently break.
+    expect(s.dashboards.main.tiles[0].kind).toBe('view');
+    expect(s.dashboards.main.tiles[0].viewId).toBe('vpin');
+});
+
+test('addGraphTile appends a graph-kind tile with graphId, not viewId', () => {
+    const s = store.addGraphTile(store.defaultState(), 'main', 'cumulative_pnl');
+    expect(s.dashboards.main.tiles).toHaveLength(1);
+    expect(s.dashboards.main.tiles[0].kind).toBe('graph');
+    expect(s.dashboards.main.tiles[0].graphId).toBe('cumulative_pnl');
+    expect(s.dashboards.main.tiles[0].viewId).toBeUndefined();
+});
+
+test('addGraphTile no-ops on missing dashboard or empty graphId', () => {
+    const s = store.defaultState();
+    expect(store.addGraphTile(s, 'no-such', 'cumulative_pnl')).toBe(s);
+    expect(store.addGraphTile(s, 'main', '')).toBe(s);
+});
+
+test('migrate accepts both legacy view tiles and graph tiles', () => {
+    const raw = {
+        version: store.SCHEMA_VERSION,
+        active: 'm',
+        dashboards: {
+            m: { id: 'm', name: 'M', tiles: [
+                { id: 't1', viewId: 'webull' },                       // legacy view
+                { id: 't2', kind: 'view', viewId: 'mlp-k1' },         // explicit view
+                { id: 't3', kind: 'graph', graphId: 'cumulative_pnl' }, // graph
+                { id: 't4', kind: 'graph' },                          // missing graphId — dropped
+            ] },
+        },
+    };
+    const m = store.migrate(raw);
+    expect(m.dashboards.m.tiles).toHaveLength(3);
+    expect(m.dashboards.m.tiles[0].viewId).toBe('webull');
+    expect(m.dashboards.m.tiles[1].viewId).toBe('mlp-k1');
+    expect(m.dashboards.m.tiles[2].graphId).toBe('cumulative_pnl');
+});
+
 test('removeTile removes by id', () => {
     let s = store.addTile(store.defaultState(), 'main', 'vpin');
     const tid = s.dashboards.main.tiles[0].id;

@@ -16,6 +16,7 @@ import { TILES } from './launcher.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
+import { WIDGETS_BY_ID, loadAnalyticsBundle } from './dashboard.js';
 
 // Re-export so the rest of the app can mount the same renderers in
 // other contexts later (e.g., browser extensions, popups).
@@ -387,30 +388,47 @@ function renderPicker() {
 function wirePicker(activeDashboard) {
     const grid = document.getElementById('db-pick-grid');
     const search = document.getElementById('db-pick-search');
+    // Build the graph-widget catalog once: every entry from the analytics
+    // dashboard's WIDGETS_BY_ID, shaped so the same render path handles it
+    // alongside the view tiles. Glyph 📊 distinguishes them in the picker.
+    const GRAPH_ITEMS = [...WIDGETS_BY_ID.values()].map(w => ({
+        kind: 'graph',
+        id: w.id,
+        label: t(w.titleKey) || w.id,
+        glyph: '📊',
+        desc: '',
+    }));
     const renderGrid = (q) => {
         // Resolve label/desc through the i18n catalog so filter + display
         // both follow the active locale. Falls back to the TILES literal
         // when a key is absent.
         const tr = (key, fallback) => { const v = t(key); return (v && v !== key) ? v : fallback; };
-        const filtered = TILES.filter(([id, label, , desc]) => {
+        const viewItems = TILES.map(([id, label, glyph, desc]) => ({
+            kind: 'view',
+            id,
+            label: tr(`tile.${id}.label`, label),
+            glyph: glyph || '·',
+            desc:  tr(`tile.${id}.desc`,  desc || ''),
+        }));
+        const all = [...GRAPH_ITEMS, ...viewItems];
+        const filtered = all.filter(item => {
             if (!q) return true;
             const needle = q.toLowerCase();
-            const trLabel = tr(`tile.${id}.label`, label);
-            const trDesc  = tr(`tile.${id}.desc`,  desc || '');
-            return trLabel.toLowerCase().includes(needle) || trDesc.toLowerCase().includes(needle);
+            return item.label.toLowerCase().includes(needle)
+                || (item.desc || '').toLowerCase().includes(needle);
         });
-        grid.innerHTML = filtered.map(([id, label, glyph, desc]) => {
-            const trLabel = tr(`tile.${id}.label`, label);
-            const trDesc  = tr(`tile.${id}.desc`,  desc || '');
-            return `<button class="db-pick-tile" data-add="${esc(id)}" type="button"
-                    title="${esc(trDesc)}">
-                <span class="db-pick-glyph">${esc(glyph || '·')}</span>
-                <span class="db-pick-label">${esc(trLabel)}</span>
-            </button>`;
-        }).join('') || `<div class="muted" data-i18n="view.dashboards.empty.no_views_match">No views match the filter.</div>`;
+        grid.innerHTML = filtered.map(item =>
+            `<button class="db-pick-tile" data-kind="${item.kind}" data-add="${esc(item.id)}" type="button"
+                    title="${esc(item.desc)}">
+                <span class="db-pick-glyph">${esc(item.glyph)}</span>
+                <span class="db-pick-label">${esc(item.label)}</span>
+            </button>`
+        ).join('') || `<div class="muted" data-i18n="view.dashboards.empty.no_views_match">No views match the filter.</div>`;
         grid.querySelectorAll('button[data-add]').forEach(btn => {
             btn.addEventListener('click', async () => {
-                state = store.addTile(state, activeDashboard.id, btn.dataset.add);
+                state = btn.dataset.kind === 'graph'
+                    ? store.addGraphTile(state, activeDashboard.id, btn.dataset.add)
+                    : store.addTile(state, activeDashboard.id, btn.dataset.add);
                 persist();
                 renderSidebar();
                 await renderActive();
@@ -431,11 +449,20 @@ async function renderTiles(dashboard) {
         editMode ? `<div class="db-dropzone" data-drop-index="${idx}"></div>` : '';
     let html = dropZone(0);
     for (let idx = 0; idx < dashboard.tiles.length; idx++) {
-        const t = dashboard.tiles[idx];
-        const meta = TILE_INDEX.get(t.viewId) || { label: t.viewId, glyph: '·' };
+        const tile = dashboard.tiles[idx];
+        // Graph tiles read meta from the analytics dashboard's WIDGETS
+        // table; view tiles read from the launcher's TILES catalog.
+        let meta;
+        if (tile.kind === 'graph') {
+            const w = WIDGETS_BY_ID.get(tile.graphId);
+            const labelVal = w ? t(w.titleKey) : tile.graphId;
+            meta = { label: labelVal, glyph: '📊' };
+        } else {
+            meta = TILE_INDEX.get(tile.viewId) || { label: tile.viewId, glyph: '·' };
+        }
         html += `
             <div class="db-tile ${editMode ? 'db-tile-draggable' : ''}"
-                 data-tile-id="${esc(t.id)}"
+                 data-tile-id="${esc(tile.id)}"
                  ${editMode ? `draggable="true"` : ''}>
                 <div class="db-tile-head">
                     <span class="db-tile-glyph">${esc(meta.glyph)}</span>
@@ -443,13 +470,13 @@ async function renderTiles(dashboard) {
                     ${editMode ? `
                         <span class="db-tile-controls">
                             <span class="db-tile-drag" data-i18n-title="view.dashboards.tip.drag" title="Drag to reorder">⋮⋮</span>
-                            <button class="db-tile-btn" data-move="up" data-tile="${esc(t.id)}"   ${idx === 0 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_up" title="Move up">▲</button>
-                            <button class="db-tile-btn" data-move="down" data-tile="${esc(t.id)}" ${idx === dashboard.tiles.length - 1 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_down" title="Move down">▼</button>
-                            <button class="db-tile-btn db-tile-remove" data-remove="${esc(t.id)}" data-i18n-title="view.dashboards.tip.remove_tile" title="Remove tile">×</button>
+                            <button class="db-tile-btn" data-move="up" data-tile="${esc(tile.id)}"   ${idx === 0 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_up" title="Move up">▲</button>
+                            <button class="db-tile-btn" data-move="down" data-tile="${esc(tile.id)}" ${idx === dashboard.tiles.length - 1 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_down" title="Move down">▼</button>
+                            <button class="db-tile-btn db-tile-remove" data-remove="${esc(tile.id)}" data-i18n-title="view.dashboards.tip.remove_tile" title="Remove tile">×</button>
                         </span>
                     ` : ''}
                 </div>
-                <div class="db-tile-body" id="db-tile-body-${esc(t.id)}"></div>
+                <div class="db-tile-body" id="db-tile-body-${esc(tile.id)}"></div>
             </div>
         `;
         html += dropZone(idx + 1);
@@ -475,12 +502,51 @@ async function renderTiles(dashboard) {
         wireDragAndDrop(dashboard);
     }
 
-    // Mount each view into its tile body. Failures in one tile don't
-    // block others — render is wrapped so a broken view shows an inline
-    // error rather than blanking the whole dashboard.
+    // If any graph tile is present, fetch the analytics bundle ONCE and
+    // reuse the same `data` for every widget render — same as the
+    // analytics dashboard does.
+    const hasGraph = dashboard.tiles.some(t => t.kind === 'graph');
+    let analyticsBundle = null;
+    if (hasGraph) {
+        try {
+            // The active account id lives in the app's state but we render
+            // tiles in isolation; pull from the global. Falls back to
+            // undefined which the API treats as "all accounts".
+            const appState = (await import('../app.js')).state || {};
+            analyticsBundle = await loadAnalyticsBundle(appState.accountId, 90);
+        } catch (e) {
+            console.warn('analytics bundle load failed', e);
+        }
+    }
+
+    // Mount each tile into its body. Failures in one tile don't block
+    // others — render is wrapped so a broken tile shows an inline error
+    // rather than blanking the whole dashboard.
     for (const tile of dashboard.tiles) {
         const body = document.getElementById(`db-tile-body-${tile.id}`);
         if (!body) continue;
+
+        if (tile.kind === 'graph') {
+            const widget = WIDGETS_BY_ID.get(tile.graphId);
+            if (!widget) {
+                body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.not_found', { view: tile.graphId }))}</div>`;
+                continue;
+            }
+            if (!analyticsBundle) {
+                body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.render_failed', { err: 'analytics data unavailable' }))}</div>`;
+                continue;
+            }
+            try {
+                body.innerHTML = widget.html(analyticsBundle.data);
+                if (typeof widget.mount === 'function') {
+                    widget.mount(analyticsBundle.data, body);
+                }
+            } catch (e) {
+                body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.render_failed', { err: String(e.message || e) }))}</div>`;
+            }
+            continue;
+        }
+
         const fn = renderers[tile.viewId];
         if (!fn) {
             body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.not_found', { view: tile.viewId }))}</div>`;

@@ -7,9 +7,16 @@ import { t } from './i18n.js';
 //   version: 1,
 //   active: <dashboardId>,
 //   dashboards: {
-//     <dashboardId>: { id, name, tiles: [{ id, viewId, config }] }
+//     <dashboardId>: { id, name, tiles: [Tile, ...] }
 //   }
 // }
+//
+// Tile (two kinds — discriminated by `kind`, defaults to "view" so legacy
+// tiles written before graph-pinning landed continue working):
+//   { id, kind: "view",  viewId,  config }   // mounts a launcher view by id
+//   { id, kind: "graph", graphId, config }   // mounts a `dashboard.js`
+//                                            // WIDGETS entry by id (e.g.
+//                                            // "cumulative_pnl", "perf_dow")
 //
 // All mutations return a NEW state object (no in-place mutation) so the
 // caller can decide when to persist. Storage I/O is wrapped in try/catch
@@ -41,12 +48,20 @@ export function migrate(raw) {
     for (const [id, d] of Object.entries(raw.dashboards)) {
         if (!d || typeof d !== 'object' || typeof d.id !== 'string') continue;
         if (typeof d.name !== 'string' || !d.name.trim()) continue;
-        const tiles = Array.isArray(d.tiles) ? d.tiles.filter(t =>
-            t && typeof t.id === 'string' && typeof t.viewId === 'string'
-        ).map(t => ({
-            id: t.id, viewId: t.viewId,
-            config: (t.config && typeof t.config === 'object') ? t.config : {},
-        })) : [];
+        const tiles = Array.isArray(d.tiles) ? d.tiles.filter(t => {
+            if (!t || typeof t.id !== 'string') return false;
+            // Legacy: no `kind` + viewId = view tile.
+            if (typeof t.viewId === 'string') return true;
+            // Graph tile.
+            if (t.kind === 'graph' && typeof t.graphId === 'string') return true;
+            return false;
+        }).map(t => {
+            const config = (t.config && typeof t.config === 'object') ? t.config : {};
+            if (t.kind === 'graph') {
+                return { id: t.id, kind: 'graph', graphId: t.graphId, config };
+            }
+            return { id: t.id, kind: 'view', viewId: t.viewId, config };
+        }) : [];
         dashboards[id] = { id: d.id, name: d.name, tiles };
     }
     if (Object.keys(dashboards).length === 0) return defaultState();
@@ -170,11 +185,11 @@ export function duplicateDashboard(state, id) {
     if (!d) return state;
     const existing = new Set(Object.keys(state.dashboards));
     const slug = slugifyName(t('common.duplicate.slug', { name: d.name }), existing);
-    const tiles = d.tiles.map(t => ({
-        id: newTileId(new Set()),
-        viewId: t.viewId,
-        config: { ...(t.config || {}) },
-    }));
+    const tiles = d.tiles.map(t => {
+        const base = { id: newTileId(new Set()), config: { ...(t.config || {}) } };
+        if (t.kind === 'graph') return { ...base, kind: 'graph', graphId: t.graphId };
+        return { ...base, kind: 'view', viewId: t.viewId };
+    });
     return {
         ...state,
         active: slug,
@@ -211,7 +226,27 @@ export function addTile(state, dashboardId, viewId, config = {}) {
     if (!viewId || typeof viewId !== 'string') return state;
     const existing = new Set(d.tiles.map(t => t.id));
     const id = newTileId(existing);
-    const tile = { id, viewId, config: { ...config } };
+    const tile = { id, kind: 'view', viewId, config: { ...config } };
+    return {
+        ...state,
+        dashboards: {
+            ...state.dashboards,
+            [dashboardId]: { ...d, tiles: [...d.tiles, tile] },
+        },
+    };
+}
+
+// Pin one of the analytics-dashboard graph widgets (e.g. "cumulative_pnl",
+// "perf_dow") onto a saved board. The `graphId` resolves against
+// `views/dashboard.js`'s `WIDGETS_BY_ID` at render time, so adding a
+// widget there auto-makes it pinnable here without any change to storage.
+export function addGraphTile(state, dashboardId, graphId, config = {}) {
+    const d = state.dashboards[dashboardId];
+    if (!d) return state;
+    if (!graphId || typeof graphId !== 'string') return state;
+    const existing = new Set(d.tiles.map(t => t.id));
+    const id = newTileId(existing);
+    const tile = { id, kind: 'graph', graphId, config: { ...config } };
     return {
         ...state,
         dashboards: {

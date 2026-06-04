@@ -310,7 +310,7 @@ table.open-trades a:hover { text-decoration:underline }
     min-height:20px;
 }
 .trello-ghost { transition:none !important }
-.dash-tv-drag-handle, .dash-tv-del-btn {
+.dash-tv-drag-handle, .dash-tv-del-btn, .dash-tv-pin-btn {
     position:absolute; top:6px; width:18px; height:18px;
     color:var(--text-muted); cursor:pointer; opacity:0.45;
     transition:opacity 120ms ease, color 120ms ease;
@@ -318,10 +318,13 @@ table.open-trades a:hover { text-decoration:underline }
     font-size:13px; user-select:none;
 }
 .dash-tv-drag-handle { left:6px; cursor:grab; font-size:15px }
+.dash-tv-pin-btn     { right:28px }
 .dash-tv-del-btn     { right:6px }
 .dash-tv-grid .chart-panel:hover .dash-tv-drag-handle,
+.dash-tv-grid .chart-panel:hover .dash-tv-pin-btn,
 .dash-tv-grid .chart-panel:hover .dash-tv-del-btn { opacity:1 }
 .dash-tv-drag-handle:hover { color:var(--cyan) }
+.dash-tv-pin-btn:hover     { color:var(--cyan) }
 .dash-tv-del-btn:hover     { color:#ff3860 }
 
 .dash-tv-layout-controls { display:inline-flex; gap:8px; align-items:center }
