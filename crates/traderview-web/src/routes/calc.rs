@@ -263,6 +263,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-45l",           post(section_45l_route))
         .route("/calc/section-45w",           post(section_45w_route))
+        .route("/calc/section-45x",           post(section_45x_route))
         .route("/calc/section-45y",           post(section_45y_route))
         .route("/calc/section-48e",           post(section_48e_route))
         .route("/calc/section-451b",          post(section_451b_route))
@@ -10311,6 +10312,13 @@ async fn section_45w_route(
     Json(b): Json<traderview_expense::section_45w::Section45WInput>,
 ) -> Result<Json<traderview_expense::section_45w::Section45WResult>, ApiError> {
     Ok(Json(traderview_expense::section_45w::check(&b)))
+}
+
+async fn section_45x_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_45x::Section45XInput>,
+) -> Result<Json<traderview_expense::section_45x::Section45XResult>, ApiError> {
+    Ok(Json(traderview_expense::section_45x::check(&b)))
 }
 
 async fn section_45y_route(
