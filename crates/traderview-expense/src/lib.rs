@@ -549,6 +549,7 @@ pub mod section_446;
 pub mod section_45l;
 pub mod section_45w;
 pub mod section_45y;
+pub mod section_48e;
 pub mod section_448;
 pub mod section_451b;
 pub mod section_451c;
