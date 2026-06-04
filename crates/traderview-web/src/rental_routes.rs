@@ -794,6 +794,11 @@ use traderview_expense::rental_wisconsin_chapter_704_atcp_134::{
     WiLandlordTenantInput as RentalWisconsinChapter704Atcp134Input,
     WiLandlordTenantResult as RentalWisconsinChapter704Atcp134Result,
 };
+use traderview_expense::rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40::{
+    check as check_rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40,
+    ScLandlordTenantInput as RentalSouthCarolinaResidentialLandlordTenantActScCode2740Input,
+    ScLandlordTenantResult as RentalSouthCarolinaResidentialLandlordTenantActScCode2740Result,
+};
 use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
     check as check_rental_vehicle_towing_notice_sign_requirements,
     RentalVehicleTowingNoticeSignRequirementsInput,
@@ -1877,6 +1882,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-window-blind-cord-safety", axum::routing::post(rental_window_blind_cord_safety_route))
         .route("/rental-window-guard-installation", axum::routing::post(rental_window_guard_installation_route))
         .route("/rental-wisconsin-chapter-704-atcp-134", axum::routing::post(rental_wisconsin_chapter_704_atcp_134_route))
+        .route("/rental-south-carolina-residential-landlord-tenant-act-sc-code-27-40", axum::routing::post(rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
@@ -9649,6 +9655,14 @@ async fn rental_wisconsin_chapter_704_atcp_134_route(
     Json(b): Json<RentalWisconsinChapter704Atcp134Input>,
 ) -> Result<Json<RentalWisconsinChapter704Atcp134Result>, ApiError> {
     Ok(Json(check_rental_wisconsin_chapter_704_atcp_134(&b)))
+}
+
+async fn rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalSouthCarolinaResidentialLandlordTenantActScCode2740Input>,
+) -> Result<Json<RentalSouthCarolinaResidentialLandlordTenantActScCode2740Result>, ApiError> {
+    Ok(Json(check_rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40(&b)))
 }
 
 async fn rental_water_submetering_disclosure_route(

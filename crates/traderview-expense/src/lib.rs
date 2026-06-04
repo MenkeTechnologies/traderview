@@ -294,6 +294,7 @@ pub mod rental_smoke_free_housing_disclosure;
 pub mod rental_soft_story_seismic_retrofit;
 pub mod rental_solar_panel_disclosure;
 pub mod rental_source_of_income_discrimination;
+pub mod rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40;
 pub mod rental_storage_unit_lease_disclosure;
 pub mod rental_swimming_pool_drain_safety;
 pub mod rental_tenant_abandoned_personal_property;
