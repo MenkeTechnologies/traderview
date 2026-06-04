@@ -145,6 +145,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-6402",          post(section_6402_route))
         .route("/calc/section-6404",          post(section_6404_route))
         .route("/calc/section-6411",          post(section_6411_route))
+        .route("/calc/section-6417",          post(section_6417_route))
         .route("/calc/section-6418",          post(section_6418_route))
         .route("/calc/section-6425",          post(section_6425_route))
         .route("/calc/section-7201",          post(section_7201_route))
@@ -7672,6 +7673,13 @@ async fn section_6418_route(
     Json(b): Json<traderview_expense::section_6418::Section6418Input>,
 ) -> Result<Json<traderview_expense::section_6418::Section6418Result>, ApiError> {
     Ok(Json(traderview_expense::section_6418::compute(&b)))
+}
+
+async fn section_6417_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_6417::Section6417Input>,
+) -> Result<Json<traderview_expense::section_6417::Section6417Result>, ApiError> {
+    Ok(Json(traderview_expense::section_6417::compute(&b)))
 }
 
 // ── §6531 periods of limitation on criminal prosecutions ────────────
