@@ -309,6 +309,7 @@ pub mod rental_vehicle_towing_notice_sign_requirements;
 pub mod rental_video_surveillance_retention;
 pub mod rental_virginia_vrlta_va_code_55_1_1200;
 pub mod rental_washington_hb_1217_rent_stabilization;
+pub mod rental_washington_rlta_rcw_59_18;
 pub mod rental_waste_recycling_collection_mandate;
 pub mod rental_water_submetering_disclosure;
 pub mod rental_well_water_disclosure;

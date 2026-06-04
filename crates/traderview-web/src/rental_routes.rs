@@ -1209,6 +1209,11 @@ use traderview_expense::rental_washington_hb_1217_rent_stabilization::{
     RentalWashingtonHb1217RentStabilizationInput,
     RentalWashingtonHb1217RentStabilizationResult,
 };
+use traderview_expense::rental_washington_rlta_rcw_59_18::{
+    check as check_rental_washington_rlta_rcw_59_18,
+    WaRltaInput as RentalWashingtonRltaRcw5918Input,
+    WaRltaResult as RentalWashingtonRltaRcw5918Result,
+};
 use traderview_expense::rental_virginia_vrlta_va_code_55_1_1200::{
     check as check_rental_virginia_vrlta_va_code_55_1_1200,
     RentalVirginiaVrltaVaCode55_1_1200Input,
@@ -1808,6 +1813,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
         .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
         .route("/rental-washington-hb-1217-rent-stabilization", axum::routing::post(rental_washington_hb_1217_rent_stabilization_route))
+        .route("/rental-washington-rlta-rcw-59-18", axum::routing::post(rental_washington_rlta_rcw_59_18_route))
         .route("/rental-virginia-vrlta-va-code-55-1-1200", axum::routing::post(rental_virginia_vrlta_va_code_55_1_1200_route))
         .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
         .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
@@ -14797,6 +14803,14 @@ async fn rental_washington_hb_1217_rent_stabilization_route(
     Json(b): Json<RentalWashingtonHb1217RentStabilizationInput>,
 ) -> Result<Json<RentalWashingtonHb1217RentStabilizationResult>, ApiError> {
     Ok(Json(check_rental_washington_hb_1217_rent_stabilization(&b)))
+}
+
+async fn rental_washington_rlta_rcw_59_18_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWashingtonRltaRcw5918Input>,
+) -> Result<Json<RentalWashingtonRltaRcw5918Result>, ApiError> {
+    Ok(Json(check_rental_washington_rlta_rcw_59_18(&b)))
 }
 
 // ---------------------------------------------------------------------------
