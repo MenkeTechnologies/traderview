@@ -1119,6 +1119,11 @@ use traderview_expense::rental_minneapolis_renter_protections_ordinance_2020::{
     RentalMinneapolisRenterProtectionsOrdinance2020Input,
     RentalMinneapolisRenterProtectionsOrdinance2020Result,
 };
+use traderview_expense::rental_minnesota_landlord_tenant_act_minn_stat_504b::{
+    check as check_rental_minnesota_landlord_tenant_act_minn_stat_504b,
+    MnLandlordTenantInput as RentalMinnesotaLandlordTenantActMinnStat504bInput,
+    MnLandlordTenantResult as RentalMinnesotaLandlordTenantActMinnStat504bResult,
+};
 use traderview_expense::rental_mold_disclosure_remediation::{
     check as check_rental_mold_disclosure_remediation,
     RentalMoldDisclosureRemediationInput,
@@ -1805,6 +1810,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-texas-property-code-chapter-92-residential-tenancies", axum::routing::post(rental_texas_property_code_chapter_92_residential_tenancies_route))
         .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
         .route("/rental-minneapolis-renter-protections-ordinance-2020", axum::routing::post(rental_minneapolis_renter_protections_ordinance_2020_route))
+        .route("/rental-minnesota-landlord-tenant-act-minn-stat-504b", axum::routing::post(rental_minnesota_landlord_tenant_act_minn_stat_504b_route))
         .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
         .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
         .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
@@ -14099,6 +14105,14 @@ async fn rental_minneapolis_renter_protections_ordinance_2020_route(
     Json(b): Json<RentalMinneapolisRenterProtectionsOrdinance2020Input>,
 ) -> Result<Json<RentalMinneapolisRenterProtectionsOrdinance2020Result>, ApiError> {
     Ok(Json(check_rental_minneapolis_renter_protections_ordinance_2020(&b)))
+}
+
+async fn rental_minnesota_landlord_tenant_act_minn_stat_504b_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMinnesotaLandlordTenantActMinnStat504bInput>,
+) -> Result<Json<RentalMinnesotaLandlordTenantActMinnStat504bResult>, ApiError> {
+    Ok(Json(check_rental_minnesota_landlord_tenant_act_minn_stat_504b(&b)))
 }
 
 // ---------------------------------------------------------------------------
