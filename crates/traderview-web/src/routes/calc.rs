@@ -373,6 +373,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-408-d3",        post(section_408_d3_route))
         .route("/calc/section-408m",          post(section_408m_route))
         .route("/calc/section-41",            post(section_41_route))
+        .route("/calc/section-42",            post(section_42_route))
         .route("/calc/section-408a-d3",       post(section_408A_d3_route))
         .route("/calc/section-174",           post(section_174_route))
         .route("/calc/section-179",           post(section_179_route))
@@ -3811,6 +3812,13 @@ async fn section_41_route(
         ));
     }
     Ok(Json(traderview_expense::section_41::compute(&b)))
+}
+
+async fn section_42_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_42::Section42Input>,
+) -> Result<Json<traderview_expense::section_42::Section42Result>, ApiError> {
+    Ok(Json(traderview_expense::section_42::check(&b)))
 }
 
 // ── §408(d)(3) IRA 60-day rollover rules ─────────────────────────────
