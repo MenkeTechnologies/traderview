@@ -72,10 +72,30 @@ export async function renderCharts(mount, _state, symbol = '') {
         </p>
     `;
 
+    // Load global chart preset (indicator IDs + interval + lookback days)
+    // from user settings so re-opening #charts restores the user's setup.
+    // Falls back to defaults on first run / fetch failure.
+    let cachedSettings = null;
+    let preset = {};
+    try {
+        cachedSettings = await api.settings();
+        if (!viewIsCurrent(tok)) return;
+        preset = (cachedSettings && cachedSettings.chart_preset) || {};
+    } catch (_) { /* defaults kick in below */ }
+
+    const lookbackDays = Number.isFinite(Number(preset.lookback_days))
+        ? Math.max(1, Math.min(3650, Number(preset.lookback_days)))
+        : 90;
     const to = new Date();
-    const from = new Date(to.getTime() - 90 * 86400_000);
+    const from = new Date(to.getTime() - lookbackDays * 86400_000);
     mount.querySelector('#from').value = from.toISOString().slice(0, 10);
     mount.querySelector('#to').value = to.toISOString().slice(0, 10);
+    if (typeof preset.interval === 'string') {
+        const ivSel = mount.querySelector('#iv');
+        if (ivSel && [...ivSel.options].some(o => o.value === preset.interval)) {
+            ivSel.value = preset.interval;
+        }
+    }
 
     // State for the drawing layer.
     const ds = {
@@ -111,17 +131,76 @@ export async function renderCharts(mount, _state, symbol = '') {
 
     mount.querySelector('#drawLayer').addEventListener('click', (e) => onDrawClick(e, ds));
 
-    // Populate indicator selector from registry.
+    // Populate indicator selector from registry. Prefer the user's saved
+    // preset selection over each indicator's `is_default` flag; fall back
+    // to `is_default` only when the preset has no `indicator_ids` saved.
     let allIndicators = [];
+    const savedIds = Array.isArray(preset.indicator_ids)
+        ? new Set(preset.indicator_ids.map(String))
+        : null;
     try {
         allIndicators = await api.listCustomIndicators();
         if (!viewIsCurrent(tok)) return;
         const sel = mount.querySelector('#indicatorSel');
-        if (sel) sel.innerHTML = allIndicators.map(i =>
-            `<option value="${i.id}" ${i.is_default ? 'selected' : ''}>${esc(i.name)}</option>`
-        ).join('');
+        if (sel) sel.innerHTML = allIndicators.map(i => {
+            const selected = savedIds
+                ? savedIds.has(String(i.id))
+                : i.is_default;
+            return `<option value="${i.id}" ${selected ? 'selected' : ''}>${esc(i.name)}</option>`;
+        }).join('');
     } catch (_) { /* ignore */ }
     ds.indicatorSeries = [];
+
+    // Persist the user's choices back to user_settings.chart_preset
+    // whenever they change anything. Debounced so dragging the date
+    // picker doesn't fire a save per keystroke.
+    let saveTimer = null;
+    const savePresetSoon = () => {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(async () => {
+            saveTimer = null;
+            if (!viewIsCurrent(tok)) return;
+            try {
+                if (!cachedSettings) cachedSettings = await api.settings();
+                if (!viewIsCurrent(tok)) return;
+                const sel = mount.querySelector('#indicatorSel');
+                const ids = sel ? [...sel.selectedOptions].map(o => o.value) : [];
+                const ivEl = mount.querySelector('#iv');
+                const fromEl = mount.querySelector('#from');
+                const toEl = mount.querySelector('#to');
+                let lookback = preset.lookback_days || lookbackDays;
+                if (fromEl && toEl && fromEl.value && toEl.value) {
+                    const f = new Date(fromEl.value).getTime();
+                    const t2 = new Date(toEl.value).getTime();
+                    if (Number.isFinite(f) && Number.isFinite(t2) && t2 > f) {
+                        lookback = Math.max(1, Math.round((t2 - f) / 86400_000));
+                    }
+                }
+                const next = {
+                    ...cachedSettings,
+                    chart_preset: {
+                        ...((cachedSettings && cachedSettings.chart_preset) || {}),
+                        indicator_ids: ids,
+                        interval: ivEl ? ivEl.value : '1d',
+                        lookback_days: lookback,
+                        zoom_by_symbol: zoomBySymbol,
+                    },
+                };
+                await api.updateSettings(next);
+                cachedSettings = next;
+            } catch (e) { console.warn('chart preset save failed:', e?.message || e); }
+        }, 400);
+    };
+
+    // Per-symbol zoom map. Restored when reopening the same symbol and
+    // updated whenever the user pans/zooms the chart.
+    const zoomBySymbol = (preset && typeof preset === 'object' && preset.zoom_by_symbol)
+        ? { ...preset.zoom_by_symbol } : {};
+    const saveZoom = (sym, range) => {
+        if (!sym || !Array.isArray(range)) return;
+        zoomBySymbol[sym] = range;
+        savePresetSoon();
+    };
 
     const load = async () => {
         const sym = mount.querySelector('#sym').value.trim().toUpperCase();
@@ -134,7 +213,11 @@ export async function renderCharts(mount, _state, symbol = '') {
             if (!viewIsCurrent(tok)) return;
             const cm = mount.querySelector('#chart-mount');
             if (!cm) return;
-            ds.plot = ohlcChart(cm, resp.bars, [], { height: 480 });
+            ds.plot = ohlcChart(cm, resp.bars, [], {
+                height: 480,
+                initialZoom: zoomBySymbol[sym],
+                onZoomChange: (range) => saveZoom(sym, range),
+            });
             sizeOverlay(ds);
             ds.drawings = await api.listChartDrawings(sym);
             if (!viewIsCurrent(tok)) return;
@@ -148,7 +231,7 @@ export async function renderCharts(mount, _state, symbol = '') {
         }
     };
 
-    mount.querySelector('#load').addEventListener('click', load);
+    mount.querySelector('#load').addEventListener('click', () => { load(); savePresetSoon(); });
     const refreshBtn = mount.querySelector('#charts-refresh-btn');
     if (refreshBtn) refreshBtn.addEventListener('click', () => load());
     mount.querySelector('#indicatorReload').addEventListener('click', async () => {
@@ -157,7 +240,16 @@ export async function renderCharts(mount, _state, symbol = '') {
         await loadIndicators(ds, sym, iv);
         if (!viewIsCurrent(tok)) return;
         drawAll(ds);
+        savePresetSoon();
     });
+    // Auto-save preset on interval or date-range change so the user
+    // doesn't have to hit "Load" for the choice to persist.
+    const ivEl = mount.querySelector('#iv');
+    if (ivEl) ivEl.addEventListener('change', savePresetSoon);
+    const fromEl = mount.querySelector('#from');
+    const toEl = mount.querySelector('#to');
+    if (fromEl) fromEl.addEventListener('change', savePresetSoon);
+    if (toEl) toEl.addEventListener('change', savePresetSoon);
     // Self-cleaning resize listener: once a later navigation bumps the
     // view token, the handler removes itself so multiple charts visits
     // don't accumulate parallel listeners on the window.

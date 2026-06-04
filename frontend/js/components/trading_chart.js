@@ -103,6 +103,19 @@ export function createTradingChart(container, opts = {}) {
         showVolume: opts.volume !== false,
         destroyed: false,
         loadSeq: 0,
+        // Caller-supplied callbacks for chart-grid → preset persistence.
+        // `onIndicatorsChange(ids)` fires whenever the active indicator
+        // set mutates; `onZoomChange(symbol, [from, to])` fires when the
+        // visible time-range moves (pan or zoom). Both default to no-op.
+        onIndicatorsChange: typeof opts.onIndicatorsChange === 'function'
+            ? opts.onIndicatorsChange : () => {},
+        onZoomChange: typeof opts.onZoomChange === 'function'
+            ? opts.onZoomChange : () => {},
+        onIntervalChange: typeof opts.onIntervalChange === 'function'
+            ? opts.onIntervalChange : () => {},
+        // Per-symbol saved zoom range (seconds since epoch). Optional;
+        // when present, the chart restores it after `loadBars()` completes.
+        savedZoomBySymbol: opts.savedZoomBySymbol || {},
     };
 
     const timeframes = (opts.timeframes || TIMEFRAMES).filter(tf => TIMEFRAMES.includes(tf));
@@ -201,7 +214,17 @@ export function createTradingChart(container, opts = {}) {
         candleSeries.setData(toCandleData(state.bars));
         if (state.showVolume) ensureVolumeSeries().setData(toVolumeData(state.bars));
         else if (volumeSeries) volumeSeries.setData([]);
-        chart.timeScale().fitContent();
+        // Restore saved zoom for this symbol if we have one, else fit.
+        const saved = state.savedZoomBySymbol[state.symbol];
+        if (Array.isArray(saved) && saved.length === 2
+            && Number.isFinite(saved[0]) && Number.isFinite(saved[1])
+            && saved[1] > saved[0]) {
+            try {
+                chart.timeScale().setVisibleRange({ from: saved[0], to: saved[1] });
+            } catch (_) { chart.timeScale().fitContent(); }
+        } else {
+            chart.timeScale().fitContent();
+        }
         setStatus('');
         // Re-fetch any active indicators for the new window.
         for (const { def } of [...state.active.values()]) addIndicator(def, true);
@@ -247,6 +270,28 @@ export function createTradingChart(container, opts = {}) {
     function toggleIndicator(def) {
         if (state.active.has(def.id)) removeIndicator(def.id);
         else addIndicator(def);
+        // Notify the parent (chart-grid → preset persistence) that the
+        // active indicator set changed. Sends the resulting list of ids.
+        state.onIndicatorsChange([...state.active.keys()]);
+    }
+
+    // Public method: apply a list of indicator IDs (idempotent). Used by
+    // chart_grid to push the user's saved preset selection down on first
+    // render and after pane rebuilds. IDs not in our known catalog are
+    // ignored.
+    function setIndicators(ids) {
+        if (!Array.isArray(ids)) return;
+        const want = new Set(ids);
+        const have = new Set(state.active.keys());
+        const all = [...OVERLAY_INDICATORS, ...OSCILLATOR_INDICATORS];
+        // Remove any no-longer-wanted.
+        for (const id of have) if (!want.has(id)) removeIndicator(id);
+        // Add any newly-wanted.
+        for (const id of want) {
+            if (have.has(id)) continue;
+            const def = all.find(d => d.id === id);
+            if (def) addIndicator(def);
+        }
     }
 
     function toggleVolume() {
@@ -333,6 +378,7 @@ export function createTradingChart(container, opts = {}) {
         state.interval = iv;
         container.querySelectorAll('.tv-tf-btn').forEach(b => b.classList.toggle('active', b.dataset.tf === iv));
         loadBars();
+        state.onIntervalChange(iv);
     }
 
     function setSymbol(sym) {
@@ -353,7 +399,33 @@ export function createTradingChart(container, opts = {}) {
         container.innerHTML = '';
     }
 
+    // Save the visible range to the parent whenever the user pans/zooms.
+    // LightweightCharts fires `subscribeVisibleTimeRangeChange` on every
+    // frame during a drag, so debounce to once per 350ms — well under
+    // any plausible interaction cadence but still feels responsive.
+    let zoomSaveTimer = null;
+    try {
+        chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
+            if (state.destroyed || !range) return;
+            const from = Number(range.from);
+            const to = Number(range.to);
+            if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return;
+            if (zoomSaveTimer) clearTimeout(zoomSaveTimer);
+            zoomSaveTimer = setTimeout(() => {
+                zoomSaveTimer = null;
+                if (state.destroyed) return;
+                state.onZoomChange(state.symbol, [from, to]);
+            }, 350);
+        });
+    } catch (_) { /* zoom persistence not available on this build of LWC */ }
+
+    // Apply preset indicator selection (from chart_grid → user_settings)
+    // BEFORE the first bar load so it shows up on the initial render.
+    if (Array.isArray(opts.indicatorIds) && opts.indicatorIds.length) {
+        setIndicators(opts.indicatorIds);
+    }
+
     loadBars();
 
-    return { setSymbol, setInterval: setInterval_, destroy, chart };
+    return { setSymbol, setInterval: setInterval_, setIndicators, destroy, chart };
 }

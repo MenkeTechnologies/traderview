@@ -329,16 +329,33 @@ pub async fn poll_all(pool: &PgPool) -> (usize, usize) {
     let whitelist: HashSet<String> = symbols.iter().cloned().collect();
 
     let wsb = poll_wsb(pool, &whitelist).await.unwrap_or_else(|e| {
-        tracing::warn!(error = ?e, "wsb poll failed");
+        log_poll_error("wsb", &e);
         0
     });
     let st = poll_stocktwits(pool, &symbols, &whitelist)
         .await
         .unwrap_or_else(|e| {
-            tracing::warn!(error = ?e, "stocktwits poll failed");
+            log_poll_error("stocktwits", &e);
             0
         });
     (wsb, st)
+}
+
+/// Demote transient connection errors (machine offline, geo-blocked,
+/// firewalled, host unreachable) from WARN to DEBUG so the log stream
+/// doesn't get spammed once per minute when a sentiment endpoint is
+/// unreachable. Real failures (HTTP 4xx/5xx from the server, JSON parse
+/// errors, etc.) stay at WARN because they indicate something we should
+/// look at — schema drift, rate-limit ban, etc.
+fn log_poll_error(source: &str, err: &anyhow::Error) {
+    let is_transient = err.downcast_ref::<reqwest::Error>().is_some_and(|re| {
+        re.is_connect() || re.is_timeout() || re.is_request()
+    });
+    if is_transient {
+        tracing::debug!(error = ?err, source, "sentiment poll skipped (transient network error)");
+    } else {
+        tracing::warn!(error = ?err, source, "sentiment poll failed");
+    }
 }
 
 #[cfg(test)]

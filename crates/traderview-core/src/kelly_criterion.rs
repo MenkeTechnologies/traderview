@@ -29,7 +29,10 @@ pub struct KellyReport {
     pub full_kelly_fraction: f64,
     pub half_kelly: f64,
     pub quarter_kelly: f64,
-    pub expected_growth_rate: f64,
+    /// `None` when the growth rate is undefined — e.g. p = 1 (all wins)
+    /// pushes f_full to 1 and the log term becomes 0 · log(0) → NaN.
+    /// serde_json refuses non-finite floats, so we surface `None` instead.
+    pub expected_growth_rate: Option<f64>,
 }
 
 /// Discrete win/loss Kelly:  f* = (p·b − q) / b.
@@ -47,9 +50,23 @@ pub fn discrete(
     let q = 1.0 - p;
     let b = win_loss_payoff_ratio;
     let f_full = (p * b - q) / b;
-    let expected_growth = if f_full > 0.0 {
-        p * (1.0 + f_full * b).ln() + q * (1.0 - f_full).ln()
-    } else { 0.0 };
+    // Expected geometric growth rate at full Kelly. Two NaN traps to dodge:
+    //   1) p == 1 → f_full == 1 → ln(1 - f_full) = ln(0) = -∞,
+    //      then q * -∞ = 0 * -∞ = NaN in IEEE.
+    //   2) f_full * b < -1 → ln(1 + f_full * b) of a non-positive
+    //      → NaN. Can't happen here while f_full > 0 (guarded), but
+    //      defensive .is_finite() catches future widening of the branch.
+    let expected_growth = if f_full > 0.0 && f_full < 1.0 {
+        let v = p * (1.0 + f_full * b).ln() + q * (1.0 - f_full).ln();
+        v.is_finite().then_some(v)
+    } else if f_full > 0.0 {
+        // Edge case p == 1: log term contributes 0 by convention since
+        // q = 0; the surviving term is p · ln(1 + b) which is finite.
+        let v = p * (1.0 + f_full * b).ln();
+        v.is_finite().then_some(v)
+    } else {
+        Some(0.0)
+    };
     Some(KellyReport {
         full_kelly_fraction: f_full,
         half_kelly: 0.5 * f_full,
@@ -77,7 +94,7 @@ pub fn continuous(
         full_kelly_fraction: f_full,
         half_kelly: 0.5 * f_full,
         quarter_kelly: 0.25 * f_full,
-        expected_growth_rate: expected_growth,
+        expected_growth_rate: expected_growth.is_finite().then_some(expected_growth),
     })
 }
 
@@ -128,7 +145,20 @@ mod tests {
     #[test]
     fn expected_growth_non_negative_under_positive_edge() {
         let r = discrete(0.6, 2.0).unwrap();
-        assert!(r.expected_growth_rate > 0.0);
+        assert!(r.expected_growth_rate.unwrap() > 0.0);
+    }
+
+    #[test]
+    fn all_wins_yields_finite_growth_rate_not_nan() {
+        // Regression: p=1.0 used to compute q * ln(1 - f_full) = 0 * ln(0)
+        // = 0 * -∞ = NaN, which broke JSON serialization. With the fix,
+        // we either get a finite growth rate or `None`.
+        let r = discrete(1.0, 2.0).unwrap();
+        if let Some(g) = r.expected_growth_rate {
+            assert!(g.is_finite(), "p=1 must not produce NaN; got {g}");
+        }
+        let json = serde_json::to_string(&r).expect("must serialize");
+        assert!(json.contains("expected_growth_rate"));
     }
 
     #[test]

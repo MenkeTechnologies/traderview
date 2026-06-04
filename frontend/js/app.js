@@ -2118,7 +2118,18 @@ export async function dispatch() {
     // skip the work that would otherwise reach into the wrong view's DOM.
     bumpViewToken();
     const hash = (window.location.hash || '#launcher').slice(1);
-    const [view, ...rest] = hash.split('/');
+    let [view, ...rest] = hash.split('/');
+    // Popout mode — a route like `#popout/<viewId>/<...rest>` renders the
+    // target view ALONE on the page (no topbar, no account strip, no
+    // launcher chrome) so the user can tear it off into its own
+    // window for multi-monitor work. Strip the `popout/` prefix and
+    // toggle a body class that the stylesheet uses to hide chrome.
+    if (view === 'popout' && rest.length > 0) {
+        document.body.classList.add('popout-mode');
+        view = rest.shift();
+    } else {
+        document.body.classList.remove('popout-mode');
+    }
     // Track recents (pure, localStorage-backed). Best-effort; never blocks
     // the dispatch path. Skipped views (launcher, keyboard-shortcuts, …)
     // are filtered inside push().

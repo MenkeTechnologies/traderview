@@ -78,6 +78,8 @@ pub enum OptionType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum BarInterval {
+    #[serde(rename = "10s")]
+    S10,
     #[serde(rename = "1m")]
     M1,
     #[serde(rename = "5m")]
@@ -95,6 +97,7 @@ pub enum BarInterval {
 impl BarInterval {
     pub fn seconds(self) -> i64 {
         match self {
+            BarInterval::S10 => 10,
             BarInterval::M1 => 60,
             BarInterval::M5 => 300,
             BarInterval::M15 => 900,
@@ -106,6 +109,7 @@ impl BarInterval {
 
     pub fn label(self) -> &'static str {
         match self {
+            BarInterval::S10 => "10s",
             BarInterval::M1 => "1m",
             BarInterval::M5 => "5m",
             BarInterval::M15 => "15m",
@@ -156,6 +160,11 @@ pub struct UserSettings {
     pub theme: String,
     pub starting_cash: Decimal,
     pub dashboard_layout: serde_json::Value,
+    /// Global chart preset (indicator IDs + interval + lookback window).
+    /// Restores the user's last `#charts` setup on every reopen.
+    /// Defaults to `{}` until first save.
+    #[serde(default)]
+    pub chart_preset: serde_json::Value,
     #[serde(default)]
     pub commission_per_share: Decimal,
     #[serde(default)]
@@ -185,6 +194,7 @@ impl Default for UserSettings {
             theme: "cyberpunk".into(),
             starting_cash: Decimal::ZERO,
             dashboard_layout: serde_json::json!({}),
+            chart_preset: serde_json::json!({}),
             commission_per_share: Decimal::ZERO,
             commission_per_contract: Decimal::ZERO,
             auto_flatten: true,

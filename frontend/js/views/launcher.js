@@ -813,11 +813,45 @@ function renderGrid() {
             })();
         });
     });
+    grid.querySelectorAll('.tile-action[data-popout]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.popout;
+            popoutTile(id);
+        });
+    });
     // Re-translate + upgrade tooltips on the freshly-rendered grid so
     // toggle-induced rebuilds (favorite star, recents repaint) carry
     // the same a11y / hover-help surface as the initial dispatch.
     try { applyUiI18n(grid); } catch (_) {}
     try { upgradeTooltips(grid); } catch (_) {}
+}
+
+/// Open a tile in a new window. In Tauri desktop builds, spawns a real
+/// native WebviewWindow so the user can drag it to another monitor; in
+/// browser/web mode falls back to `window.open()`. Each popout window
+/// gets its own label (id + epoch) so multiple pops of the same tile
+/// don't collide. The new window navigates to `#popout/<id>` which the
+/// app.js dispatcher recognizes (strips chrome via `body.popout-mode`).
+function popoutTile(id) {
+    const route = `${location.origin}${location.pathname}#popout/${encodeURIComponent(id)}`;
+    const tauri = window.__TAURI__;
+    if (tauri && tauri.webviewWindow && tauri.webviewWindow.WebviewWindow) {
+        const label = `tile-${id}-${Date.now()}`;
+        try {
+            new tauri.webviewWindow.WebviewWindow(label, {
+                url: `${location.pathname}#popout/${encodeURIComponent(id)}`,
+                title: id,
+                width: 1100,
+                height: 720,
+                focus: true,
+            });
+            return;
+        } catch (e) {
+            console.warn('[popout] tauri create failed, falling back to window.open:', e);
+        }
+    }
+    window.open(route, '_blank', 'width=1100,height=720,menubar=no,toolbar=no,location=no');
 }
 
 // Map of tile view-id → registered shortcut id. When present, the tile
@@ -859,6 +893,9 @@ function renderTile([id, label, glyph, desc, badge]) {
             <span class="tile-action" data-pin="${esc(id)}"
                   data-tip="view.launcher.tile.pin"
                   data-i18n-aria-label="view.launcher.tile.pin">📌</span>
+            <span class="tile-action" data-popout="${esc(id)}"
+                  data-tip="view.launcher.tile.popout"
+                  data-i18n-aria-label="view.launcher.tile.popout">↗</span>
         </span>
     </button>`;
 }

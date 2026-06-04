@@ -20,7 +20,11 @@ pub struct SortinoReport {
     pub mean_return: f64,
     pub mar: f64,
     pub downside_deviation: f64,
-    pub sortino_ratio: f64,
+    /// `None` when undefined — i.e. zero downside deviation with mean > mar
+    /// (mathematically infinite Sortino). Serializes as `null` so consumers
+    /// render it as "—" instead of crashing on `f64::INFINITY` (serde_json
+    /// refuses non-finite floats).
+    pub sortino_ratio: Option<f64>,
     /// Number of below-MAR observations (the "downside count").
     pub downside_obs: usize,
     /// Total observations.
@@ -57,12 +61,15 @@ pub fn compute(returns: &[f64], mar: f64, annualization: f64) -> SortinoReport {
     let ann_sqrt = annualization.max(0.0).sqrt();
     let sortino = if downside_dev == 0.0 {
         if mean > mar {
-            f64::INFINITY
+            // Mathematically +∞, but serde_json refuses non-finite floats.
+            // Emit `None` so the API still serializes cleanly.
+            None
         } else {
-            0.0
+            Some(0.0)
         }
     } else {
-        (mean - mar) / downside_dev * ann_sqrt
+        let v = (mean - mar) / downside_dev * ann_sqrt;
+        if v.is_finite() { Some(v) } else { None }
     };
     SortinoReport {
         mean_return: mean,
@@ -82,7 +89,7 @@ mod tests {
     fn empty_returns_default_with_zero_n() {
         let r = compute(&[], 0.0, 252.0);
         assert_eq!(r.n, 0);
-        assert_eq!(r.sortino_ratio, 0.0);
+        assert_eq!(r.sortino_ratio, None);
     }
 
     #[test]
@@ -90,26 +97,27 @@ mod tests {
         let r = compute(&[1.0], 0.0, 252.0);
         assert_eq!(r.n, 1);
         assert_eq!(
-            r.sortino_ratio, 0.0,
+            r.sortino_ratio, None,
             "need at least 2 obs for a meaningful sortino"
         );
     }
 
     #[test]
-    fn all_positive_returns_infinite_sortino() {
-        // No below-MAR obs → downside dev = 0 AND mean > MAR → infinite.
+    fn all_positive_returns_none_sortino() {
+        // No below-MAR obs → downside dev = 0 AND mean > MAR → mathematically
+        // infinite. We emit `None` (was `f64::INFINITY`) because serde_json
+        // refuses non-finite floats and the API would 500.
         let r = compute(&[1.0, 2.0, 3.0], 0.0, 252.0);
         assert_eq!(r.downside_deviation, 0.0);
-        assert!(r.sortino_ratio.is_infinite());
-        assert!(r.sortino_ratio > 0.0);
+        assert_eq!(r.sortino_ratio, None);
         assert_eq!(r.downside_obs, 0);
     }
 
     #[test]
     fn all_returns_at_mar_zero_sortino() {
-        // No deviation, but no excess return either → 0 (not infinite).
+        // No deviation, but no excess return either → 0 (defined, not None).
         let r = compute(&[0.0, 0.0, 0.0], 0.0, 252.0);
-        assert_eq!(r.sortino_ratio, 0.0);
+        assert_eq!(r.sortino_ratio, Some(0.0));
     }
 
     #[test]
@@ -117,7 +125,7 @@ mod tests {
         // Returns symmetric around 0 → mean=0, sortino = 0/x = 0.
         let r = compute(&[-1.0, 0.0, 1.0], 0.0, 252.0);
         assert!((r.mean_return - 0.0).abs() < 1e-12);
-        assert_eq!(r.sortino_ratio, 0.0);
+        assert_eq!(r.sortino_ratio, Some(0.0));
         assert_eq!(r.downside_obs, 1);
     }
 
@@ -125,7 +133,7 @@ mod tests {
     fn positive_skew_yields_positive_sortino() {
         // Mostly winners, occasional small loss → positive sortino.
         let r = compute(&[1.0, 1.0, 1.0, -0.5], 0.0, 252.0);
-        assert!(r.sortino_ratio > 0.0);
+        assert!(r.sortino_ratio.unwrap() > 0.0);
     }
 
     #[test]
@@ -147,7 +155,7 @@ mod tests {
         // Compare against textbook sharpe for the same series. Sortino
         // ignores upside vol, so on a positively-skewed series it's higher.
         let returns = vec![5.0, 5.0, 5.0, -1.0];
-        let sortino = compute(&returns, 0.0, 1.0).sortino_ratio;
+        let sortino = compute(&returns, 0.0, 1.0).sortino_ratio.unwrap();
         // Naive sharpe with stdev based on full distribution:
         let mean = returns.iter().sum::<f64>() / returns.len() as f64;
         let var: f64 =
@@ -164,8 +172,19 @@ mod tests {
         // Same series at 4 vs 16 annualization → sortino at 16 = 2× at 4
         // (sqrt(16)/sqrt(4) = 2).
         let returns = vec![1.0, 2.0, -1.0, 3.0];
-        let r4 = compute(&returns, 0.0, 4.0).sortino_ratio;
-        let r16 = compute(&returns, 0.0, 16.0).sortino_ratio;
+        let r4 = compute(&returns, 0.0, 4.0).sortino_ratio.unwrap();
+        let r16 = compute(&returns, 0.0, 16.0).sortino_ratio.unwrap();
         assert!((r16 / r4 - 2.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn serializes_cleanly_with_infinite_sortino_case() {
+        // Regression test for the bug fix: previously this case set
+        // sortino_ratio = f64::INFINITY which made serde_json refuse to
+        // serialize the response, causing the API endpoint to 500.
+        let r = compute(&[1.0, 2.0, 3.0], 0.0, 252.0);
+        assert_eq!(r.sortino_ratio, None);
+        let json = serde_json::to_string(&r).expect("must serialize");
+        assert!(json.contains("\"sortino_ratio\":null"));
     }
 }

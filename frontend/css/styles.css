@@ -26,6 +26,17 @@ button.link {
 }
 button.link:hover { color: var(--accent); text-shadow: 0 0 6px var(--accent-glow); }
 
+/* ---- popout mode ------------------------------------------------- */
+/* When a tile is opened in its own window via the "↗ Pop out" button,
+   `body.popout-mode` strips the topbar / account strip / launcher chrome
+   so the view fills the new window for multi-monitor work. */
+body.popout-mode .topbar,
+body.popout-mode #account-strip,
+body.popout-mode .launcher-tile-strip,
+body.popout-mode .ws-status-strip,
+body.popout-mode .nav-toggle { display:none !important }
+body.popout-mode #app { padding-top: 0 }
+
 /* ---- top bar ----------------------------------------------------- */
 .topbar {
     position: relative; z-index: 10;
@@ -249,6 +260,8 @@ table.open-trades a:hover { text-decoration:underline }
 .dash-tv-header { display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap }
 .dash-tv-header h1 { margin:0 }
 .dash-tv-range { color: var(--text-muted); font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:2px; margin:8px 0 12px }
+.dash-tv-banner { padding:8px 12px; border-radius:2px; margin:0 0 10px; font-size:12px; font-family:'Share Tech Mono',monospace }
+.dash-tv-banner.warn { background:rgba(255,184,0,0.12); border:1px solid rgba(255,184,0,0.45); color:#ffd75e }
 
 .dash-tv-toggle { margin-left:auto; display:inline-flex; gap:0; border:1px solid var(--cyan); border-radius:2px; overflow:hidden }
 .dash-tv-toggle button { background:transparent; color:var(--text-muted); border:0; padding:6px 14px; font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:1.5px; cursor:pointer }

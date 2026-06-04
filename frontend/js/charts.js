@@ -89,7 +89,29 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
         return null;
     };
 
-    return new window.uPlot({
+    // Restore-on-open + persist-on-change zoom range. Callers (e.g. the
+    // #charts view) pass `initialZoom: [from_ts, to_ts]` to set the visible
+    // x range after init, and `onZoomChange([from, to])` to receive
+    // debounced range-change events for saving to the user preset.
+    const initialZoom = Array.isArray(opts.initialZoom) ? opts.initialZoom : null;
+    const onZoomChange = typeof opts.onZoomChange === 'function' ? opts.onZoomChange : null;
+    let zoomTimer = null;
+    const setScaleHook = onZoomChange ? (u, key) => {
+        if (key !== 'x') return;
+        const s = u.scales.x;
+        if (!s || s.min == null || s.max == null) return;
+        if (zoomTimer) clearTimeout(zoomTimer);
+        const from = Number(s.min);
+        const to = Number(s.max);
+        zoomTimer = setTimeout(() => {
+            zoomTimer = null;
+            if (Number.isFinite(from) && Number.isFinite(to) && to > from) {
+                onZoomChange([from, to]);
+            }
+        }, 350);
+    } : null;
+
+    const plot = new window.uPlot({
         title: '',
         width: w,
         height: h,
@@ -99,7 +121,16 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
             { label: t('chart.series.price'), stroke: 'transparent', paths: candlePath },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        ...(setScaleHook ? { hooks: { setScale: [setScaleHook] } } : {}),
     }, [xs, c], el);
+
+    if (initialZoom && initialZoom.length === 2
+        && Number.isFinite(initialZoom[0]) && Number.isFinite(initialZoom[1])
+        && initialZoom[1] > initialZoom[0]) {
+        try { plot.setScale('x', { min: initialZoom[0], max: initialZoom[1] }); }
+        catch (_) { /* ignore — initial fit-content kicks in */ }
+    }
+    return plot;
 }
 
 export function barChart(el, labels, values, opts = {}) {

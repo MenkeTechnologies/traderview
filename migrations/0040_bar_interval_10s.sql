@@ -1,0 +1,14 @@
+-- 0040 — Add 10-second bars to the bar_interval_t enum.
+--
+-- Webull-style multichart wants sub-minute resolution (10s panes alongside
+-- 1m / 5m / 1d). Yahoo's free chart endpoint does NOT serve 10s aggregates
+-- — the only paths that can populate 10s rows in `price_bars` are:
+--   1. Live tick aggregator (Finnhub WS in `live_ticks::tape_aggregator`)
+--      rolls incoming trades into 10s OHLC and persists them.
+--   2. Broker CSV imports that already contain second-resolution data
+--      (Webull Tape, IBKR FlexQuery, etc.).
+--
+-- `ADD VALUE` is metadata-only in PostgreSQL (no table rewrite, no row
+-- scans), so this is safe to run on an existing populated `price_bars`.
+-- Placing 10s BEFORE 1m keeps the enum ordered by resolution (finest → coarsest).
+ALTER TYPE bar_interval_t ADD VALUE IF NOT EXISTS '10s' BEFORE '1m';

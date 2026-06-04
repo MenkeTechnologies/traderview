@@ -1,0 +1,21 @@
+-- 0039 — Per-user global chart preset (indicators + interval + date range).
+--
+-- The Charts view (#charts) currently forgets the user's indicator
+-- selection, candle interval, and date window on every page load — the
+-- multi-select picker reverts to the `is_default`-marked indicators,
+-- the interval drops back to `1d`, and the date range resets to the
+-- last 90 days. We persist the user's actual choices here so reopening
+-- the Charts view restores their last setup.
+--
+-- Per-symbol chart drawings already persist via the `chart_drawings`
+-- table (migration 0016). This blob is the symbol-agnostic preset.
+--
+-- Schema is a free-form JSONB blob so the frontend can evolve the
+-- preset shape without further migrations. Current shape:
+--   {
+--     "indicator_ids": ["uuid", ...],   -- selected custom-indicator IDs
+--     "interval": "5m",                 -- 1m | 5m | 15m | 1h | 1d | 1w
+--     "lookback_days": 90               -- how far back to load on open
+--   }
+ALTER TABLE user_settings
+    ADD COLUMN chart_preset JSONB NOT NULL DEFAULT '{}'::jsonb;

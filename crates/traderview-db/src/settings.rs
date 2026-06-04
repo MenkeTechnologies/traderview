@@ -5,7 +5,7 @@ use traderview_core::{FilterSet, UserSettings};
 use uuid::Uuid;
 
 const SETTINGS_COLS: &str = "user_id, default_account_id, base_currency, timezone, theme,
-                starting_cash, dashboard_layout,
+                starting_cash, dashboard_layout, chart_preset,
                 commission_per_share, commission_per_contract,
                 auto_flatten, require_account_tag,
                 daily_profit_goal, daily_max_loss, updated_at";
@@ -30,11 +30,11 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
     sqlx::query(
         "INSERT INTO user_settings
             (user_id, default_account_id, base_currency, timezone, theme,
-             starting_cash, dashboard_layout,
+             starting_cash, dashboard_layout, chart_preset,
              commission_per_share, commission_per_contract,
              auto_flatten, require_account_tag,
              daily_profit_goal, daily_max_loss, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now())
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, now())
          ON CONFLICT (user_id) DO UPDATE SET
             default_account_id      = EXCLUDED.default_account_id,
             base_currency           = EXCLUDED.base_currency,
@@ -42,6 +42,7 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
             theme                   = EXCLUDED.theme,
             starting_cash           = EXCLUDED.starting_cash,
             dashboard_layout        = EXCLUDED.dashboard_layout,
+            chart_preset            = EXCLUDED.chart_preset,
             commission_per_share    = EXCLUDED.commission_per_share,
             commission_per_contract = EXCLUDED.commission_per_contract,
             auto_flatten            = EXCLUDED.auto_flatten,
@@ -57,6 +58,7 @@ pub async fn upsert(pool: &PgPool, s: &UserSettings) -> anyhow::Result<()> {
     .bind(&s.theme)
     .bind(s.starting_cash)
     .bind(&s.dashboard_layout)
+    .bind(&s.chart_preset)
     .bind(s.commission_per_share)
     .bind(s.commission_per_contract)
     .bind(s.auto_flatten)
@@ -121,6 +123,7 @@ struct Row {
     theme: String,
     starting_cash: Decimal,
     dashboard_layout: serde_json::Value,
+    chart_preset: serde_json::Value,
     commission_per_share: Decimal,
     commission_per_contract: Decimal,
     auto_flatten: bool,
@@ -140,6 +143,7 @@ impl From<Row> for UserSettings {
             theme: r.theme,
             starting_cash: r.starting_cash,
             dashboard_layout: r.dashboard_layout,
+            chart_preset: r.chart_preset,
             commission_per_share: r.commission_per_share,
             commission_per_contract: r.commission_per_contract,
             auto_flatten: r.auto_flatten,

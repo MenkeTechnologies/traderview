@@ -172,6 +172,7 @@ pub async fn upsert(pool: &PgPool, bars: &[PriceBar]) -> anyhow::Result<()> {
 
 fn parse_interval(s: &str) -> BarInterval {
     match s {
+        "10s" => BarInterval::S10,
         "1m" => BarInterval::M1,
         "5m" => BarInterval::M5,
         "15m" => BarInterval::M15,
@@ -181,15 +182,20 @@ fn parse_interval(s: &str) -> BarInterval {
     }
 }
 
-fn yahoo_interval(iv: BarInterval) -> &'static str {
-    match iv {
+// Yahoo's chart endpoint does NOT serve 10s aggregates — its finest
+// resolution is 1m. `S10` returns None here so `fetch_yahoo` short-circuits
+// with an empty bar set rather than mis-bucketing into 1m. 10s rows enter
+// `price_bars` exclusively from the live-tick aggregator or broker imports.
+fn yahoo_interval(iv: BarInterval) -> Option<&'static str> {
+    Some(match iv {
+        BarInterval::S10 => return None,
         BarInterval::M1 => "1m",
         BarInterval::M5 => "5m",
         BarInterval::M15 => "15m",
         BarInterval::H1 => "60m",
         BarInterval::D1 => "1d",
         BarInterval::W1 => "1wk",
-    }
+    })
 }
 
 async fn fetch_yahoo(
@@ -202,13 +208,20 @@ async fn fetch_yahoo(
         .user_agent(USER_AGENT)
         .timeout(std::time::Duration::from_secs(10))
         .build()?;
+    let iv_str = match yahoo_interval(interval) {
+        Some(s) => s,
+        // Yahoo doesn't serve sub-minute aggregates. Returning an empty
+        // bar set lets the caller fall through to whatever rows the live
+        // tick aggregator or a broker import has already persisted.
+        None => return Ok(Vec::new()),
+    };
     let url = format!(
         "{base}{sym}?period1={p1}&period2={p2}&interval={iv}&events=div%2Csplit&includeAdjustedClose=true",
         base = YAHOO_BASE,
         sym = symbol,
         p1 = from.timestamp(),
         p2 = to.timestamp(),
-        iv = yahoo_interval(interval),
+        iv = iv_str,
     );
     let resp = client.get(&url).send().await?;
     if !resp.status().is_success() {
@@ -352,13 +365,22 @@ mod tests {
     // ─── yahoo_interval: enum → Yahoo API string ──────────────────────────
     #[test]
     fn yahoo_interval_emits_yahoo_specific_codes() {
-        assert_eq!(yahoo_interval(BarInterval::M1), "1m");
-        assert_eq!(yahoo_interval(BarInterval::M5), "5m");
-        assert_eq!(yahoo_interval(BarInterval::M15), "15m");
+        assert_eq!(yahoo_interval(BarInterval::M1), Some("1m"));
+        assert_eq!(yahoo_interval(BarInterval::M5), Some("5m"));
+        assert_eq!(yahoo_interval(BarInterval::M15), Some("15m"));
         // Hourly is "60m" in Yahoo's API, not "1h" — pins this contract.
-        assert_eq!(yahoo_interval(BarInterval::H1), "60m");
-        assert_eq!(yahoo_interval(BarInterval::D1), "1d");
+        assert_eq!(yahoo_interval(BarInterval::H1), Some("60m"));
+        assert_eq!(yahoo_interval(BarInterval::D1), Some("1d"));
         // Weekly is "1wk" in Yahoo (not "1w" like our internal label).
-        assert_eq!(yahoo_interval(BarInterval::W1), "1wk");
+        assert_eq!(yahoo_interval(BarInterval::W1), Some("1wk"));
+    }
+
+    // Yahoo's chart endpoint floors at 1-minute aggregates — `S10` returns
+    // None so `fetch_yahoo` short-circuits to an empty bar set. If this
+    // assertion ever flips, the caller will start mis-bucketing 1m data
+    // into a 10s request.
+    #[test]
+    fn yahoo_interval_returns_none_for_s10() {
+        assert_eq!(yahoo_interval(BarInterval::S10), None);
     }
 }

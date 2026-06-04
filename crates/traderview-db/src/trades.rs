@@ -22,8 +22,45 @@ pub struct TradeFilter {
     pub max_pnl: Option<Decimal>,
     pub min_qty: Option<Decimal>,
     pub max_qty: Option<Decimal>,
+    /// URL query params arrive as strings; `#[serde(flatten)]` on the
+    /// route's wrapper struct breaks serde_urlencoded's normal
+    /// string→int coercion, so we accept either form explicitly via
+    /// `deserialize_with`. This made the dashboard's Open Trades widget
+    /// 400 on every refresh until fixed.
+    #[serde(default, deserialize_with = "de_opt_i64_from_str_or_int")]
     pub limit: Option<i64>,
+    #[serde(default, deserialize_with = "de_opt_i64_from_str_or_int")]
     pub offset: Option<i64>,
+}
+
+/// Accept Option<i64> from either a JSON integer (POST body) or a query-
+/// string scalar (which arrives as a string after `#[serde(flatten)]`).
+fn de_opt_i64_from_str_or_int<'de, D>(de: D) -> Result<Option<i64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    struct V;
+    impl<'de> Visitor<'de> for V {
+        type Value = Option<i64>;
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            f.write_str("integer or string-encoded integer (or null)")
+        }
+        fn visit_none<E: de::Error>(self) -> Result<Self::Value, E> { Ok(None) }
+        fn visit_unit<E: de::Error>(self) -> Result<Self::Value, E> { Ok(None) }
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> { Ok(Some(v)) }
+        fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
+            Ok(Some(v as i64))
+        }
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
+            if v.is_empty() { return Ok(None); }
+            v.parse::<i64>().map(Some).map_err(de::Error::custom)
+        }
+        fn visit_some<D2: serde::Deserializer<'de>>(self, d: D2) -> Result<Self::Value, D2::Error> {
+            d.deserialize_any(V)
+        }
+    }
+    de.deserialize_any(V)
 }
 
 pub async fn list_for_account(

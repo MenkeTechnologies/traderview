@@ -127,14 +127,7 @@ pub async fn evaluate(
         .unwrap_or_default();
     let times: Vec<DateTime<Utc>> = bars.iter().map(|b| b.bar_time).collect();
     let closes: Vec<f64> = bars.iter().map(|b| dec(b.close)).collect();
-    let interval_str = match interval {
-        BarInterval::M1 => "1m",
-        BarInterval::M5 => "5m",
-        BarInterval::M15 => "15m",
-        BarInterval::H1 => "1h",
-        BarInterval::D1 => "1d",
-        BarInterval::W1 => "1w",
-    };
+    let interval_str = interval.label();
 
     let mut series_out: Vec<EvalSeries> = Vec::new();
     for ind in &indicators {

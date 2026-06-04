@@ -23,12 +23,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExpectancyReport {
     pub expectancy_per_trade: f64,
-    pub r_multiple_expectancy: f64,
+    /// `None` when undefined — e.g. zero losses make payoff mathematically
+    /// infinite, which serde_json refuses to serialize.
+    pub r_multiple_expectancy: Option<f64>,
     pub win_rate: f64,
     pub avg_win: f64,
     pub avg_loss: f64,
-    pub payoff_ratio: f64,
-    pub profit_factor: f64,
+    /// `None` when avg_loss is zero (no losing trades) — payoff is
+    /// mathematically infinite.
+    pub payoff_ratio: Option<f64>,
+    /// `None` when there are no losing trades — profit factor is
+    /// mathematically infinite.
+    pub profit_factor: Option<f64>,
     pub n_trades: usize,
     pub n_wins: usize,
     pub n_losses: usize,
@@ -47,13 +53,23 @@ pub fn compute(trade_pnls: &[f64]) -> Option<ExpectancyReport> {
     let avg_win = if n_wins > 0 { wins.iter().sum::<f64>() / n_wins as f64 } else { 0.0 };
     let avg_loss = if n_losses > 0 { losses.iter().sum::<f64>() / n_losses as f64 } else { 0.0 };
     let expectancy = win_rate * avg_win + (1.0 - win_rate) * avg_loss;
-    let payoff = if avg_loss.abs() > 0.0 { avg_win / avg_loss.abs() } else { f64::INFINITY };
-    let r_mult = if payoff.is_finite() {
-        win_rate * payoff - (1.0 - win_rate)
-    } else { f64::INFINITY };
+    // Wrap mathematically-infinite values in `None` so serde_json can
+    // serialize (refuses `f64::INFINITY`).
+    let payoff: Option<f64> = if avg_loss.abs() > 0.0 {
+        let v = avg_win / avg_loss.abs();
+        v.is_finite().then_some(v)
+    } else {
+        None
+    };
+    let r_mult: Option<f64> = payoff.map(|p| win_rate * p - (1.0 - win_rate));
     let sum_wins: f64 = wins.iter().sum();
     let sum_losses_abs: f64 = losses.iter().map(|l| l.abs()).sum();
-    let pf = if sum_losses_abs > 0.0 { sum_wins / sum_losses_abs } else { f64::INFINITY };
+    let pf: Option<f64> = if sum_losses_abs > 0.0 {
+        let v = sum_wins / sum_losses_abs;
+        v.is_finite().then_some(v)
+    } else {
+        None
+    };
     Some(ExpectancyReport {
         expectancy_per_trade: expectancy,
         r_multiple_expectancy: r_mult,
@@ -108,8 +124,8 @@ mod tests {
         let r = compute(&trades).unwrap();
         assert!((r.expectancy_per_trade - 50.0).abs() < 1e-9);
         assert!((r.win_rate - 0.5).abs() < 1e-12);
-        assert!((r.payoff_ratio - 2.0).abs() < 1e-9);
-        assert!((r.profit_factor - 2.0).abs() < 1e-9);
+        assert!((r.payoff_ratio.unwrap() - 2.0).abs() < 1e-9);
+        assert!((r.profit_factor.unwrap() - 2.0).abs() < 1e-9);
     }
 
     #[test]
@@ -118,7 +134,19 @@ mod tests {
         let mut trades = vec![100.0; 6];
         trades.extend(vec![-50.0; 4]);
         let r = compute(&trades).unwrap();
-        assert!((r.r_multiple_expectancy - 0.8).abs() < 1e-9);
+        assert!((r.r_multiple_expectancy.unwrap() - 0.8).abs() < 1e-9);
+    }
+
+    #[test]
+    fn pure_winners_yield_none_for_infinite_metrics() {
+        // No losing trades → payoff, r_multiple, profit_factor are all
+        // mathematically infinite. We emit `None` so the API serializes.
+        let r = compute(&[100.0, 50.0, 200.0]).unwrap();
+        assert_eq!(r.payoff_ratio, None);
+        assert_eq!(r.r_multiple_expectancy, None);
+        assert_eq!(r.profit_factor, None);
+        let json = serde_json::to_string(&r).expect("must serialize");
+        assert!(json.contains("\"profit_factor\":null"));
     }
 
     #[test]

@@ -375,21 +375,36 @@ pub struct PollResult {
 
 pub async fn poll_all(pool: &PgPool) -> PollResult {
     let edgar = poll_edgar_form4(pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = ?e, "edgar poll failed");
+        log_poll_error("edgar", &e);
         0
     });
     let senate = poll_senate(pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = ?e, "senate poll failed");
+        log_poll_error("senate", &e);
         0
     });
     let house = poll_house(pool).await.unwrap_or_else(|e| {
-        tracing::warn!(error = ?e, "house poll failed");
+        log_poll_error("house", &e);
         0
     });
     PollResult {
         edgar_inserted: edgar,
         senate_inserted: senate,
         house_inserted: house,
+    }
+}
+
+/// Demote transient connection errors (offline, geo-block, firewall) from
+/// WARN to DEBUG. Keeps the WARN stream free of repeating noise when an
+/// endpoint is unreachable while still surfacing real failures (HTTP
+/// 4xx/5xx, parse errors).
+fn log_poll_error(source: &str, err: &anyhow::Error) {
+    let is_transient = err.downcast_ref::<reqwest::Error>().is_some_and(|re| {
+        re.is_connect() || re.is_timeout() || re.is_request()
+    });
+    if is_transient {
+        tracing::debug!(error = ?err, source, "disclosures poll skipped (transient network error)");
+    } else {
+        tracing::warn!(error = ?err, source, "disclosures poll failed");
     }
 }
 

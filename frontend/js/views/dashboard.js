@@ -702,27 +702,39 @@ export async function renderDashboard(mount, state) {
         return;
     }
 
+    // Track which optional endpoints fail so the banner can name them.
+    // Each .catch() falls back so the dashboard still renders for the
+    // healthy endpoints.
+    const failedFetches = [];
+    const swallow = (name, fallback) => (e) => {
+        const msg = e?.message || String(e);
+        failedFetches.push({ name, msg });
+        // eslint-disable-next-line no-console
+        console.warn(`[dashboard] ${name} failed:`, msg);
+        return fallback;
+    };
+
     const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags,
            byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
            byInstrumentVolume, byMovement, openTrades, layout] = await Promise.all([
         api.summary(state.accountId, interval),
         api.equity(state.accountId, undefined, interval),
         api.calendar(state.accountId, interval),
-        api.byDow(state.accountId, interval).catch(() => []),
-        api.byHold(state.accountId, interval).catch(() => []),
-        api.byHour(state.accountId, interval).catch(() => []),
-        api.drawdown(state.accountId, undefined, interval).catch(() => null),
-        api.byPrice(state.accountId, interval).catch(() => []),
-        api.dailySeries(state.accountId, interval).catch(() => []),
-        api.byTag(state.accountId, interval).catch(() => []),
-        api.byMonth(state.accountId, interval).catch(() => []),
-        api.bySymbol(state.accountId, interval).catch(() => []),
-        api.byDurationCoarse(state.accountId, interval).catch(() => []),
-        api.byRBucket(state.accountId, interval).catch(() => []),
-        api.byOpeningGap(state.accountId, interval).catch(() => []),
-        api.byInstrumentVolume(state.accountId, interval).catch(() => []),
-        api.byMovement(state.accountId, interval).catch(() => []),
-        api.trades(state.accountId, { status: 'open', limit: 100 }).catch(() => []),
+        api.byDow(state.accountId, interval).catch(swallow('byDow', [])),
+        api.byHold(state.accountId, interval).catch(swallow('byHold', [])),
+        api.byHour(state.accountId, interval).catch(swallow('byHour', [])),
+        api.drawdown(state.accountId, undefined, interval).catch(swallow('drawdown', null)),
+        api.byPrice(state.accountId, interval).catch(swallow('byPrice', [])),
+        api.dailySeries(state.accountId, interval).catch(swallow('dailySeries', [])),
+        api.byTag(state.accountId, interval).catch(swallow('byTag', [])),
+        api.byMonth(state.accountId, interval).catch(swallow('byMonth', [])),
+        api.bySymbol(state.accountId, interval).catch(swallow('bySymbol', [])),
+        api.byDurationCoarse(state.accountId, interval).catch(swallow('byDurationCoarse', [])),
+        api.byRBucket(state.accountId, interval).catch(swallow('byRBucket', [])),
+        api.byOpeningGap(state.accountId, interval).catch(swallow('byOpeningGap', [])),
+        api.byInstrumentVolume(state.accountId, interval).catch(swallow('byInstrumentVolume', [])),
+        api.byMovement(state.accountId, interval).catch(swallow('byMovement', [])),
+        api.trades(state.accountId, { status: 'open', limit: 100 }).catch(swallow('openTrades', [])),
         loadLayout(),
     ]);
     if (!viewIsCurrent(tok)) return;
@@ -752,6 +764,7 @@ export async function renderDashboard(mount, state) {
             </div>
         </div>
         <div class="dash-tv-range">${esc(rangeLabel(interval))}</div>
+        ${failedFetches.length > 0 ? `<div class="dash-tv-banner warn" role="alert">${esc(t('view.dashboard.banner.partial_data', { names: failedFetches.map(f => f.name).join(', ') }))}</div>` : ''}
         <div class="dash-tv-day-strip">${dayStrip(cal)}</div>
 
         <div class="dash-tv-grid" id="dash-tv-grid">

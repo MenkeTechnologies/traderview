@@ -82,6 +82,7 @@ async fn fetch_bars(
 
 fn parse_interval(s: &str) -> Option<BarInterval> {
     Some(match s {
+        "10s" => BarInterval::S10,
         "1m" => BarInterval::M1,
         "5m" => BarInterval::M5,
         "15m" => BarInterval::M15,
@@ -101,6 +102,7 @@ mod tests {
 
     #[test]
     fn parse_interval_accepts_known_strings() {
+        assert!(matches!(parse_interval("10s"), Some(BarInterval::S10)));
         assert!(matches!(parse_interval("1m"),  Some(BarInterval::M1)));
         assert!(matches!(parse_interval("5m"),  Some(BarInterval::M5)));
         assert!(matches!(parse_interval("15m"), Some(BarInterval::M15)));
