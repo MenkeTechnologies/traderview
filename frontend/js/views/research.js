@@ -491,6 +491,17 @@ function renderHolders(el, h) {
     if (!h) { el.innerHTML = '<p data-i18n="view.research.hint.no_data_5" class="muted">no data</p>'; return; }
     const b = h.majorHoldersBreakdown || {};
     const inst = h.institutionOwnership?.ownershipList || [];
+    // When the backend ships an explicit `_source_note` it means every
+    // upstream provider was unreachable (Yahoo crumb-locked, Finnhub
+    // ownership is premium-only) and the rest of the payload is an empty
+    // stub. Render the note as a muted hint above the empty cards so the
+    // user knows it's a data-source gap, not a render bug.
+    const sourceNote = typeof h._source_note === 'string' ? h._source_note : '';
+    const isEmpty = !Object.keys(b).length && !inst.length;
+    if (sourceNote && isEmpty) {
+        el.innerHTML = `<p class="muted small">${esc(sourceNote)}</p>`;
+        return;
+    }
     el.innerHTML = `
         <div class="cards">
             <div class="card"><div class="label" data-i18n="view.research.card.insider_pct">Insider %</div><div class="value">${rawVal(b.insidersPercentHeld)}</div></div>

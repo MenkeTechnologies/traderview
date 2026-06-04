@@ -224,6 +224,10 @@ export function addTile(state, dashboardId, viewId, config = {}) {
     const d = state.dashboards[dashboardId];
     if (!d) return state;
     if (!viewId || typeof viewId !== 'string') return state;
+    // Dedupe — pinning the same view twice from the launcher's 📌 button
+    // produced visible duplicates in the board grid. Quietly no-op if the
+    // viewId is already present (test relies on `===` no-op behavior).
+    if (d.tiles.some(t => t.kind !== 'graph' && t.viewId === viewId)) return state;
     const existing = new Set(d.tiles.map(t => t.id));
     const id = newTileId(existing);
     const tile = { id, kind: 'view', viewId, config: { ...config } };
@@ -244,6 +248,9 @@ export function addGraphTile(state, dashboardId, graphId, config = {}) {
     const d = state.dashboards[dashboardId];
     if (!d) return state;
     if (!graphId || typeof graphId !== 'string') return state;
+    // Same dedup rule as addTile — pinning the same graph repeatedly is
+    // almost always an accidental double-click; show one tile.
+    if (d.tiles.some(t => t.kind === 'graph' && t.graphId === graphId)) return state;
     const existing = new Set(d.tiles.map(t => t.id));
     const id = newTileId(existing);
     const tile = { id, kind: 'graph', graphId, config: { ...config } };

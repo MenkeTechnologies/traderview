@@ -7007,7 +7007,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "rand 0.8.6",
@@ -7021,7 +7021,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-db"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -7054,7 +7054,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-desktop"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -7081,7 +7081,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-expense"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "calamine",
@@ -7104,7 +7104,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-import"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -7122,7 +7122,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-ocr"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -7140,7 +7140,7 @@ dependencies = [
 
 [[package]]
 name = "traderview-web"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "argon2",

@@ -20,6 +20,7 @@ use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::broadcast;
@@ -137,6 +138,11 @@ pub struct LiveTickStore {
     // `set_pool` so the global() singleton can persist bars without taking
     // a pool argument on every trade.
     pool: Arc<tokio::sync::RwLock<Option<PgPool>>>,
+    // Guards the idle-flush sweeper spawn — `set_pool` may be invoked
+    // multiple times (settings-page key updates, hot reload, tests) and
+    // we must NOT leak a fresh sweeper task per call. CAS to true on
+    // first spawn; subsequent calls observe `true` and skip.
+    sweeper_spawned: Arc<AtomicBool>,
 }
 
 impl LiveTickStore {
@@ -149,19 +155,31 @@ impl LiveTickStore {
             subs: Arc::new(tokio::sync::Mutex::new(Vec::new())),
             buckets: Arc::new(DashMap::new()),
             pool: Arc::new(tokio::sync::RwLock::new(None)),
+            sweeper_spawned: Arc::new(AtomicBool::new(false)),
         }
     }
 
-    /// Wire the DB pool used by the 10s tape aggregator. Called once at
-    /// server boot. When unset, trades still update `SymbolState` but no
-    /// 10s bars are persisted (cold start before pool is ready, tests).
+    /// Wire the DB pool used by the 10s tape aggregator. Idempotent — may
+    /// be called more than once (settings-page Finnhub key update, test
+    /// fixtures, hot reload); the latest pool wins and the idle-flush
+    /// sweeper is spawned at most once per process.
     pub async fn set_pool(&self, pool: PgPool) {
         *self.pool.write().await = Some(pool);
-        // Kick off the idle-flush sweeper exactly once per process. Buckets
-        // whose 10s window has fully closed (and then some) but received no
+        // CAS guard — only the first call spawns the sweeper. Without
+        // this, repeated set_pool invocations leak one tokio task per
+        // call, each calling flush_idle_buckets concurrently against the
+        // same DashMap (correct via ON CONFLICT but wastes IO).
+        if self
+            .sweeper_spawned
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .is_err()
+        {
+            return;
+        }
+        // Buckets whose 10s window has fully closed but received no
         // further trades to trigger flush-on-cross will sit indefinitely
-        // otherwise — this guarantees they land in `price_bars` within ~5s
-        // of natural close.
+        // otherwise — this guarantees they land in `price_bars` within
+        // ~5s of natural close.
         let store = self.clone();
         tokio::spawn(async move {
             let mut tick = tokio::time::interval(Duration::from_secs(5));
@@ -249,14 +267,19 @@ impl LiveTickStore {
 
     // ---- 10s tape aggregator ----
 
-    // Fold one trade into the symbol's open 10s bucket. If the trade falls
-    // in a later bucket, flush the existing one to `price_bars` before
-    // opening a fresh bucket for this trade.
-    async fn feed_bucket(&self, t: &Trade) {
+    // Fold one trade into the symbol's open 10s bucket. If the trade
+    // falls in a later bucket, flush the existing one to `price_bars`
+    // before opening a fresh bucket for this trade. The flush is
+    // dispatched to a background task so DB latency cannot backpressure
+    // the WS read loop — the previous inline `await` here would stall
+    // every subsequent trade until Postgres ack'd, which Finnhub can
+    // detect as backpressure and start dropping messages.
+    fn feed_bucket(&self, t: &Trade) {
         let bucket_start = (t.ts_ms / 1000 / TAPE_BUCKET_SECS) * TAPE_BUCKET_SECS;
         let mut closed: Option<(String, TapeBucket)> = None;
         {
-            // Scope the DashMap guard so the await below doesn't hold it.
+            // DashMap entry lives only for the synchronous bookkeeping —
+            // no .await held under it.
             let mut entry = self
                 .buckets
                 .entry(t.symbol.clone())
@@ -288,13 +311,33 @@ impl LiveTickStore {
             entry.volume += t.volume;
         }
         if let Some((sym, bucket)) = closed {
-            self.persist_bucket(&sym, &bucket).await;
+            // Detach the persist to a background task — `feed_bucket`
+            // returns to the WS read loop immediately, and the DB write
+            // races independently. Late persists are safe because
+            // `price_bars (symbol, interval, bar_time)` is unique and the
+            // upsert uses `ON CONFLICT DO UPDATE`.
+            let store = self.clone();
+            tokio::spawn(async move {
+                store.persist_bucket(&sym, &bucket).await;
+            });
         }
     }
 
     // Idle sweep — flush any bucket whose window has fully elapsed at
     // least one full window ago. Without this, a symbol that stops trading
     // mid-window leaves an in-progress bucket dangling forever.
+    //
+    // Race-safety: we snapshot each bucket's `start_sec` at observation
+    // time, and only remove if the entry still matches that snapshot. If
+    // a fresh trade arrives between the iter and the remove (rotating the
+    // bucket to a new window), `remove_if` returns None and we leave the
+    // new bucket in place. The previously-observed (now-stale) closed
+    // bucket was already in the same DashMap slot — the rotation in
+    // feed_bucket re-uses the entry but the new `start_sec` differs, so
+    // `remove_if` cleanly distinguishes. Persist the snapshotted closed
+    // bucket regardless; the row in `price_bars` keys on (symbol, '10s',
+    // bar_time) so re-persisting the SAME closed bucket on a later sweep
+    // is idempotent via `ON CONFLICT DO UPDATE`.
     async fn flush_idle_buckets(&self) {
         let now_sec = Utc::now().timestamp();
         let mut to_flush: Vec<(String, TapeBucket)> = Vec::new();
@@ -308,7 +351,12 @@ impl LiveTickStore {
         }
         for (sym, bucket) in &to_flush {
             self.persist_bucket(sym, bucket).await;
-            self.buckets.remove(sym);
+            // Only drop the slot if it still holds the bucket we
+            // observed. Otherwise a fresh trade rotated in a new bucket
+            // (different `start_sec`) between iter and remove — leave it.
+            let observed_start = bucket.start_sec;
+            self.buckets
+                .remove_if(sym, |_, cur| cur.start_sec == observed_start);
         }
     }
 
@@ -373,10 +421,10 @@ impl LiveTickStore {
                                     let _ = self.tx.send(snap);
                                 }
                                 // Fold the trade into the 10s OHLC bucket
-                                // and flush on bucket-cross. Fire-and-
-                                // forget: a slow DB shouldn't backpressure
-                                // the WS read loop.
-                                self.feed_bucket(&trade).await;
+                                // and dispatch any closed bucket to a
+                                // background persist task. Synchronous —
+                                // does NOT await the DB write.
+                                self.feed_bucket(&trade);
                             }
                         }
                     }

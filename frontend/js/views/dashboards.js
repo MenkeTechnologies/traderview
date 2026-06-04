@@ -507,16 +507,26 @@ async function renderTiles(dashboard) {
     // analytics dashboard does.
     const hasGraph = dashboard.tiles.some(t => t.kind === 'graph');
     let analyticsBundle = null;
+    // Snapshot the active view token + active account BEFORE awaiting so
+    // we can bail if the user navigates away (or switches accounts) mid-
+    // fetch. Without this, a slow analytics bundle landing after the
+    // user changed accounts paints the OLD account's graphs into the NEW
+    // account's tile bodies — silent wrong-data display.
+    const app = await import('../app.js');
+    const tok = typeof app.currentViewToken === 'function' ? app.currentViewToken() : null;
+    const appState = app.state || {};
+    const renderAccountId = appState.accountId;
     if (hasGraph) {
         try {
-            // The active account id lives in the app's state but we render
-            // tiles in isolation; pull from the global. Falls back to
-            // undefined which the API treats as "all accounts".
-            const appState = (await import('../app.js')).state || {};
-            analyticsBundle = await loadAnalyticsBundle(appState.accountId, 90);
+            analyticsBundle = await loadAnalyticsBundle(renderAccountId, 90);
         } catch (e) {
             console.warn('analytics bundle load failed', e);
         }
+        if (tok != null && typeof app.viewIsCurrent === 'function' && !app.viewIsCurrent(tok)) {
+            return;
+        }
+        // Account change during fetch — caller's render is stale.
+        if ((app.state || {}).accountId !== renderAccountId) return;
     }
 
     // Mount each tile into its body. Failures in one tile don't block

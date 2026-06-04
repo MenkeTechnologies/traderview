@@ -202,6 +202,32 @@ test('addGraphTile no-ops on missing dashboard or empty graphId', () => {
     expect(store.addGraphTile(s, 'main', '')).toBe(s);
 });
 
+test('addTile is idempotent — double-pin of the same viewId no-ops', () => {
+    // Pinning the same launcher tile twice (accidental double-click)
+    // should not create two identical panels in the saved board.
+    const s1 = store.addTile(store.defaultState(), 'main', 'vpin');
+    const s2 = store.addTile(s1, 'main', 'vpin');
+    expect(s2).toBe(s1);
+    expect(s2.dashboards.main.tiles).toHaveLength(1);
+});
+
+test('addGraphTile is idempotent — double-pin of the same graphId no-ops', () => {
+    // Same dedup rule for graph widgets — clicking 📌 on the dashboard
+    // analytics panel twice should still result in a single tile.
+    const s1 = store.addGraphTile(store.defaultState(), 'main', 'cumulative_pnl');
+    const s2 = store.addGraphTile(s1, 'main', 'cumulative_pnl');
+    expect(s2).toBe(s1);
+    expect(s2.dashboards.main.tiles).toHaveLength(1);
+});
+
+test('addTile and addGraphTile share no dedupe keyspace (view vs graph)', () => {
+    // A view tile named "foo" must NOT block a graph tile with graphId
+    // "foo" — different kinds live in different namespaces.
+    let s = store.addTile(store.defaultState(), 'main', 'foo');
+    s = store.addGraphTile(s, 'main', 'foo');
+    expect(s.dashboards.main.tiles).toHaveLength(2);
+});
+
 test('migrate accepts both legacy view tiles and graph tiles', () => {
     const raw = {
         version: store.SCHEMA_VERSION,

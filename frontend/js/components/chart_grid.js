@@ -52,9 +52,13 @@ export function createChartGrid(container, opts = {}) {
     let intervalsByLayout = {};
     let saveTimer = null;
     function loadPresetAsync() {
-        // Fire-and-forget; once it lands, push the selection into existing
-        // panes. First render uses whatever's in `state.active` (which is
-        // empty for trading_chart) until the preset arrives.
+        // Snapshot the layout the user is currently on. If they switch
+        // layouts (or symbols, which also rebuilds via `broadcastSymbol`)
+        // before the preset arrives, we must NOT rebuild — that would
+        // stomp the user's newer selection and discard freshly-built
+        // panes. The user-action path always re-renders with the same
+        // preset state in scope, so we just no-op here.
+        const startedAtLayout = layoutKey;
         api.settings().then((s) => {
             cachedSettings = s;
             const p = (s && s.chart_preset) || {};
@@ -67,6 +71,8 @@ export function createChartGrid(container, opts = {}) {
             if (p.multichart_intervals && typeof p.multichart_intervals === 'object') {
                 intervalsByLayout = p.multichart_intervals;
             }
+            // Bail if the user changed layouts mid-fetch.
+            if (layoutKey !== startedAtLayout) return;
             // If we landed with the layout's default intervals because the
             // preset hadn't arrived yet, rebuild now that it has.
             const saved = intervalsByLayout[layoutKey];
