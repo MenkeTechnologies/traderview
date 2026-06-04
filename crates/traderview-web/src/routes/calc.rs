@@ -262,6 +262,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/section-362",           post(section_362_route))
         .route("/calc/section-367",           post(section_367_route))
         .route("/calc/section-45l",           post(section_45l_route))
+        .route("/calc/section-45v",           post(section_45v_route))
         .route("/calc/section-45w",           post(section_45w_route))
         .route("/calc/section-45x",           post(section_45x_route))
         .route("/calc/section-45y",           post(section_45y_route))
@@ -10307,6 +10308,13 @@ async fn section_45l_route(
 // (Public Law 119-21, signed July 4, 2025) for vehicles acquired
 // after September 30, 2025 (parallel § 30D new clean vehicle
 // termination; accelerates original IRA 2032 sunset by 7+ years).
+async fn section_45v_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_expense::section_45v::Section45VInput>,
+) -> Result<Json<traderview_expense::section_45v::Section45VResult>, ApiError> {
+    Ok(Json(traderview_expense::section_45v::check(&b)))
+}
+
 async fn section_45w_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_45w::Section45WInput>,
