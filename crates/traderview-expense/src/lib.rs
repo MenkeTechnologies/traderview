@@ -322,6 +322,7 @@ pub mod rental_water_submetering_disclosure;
 pub mod rental_well_water_disclosure;
 pub mod rental_window_blind_cord_safety;
 pub mod rental_window_guard_installation;
+pub mod rental_wisconsin_chapter_704_atcp_134;
 pub mod right_to_dry;
 pub mod reps_qualification;
 pub mod rules;

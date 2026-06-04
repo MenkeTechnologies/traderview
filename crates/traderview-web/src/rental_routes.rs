@@ -789,6 +789,11 @@ use traderview_expense::rental_window_guard_installation::{
     check as check_rental_window_guard_installation,
     RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
 };
+use traderview_expense::rental_wisconsin_chapter_704_atcp_134::{
+    check as check_rental_wisconsin_chapter_704_atcp_134,
+    WiLandlordTenantInput as RentalWisconsinChapter704Atcp134Input,
+    WiLandlordTenantResult as RentalWisconsinChapter704Atcp134Result,
+};
 use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
     check as check_rental_vehicle_towing_notice_sign_requirements,
     RentalVehicleTowingNoticeSignRequirementsInput,
@@ -1871,6 +1876,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
         .route("/rental-window-blind-cord-safety", axum::routing::post(rental_window_blind_cord_safety_route))
         .route("/rental-window-guard-installation", axum::routing::post(rental_window_guard_installation_route))
+        .route("/rental-wisconsin-chapter-704-atcp-134", axum::routing::post(rental_wisconsin_chapter_704_atcp_134_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
@@ -9635,6 +9641,14 @@ async fn rental_window_guard_installation_route(
     Json(b): Json<RentalWindowGuardInstallationInput>,
 ) -> Result<Json<RentalWindowGuardInstallationResult>, ApiError> {
     Ok(Json(check_rental_window_guard_installation(&b)))
+}
+
+async fn rental_wisconsin_chapter_704_atcp_134_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalWisconsinChapter704Atcp134Input>,
+) -> Result<Json<RentalWisconsinChapter704Atcp134Result>, ApiError> {
+    Ok(Json(check_rental_wisconsin_chapter_704_atcp_134(&b)))
 }
 
 async fn rental_water_submetering_disclosure_route(
