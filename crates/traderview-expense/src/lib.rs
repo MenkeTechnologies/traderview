@@ -235,6 +235,7 @@ pub mod rental_lead_pipe_disclosure;
 pub mod rental_marijuana_cultivation_restriction;
 pub mod rental_massachusetts_homes_act_eviction_sealing;
 pub mod rental_maryland_landlord_tenant_md_real_property_title_8;
+pub mod rental_massachusetts_mgl_chapter_186_239_broader_regime;
 pub mod rental_massachusetts_security_deposit_statute;
 pub mod rental_michigan_landlord_tenant_mcl_554;
 pub mod rental_minneapolis_renter_protections_ordinance_2020;

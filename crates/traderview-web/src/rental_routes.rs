@@ -1019,6 +1019,11 @@ use traderview_expense::rental_maryland_landlord_tenant_md_real_property_title_8
     MdLandlordTenantInput as RentalMarylandLandlordTenantMdRealPropertyTitle8Input,
     MdLandlordTenantResult as RentalMarylandLandlordTenantMdRealPropertyTitle8Result,
 };
+use traderview_expense::rental_massachusetts_mgl_chapter_186_239_broader_regime::{
+    check as check_rental_massachusetts_mgl_chapter_186_239_broader_regime,
+    MaLandlordTenantInput as RentalMassachusettsMglChapter186239BroaderRegimeInput,
+    MaLandlordTenantResult as RentalMassachusettsMglChapter186239BroaderRegimeResult,
+};
 use traderview_expense::rental_massachusetts_security_deposit_statute::{
     check as check_rental_massachusetts_security_deposit_statute,
     MassachusettsSecurityDepositInput as RentalMassachusettsSecurityDepositStatuteInput,
@@ -1807,6 +1812,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
         .route("/rental-maryland-landlord-tenant-md-real-property-title-8", axum::routing::post(rental_maryland_landlord_tenant_md_real_property_title_8_route))
+        .route("/rental-massachusetts-mgl-chapter-186-239-broader-regime", axum::routing::post(rental_massachusetts_mgl_chapter_186_239_broader_regime_route))
         .route("/rental-massachusetts-security-deposit-statute", axum::routing::post(rental_massachusetts_security_deposit_statute_route))
         .route("/rental-massachusetts-homes-act-eviction-sealing", axum::routing::post(rental_massachusetts_homes_act_eviction_sealing_route))
         .route("/rental-michigan-landlord-tenant-mcl-554", axum::routing::post(rental_michigan_landlord_tenant_mcl_554_route))
@@ -13226,6 +13232,14 @@ async fn rental_maryland_landlord_tenant_md_real_property_title_8_route(
     Json(b): Json<RentalMarylandLandlordTenantMdRealPropertyTitle8Input>,
 ) -> Result<Json<RentalMarylandLandlordTenantMdRealPropertyTitle8Result>, ApiError> {
     Ok(Json(check_rental_maryland_landlord_tenant_md_real_property_title_8(&b)))
+}
+
+async fn rental_massachusetts_mgl_chapter_186_239_broader_regime_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMassachusettsMglChapter186239BroaderRegimeInput>,
+) -> Result<Json<RentalMassachusettsMglChapter186239BroaderRegimeResult>, ApiError> {
+    Ok(Json(check_rental_massachusetts_mgl_chapter_186_239_broader_regime(&b)))
 }
 
 async fn rental_massachusetts_security_deposit_statute_route(
