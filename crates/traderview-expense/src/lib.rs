@@ -189,6 +189,7 @@ pub mod rental_california_sb_567_no_fault_eviction_amendments;
 pub mod rental_carbon_monoxide_detector;
 pub mod rental_chimney_fireplace_inspection_disclosure;
 pub mod rental_climate_mobilization_act_ll97_emissions;
+pub mod rental_colorado_crs_title_38_article_12_tenants_landlords;
 pub mod rental_colorado_hb_24_1098_just_cause_eviction;
 pub mod rental_connecticut_fair_rent_commission;
 pub mod rental_cook_county_rtlo;

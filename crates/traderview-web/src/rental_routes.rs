@@ -680,6 +680,11 @@ use traderview_expense::rental_climate_mobilization_act_ll97_emissions::{
     ClimateMobilizationActLl97EmissionsInput as RentalClimateMobilizationActLl97EmissionsInput,
     ClimateMobilizationActLl97EmissionsResult as RentalClimateMobilizationActLl97EmissionsResult,
 };
+use traderview_expense::rental_colorado_crs_title_38_article_12_tenants_landlords::{
+    check as check_rental_colorado_crs_title_38_article_12_tenants_landlords,
+    CoLandlordTenantInput as RentalColoradoCrsTitle38Article12TenantsLandlordsInput,
+    CoLandlordTenantResult as RentalColoradoCrsTitle38Article12TenantsLandlordsResult,
+};
 use traderview_expense::rental_colorado_hb_24_1098_just_cause_eviction::{
     check as check_rental_colorado_hb_24_1098_just_cause_eviction,
     RentalColoradoHb241098JustCauseEvictionInput,
@@ -1715,6 +1720,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-california-sb-567-no-fault-eviction-amendments", axum::routing::post(rental_california_sb_567_no_fault_eviction_amendments_route))
         .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
         .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
+        .route("/rental-colorado-crs-title-38-article-12-tenants-landlords", axum::routing::post(rental_colorado_crs_title_38_article_12_tenants_landlords_route))
         .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
         .route("/rental-connecticut-fair-rent-commission", axum::routing::post(rental_connecticut_fair_rent_commission_route))
         .route("/rental-cook-county-rtlo", axum::routing::post(rental_cook_county_rtlo_route))
@@ -8249,6 +8255,14 @@ async fn rental_climate_mobilization_act_ll97_emissions_route(
 // 647), rental_eviction_diversion_program (parallel eviction
 // regulation regime).
 // ---------------------------------------------------------------------------
+
+async fn rental_colorado_crs_title_38_article_12_tenants_landlords_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalColoradoCrsTitle38Article12TenantsLandlordsInput>,
+) -> Result<Json<RentalColoradoCrsTitle38Article12TenantsLandlordsResult>, ApiError> {
+    Ok(Json(check_rental_colorado_crs_title_38_article_12_tenants_landlords(&b)))
+}
 
 async fn rental_colorado_hb_24_1098_just_cause_eviction_route(
     _s: State<AppState>,
