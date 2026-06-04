@@ -226,6 +226,7 @@ pub mod rental_in_unit_laundry_appliance_provision;
 pub mod rental_indiana_landlord_tenant_law_ic_32_31;
 pub mod rental_junk_fee_transparency;
 pub mod rental_just_cause_eviction;
+pub mod rental_kentucky_urlta_krs_chapter_383_subchapter_5;
 pub mod rental_landlord_notice_to_enter;
 pub mod rental_late_fee_cap;
 pub mod rental_lead_paint_disclosure;
