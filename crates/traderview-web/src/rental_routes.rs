@@ -1009,6 +1009,11 @@ use traderview_expense::rental_massachusetts_security_deposit_statute::{
     MassachusettsSecurityDepositInput as RentalMassachusettsSecurityDepositStatuteInput,
     MassachusettsSecurityDepositResult as RentalMassachusettsSecurityDepositStatuteResult,
 };
+use traderview_expense::rental_michigan_landlord_tenant_mcl_554::{
+    check as check_rental_michigan_landlord_tenant_mcl_554,
+    MiLandlordTenantInput as RentalMichiganLandlordTenantMcl554Input,
+    MiLandlordTenantResult as RentalMichiganLandlordTenantMcl554Result,
+};
 use traderview_expense::rental_massachusetts_homes_act_eviction_sealing::{
     check as check_rental_massachusetts_homes_act_eviction_sealing,
     RentalMassachusettsHomesActEvictionSealingInput,
@@ -1776,6 +1781,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
         .route("/rental-massachusetts-security-deposit-statute", axum::routing::post(rental_massachusetts_security_deposit_statute_route))
         .route("/rental-massachusetts-homes-act-eviction-sealing", axum::routing::post(rental_massachusetts_homes_act_eviction_sealing_route))
+        .route("/rental-michigan-landlord-tenant-mcl-554", axum::routing::post(rental_michigan_landlord_tenant_mcl_554_route))
         .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
         .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
         .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
@@ -13174,6 +13180,14 @@ async fn rental_massachusetts_security_deposit_statute_route(
     Json(b): Json<RentalMassachusettsSecurityDepositStatuteInput>,
 ) -> Result<Json<RentalMassachusettsSecurityDepositStatuteResult>, ApiError> {
     Ok(Json(check_rental_massachusetts_security_deposit_statute(&b)))
+}
+
+async fn rental_michigan_landlord_tenant_mcl_554_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalMichiganLandlordTenantMcl554Input>,
+) -> Result<Json<RentalMichiganLandlordTenantMcl554Result>, ApiError> {
+    Ok(Json(check_rental_michigan_landlord_tenant_mcl_554(&b)))
 }
 
 // ---------------------------------------------------------------------------
