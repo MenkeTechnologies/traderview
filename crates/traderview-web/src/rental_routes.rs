@@ -809,6 +809,11 @@ use traderview_expense::rental_iowa_urlta_iowa_code_chapter_562a::{
     IaLandlordTenantInput as RentalIowaUrltaIowaCodeChapter562aInput,
     IaLandlordTenantResult as RentalIowaUrltaIowaCodeChapter562aResult,
 };
+use traderview_expense::rental_alabama_urlta_ala_code_35_9a::{
+    check as check_rental_alabama_urlta_ala_code_35_9a,
+    AlLandlordTenantInput as RentalAlabamaUrltaAlaCode359aInput,
+    AlLandlordTenantResult as RentalAlabamaUrltaAlaCode359aResult,
+};
 use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
     check as check_rental_vehicle_towing_notice_sign_requirements,
     RentalVehicleTowingNoticeSignRequirementsInput,
@@ -1895,6 +1900,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-south-carolina-residential-landlord-tenant-act-sc-code-27-40", axum::routing::post(rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40_route))
         .route("/rental-kentucky-urlta-krs-chapter-383-subchapter-5", axum::routing::post(rental_kentucky_urlta_krs_chapter_383_subchapter_5_route))
         .route("/rental-iowa-urlta-iowa-code-chapter-562a", axum::routing::post(rental_iowa_urlta_iowa_code_chapter_562a_route))
+        .route("/rental-alabama-urlta-ala-code-35-9a", axum::routing::post(rental_alabama_urlta_ala_code_35_9a_route))
         .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
         .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
         .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
@@ -9691,6 +9697,14 @@ async fn rental_iowa_urlta_iowa_code_chapter_562a_route(
     Json(b): Json<RentalIowaUrltaIowaCodeChapter562aInput>,
 ) -> Result<Json<RentalIowaUrltaIowaCodeChapter562aResult>, ApiError> {
     Ok(Json(check_rental_iowa_urlta_iowa_code_chapter_562a(&b)))
+}
+
+async fn rental_alabama_urlta_ala_code_35_9a_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalAlabamaUrltaAlaCode359aInput>,
+) -> Result<Json<RentalAlabamaUrltaAlaCode359aResult>, ApiError> {
+    Ok(Json(check_rental_alabama_urlta_ala_code_35_9a(&b)))
 }
 
 async fn rental_water_submetering_disclosure_route(

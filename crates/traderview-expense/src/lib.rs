@@ -172,6 +172,7 @@ pub mod rental_domestic_violence_lock_change_lease_termination;
 pub mod rental_dog_bite_liability;
 pub mod rental_drone_overflight_surveillance_privacy;
 pub mod rental_ada_accessible_parking_compliance;
+pub mod rental_alabama_urlta_ala_code_35_9a;
 pub mod rental_application_denial_disclosure;
 pub mod rental_arizona_residential_landlord_tenant_act_ars_33_1301;
 pub mod rental_asbestos_disclosure;
