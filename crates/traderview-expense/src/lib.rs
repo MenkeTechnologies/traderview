@@ -572,6 +572,7 @@ pub mod section_45x;
 pub mod section_45y;
 pub mod section_45z;
 pub mod section_47;
+pub mod section_48;
 pub mod section_48c;
 pub mod section_48e;
 pub mod section_51;
