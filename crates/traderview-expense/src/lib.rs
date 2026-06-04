@@ -257,6 +257,7 @@ pub mod rental_nyc_scrie_drie_rent_freeze;
 pub mod rental_oakland_measure_ee_just_cause_omc_8_22;
 pub mod rental_ohio_revised_code_chapter_5321_landlord_tenant_act;
 pub mod rental_oil_tank_replacement_disclosure;
+pub mod rental_oregon_residential_landlord_tenant_act_ors_chapter_90;
 pub mod rental_oregon_sb_608_sb_611_rent_stabilization;
 pub mod rental_organic_waste_collection_disclosure;
 pub mod rental_pellet_stove_disclosure;

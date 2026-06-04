@@ -939,6 +939,11 @@ use traderview_expense::rental_oil_tank_replacement_disclosure::{
     check as check_rental_oil_tank_replacement_disclosure,
     RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
 };
+use traderview_expense::rental_oregon_residential_landlord_tenant_act_ors_chapter_90::{
+    check as check_rental_oregon_residential_landlord_tenant_act_ors_chapter_90,
+    OrLandlordTenantInput as RentalOregonResidentialLandlordTenantActOrsChapter90Input,
+    OrLandlordTenantResult as RentalOregonResidentialLandlordTenantActOrsChapter90Result,
+};
 use traderview_expense::rental_oregon_sb_608_sb_611_rent_stabilization::{
     check as check_rental_oregon_sb_608_sb_611_rent_stabilization,
     RentalOregonSb608Sb611RentStabilizationInput,
@@ -1769,6 +1774,7 @@ pub fn router() -> Router<AppState> {
         .route("/rental-oakland-measure-ee-just-cause-omc-8-22", axum::routing::post(rental_oakland_measure_ee_just_cause_omc_8_22_route))
         .route("/rental-ohio-revised-code-chapter-5321-landlord-tenant-act", axum::routing::post(rental_ohio_revised_code_chapter_5321_landlord_tenant_act_route))
         .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
+        .route("/rental-oregon-residential-landlord-tenant-act-ors-chapter-90", axum::routing::post(rental_oregon_residential_landlord_tenant_act_ors_chapter_90_route))
         .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
         .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
         .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
@@ -12645,6 +12651,14 @@ async fn rental_oil_tank_replacement_disclosure_route(
 // mobile_home_park (ORS 90.600 cross-reference), rental_rent_
 // increase_notice_requirement (90-day notice cross-reference).
 // ---------------------------------------------------------------------------
+
+async fn rental_oregon_residential_landlord_tenant_act_ors_chapter_90_route(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<RentalOregonResidentialLandlordTenantActOrsChapter90Input>,
+) -> Result<Json<RentalOregonResidentialLandlordTenantActOrsChapter90Result>, ApiError> {
+    Ok(Json(check_rental_oregon_residential_landlord_tenant_act_ors_chapter_90(&b)))
+}
 
 async fn rental_oregon_sb_608_sb_611_rent_stabilization_route(
     _s: State<AppState>,
