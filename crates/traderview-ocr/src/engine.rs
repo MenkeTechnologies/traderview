@@ -647,6 +647,60 @@ mod tests {
         }
     }
 
+    /// Sauvola degenerate: 1×1 image. Window math should not div-by-zero
+    /// even though every dim < window. Output is one pixel either 0 or
+    /// 255 — just don't panic.
+    #[test]
+    fn sauvola_handles_1x1_image() {
+        let img = image::ImageBuffer::<image::Luma<u8>, _>::from_pixel(1, 1, image::Luma([128]));
+        let out = sauvola_threshold(&img, 5, 0.34);
+        assert_eq!(out.width(), 1);
+        assert_eq!(out.height(), 1);
+    }
+
+    /// Sauvola degenerate: very narrow 1×N strip (a column scan).
+    /// Tests that window-edge clamping (`saturating_sub`, `min`) works
+    /// when one dim is smaller than the half-window.
+    ///
+    /// Strip: alternating dark + light "text-like" pattern. Sauvola
+    /// only marks pixels darker than the LOCAL mean as foreground —
+    /// uniform regions stay background regardless of luminance, which
+    /// is by design (no contrast → no text).
+    #[test]
+    fn sauvola_handles_narrow_strip() {
+        let img = image::ImageBuffer::<image::Luma<u8>, _>::from_fn(1, 20, |_, y| {
+            // Mostly light (200) with two dark "ink" rows at y=5 and y=15.
+            image::Luma([if y == 5 || y == 15 { 30 } else { 200 }])
+        });
+        let out = sauvola_threshold(&img, 5, 0.34);
+        // Output is the same shape.
+        assert_eq!(out.width(), 1);
+        assert_eq!(out.height(), 20);
+        // The dark "ink" rows should be foreground (0) — they're well
+        // below the local mean of the mostly-light window.
+        assert_eq!(out.get_pixel(0, 5).0[0], 0,
+            "dark pixel surrounded by light must be foreground");
+        assert_eq!(out.get_pixel(0, 15).0[0], 0,
+            "dark pixel surrounded by light must be foreground");
+        // A typical light row is background (255).
+        assert_eq!(out.get_pixel(0, 0).0[0], 255);
+    }
+
+    /// Sauvola w_half=0: window is just the pixel itself. With k=0.34
+    /// and R=128, T = p * (1 + 0.34 * (0/128 - 1)) = p * 0.66.
+    /// Then p ≤ 0.66 * p ⇒ p ≤ 0 — only the zero pixel is foreground.
+    #[test]
+    fn sauvola_zero_window_degenerates_predictably() {
+        let mut img = image::ImageBuffer::<image::Luma<u8>, _>::new(3, 1);
+        img.put_pixel(0, 0, image::Luma([0]));
+        img.put_pixel(1, 0, image::Luma([128]));
+        img.put_pixel(2, 0, image::Luma([255]));
+        let out = sauvola_threshold(&img, 0, 0.34);
+        assert_eq!(out.get_pixel(0, 0).0[0], 0,   "0 pixel: 0 ≤ 0 → foreground");
+        assert_eq!(out.get_pixel(1, 0).0[0], 255, "128 pixel: 128 > 84.48 → background");
+        assert_eq!(out.get_pixel(2, 0).0[0], 255, "255 pixel: 255 > 168 → background");
+    }
+
     /// End-to-end smoke — `run()` returns Ok or one of the documented
     /// error variants on a 1×1 PNG. CI without tesseract installed hits
     /// ModelsMissing; CI with tesseract installed reaches the engine.

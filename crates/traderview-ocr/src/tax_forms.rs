@@ -289,6 +289,60 @@ mod tests {
     }
 
     #[test]
+    fn parse_amount_picks_first_when_line_has_multiple() {
+        // Multiple amounts on one line — common when OCR collapses two
+        // label/value pairs onto a single row. The parser scans
+        // character-by-character and stops at the first valid number
+        // it slurps. NOTE: this means embedded digits in labels
+        // ("Box1") would be picked up first — by design, since the
+        // upstream `find_amount_near_label` call lops off the label
+        // prefix before calling here.
+        assert_eq!(parse_amount("Total 12345.67 Tax 999.00"),
+                   Some("12345.67".parse().unwrap()));
+    }
+
+    #[test]
+    fn parse_amount_handles_leading_zeros() {
+        // OCR sometimes preserves leading zeros from preprinted form
+        // fields (00123.45). Parser must NOT reject the value just
+        // because it has leading zeros.
+        assert_eq!(parse_amount("00123.45"), Some("123.45".parse().unwrap()));
+    }
+
+    #[test]
+    fn parse_amount_rejects_scientific_notation() {
+        // OCR is unlikely to emit `1.5e3` but if it does, we should
+        // parse the `1.5` rather than try to interpret the exponent.
+        // The parser stops at non-numeric characters → reads "1.5".
+        assert_eq!(parse_amount("1.5e3"), Some("1.5".parse().unwrap()));
+    }
+
+    #[test]
+    fn parse_amount_label_proximity_takes_first_label_occurrence() {
+        // Same label appears twice in the text (e.g., a duplicate
+        // header at the top of a multi-page scan). The proximity
+        // scan must take the FIRST occurrence's value, not the last.
+        let text = "\
+Form W-2 Wage and Tax Statement
+Wages, tips, other compensation 50000.00
+[separator]
+Wages, tips, other compensation 99999.00
+";
+        let r = extract(text).expect("w2");
+        assert_eq!(r.payload.get("box_1"), Some(&"50000.00".parse().unwrap()),
+            "first label occurrence wins");
+    }
+
+    #[test]
+    fn parse_amount_zero_with_decimal() {
+        // "0.00" must parse as Decimal::ZERO. A naive
+        // `if !clean.is_empty() && clean != "."` filter must NOT reject
+        // valid zero values.
+        assert_eq!(parse_amount("0.00"), Some(rust_decimal::Decimal::ZERO));
+        assert_eq!(parse_amount("0"), Some(rust_decimal::Decimal::ZERO));
+    }
+
+    #[test]
     fn parse_amount_handles_dollar_and_commas() {
         assert_eq!(parse_amount("$1,234.56"), Some("1234.56".parse().unwrap()));
         assert_eq!(parse_amount("  $50,000.00"), Some("50000.00".parse().unwrap()));

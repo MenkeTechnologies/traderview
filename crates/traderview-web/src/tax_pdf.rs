@@ -326,6 +326,121 @@ mod tests {
     }
 
     #[test]
+    fn render_pdf_handles_many_w2s() {
+        // Filer with 10 W-2s (gig economy, multi-employer year). PDF
+        // generation must not fail or produce a corrupt file when
+        // total_w2.sum() is computed over a Vec of 10 entries.
+        let mut w2s = Vec::new();
+        for i in 0..10 {
+            w2s.push(W2 {
+                employer_name: format!("Employer #{i}"),
+                box_1_wages: Decimal::from(8_000 + i * 100),
+                box_2_federal_income_tax_withheld: Decimal::from(900),
+                ..Default::default()
+            });
+        }
+        let draft = TaxReturn {
+            tax_year: 2025,
+            status: traderview_tax::FilingStatus::Single,
+            w2s,
+            ..Default::default()
+        };
+        let result = compute_tax(&draft);
+        let bytes = render_pdf(2025, &draft, &result).expect("render");
+        assert_valid_pdf(&bytes);
+    }
+
+    #[test]
+    fn render_pdf_handles_large_dollar_amounts() {
+        // Million-dollar wages — formatting must not overflow the layout
+        // bounds (current `fmt_money` uses `${:.2}` which auto-widens).
+        let draft = TaxReturn {
+            tax_year: 2025,
+            status: traderview_tax::FilingStatus::Mfj,
+            w2s: vec![W2 {
+                employer_name: "Mega Corp".into(),
+                box_1_wages: Decimal::from(1_500_000),
+                box_2_federal_income_tax_withheld: Decimal::from(450_000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let result = compute_tax(&draft);
+        let bytes = render_pdf(2025, &draft, &result).expect("render");
+        assert_valid_pdf(&bytes);
+    }
+
+    #[test]
+    fn render_pdf_handles_long_employer_names() {
+        // Real-world employer names sometimes exceed 60 chars. Printpdf
+        // doesn't wrap automatically — but it must NOT panic.
+        let very_long = "The Extremely Long Name of an Enterprise Corporation \
+                         International Holdings, LLC (a Subsidiary of Mega Holdco Inc.)";
+        let draft = TaxReturn {
+            tax_year: 2025,
+            status: traderview_tax::FilingStatus::Single,
+            w2s: vec![W2 {
+                employer_name: very_long.into(),
+                box_1_wages: Decimal::from(50_000),
+                box_2_federal_income_tax_withheld: Decimal::from(5_000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let result = compute_tax(&draft);
+        let bytes = render_pdf(2025, &draft, &result).expect("render");
+        assert_valid_pdf(&bytes);
+    }
+
+    #[test]
+    fn render_pdf_full_combo_w2_schedule_c_schedule_e() {
+        // Maximally populated draft — every conditional page renders.
+        // Also flags QBI manual-review warning at high income.
+        let draft = TaxReturn {
+            tax_year: 2025,
+            status: traderview_tax::FilingStatus::Mfj,
+            w2s: vec![
+                W2 {
+                    employer_name: "Day Job A".into(),
+                    box_1_wages: Decimal::from(120_000),
+                    box_2_federal_income_tax_withheld: Decimal::from(18_000),
+                    ..Default::default()
+                },
+                W2 {
+                    employer_name: "Day Job B".into(),
+                    box_1_wages: Decimal::from(95_000),
+                    box_2_federal_income_tax_withheld: Decimal::from(13_000),
+                    ..Default::default()
+                },
+            ],
+            interest_income: Decimal::from(800),
+            ordinary_dividends: Decimal::from(2_000),
+            qualified_dividends: Decimal::from(1_500),
+            net_long_term_capital_gain: Decimal::from(5_000),
+            schedule_c: ScheduleC {
+                gross_receipts: Decimal::from(60_000),
+                total_expenses: Decimal::from(10_000),
+                net_profit: Decimal::from(50_000),
+            },
+            schedule_e: ScheduleE {
+                gross_rents: Decimal::from(36_000),
+                total_expenses: Decimal::from(12_000),
+                net_income: Decimal::from(24_000),
+            },
+            qualifying_children_under_17: 2,
+            other_dependents: 1,
+            estimated_tax_payments: Decimal::from(8_000),
+            ..Default::default()
+        };
+        let result = compute_tax(&draft);
+        let bytes = render_pdf(2025, &draft, &result).expect("render");
+        assert_valid_pdf(&bytes);
+        // Must be substantially larger than the empty case.
+        assert!(bytes.len() > 3_000,
+            "full-combo PDF should be ~3+ kb, got {} bytes", bytes.len());
+    }
+
+    #[test]
     fn fmt_money_renders_parens_for_negative() {
         // Locks the IRS-style accounting format: ($1,234.56) for
         // negatives, $1,234.56 for positives. Tax forms show losses

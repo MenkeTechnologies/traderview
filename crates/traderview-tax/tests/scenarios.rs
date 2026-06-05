@@ -299,6 +299,108 @@ fn scenario_boundary_taxable_income_zero() {
     assert_eq!(res.tax_owed, Decimal::ZERO);
 }
 
+/// Scenario 9: Head of household freelancer with one kid.
+/// $55k Schedule C, no W-2, 1 qualifying child, HoH status.
+///
+/// HoH std deduction = $22,500 (higher than single's $15k).
+/// HoH brackets push the 10%/12% boundary to $17,000 (vs single $11,925).
+///
+/// Key checks:
+///   * HoH std deduction applied (not single's).
+///   * CTC $2,000 reduces ordinary tax (one kid, well under phase-out).
+///   * SE tax computed on Schedule C net.
+#[test]
+fn scenario_hoh_freelancer_one_kid() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Hoh,
+        schedule_c: ScheduleC {
+            gross_receipts: d(55_000),
+            total_expenses: d(0),
+            net_profit: d(55_000),
+        },
+        qualifying_children_under_17: 1,
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // SE tax on $55k.
+    //   base = 55,000 × 0.9235 = 50,792.50
+    //   SS   = 50,792.50 × 0.124 = 6,298.27
+    //   Med  = 50,792.50 × 0.029 = 1,472.98 (1472.9825 → 1472.98)
+    //   total = 7,771.25; half = 3,885.625 → 3,885.63
+    assert_eq!(res.se_tax.total, dc("7771.25"));
+    // Above-line = (ss + medicare) / 2 = (6,298.27 + 1,472.98) / 2 =
+    // 3,885.625 → banker's-round to 3,885.62 (digit before is even).
+    assert_eq!(res.se_tax.above_line_deduction, dc("3885.62"));
+    // AGI = 55,000 - 3,885.62 = 51,114.38
+    assert_eq!(res.agi, dc("51114.38"));
+    // HoH std deduction.
+    assert_eq!(res.deduction_used, d(22_500));
+    // CTC $2,000 nonref (none refundable until tax_after_credits is solved).
+    assert_eq!(res.ctc.total, d(2_000));
+}
+
+/// Scenario 10: MFS in a high-SALT state — SALT cap binds at $10k.
+/// User reports $18k in state+local taxes; itemized total must cap
+/// the SALT line at $10k (per IRC § 164(b)(6) post-TCJA).
+#[test]
+fn scenario_mfs_salt_cap_binds() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Mfs,
+        w2s: vec![W2 {
+            box_1_wages: d(120_000),
+            box_2_federal_income_tax_withheld: d(20_000),
+            ..Default::default()
+        }],
+        itemized: Itemized {
+            medical_over_7_5_pct_agi: Decimal::ZERO,
+            state_and_local_taxes_capped_at_10k: d(18_000), // user-reported, BEFORE cap
+            mortgage_interest: d(15_000),
+            charitable_gifts: d(3_000),
+            casualty_losses: Decimal::ZERO,
+        },
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // SALT must cap at $10k → itemized total = 10k + 15k + 3k = 28k.
+    // MFS std deduction = $15k → 28k > 15k, itemized used.
+    assert_eq!(res.deduction_label, "itemized");
+    assert_eq!(res.deduction_used, d(28_000));
+    // Confirm AGI flowed correctly.
+    assert_eq!(res.agi, d(120_000));
+}
+
+/// Scenario 11: Retiree with large qualified dividends + LTCG —
+/// QBI's TI cap uses net_capital_gain (LTCG + qualified div) to
+/// reduce the TI base.
+#[test]
+fn scenario_retiree_qbi_ti_cap_reduces_for_capgains() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        qualified_dividends: d(40_000),
+        net_long_term_capital_gain: d(20_000),
+        // Tiny Schedule C income to trigger QBI.
+        schedule_c: ScheduleC {
+            gross_receipts: d(10_000),
+            total_expenses: Decimal::ZERO,
+            net_profit: d(10_000),
+        },
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // QBI: 20% of $10k SE net = $2,000.
+    // TI cap = 20% × (TI - net_cap_gain).
+    //   AGI = 10,000 - half SE = 10,000 - se_tax.above_line
+    //   TI before QBI = AGI - 15,000 (std), clamped at 0 if negative.
+    //   net_capital_gain = 40,000 + 20,000 = 60,000.
+    //   TI - net_cap_gain → likely negative → 0. So TI cap = $0.
+    //   QBI deduction = min(2,000, 0) = 0.
+    assert_eq!(res.qbi_deduction, Decimal::ZERO,
+        "QBI must be capped at $0 when TI - net_cap_gain ≤ 0");
+}
+
 /// Scenario 8: Mixed Schedule C + W-2 with SE tax SS-cap interaction.
 /// W-2 already at $100k SS wages (under cap), Schedule C $80k net.
 /// SE base = 73,880. SS portion limited by (cap - 100k) = 76,100 → 73,880
