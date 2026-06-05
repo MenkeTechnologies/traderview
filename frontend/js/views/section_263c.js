@@ -41,7 +41,7 @@ export async function renderSection263C(mount, _appState) {
             <h2 data-i18n="view.s263c.h2.inputs">Inputs</h2>
             <form id="s263c-form" class="inline-form">
                 <label><span data-i18n="view.s263c.label.idc">IDC total ($)</span>
-                    <input type="number" step="10000" name="idc_total" value="${state.idc_total}"></label>
+                    <input type="number" step="0.01" name="idc_total" value="${state.idc_total}"></label>
                 <label><span data-i18n="view.s263c.label.independent">Independent producer?</span>
                     <input type="checkbox" name="is_independent_producer" ${state.is_independent_producer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s263c.label.integrated">Integrated oil co?</span>
@@ -51,7 +51,7 @@ export async function renderSection263C(mount, _appState) {
                 <label><span data-i18n="view.s263c.label.working">Working interest owner?</span>
                     <input type="checkbox" name="is_working_interest" ${state.is_working_interest ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s263c.label.net_income">Net oil + gas income ($)</span>
-                    <input type="number" step="10000" name="net_oil_gas_income" value="${state.net_oil_gas_income}"></label>
+                    <input type="number" step="0.01" name="net_oil_gas_income" value="${state.net_oil_gas_income}"></label>
                 <label><span data-i18n="view.s263c.label.well_type">Well type</span>
                     <select name="well_type">
                         <option value="developmental" ${state.well_type === 'developmental' ? 'selected' : ''}>Developmental</option>
@@ -65,13 +65,13 @@ export async function renderSection263C(mount, _appState) {
                 <label><span data-i18n="view.s263c.label.elect">Elect current deduction?</span>
                     <input type="checkbox" name="elect_current_deduction" ${state.elect_current_deduction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s263c.label.amt">AMT taxable income ($)</span>
-                    <input type="number" step="10000" name="amt_taxable_income" value="${state.amt_taxable_income}"></label>
+                    <input type="number" step="0.01" name="amt_taxable_income" value="${state.amt_taxable_income}"></label>
                 <label><span data-i18n="view.s263c.label.passive">§ 469 passive activity?</span>
                     <input type="checkbox" name="section_469_passive" ${state.section_469_passive ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s263c.label.recapture">§ 1254 recapture amount ($)</span>
-                    <input type="number" step="10000" name="s291_recapture_amount" value="${state.s291_recapture_amount}"></label>
+                    <input type="number" step="0.01" name="s291_recapture_amount" value="${state.s291_recapture_amount}"></label>
                 <label><span data-i18n="view.s263c.label.gg">Geological + geophysical ($)</span>
-                    <input type="number" step="10000" name="geological_geophysical_amount" value="${state.geological_geophysical_amount}"></label>
+                    <input type="number" step="0.01" name="geological_geophysical_amount" value="${state.geological_geophysical_amount}"></label>
                 <label><span data-i18n="view.s263c.label.dry">Dry hole?</span>
                     <input type="checkbox" name="well_dry_hole" ${state.well_dry_hole ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s263c.label.year">Production year</span>

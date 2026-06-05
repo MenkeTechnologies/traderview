@@ -129,10 +129,10 @@ export async function renderRiskGate(mount, state) {
                         <option data-i18n="view.risk_gate.opt.long" value="long">Long</option>
                         <option data-i18n="view.risk_gate.opt.short" value="short">Short</option>
                     </select></label>
-                <label><span data-i18n="view.risk_gate.label.qty">Qty</span> <input name="qty" type="number" step="any" value="100" required></label>
-                <label><span data-i18n="view.risk_gate.label.entry">Entry</span> <input name="entry_price" type="number" step="any" value="150" required></label>
-                <label><span data-i18n="view.risk_gate.label.stop_loss">Stop loss</span> <input name="stop_loss" type="number" step="any" value="149"></label>
-                <label><span data-i18n="view.risk_gate.label.multiplier">Multiplier</span> <input name="multiplier" type="number" step="any" value="1"></label>
+                <label><span data-i18n="view.risk_gate.label.qty">Qty</span> <input name="qty" type="number" step="0.01" value="100" required></label>
+                <label><span data-i18n="view.risk_gate.label.entry">Entry</span> <input name="entry_price" type="number" step="0.01" value="150" required></label>
+                <label><span data-i18n="view.risk_gate.label.stop_loss">Stop loss</span> <input name="stop_loss" type="number" step="0.01" value="149"></label>
+                <label><span data-i18n="view.risk_gate.label.multiplier">Multiplier</span> <input name="multiplier" type="number" step="0.01" value="1"></label>
                 <label><input type="checkbox" name="has_attached_plan" checked> <span data-i18n="view.risk_gate.label.plan_attached">Plan attached</span></label>
                 <button data-i18n="view.risk_gate.btn.evaluate" class="primary" type="submit">Evaluate</button>
             </form>
@@ -149,7 +149,7 @@ export async function renderRiskGate(mount, state) {
         fieldsEl.innerHTML = rt.fields.map(([name, kind, ph]) =>
             `<label>${esc(name)}
                 <input name="${esc(name)}" type="${kind === 'text' ? 'text' : 'number'}"
-                       ${kind === 'integer' ? 'step="1"' : kind === 'number' ? 'step="any"' : ''}
+                       ${kind === 'integer' ? 'step="1"' : kind === 'number' ? 'step="0.01"' : ''}
                        value="${esc(ph)}" required>
             </label>`
         ).join('');

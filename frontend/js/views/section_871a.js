@@ -55,7 +55,7 @@ export async function renderSection871A(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s871a.label.amount">Gross amount ($)</span>
-                    <input type="number" step="100" name="gross_amount" value="${state.gross_amount}"></label>
+                    <input type="number" step="0.01" name="gross_amount" value="${state.gross_amount}"></label>
                 <label><span data-i18n="view.s871a.label.nra">Nonresident alien?</span>
                     <input type="checkbox" name="is_nonresident_alien" ${state.is_nonresident_alien ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s871a.label.country">Treaty country</span>

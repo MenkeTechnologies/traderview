@@ -44,17 +44,17 @@ export async function renderSection472(mount, _appState) {
             <h2 data-i18n="view.s472.h2.inputs">Inputs</h2>
             <form id="s472-form" class="inline-form">
                 <label><span data-i18n="view.s472.label.beg">Beginning inventory ($)</span>
-                    <input type="number" step="10000" name="beginning_inventory" value="${state.beginning_inventory}"></label>
+                    <input type="number" step="0.01" name="beginning_inventory" value="${state.beginning_inventory}"></label>
                 <label><span data-i18n="view.s472.label.end_fifo">Ending inventory FIFO ($)</span>
-                    <input type="number" step="10000" name="ending_inventory_fifo" value="${state.ending_inventory_fifo}"></label>
+                    <input type="number" step="0.01" name="ending_inventory_fifo" value="${state.ending_inventory_fifo}"></label>
                 <label><span data-i18n="view.s472.label.end_lifo">Ending inventory LIFO ($)</span>
-                    <input type="number" step="10000" name="ending_inventory_lifo" value="${state.ending_inventory_lifo}"></label>
+                    <input type="number" step="0.01" name="ending_inventory_lifo" value="${state.ending_inventory_lifo}"></label>
                 <label><span data-i18n="view.s472.label.cogs_fifo">COGS FIFO ($)</span>
-                    <input type="number" step="10000" name="cogs_fifo" value="${state.cogs_fifo}"></label>
+                    <input type="number" step="0.01" name="cogs_fifo" value="${state.cogs_fifo}"></label>
                 <label><span data-i18n="view.s472.label.cogs_lifo">COGS LIFO ($)</span>
-                    <input type="number" step="10000" name="cogs_lifo" value="${state.cogs_lifo}"></label>
+                    <input type="number" step="0.01" name="cogs_lifo" value="${state.cogs_lifo}"></label>
                 <label><span data-i18n="view.s472.label.purchases">Purchases this period ($)</span>
-                    <input type="number" step="10000" name="purchases" value="${state.purchases}"></label>
+                    <input type="number" step="0.01" name="purchases" value="${state.purchases}"></label>
                 <label><span data-i18n="view.s472.label.price">Price increase %</span>
                     <input type="number" step="0.1" name="price_increase_pct" value="${state.price_increase_pct}"></label>
                 <label><span data-i18n="view.s472.label.year">LIFO election year</span>
@@ -66,13 +66,13 @@ export async function renderSection472(mount, _appState) {
                 <label><span data-i18n="view.s472.label.layers">Inventory layers count</span>
                     <input type="number" step="1" name="inventory_layers_count" value="${state.inventory_layers_count}"></label>
                 <label><span data-i18n="view.s472.label.reserve">LIFO reserve ($)</span>
-                    <input type="number" step="10000" name="lifo_reserve" value="${state.lifo_reserve}"></label>
+                    <input type="number" step="0.01" name="lifo_reserve" value="${state.lifo_reserve}"></label>
                 <label><span data-i18n="view.s472.label.simplified">Simplified Dollar-Value LIFO?</span>
                     <input type="checkbox" name="elected_simplified_dollar_value" ${state.elected_simplified_dollar_value ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s472.label.c_to_s">C-corp to S-corp conversion?</span>
                     <input type="checkbox" name="is_c_to_s_conversion" ${state.is_c_to_s_conversion ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s472.label.cum_recap">Cumulative LIFO recapture ($)</span>
-                    <input type="number" step="10000" name="cumulative_lifo_recapture" value="${state.cumulative_lifo_recapture}"></label>
+                    <input type="number" step="0.01" name="cumulative_lifo_recapture" value="${state.cumulative_lifo_recapture}"></label>
                 <label><span data-i18n="view.s472.label.pools">Pool count</span>
                     <input type="number" step="1" name="pool_count" value="${state.pool_count}"></label>
                 <button class="primary" type="submit" data-i18n="view.s472.btn.compute">Compute</button>

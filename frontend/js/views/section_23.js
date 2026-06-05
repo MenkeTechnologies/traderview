@@ -39,13 +39,13 @@ export async function renderSection23(mount, _appState) {
             <h2 data-i18n="view.s23.h2.inputs">Inputs</h2>
             <form id="s23-form" class="inline-form">
                 <label><span data-i18n="view.s23.label.expenses">Qualified adoption expenses ($)</span>
-                    <input type="number" step="100" name="qualified_expenses" value="${state.qualified_expenses}"></label>
+                    <input type="number" step="0.01" name="qualified_expenses" value="${state.qualified_expenses}"></label>
                 <label><span data-i18n="view.s23.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s23.label.special_needs">Special needs adoption?</span>
                     <input type="checkbox" name="is_special_needs" ${state.is_special_needs ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s23.label.employer">Employer-provided assistance ($)</span>
-                    <input type="number" step="100" name="employer_assistance" value="${state.employer_assistance}"></label>
+                    <input type="number" step="0.01" name="employer_assistance" value="${state.employer_assistance}"></label>
                 <label><span data-i18n="view.s23.label.finalized">Adoption finalized?</span>
                     <input type="checkbox" name="adoption_finalized" ${state.adoption_finalized ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s23.label.domestic">Domestic adoption?</span>
@@ -53,7 +53,7 @@ export async function renderSection23(mount, _appState) {
                 <label><span data-i18n="view.s23.label.failed">Adoption attempt that failed?</span>
                     <input type="checkbox" name="failed_adoption" ${state.failed_adoption ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s23.label.tax">Federal tax liability ($)</span>
-                    <input type="number" step="100" name="fed_tax_liability" value="${state.fed_tax_liability}"></label>
+                    <input type="number" step="0.01" name="fed_tax_liability" value="${state.fed_tax_liability}"></label>
                 <button class="primary" type="submit" data-i18n="view.s23.btn.compute">Compute</button>
             </form>
         </div>

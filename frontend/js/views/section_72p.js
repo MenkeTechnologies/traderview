@@ -41,9 +41,9 @@ export async function renderSection72p(mount, _appState) {
             <h2 data-i18n="view.s72p.h2.inputs">Inputs</h2>
             <form id="s72p-form" class="inline-form">
                 <label><span data-i18n="view.s72p.label.balance">Vested balance ($)</span>
-                    <input type="number" step="1000" name="vested_balance" value="${state.vested_balance}"></label>
+                    <input type="number" step="0.01" name="vested_balance" value="${state.vested_balance}"></label>
                 <label><span data-i18n="view.s72p.label.amount">Desired loan ($)</span>
-                    <input type="number" step="1000" name="loan_amount" value="${state.loan_amount}"></label>
+                    <input type="number" step="0.01" name="loan_amount" value="${state.loan_amount}"></label>
                 <label><span data-i18n="view.s72p.label.residence">Principal residence?</span>
                     <input type="checkbox" name="is_principal_residence" ${state.is_principal_residence ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s72p.label.term">Loan term (years)</span>
@@ -51,7 +51,7 @@ export async function renderSection72p(mount, _appState) {
                 <label><span data-i18n="view.s72p.label.rate">Interest rate</span>
                     <input type="number" step="0.001" name="interest_rate" value="${state.interest_rate}"></label>
                 <label><span data-i18n="view.s72p.label.outstanding">Outstanding employer loans ($)</span>
-                    <input type="number" step="1000" name="employer_outstanding_loans" value="${state.employer_outstanding_loans}"></label>
+                    <input type="number" step="0.01" name="employer_outstanding_loans" value="${state.employer_outstanding_loans}"></label>
                 <label><span data-i18n="view.s72p.label.age">Your age</span>
                     <input type="number" step="1" name="your_age" value="${state.your_age}"></label>
                 <label><span data-i18n="view.s72p.label.marginal">Marginal %</span>

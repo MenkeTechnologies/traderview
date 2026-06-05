@@ -59,15 +59,15 @@ export async function renderSection368(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s368.label.fmv">Target FMV ($)</span>
-                    <input type="number" step="1000000" name="target_fmv" value="${state.target_fmv}"></label>
+                    <input type="number" step="0.01" name="target_fmv" value="${state.target_fmv}"></label>
                 <label><span data-i18n="view.s368.label.basis">Target basis ($)</span>
-                    <input type="number" step="1000000" name="target_basis" value="${state.target_basis}"></label>
+                    <input type="number" step="0.01" name="target_basis" value="${state.target_basis}"></label>
                 <label><span data-i18n="view.s368.label.voting_stock">Voting stock consideration ($)</span>
-                    <input type="number" step="100000" name="consideration_voting_stock" value="${state.consideration_voting_stock}"></label>
+                    <input type="number" step="0.01" name="consideration_voting_stock" value="${state.consideration_voting_stock}"></label>
                 <label><span data-i18n="view.s368.label.other">Other consideration ($)</span>
-                    <input type="number" step="100000" name="consideration_other" value="${state.consideration_other}"></label>
+                    <input type="number" step="0.01" name="consideration_other" value="${state.consideration_other}"></label>
                 <label><span data-i18n="view.s368.label.boot">Boot amount ($)</span>
-                    <input type="number" step="100000" name="boot_amount" value="${state.boot_amount}"></label>
+                    <input type="number" step="0.01" name="boot_amount" value="${state.boot_amount}"></label>
                 <label><span data-i18n="view.s368.label.triangular">Triangular reorg?</span>
                     <input type="checkbox" name="is_triangular" ${state.is_triangular ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s368.label.direction">Direction</span>
@@ -81,9 +81,9 @@ export async function renderSection368(mount, _appState) {
                 <label><span data-i18n="view.s368.label.bankruptcy">Bankruptcy Type G?</span>
                     <input type="checkbox" name="is_bankruptcy_g" ${state.is_bankruptcy_g ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s368.label.nol">Target NOL carryforward ($)</span>
-                    <input type="number" step="100000" name="target_nol_carryforward" value="${state.target_nol_carryforward}"></label>
+                    <input type="number" step="0.01" name="target_nol_carryforward" value="${state.target_nol_carryforward}"></label>
                 <label><span data-i18n="view.s368.label.s382_value">§ 382 target value ($)</span>
-                    <input type="number" step="100000" name="target_value_for_s382" value="${state.target_value_for_s382}"></label>
+                    <input type="number" step="0.01" name="target_value_for_s382" value="${state.target_value_for_s382}"></label>
                 <label><span data-i18n="view.s368.label.coi">Continuity of Interest %</span>
                     <input type="number" step="0.1" name="continuity_of_interest" value="${state.continuity_of_interest}"></label>
                 <label><span data-i18n="view.s368.label.cobe">Continuity of Business?</span>

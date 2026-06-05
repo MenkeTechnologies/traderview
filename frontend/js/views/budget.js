@@ -45,7 +45,7 @@ export async function renderBudget(mount) {
                 <select id="bg-month"></select>
                 <span class="bg-target-wrap">
                     <label>${esc(t('view.budget.savings_target'))}
-                        <input type="number" id="bg-target" step="50" value="0" min="0">
+                        <input type="number" id="bg-target" step="0.01" value="0" min="0">
                     </label>
                 </span>
             </header>
@@ -57,7 +57,7 @@ export async function renderBudget(mount) {
                     <select id="bg-add-cat"></select>
                 </label>
                 <label>${esc(t('view.budget.add.limit'))}
-                    <input type="number" id="bg-add-lim" min="0" step="10" value="0">
+                    <input type="number" id="bg-add-lim" min="0" step="0.01" value="0">
                 </label>
                 <button type="button" id="bg-add-btn" class="btn btn-primary btn-compact">
                     ${esc(t('view.budget.add.set'))}
@@ -195,7 +195,7 @@ function renderCategories(mount, tok) {
                         <td>${esc(c.label || c.category_code)} ${c.paused ? '<span class="bg-paused">paused</span>' : ''}</td>
                         <td class="num">${esc(fmtMoney(+c.spent || 0))}</td>
                         <td class="num">
-                            <input type="number" class="bg-lim-input" data-code="${esc(c.category_code)}" value="${+c.monthly_limit || 0}" min="0" step="10">
+                            <input type="number" class="bg-lim-input" data-code="${esc(c.category_code)}" value="${+c.monthly_limit || 0}" min="0" step="0.01">
                         </td>
                         <td>
                             <div class="bg-bar-wrap" title="${(+c.pct || 0).toFixed(1)}%">

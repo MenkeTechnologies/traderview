@@ -28,11 +28,11 @@ export async function renderBondDuration(mount, _appState) {
             <h2 data-i18n="view.bond_duration.h2.builder">Quick bond builder</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.bond_duration.label.par">Par ($)</span>
-                    <input id="bd-par" type="number" step="any" min="0" value="${state.builder.par}" data-tip="view.bond_duration.tip.par"></label>
+                    <input id="bd-par" type="number" step="0.01" min="0" value="${state.builder.par}" data-tip="view.bond_duration.tip.par"></label>
                 <label><span data-i18n="view.bond_duration.label.coupon">Coupon rate (decimal — 0.05 = 5%)</span>
-                    <input id="bd-coupon" type="number" step="any" min="0" max="1" value="${state.builder.coupon_rate}" data-tip="view.bond_duration.tip.coupon"></label>
+                    <input id="bd-coupon" type="number" step="0.01" min="0" max="1" value="${state.builder.coupon_rate}" data-tip="view.bond_duration.tip.coupon"></label>
                 <label><span data-i18n="view.bond_duration.label.maturity">Maturity (years)</span>
-                    <input id="bd-maturity" type="number" step="any" min="0" value="${state.builder.maturity_years}" data-tip="view.bond_duration.tip.maturity"></label>
+                    <input id="bd-maturity" type="number" step="0.01" min="0" value="${state.builder.maturity_years}" data-tip="view.bond_duration.tip.maturity"></label>
                 <button data-i18n="view.bond_duration.btn.build_bond" id="bd-build" class="secondary"
                         data-tip="view.bond_duration.tip.build_bond" data-shortcut="bond_duration_build" type="button">Build coupon bond</button>
             </div>
@@ -45,7 +45,7 @@ export async function renderBondDuration(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.bond_duration.label.ytm">YTM (decimal)</span>
-                    <input id="bd-ytm" type="number" step="any" value="${state.ytm}" data-tip="view.bond_duration.tip.ytm"></label>
+                    <input id="bd-ytm" type="number" step="0.01" value="${state.ytm}" data-tip="view.bond_duration.tip.ytm"></label>
                 <label><span data-i18n="view.bond_duration.label.compounding">Compounding / year</span>
                     <input id="bd-m" type="number" step="1" min="1" value="${state.compounding_per_year}" data-tip="view.bond_duration.tip.compounding"></label>
                 <button data-i18n="view.bond_duration.btn.compute" id="bd-run" class="primary"

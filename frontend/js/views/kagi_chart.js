@@ -32,7 +32,7 @@ export async function renderKagiChart(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.kagi.label.reversal">Reversal</span>
-                    <input id="kg-rev" type="number" step="any" min="0" value="${state.reversal}" data-tip="view.kagi.tip.reversal"></label>
+                    <input id="kg-rev" type="number" step="0.01" min="0" value="${state.reversal}" data-tip="view.kagi.tip.reversal"></label>
                 <label><span data-i18n="view.kagi.label.kind">Kind</span>
                     <select id="kg-kind" data-tip="view.kagi.tip.kind">
                         ${KINDS.map(k => `<option value="${k}" ${k === state.kind ? 'selected' : ''}

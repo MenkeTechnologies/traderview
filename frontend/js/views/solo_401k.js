@@ -52,9 +52,9 @@ export async function renderSolo401k(mount, _appState) {
                 <label><span data-i18n="view.solo.label.age">Your age</span>
                     <input type="number" step="1" name="age" value="${state.age}"></label>
                 <label><span data-i18n="view.solo.label.net_se">Net SE earnings (Schedule C) ($)</span>
-                    <input type="number" step="1000" name="net_se_earnings" value="${state.net_se_earnings}"></label>
+                    <input type="number" step="0.01" name="net_se_earnings" value="${state.net_se_earnings}"></label>
                 <label><span data-i18n="view.solo.label.w2_wages">W-2 wages (S/C-corp) ($)</span>
-                    <input type="number" step="1000" name="w2_wages" value="${state.w2_wages}"></label>
+                    <input type="number" step="0.01" name="w2_wages" value="${state.w2_wages}"></label>
                 <label><span data-i18n="view.solo.label.elect_roth">Roth deferral?</span>
                     <input type="checkbox" name="elect_roth_deferral" ${state.elect_roth_deferral ? 'checked' : ''}></label>
                 <label><span data-i18n="view.solo.label.mega_backdoor">Mega backdoor (after-tax)?</span>

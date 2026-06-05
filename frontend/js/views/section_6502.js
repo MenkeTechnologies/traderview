@@ -38,9 +38,9 @@ export async function renderSection6502(mount, _appState) {
                 <label><span data-i18n="view.s6502.label.assessment_date">Assessment date</span>
                     <input type="date" name="assessment_date" required></label>
                 <label><span data-i18n="view.s6502.label.original_amount">Original assessed amount ($)</span>
-                    <input type="number" step="1000" name="original_amount" required></label>
+                    <input type="number" step="0.01" name="original_amount" required></label>
                 <label><span data-i18n="view.s6502.label.current_balance">Current balance ($)</span>
-                    <input type="number" step="100" name="current_balance"></label>
+                    <input type="number" step="0.01" name="current_balance"></label>
                 <label><span data-i18n="view.s6502.label.suspension_days">Suspension days (cumulative)</span>
                     <input type="number" step="1" name="suspension_days" value="0"></label>
                 <button class="primary" type="submit" data-i18n="view.s6502.btn.add">Add</button>

@@ -46,7 +46,7 @@ export async function renderSection6038a(mount, _appState) {
                 <label><span data-i18n="view.s6038a.label.has_transactions">Related-party transactions?</span>
                     <input type="checkbox" name="has_related_party_transactions" ${state.has_related_party_transactions ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6038a.label.value">Total transaction value ($)</span>
-                    <input type="number" step="1000" name="total_related_party_value" value="${state.total_related_party_value}"></label>
+                    <input type="number" step="0.01" name="total_related_party_value" value="${state.total_related_party_value}"></label>
                 <label><span data-i18n="view.s6038a.label.years_unfiled">Years unfiled</span>
                     <input type="number" step="1" name="years_unfiled" value="${state.years_unfiled}"></label>
                 <button class="primary" type="submit" data-i18n="view.s6038a.btn.compute">Compute</button>

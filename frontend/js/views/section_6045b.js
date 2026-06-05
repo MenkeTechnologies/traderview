@@ -45,7 +45,7 @@ export async function renderSection6045b(mount, _appState) {
                 <label><span data-i18n="view.s6045b.label.is_broker">Broker (separate § 6045)?</span>
                     <input type="checkbox" name="is_broker" ${state.is_broker ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6045b.label.count">Securities / holders affected</span>
-                    <input type="number" step="1000" name="securities_affected" value="${state.securities_affected}"></label>
+                    <input type="number" step="0.01" name="securities_affected" value="${state.securities_affected}"></label>
                 <label><span data-i18n="view.s6045b.label.days_late">Days late</span>
                     <input type="number" step="1" name="days_late" value="${state.days_late}"></label>
                 <label><span data-i18n="view.s6045b.label.intentional">Intentional disregard?</span>

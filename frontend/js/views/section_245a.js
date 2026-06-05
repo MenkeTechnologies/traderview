@@ -36,7 +36,7 @@ export async function renderSection245A(mount, _appState) {
             <h2 data-i18n="view.s245A.h2.inputs">Inputs</h2>
             <form id="s245A-form" class="inline-form">
                 <label><span data-i18n="view.s245A.label.dividend">Dividend received ($)</span>
-                    <input type="number" step="1000" name="dividend_received" value="${state.dividend_received}"></label>
+                    <input type="number" step="0.01" name="dividend_received" value="${state.dividend_received}"></label>
                 <label><span data-i18n="view.s245A.label.foreign_pct">Foreign-source % of dividend</span>
                     <input type="number" step="0.1" name="foreign_source_pct" value="${state.foreign_source_pct}"></label>
                 <label><span data-i18n="view.s245A.label.ownership">US shareholder ownership %</span>
@@ -52,7 +52,7 @@ export async function renderSection245A(mount, _appState) {
                 <label><span data-i18n="view.s245A.label.s1248">§ 1248 recharacterized stock sale gain?</span>
                     <input type="checkbox" name="s1248_recharacterized" ${state.s1248_recharacterized ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s245A.label.foreign_tax">Foreign tax withheld ($)</span>
-                    <input type="number" step="100" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
                 <button class="primary" type="submit" data-i18n="view.s245A.btn.compute">Compute</button>
             </form>
         </div>

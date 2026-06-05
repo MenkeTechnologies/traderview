@@ -25,11 +25,11 @@ export async function renderGoalTracker(mount, _appState) {
             <h2 data-i18n="view.goal_tracker.h2.period_goals">Period goals</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.goal_tracker.label.start_eq">Period start ($)</span>
-                    <input id="gt-eq0" type="number" step="any" min="0" value="${state.params.period_start_equity}" data-tip="view.goal_tracker.tip.start_eq"></label>
+                    <input id="gt-eq0" type="number" step="0.01" min="0" value="${state.params.period_start_equity}" data-tip="view.goal_tracker.tip.start_eq"></label>
                 <label><span data-i18n="view.goal_tracker.label.target_return">Target return (decimal — 0.30 = 30%)</span>
-                    <input id="gt-tgt" type="number" step="any" value="${state.params.target_pct_return}" data-tip="view.goal_tracker.tip.target_return"></label>
+                    <input id="gt-tgt" type="number" step="0.01" value="${state.params.target_pct_return}" data-tip="view.goal_tracker.tip.target_return"></label>
                 <label><span data-i18n="view.goal_tracker.label.max_dd">Max DD (decimal — 0.10 = 10%)</span>
-                    <input id="gt-dd" type="number" step="any" min="0" max="1" value="${state.params.max_dd_pct}" data-tip="view.goal_tracker.tip.max_dd"></label>
+                    <input id="gt-dd" type="number" step="0.01" min="0" max="1" value="${state.params.max_dd_pct}" data-tip="view.goal_tracker.tip.max_dd"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.goal_tracker.label.period_start">Period start (YYYY-MM-DD)</span>

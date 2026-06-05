@@ -43,7 +43,7 @@ export async function renderSection162C(mount, _appState) {
             <h2 data-i18n="view.s162c.h2.inputs">Inputs</h2>
             <form id="s162c-form" class="inline-form">
                 <label><span data-i18n="view.s162c.label.amount">Payment amount ($)</span>
-                    <input type="number" step="10000" name="payment_amount" value="${state.payment_amount}"></label>
+                    <input type="number" step="0.01" name="payment_amount" value="${state.payment_amount}"></label>
                 <label><span data-i18n="view.s162c.label.type">Payment type</span>
                     <select name="payment_type">
                         <option value="kickback_general" ${state.payment_type === 'kickback_general' ? 'selected' : ''}>General kickback</option>

@@ -45,7 +45,7 @@ export async function renderSection7874(mount, _appState) {
                 <label><span data-i18n="view.s7874.label.income">SBA: income % in foreign country</span>
                     <input type="number" step="0.1" name="sba_income_pct" value="${state.sba_income_pct}"></label>
                 <label><span data-i18n="view.s7874.label.inversion_gain">Inversion gain (for 60-79%) ($)</span>
-                    <input type="number" step="10000" name="inversion_gain" value="${state.inversion_gain}"></label>
+                    <input type="number" step="0.01" name="inversion_gain" value="${state.inversion_gain}"></label>
                 <label><span data-i18n="view.s7874.label.jurisdiction">Foreign acquirer jurisdiction</span>
                     <select name="foreign_acquirer_jurisdiction">
                         <option value="ireland" ${state.foreign_acquirer_jurisdiction === 'ireland' ? 'selected' : ''}>Ireland</option>

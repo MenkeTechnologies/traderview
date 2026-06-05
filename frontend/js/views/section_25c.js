@@ -45,25 +45,25 @@ export async function renderSection25c(mount, _appState) {
             <h2 data-i18n="view.s25c.h2.inputs">Inputs</h2>
             <form id="s25c-form" class="inline-form">
                 <label><span data-i18n="view.s25c.label.windows">Windows / skylights ($)</span>
-                    <input type="number" step="100" name="windows_skylights_cost" value="${state.windows_skylights_cost}"></label>
+                    <input type="number" step="0.01" name="windows_skylights_cost" value="${state.windows_skylights_cost}"></label>
                 <label><span data-i18n="view.s25c.label.doors">Exterior doors ($)</span>
-                    <input type="number" step="100" name="doors_cost" value="${state.doors_cost}"></label>
+                    <input type="number" step="0.01" name="doors_cost" value="${state.doors_cost}"></label>
                 <label><span data-i18n="view.s25c.label.insulation">Insulation / air sealing ($)</span>
-                    <input type="number" step="100" name="insulation_cost" value="${state.insulation_cost}"></label>
+                    <input type="number" step="0.01" name="insulation_cost" value="${state.insulation_cost}"></label>
                 <label><span data-i18n="view.s25c.label.ac">Central AC ($)</span>
-                    <input type="number" step="100" name="central_ac_cost" value="${state.central_ac_cost}"></label>
+                    <input type="number" step="0.01" name="central_ac_cost" value="${state.central_ac_cost}"></label>
                 <label><span data-i18n="view.s25c.label.furnace">Furnace / boiler ($)</span>
-                    <input type="number" step="100" name="furnace_cost" value="${state.furnace_cost}"></label>
+                    <input type="number" step="0.01" name="furnace_cost" value="${state.furnace_cost}"></label>
                 <label><span data-i18n="view.s25c.label.heat_pump">Heat pump / HP water heater ($)</span>
-                    <input type="number" step="100" name="heat_pump_cost" value="${state.heat_pump_cost}"></label>
+                    <input type="number" step="0.01" name="heat_pump_cost" value="${state.heat_pump_cost}"></label>
                 <label><span data-i18n="view.s25c.label.biomass">Biomass stove ($)</span>
-                    <input type="number" step="100" name="biomass_stove_cost" value="${state.biomass_stove_cost}"></label>
+                    <input type="number" step="0.01" name="biomass_stove_cost" value="${state.biomass_stove_cost}"></label>
                 <label><span data-i18n="view.s25c.label.audit">Home energy audit ($)</span>
-                    <input type="number" step="100" name="home_energy_audit_cost" value="${state.home_energy_audit_cost}"></label>
+                    <input type="number" step="0.01" name="home_energy_audit_cost" value="${state.home_energy_audit_cost}"></label>
                 <label><span data-i18n="view.s25c.label.panel">Electrical panel upgrade ($)</span>
-                    <input type="number" step="100" name="electrical_panel_cost" value="${state.electrical_panel_cost}"></label>
+                    <input type="number" step="0.01" name="electrical_panel_cost" value="${state.electrical_panel_cost}"></label>
                 <label><span data-i18n="view.s25c.label.tax_liability">Federal tax liability ($)</span>
-                    <input type="number" step="100" name="fed_tax_liability" value="${state.fed_tax_liability}"></label>
+                    <input type="number" step="0.01" name="fed_tax_liability" value="${state.fed_tax_liability}"></label>
                 <label><span data-i18n="view.s25c.label.existing">Existing home (not new construction)?</span>
                     <input type="checkbox" name="is_existing_home" ${state.is_existing_home ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s25c.label.primary">Primary residence?</span>

@@ -59,29 +59,29 @@ export async function renderSection280C(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s280c.label.credit">Credit amount ($)</span>
-                    <input type="number" step="1000" name="credit_amount" value="${state.credit_amount}"></label>
+                    <input type="number" step="0.01" name="credit_amount" value="${state.credit_amount}"></label>
                 <label><span data-i18n="view.s280c.label.s280cb">§ 280C(b) reduced credit election?</span>
                     <input type="checkbox" name="is_s280c_b_election" ${state.is_s280c_b_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280c.label.s174">§ 174 R&D expense ($)</span>
-                    <input type="number" step="10000" name="s174_rd_expense" value="${state.s174_rd_expense}"></label>
+                    <input type="number" step="0.01" name="s174_rd_expense" value="${state.s174_rd_expense}"></label>
                 <label><span data-i18n="view.s280c.label.qre">§ 41 QRE ($)</span>
-                    <input type="number" step="10000" name="s41_qre" value="${state.s41_qre}"></label>
+                    <input type="number" step="0.01" name="s41_qre" value="${state.s41_qre}"></label>
                 <label><span data-i18n="view.s280c.label.aspc">§ 41 ASPC ($)</span>
-                    <input type="number" step="10000" name="s41_aspc" value="${state.s41_aspc}"></label>
+                    <input type="number" step="0.01" name="s41_aspc" value="${state.s41_aspc}"></label>
                 <label><span data-i18n="view.s280c.label.s280c_a">§ 280C(a) disallowance?</span>
                     <input type="checkbox" name="has_280c_a_disallowance" ${state.has_280c_a_disallowance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280c.label.s162">§ 162 deduction taken ($)</span>
-                    <input type="number" step="1000" name="s162_deduction_taken" value="${state.s162_deduction_taken}"></label>
+                    <input type="number" step="0.01" name="s162_deduction_taken" value="${state.s162_deduction_taken}"></label>
                 <label><span data-i18n="view.s280c.label.tips">§ 45B tips?</span>
                     <input type="checkbox" name="is_s45b_tips" ${state.is_s45b_tips ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280c.label.s45b">§ 45B credit ($)</span>
-                    <input type="number" step="1000" name="s45b_credit" value="${state.s45b_credit}"></label>
+                    <input type="number" step="0.01" name="s45b_credit" value="${state.s45b_credit}"></label>
                 <label><span data-i18n="view.s280c.label.s45a">§ 45A Indian employment ($)</span>
-                    <input type="number" step="1000" name="s45a_indian_employment" value="${state.s45a_indian_employment}"></label>
+                    <input type="number" step="0.01" name="s45a_indian_employment" value="${state.s45a_indian_employment}"></label>
                 <label><span data-i18n="view.s280c.label.s45p">§ 45P Armed Forces ($)</span>
-                    <input type="number" step="1000" name="s45p_armed_forces" value="${state.s45p_armed_forces}"></label>
+                    <input type="number" step="0.01" name="s45p_armed_forces" value="${state.s45p_armed_forces}"></label>
                 <label><span data-i18n="view.s280c.label.s51">§ 51 WOTC ($)</span>
-                    <input type="number" step="1000" name="s51_wotc" value="${state.s51_wotc}"></label>
+                    <input type="number" step="0.01" name="s51_wotc" value="${state.s51_wotc}"></label>
                 <label><span data-i18n="view.s280c.label.asc">ASC alternative simplified?</span>
                     <input type="checkbox" name="s41_alt_simplified_credit" ${state.s41_alt_simplified_credit ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280c.label.s174_amort">§ 174 5-yr amortization (post-2022)?</span>

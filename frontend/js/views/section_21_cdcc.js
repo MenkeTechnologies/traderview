@@ -38,17 +38,17 @@ export async function renderSection21Cdcc(mount, _appState) {
             <h2 data-i18n="view.cdcc.h2.inputs">Inputs</h2>
             <form id="cdcc-form" class="inline-form">
                 <label><span data-i18n="view.cdcc.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.cdcc.label.qual_count">Qualifying individuals</span>
                     <input type="number" step="1" name="qualifying_individuals" value="${state.qualifying_individuals}"></label>
                 <label><span data-i18n="view.cdcc.label.care_expenses">Qualified care expenses ($)</span>
-                    <input type="number" step="100" name="qualified_care_expenses" value="${state.qualified_care_expenses}"></label>
+                    <input type="number" step="0.01" name="qualified_care_expenses" value="${state.qualified_care_expenses}"></label>
                 <label><span data-i18n="view.cdcc.label.lower_earned">Lower-earned spouse income ($)</span>
-                    <input type="number" step="1000" name="earned_income_lower_spouse" value="${state.earned_income_lower_spouse}"></label>
+                    <input type="number" step="0.01" name="earned_income_lower_spouse" value="${state.earned_income_lower_spouse}"></label>
                 <label><span data-i18n="view.cdcc.label.higher_earned">Higher-earned spouse income ($)</span>
-                    <input type="number" step="1000" name="earned_income_higher_spouse" value="${state.earned_income_higher_spouse}"></label>
+                    <input type="number" step="0.01" name="earned_income_higher_spouse" value="${state.earned_income_higher_spouse}"></label>
                 <label><span data-i18n="view.cdcc.label.employer">Employer-provided dep care ($)</span>
-                    <input type="number" step="100" name="employer_dependent_care_assistance" value="${state.employer_dependent_care_assistance}"></label>
+                    <input type="number" step="0.01" name="employer_dependent_care_assistance" value="${state.employer_dependent_care_assistance}"></label>
                 <label><span data-i18n="view.cdcc.label.filing">Filing status</span>
                     <select name="filing_status">
                         <option value="single" ${state.filing_status === 'single' ? 'selected' : ''}>Single / HoH</option>
@@ -56,7 +56,7 @@ export async function renderSection21Cdcc(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.cdcc.label.tax_liability">Tax liability before credits ($)</span>
-                    <input type="number" step="100" name="fed_tax_liability_before_credits" value="${state.fed_tax_liability_before_credits}"></label>
+                    <input type="number" step="0.01" name="fed_tax_liability_before_credits" value="${state.fed_tax_liability_before_credits}"></label>
                 <button class="primary" type="submit" data-i18n="view.cdcc.btn.compute">Compute</button>
             </form>
         </div>

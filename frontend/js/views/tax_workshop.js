@@ -27,9 +27,9 @@ export async function renderTaxWorkshop(mount, _state) {
             <h2 data-i18n="view.tax_workshop.h2.schedule_se_self_employment_tax">// Schedule SE — Self-Employment Tax</h2>
             <form id="se-form" class="inline-form">
                 <label><span data-i18n="view.tax_workshop.label.net_profit">Net profit (Schedule C line 31)</span>
-                    <input name="net_profit_schedule_c" type="number" step="any" value="50000" required></label>
+                    <input name="net_profit_schedule_c" type="number" step="0.01" value="50000" required></label>
                 <label><span data-i18n="view.tax_workshop.label.w2_ss_wages">W-2 SS wages YTD</span>
-                    <input name="w2_ss_wages" type="number" step="any" value="0"></label>
+                    <input name="w2_ss_wages" type="number" step="0.01" value="0"></label>
                 <label><span data-i18n="view.tax_workshop.label.filing_status">Filing status</span>
                     <select name="filing_status">
                         <option data-i18n="view.tax_workshop.opt.single" value="single">Single</option>
@@ -48,21 +48,21 @@ export async function renderTaxWorkshop(mount, _state) {
             <h2 data-i18n="view.tax_workshop.h2.home_office_form_8829_vs_simplified">// Home Office — Form 8829 vs Simplified</h2>
             <form id="ho-form" class="inline-form">
                 <label><span data-i18n="view.tax_workshop.label.business_sqft">Business sqft</span>
-                    <input name="business_use_sqft" type="number" step="any" value="200" required></label>
+                    <input name="business_use_sqft" type="number" step="0.01" value="200" required></label>
                 <label><span data-i18n="view.tax_workshop.label.total_home_sqft">Total home sqft</span>
-                    <input name="total_home_sqft" type="number" step="any" value="2000" required></label>
+                    <input name="total_home_sqft" type="number" step="0.01" value="2000" required></label>
                 <label><span data-i18n="view.tax_workshop.label.mortgage">Annual mortgage interest</span>
-                    <input name="annual_mortgage_interest" type="number" step="any" value="0"></label>
+                    <input name="annual_mortgage_interest" type="number" step="0.01" value="0"></label>
                 <label><span data-i18n="view.tax_workshop.label.property_tax">Annual property tax</span>
-                    <input name="annual_property_tax" type="number" step="any" value="0"></label>
+                    <input name="annual_property_tax" type="number" step="0.01" value="0"></label>
                 <label><span data-i18n="view.tax_workshop.label.utilities">Annual utilities</span>
-                    <input name="annual_utilities" type="number" step="any" value="0"></label>
+                    <input name="annual_utilities" type="number" step="0.01" value="0"></label>
                 <label><span data-i18n="view.tax_workshop.label.insurance">Annual insurance</span>
-                    <input name="annual_insurance" type="number" step="any" value="0"></label>
+                    <input name="annual_insurance" type="number" step="0.01" value="0"></label>
                 <label><span data-i18n="view.tax_workshop.label.repairs">Annual repairs</span>
-                    <input name="annual_repairs" type="number" step="any" value="0"></label>
+                    <input name="annual_repairs" type="number" step="0.01" value="0"></label>
                 <label><span data-i18n="view.tax_workshop.label.depreciation">Annual depreciation</span>
-                    <input name="annual_depreciation" type="number" step="any" value="0"></label>
+                    <input name="annual_depreciation" type="number" step="0.01" value="0"></label>
                 <button data-i18n="view.tax_workshop.btn.compute_2" class="primary" type="submit">Compute</button>
             </form>
             <pre id="ho-out" class="boot">—</pre>
@@ -73,7 +73,7 @@ export async function renderTaxWorkshop(mount, _state) {
             <p data-i18n="view.tax_workshop.hint.add_trips_irs_standard_rate_is_applied_per_trip_da" class="muted small">Add trips. IRS standard rate is applied per trip date (handles 2022 mid-year split).</p>
             <form id="mi-form" class="inline-form">
                 <label><span data-i18n="view.tax_workshop.label.date">Date</span> <input name="date" type="date" required></label>
-                <label><span data-i18n="view.tax_workshop.label.miles">Miles</span> <input name="miles" type="number" step="any" required></label>
+                <label><span data-i18n="view.tax_workshop.label.miles">Miles</span> <input name="miles" type="number" step="0.01" required></label>
                 <label><span data-i18n="view.tax_workshop.label.purpose">Purpose</span>
                     <select name="purpose">
                         <option data-i18n="view.tax_workshop.opt.business" value="business">Business</option>
@@ -98,17 +98,17 @@ export async function renderTaxWorkshop(mount, _state) {
                 <label><span data-i18n="view.tax_workshop.label.qt_tax_year">Tax year</span>
                     <input name="tax_year" type="number" value="2026" required></label>
                 <label><span data-i18n="view.tax_workshop.label.prior_total_tax">Prior year total tax</span>
-                    <input name="prior_year_total_tax" type="number" step="any" value="20000" required></label>
+                    <input name="prior_year_total_tax" type="number" step="0.01" value="20000" required></label>
                 <label><span data-i18n="view.tax_workshop.label.prior_agi">Prior year AGI</span>
-                    <input name="prior_year_agi" type="number" step="any" value="100000" required></label>
+                    <input name="prior_year_agi" type="number" step="0.01" value="100000" required></label>
                 <label><span data-i18n="view.tax_workshop.label.ytd_profit">YTD net profit</span>
-                    <input name="ytd_net_profit" type="number" step="any" value="30000" required></label>
+                    <input name="ytd_net_profit" type="number" step="0.01" value="30000" required></label>
                 <label><span data-i18n="view.tax_workshop.label.days_ytd">Days through YTD</span>
                     <input name="days_through_ytd" type="number" value="90" required></label>
                 <label><span data-i18n="view.tax_workshop.label.eff_rate">Estimated effective tax rate (decimal, e.g. 0.28)</span>
-                    <input name="estimated_effective_tax_rate" type="number" step="any" value="0.28" required></label>
+                    <input name="estimated_effective_tax_rate" type="number" step="0.01" value="0.28" required></label>
                 <label><span data-i18n="view.tax_workshop.label.withholding">Withholding YTD</span>
-                    <input name="withholding_ytd" type="number" step="any" value="0"></label>
+                    <input name="withholding_ytd" type="number" step="0.01" value="0"></label>
                 <button data-i18n="view.tax_workshop.btn.forecast" class="primary" type="submit">Forecast</button>
             </form>
             <pre id="qt-out" class="boot">—</pre>

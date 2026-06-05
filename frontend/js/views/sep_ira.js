@@ -45,13 +45,13 @@ export async function renderSepIra(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.sep.label.net_se">Net SE earnings ($)</span>
-                    <input type="number" step="1000" name="net_se_earnings" value="${state.net_se_earnings}"></label>
+                    <input type="number" step="0.01" name="net_se_earnings" value="${state.net_se_earnings}"></label>
                 <label><span data-i18n="view.sep.label.w2_wages">W-2 wages ($)</span>
-                    <input type="number" step="1000" name="w2_wages" value="${state.w2_wages}"></label>
+                    <input type="number" step="0.01" name="w2_wages" value="${state.w2_wages}"></label>
                 <label><span data-i18n="view.sep.label.employee_count">Other eligible employees</span>
                     <input type="number" step="1" name="employee_count" value="${state.employee_count}"></label>
                 <label><span data-i18n="view.sep.label.avg_emp_wages">Avg employee W-2 ($)</span>
-                    <input type="number" step="1000" name="average_employee_wages" value="${state.average_employee_wages}"></label>
+                    <input type="number" step="0.01" name="average_employee_wages" value="${state.average_employee_wages}"></label>
                 <label><span data-i18n="view.sep.label.roth">Roth SEP (SECURE 2.0)?</span>
                     <input type="checkbox" name="elect_roth" ${state.elect_roth ? 'checked' : ''}></label>
                 <label><span data-i18n="view.sep.label.marginal">Marginal tax %</span>

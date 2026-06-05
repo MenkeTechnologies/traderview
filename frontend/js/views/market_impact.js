@@ -38,7 +38,7 @@ export async function renderMarketImpact(mount, _appState) {
             <h2 data-i18n="view.market_impact.h2.threshold">Threshold</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.market_impact.label.spike_bps">Spike threshold (bps)</span>
-                    <input id="mi-spike" type="number" step="any" min="0" value="${state.spikeBps}" data-tip="view.market_impact.tip.spike"></label>
+                    <input id="mi-spike" type="number" step="0.01" min="0" value="${state.spikeBps}" data-tip="view.market_impact.tip.spike"></label>
                 <button data-i18n="view.market_impact.btn.analyze" data-tip="view.market_impact.tip.analyze" data-shortcut="market_impact_analyze" id="mi-run" class="primary" type="button">Analyze</button>
             </div>
             <p data-i18n="view.market_impact.hint.the_first_adv_bucket_whose_avg_slippage_clears_the" class="muted">The first ADV bucket whose avg slippage clears the threshold

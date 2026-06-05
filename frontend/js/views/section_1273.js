@@ -44,9 +44,9 @@ export async function renderSection1273(mount, _appState) {
             <h2 data-i18n="view.s1273.h2.inputs">Inputs</h2>
             <form id="s1273-form" class="inline-form">
                 <label><span data-i18n="view.s1273.label.issue">Issue price ($)</span>
-                    <input type="number" step="10" name="issue_price" value="${state.issue_price}"></label>
+                    <input type="number" step="0.01" name="issue_price" value="${state.issue_price}"></label>
                 <label><span data-i18n="view.s1273.label.redemption">Stated redemption at maturity ($)</span>
-                    <input type="number" step="10" name="stated_redemption_at_maturity" value="${state.stated_redemption_at_maturity}"></label>
+                    <input type="number" step="0.01" name="stated_redemption_at_maturity" value="${state.stated_redemption_at_maturity}"></label>
                 <label><span data-i18n="view.s1273.label.years">Years to maturity (at issue)</span>
                     <input type="number" step="0.5" name="years_to_maturity" value="${state.years_to_maturity}"></label>
                 <label><span data-i18n="view.s1273.label.holding">Current holding period years</span>
@@ -72,7 +72,7 @@ export async function renderSection1273(mount, _appState) {
                 <label><span data-i18n="view.s1273.label.s1278">§ 1278(b) MD accrual election?</span>
                     <input type="checkbox" name="market_discount_election_s1278" ${state.market_discount_election_s1278 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1273.label.accrued">Accrued OID to date ($)</span>
-                    <input type="number" step="10" name="accrued_oid_to_date" value="${state.accrued_oid_to_date}"></label>
+                    <input type="number" step="0.01" name="accrued_oid_to_date" value="${state.accrued_oid_to_date}"></label>
                 <label><span data-i18n="view.s1273.label.treasury">US Treasury?</span>
                     <input type="checkbox" name="is_us_treasury" ${state.is_us_treasury ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s1273.btn.compute">Compute</button>

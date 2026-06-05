@@ -59,25 +59,25 @@ export async function renderSection408A(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s408a.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s408a.label.age">Age</span>
                     <input type="number" step="1" name="age" value="${state.age}"></label>
                 <label><span data-i18n="view.s408a.label.contrib">Contribution amount ($)</span>
-                    <input type="number" step="500" name="contribution_amount" value="${state.contribution_amount}"></label>
+                    <input type="number" step="0.01" name="contribution_amount" value="${state.contribution_amount}"></label>
                 <label><span data-i18n="view.s408a.label.conversion">Roth conversion?</span>
                     <input type="checkbox" name="is_conversion" ${state.is_conversion ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s408a.label.conv_amt">Conversion amount ($)</span>
-                    <input type="number" step="1000" name="conversion_amount" value="${state.conversion_amount}"></label>
+                    <input type="number" step="0.01" name="conversion_amount" value="${state.conversion_amount}"></label>
                 <label><span data-i18n="view.s408a.label.pretax">Pre-tax IRA balance ($)</span>
-                    <input type="number" step="1000" name="pre_tax_iras_balance" value="${state.pre_tax_iras_balance}"></label>
+                    <input type="number" step="0.01" name="pre_tax_iras_balance" value="${state.pre_tax_iras_balance}"></label>
                 <label><span data-i18n="view.s408a.label.aftertax">After-tax IRA balance ($)</span>
-                    <input type="number" step="1000" name="after_tax_iras_balance" value="${state.after_tax_iras_balance}"></label>
+                    <input type="number" step="0.01" name="after_tax_iras_balance" value="${state.after_tax_iras_balance}"></label>
                 <label><span data-i18n="view.s408a.label.backdoor">Backdoor Roth?</span>
                     <input type="checkbox" name="is_backdoor" ${state.is_backdoor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s408a.label.mega">Mega backdoor?</span>
                     <input type="checkbox" name="is_mega_backdoor" ${state.is_mega_backdoor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s408a.label.401k_aftertax">After-tax 401(k) ($)</span>
-                    <input type="number" step="1000" name="employer_401k_after_tax" value="${state.employer_401k_after_tax}"></label>
+                    <input type="number" step="0.01" name="employer_401k_after_tax" value="${state.employer_401k_after_tax}"></label>
                 <label><span data-i18n="view.s408a.label.qualified">Qualified distribution?</span>
                     <input type="checkbox" name="has_qualified_distribution" ${state.has_qualified_distribution ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s408a.label.days">Days since 1st contrib</span>
@@ -95,7 +95,7 @@ export async function renderSection408A(mount, _appState) {
                 <label><span data-i18n="view.s408a.label.s72_5yr">§ 72 5-yr rule?</span>
                     <input type="checkbox" name="s72_5yr_rule" ${state.s72_5yr_rule ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s408a.label.prorata">Pro-rata aggregate balance ($)</span>
-                    <input type="number" step="1000" name="pro_rata_balance" value="${state.pro_rata_balance}"></label>
+                    <input type="number" step="0.01" name="pro_rata_balance" value="${state.pro_rata_balance}"></label>
                 <label><span data-i18n="view.s408a.label.qcd">QCD age</span>
                     <input type="number" step="0.5" name="qcd_offset_age" value="${state.qcd_offset_age}"></label>
                 <label><span data-i18n="view.s408a.label.year">Year</span>

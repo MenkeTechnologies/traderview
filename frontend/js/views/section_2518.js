@@ -65,7 +65,7 @@ export async function renderSection2518(mount, _appState) {
                 <label><span data-i18n="view.s2518.label.age">Disclaimant age</span>
                     <input type="number" step="1" name="disclaimant_age" value="${state.disclaimant_age}"></label>
                 <label><span data-i18n="view.s2518.label.amount">Disclaimed amount ($)</span>
-                    <input type="number" step="10000" name="disclaimed_amount" value="${state.disclaimed_amount}"></label>
+                    <input type="number" step="0.01" name="disclaimed_amount" value="${state.disclaimed_amount}"></label>
                 <label><span data-i18n="view.s2518.label.transferor">Transferor</span>
                     <select name="transferor_type">
                         <option value="decedent" ${state.transferor_type === 'decedent' ? 'selected' : ''}>Decedent (estate)</option>
@@ -88,7 +88,7 @@ export async function renderSection2518(mount, _appState) {
                 <label><span data-i18n="view.s2518.label.partial">Partial disclaimer?</span>
                     <input type="checkbox" name="is_partial_disclaimer" ${state.is_partial_disclaimer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2518.label.partial_amt">Partial amount ($)</span>
-                    <input type="number" step="10000" name="partial_amount" value="${state.partial_amount}"></label>
+                    <input type="number" step="0.01" name="partial_amount" value="${state.partial_amount}"></label>
                 <label><span data-i18n="view.s2518.label.state_compliant">State law compliant?</span>
                     <input type="checkbox" name="received_state_law_compliant" ${state.received_state_law_compliant ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2518.label.state">State of disclaimer</span>

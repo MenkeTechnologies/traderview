@@ -54,7 +54,7 @@ export async function renderSection461(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s461.label.accrued">Accrued amount ($)</span>
-                    <input type="number" step="1000" name="accrued_amount" value="${state.accrued_amount}"></label>
+                    <input type="number" step="0.01" name="accrued_amount" value="${state.accrued_amount}"></label>
                 <label><span data-i18n="view.s461.label.payment_date">Payment months after year-end</span>
                     <input type="number" step="0.5" name="payment_date_months_after_year_end" value="${state.payment_date_months_after_year_end}"></label>
                 <label><span data-i18n="view.s461.label.recurring">Recurring item?</span>
@@ -63,9 +63,9 @@ export async function renderSection461(mount, _appState) {
                     <input type="checkbox" name="is_economic_performance_complete" ${state.is_economic_performance_complete ? 'checked' : ''}></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s461.label.ebl">Excess business loss ($)</span>
-                    <input type="number" step="1000" name="excess_business_loss_amount" value="${state.excess_business_loss_amount}"></label>
+                    <input type="number" step="0.01" name="excess_business_loss_amount" value="${state.excess_business_loss_amount}"></label>
                 <label><span data-i18n="view.s461.label.other_biz_income">Other non-business income ($)</span>
-                    <input type="number" step="1000" name="other_business_income" value="${state.other_business_income}"></label>
+                    <input type="number" step="0.01" name="other_business_income" value="${state.other_business_income}"></label>
                 <label><span data-i18n="view.s461.label.mfj">MFJ?</span>
                     <input type="checkbox" name="is_mfj" ${state.is_mfj ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s461.label.marginal">Marginal %</span>

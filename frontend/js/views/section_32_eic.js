@@ -51,11 +51,11 @@ export async function renderSection32Eic(mount, _appState) {
                 <label><span data-i18n="view.eic.label.children">Qualifying children</span>
                     <input type="number" step="1" min="0" max="3" name="qualifying_children_count" value="${state.qualifying_children_count}"></label>
                 <label><span data-i18n="view.eic.label.earned">Earned income ($)</span>
-                    <input type="number" step="100" name="earned_income" value="${state.earned_income}"></label>
+                    <input type="number" step="0.01" name="earned_income" value="${state.earned_income}"></label>
                 <label><span data-i18n="view.eic.label.agi">AGI ($)</span>
-                    <input type="number" step="100" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.eic.label.investment">Investment income ($)</span>
-                    <input type="number" step="100" name="investment_income" value="${state.investment_income}"></label>
+                    <input type="number" step="0.01" name="investment_income" value="${state.investment_income}"></label>
                 <label><span data-i18n="view.eic.label.filing">Filing status</span>
                     <select name="filing_status">
                         <option value="single" ${state.filing_status === 'single' ? 'selected' : ''}>Single / HoH</option>

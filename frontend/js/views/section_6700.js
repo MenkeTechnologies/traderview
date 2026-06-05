@@ -43,7 +43,7 @@ export async function renderSection6700(mount, _appState) {
             <h2 data-i18n="view.s6700.h2.inputs">Inputs</h2>
             <form id="s6700-form" class="inline-form">
                 <label><span data-i18n="view.s6700.label.gross">Gross income from activity ($)</span>
-                    <input type="number" step="1000" name="gross_income_from_activity" value="${state.gross_income_from_activity}"></label>
+                    <input type="number" step="0.01" name="gross_income_from_activity" value="${state.gross_income_from_activity}"></label>
                 <label><span data-i18n="view.s6700.label.activity">Activity type</span>
                     <select name="activity_type">
                         <option value="tax_shelter" ${state.activity_type === 'tax_shelter' ? 'selected' : ''}>Tax shelter</option>
@@ -69,7 +69,7 @@ export async function renderSection6700(mount, _appState) {
                 <label><span data-i18n="view.s6700.label.overstate">Gross valuation overstatement?</span>
                     <input type="checkbox" name="gross_valuation_overstatement" ${state.gross_valuation_overstatement ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6700.label.overstate_amt">Overstatement amount ($)</span>
-                    <input type="number" step="10000" name="overstatement_amount" value="${state.overstatement_amount}"></label>
+                    <input type="number" step="0.01" name="overstatement_amount" value="${state.overstatement_amount}"></label>
                 <label><span data-i18n="view.s6700.label.listed">Listed transaction?</span>
                     <input type="checkbox" name="listed_transaction" ${state.listed_transaction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6700.label.reportable">Reportable transaction?</span>
@@ -77,7 +77,7 @@ export async function renderSection6700(mount, _appState) {
                 <label><span data-i18n="view.s6700.label.count">Transactions count</span>
                     <input type="number" step="1" name="transactions_count" value="${state.transactions_count}"></label>
                 <label><span data-i18n="view.s6700.label.per_tx">Penalty per transaction ($)</span>
-                    <input type="number" step="100" name="penalty_per_transaction" value="${state.penalty_per_transaction}"></label>
+                    <input type="number" step="0.01" name="penalty_per_transaction" value="${state.penalty_per_transaction}"></label>
                 <label><span data-i18n="view.s6700.label.s6701">Aid + abet § 6701?</span>
                     <input type="checkbox" name="aiding_abetting_s6701" ${state.aiding_abetting_s6701 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6700.label.s6701_count">Aid + abet count</span>

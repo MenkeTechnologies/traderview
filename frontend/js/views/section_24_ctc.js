@@ -47,15 +47,15 @@ export async function renderSection24Ctc(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.ctc.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.ctc.label.children">Qualifying children &lt; 17</span>
                     <input type="number" step="1" name="qualifying_children_count" value="${state.qualifying_children_count}"></label>
                 <label><span data-i18n="view.ctc.label.other_dep">Other dependents</span>
                     <input type="number" step="1" name="other_dependents_count" value="${state.other_dependents_count}"></label>
                 <label><span data-i18n="view.ctc.label.earned">Earned income ($)</span>
-                    <input type="number" step="100" name="earned_income" value="${state.earned_income}"></label>
+                    <input type="number" step="0.01" name="earned_income" value="${state.earned_income}"></label>
                 <label><span data-i18n="view.ctc.label.tax_liability">Tax liability before credits ($)</span>
-                    <input type="number" step="100" name="fed_tax_liability_before_credits" value="${state.fed_tax_liability_before_credits}"></label>
+                    <input type="number" step="0.01" name="fed_tax_liability_before_credits" value="${state.fed_tax_liability_before_credits}"></label>
                 <label><span data-i18n="view.ctc.label.ssn">SSNs by due date?</span>
                     <input type="checkbox" name="has_ssn_by_due_date" ${state.has_ssn_by_due_date ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.ctc.btn.compute">Compute</button>

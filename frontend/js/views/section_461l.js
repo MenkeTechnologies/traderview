@@ -55,15 +55,15 @@ export async function renderSection461L(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s461l.label.gross">Gross business income ($)</span>
-                    <input type="number" step="10000" name="gross_business_income" value="${state.gross_business_income}"></label>
+                    <input type="number" step="0.01" name="gross_business_income" value="${state.gross_business_income}"></label>
                 <label><span data-i18n="view.s461l.label.deductions">Business deductions ($)</span>
-                    <input type="number" step="10000" name="business_deductions" value="${state.business_deductions}"></label>
+                    <input type="number" step="0.01" name="business_deductions" value="${state.business_deductions}"></label>
                 <label><span data-i18n="view.s461l.label.net">Net business income/loss ($)</span>
-                    <input type="number" step="10000" name="net_business_income_or_loss" value="${state.net_business_income_or_loss}"></label>
+                    <input type="number" step="0.01" name="net_business_income_or_loss" value="${state.net_business_income_or_loss}"></label>
                 <label><span data-i18n="view.s461l.label.other">Other taxable income ($)</span>
-                    <input type="number" step="10000" name="other_taxable_income" value="${state.other_taxable_income}"></label>
+                    <input type="number" step="0.01" name="other_taxable_income" value="${state.other_taxable_income}"></label>
                 <label><span data-i18n="view.s461l.label.wages">Wage income ($)</span>
-                    <input type="number" step="10000" name="wage_income" value="${state.wage_income}"></label>
+                    <input type="number" step="0.01" name="wage_income" value="${state.wage_income}"></label>
                 <label><span data-i18n="view.s461l.label.corp">Corporate taxpayer?</span>
                     <input type="checkbox" name="is_corporate_taxpayer" ${state.is_corporate_taxpayer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s461l.label.repro">Real estate professional?</span>
@@ -73,21 +73,21 @@ export async function renderSection461L(mount, _appState) {
                 <label><span data-i18n="view.s461l.label.passive_carry">Passive loss carryover?</span>
                     <input type="checkbox" name="has_passive_loss_carryover" ${state.has_passive_loss_carryover ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s461l.label.passive_amount">Passive loss carryover ($)</span>
-                    <input type="number" step="10000" name="passive_loss_carryover" value="${state.passive_loss_carryover}"></label>
+                    <input type="number" step="0.01" name="passive_loss_carryover" value="${state.passive_loss_carryover}"></label>
                 <label><span data-i18n="view.s461l.label.nol_carry">NOL carryover?</span>
                     <input type="checkbox" name="has_nol_carryover" ${state.has_nol_carryover ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s461l.label.nol_pre">NOL pre-2018 ($)</span>
-                    <input type="number" step="10000" name="nol_carryover_pre_2018" value="${state.nol_carryover_pre_2018}"></label>
+                    <input type="number" step="0.01" name="nol_carryover_pre_2018" value="${state.nol_carryover_pre_2018}"></label>
                 <label><span data-i18n="view.s461l.label.nol_post">NOL post-2017 ($)</span>
-                    <input type="number" step="10000" name="nol_carryover_post_2017" value="${state.nol_carryover_post_2017}"></label>
+                    <input type="number" step="0.01" name="nol_carryover_post_2017" value="${state.nol_carryover_post_2017}"></label>
                 <label><span data-i18n="view.s461l.label.year">Year</span>
                     <input type="number" step="1" name="year" value="${state.year}"></label>
                 <label><span data-i18n="view.s461l.label.s199a">§ 199A deduction taken ($)</span>
-                    <input type="number" step="1000" name="s199a_deduction_taken" value="${state.s199a_deduction_taken}"></label>
+                    <input type="number" step="0.01" name="s199a_deduction_taken" value="${state.s199a_deduction_taken}"></label>
                 <label><span data-i18n="view.s461l.label.se">Self-employed?</span>
                     <input type="checkbox" name="is_self_employed" ${state.is_self_employed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s461l.label.se_income">SE income/loss ($)</span>
-                    <input type="number" step="10000" name="se_income_or_loss" value="${state.se_income_or_loss}"></label>
+                    <input type="number" step="0.01" name="se_income_or_loss" value="${state.se_income_or_loss}"></label>
                 <label><span data-i18n="view.s461l.label.agg_count">Aggregated business count</span>
                     <input type="number" step="1" name="aggregated_business_count" value="${state.aggregated_business_count}"></label>
                 <label><span data-i18n="view.s461l.label.pass_through">Pass-through?</span>

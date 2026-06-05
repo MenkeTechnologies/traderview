@@ -44,13 +44,13 @@ export async function renderRdCredit(mount, _appState) {
             <h2 data-i18n="view.rd.h2.inputs">Inputs</h2>
             <form id="rd-form" class="inline-form">
                 <label><span data-i18n="view.rd.label.current_year_qre">Current year QREs ($)</span>
-                    <input type="number" step="100" name="current_year_qre" value="${state.current_year_qre}"></label>
+                    <input type="number" step="0.01" name="current_year_qre" value="${state.current_year_qre}"></label>
                 <label><span data-i18n="view.rd.label.prior_year_1">Prior year QREs ($)</span>
-                    <input type="number" step="100" name="prior_year_qre_1" value="${state.prior_year_qre_1}"></label>
+                    <input type="number" step="0.01" name="prior_year_qre_1" value="${state.prior_year_qre_1}"></label>
                 <label><span data-i18n="view.rd.label.prior_year_2">Prior year -2 QREs ($)</span>
-                    <input type="number" step="100" name="prior_year_qre_2" value="${state.prior_year_qre_2}"></label>
+                    <input type="number" step="0.01" name="prior_year_qre_2" value="${state.prior_year_qre_2}"></label>
                 <label><span data-i18n="view.rd.label.prior_year_3">Prior year -3 QREs ($)</span>
-                    <input type="number" step="100" name="prior_year_qre_3" value="${state.prior_year_qre_3}"></label>
+                    <input type="number" step="0.01" name="prior_year_qre_3" value="${state.prior_year_qre_3}"></label>
                 <label><span data-i18n="view.rd.label.is_startup">Qualified small business (startup)?</span>
                     <input type="checkbox" name="is_startup" ${state.is_startup ? 'checked' : ''}></label>
                 <label><span data-i18n="view.rd.label.years_in_business">Years with revenue</span>

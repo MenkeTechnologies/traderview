@@ -45,9 +45,9 @@ export async function renderLihtc(mount, _appState) {
                 <label><span data-i18n="view.lihtc.label.project_name">Project / property name</span>
                     <input type="text" name="project_name" required></label>
                 <label><span data-i18n="view.lihtc.label.investment">Your investment ($)</span>
-                    <input type="number" step="1000" name="investment" required></label>
+                    <input type="number" step="0.01" name="investment" required></label>
                 <label><span data-i18n="view.lihtc.label.annual_credit">Annual credit ($)</span>
-                    <input type="number" step="100" name="annual_credit" required></label>
+                    <input type="number" step="0.01" name="annual_credit" required></label>
                 <label><span data-i18n="view.lihtc.label.credit_type">Credit type</span>
                     <select name="credit_type">
                         <option value="9_percent">9% (new / substantial rehab)</option>

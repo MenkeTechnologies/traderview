@@ -40,7 +40,7 @@ export async function renderSection45Q(mount, _appState) {
             <h2 data-i18n="view.s45Q.h2.inputs">Inputs</h2>
             <form id="s45Q-form" class="inline-form">
                 <label><span data-i18n="view.s45Q.label.tons">Tons CO2 captured / yr</span>
-                    <input type="number" step="100" name="tons_captured_annual" value="${state.tons_captured_annual}"></label>
+                    <input type="number" step="0.01" name="tons_captured_annual" value="${state.tons_captured_annual}"></label>
                 <label><span data-i18n="view.s45Q.label.type">Capture type</span>
                     <select name="capture_type">
                         <option value="geologic_sequestration" ${state.capture_type === 'geologic_sequestration' ? 'selected' : ''}>Geologic sequestration ($85)</option>

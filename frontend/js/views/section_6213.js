@@ -43,15 +43,15 @@ export async function renderSection6213(mount, _appState) {
                 <label><span data-i18n="view.s6213.label.outside">Address outside US?</span>
                     <input type="checkbox" name="is_outside_us" ${state.is_outside_us ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6213.label.proposed">Proposed deficiency ($)</span>
-                    <input type="number" step="1000" name="proposed_deficiency" value="${state.proposed_deficiency}"></label>
+                    <input type="number" step="0.01" name="proposed_deficiency" value="${state.proposed_deficiency}"></label>
                 <label><span data-i18n="view.s6213.label.interest">Interest through filing date ($)</span>
-                    <input type="number" step="100" name="interest_through_date" value="${state.interest_through_date}"></label>
+                    <input type="number" step="0.01" name="interest_through_date" value="${state.interest_through_date}"></label>
                 <label><span data-i18n="view.s6213.label.accuracy">§ 6662 accuracy penalty 20% ($)</span>
-                    <input type="number" step="100" name="accuracy_penalty" value="${state.accuracy_penalty}"></label>
+                    <input type="number" step="0.01" name="accuracy_penalty" value="${state.accuracy_penalty}"></label>
                 <label><span data-i18n="view.s6213.label.fraud">§ 6663 fraud penalty 75% ($)</span>
-                    <input type="number" step="100" name="fraud_penalty" value="${state.fraud_penalty}"></label>
+                    <input type="number" step="0.01" name="fraud_penalty" value="${state.fraud_penalty}"></label>
                 <label><span data-i18n="view.s6213.label.other">Other penalties ($)</span>
-                    <input type="number" step="100" name="other_penalties" value="${state.other_penalties}"></label>
+                    <input type="number" step="0.01" name="other_penalties" value="${state.other_penalties}"></label>
                 <label><span data-i18n="view.s6213.label.strategy">Response strategy</span>
                     <select name="response_strategy">
                         <option value="tax_court" ${state.response_strategy === 'tax_court' ? 'selected' : ''}>File Tax Court petition</option>

@@ -59,9 +59,9 @@ export async function renderFbar8938(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.fbar.label.max_value">Maximum value during year (USD)</span>
-                    <input type="number" step="100" name="max_value_usd" required></label>
+                    <input type="number" step="0.01" name="max_value_usd" required></label>
                 <label><span data-i18n="view.fbar.label.year_end_value">Year-end value (USD)</span>
-                    <input type="number" step="100" name="year_end_value_usd" required></label>
+                    <input type="number" step="0.01" name="year_end_value_usd" required></label>
                 <button class="primary" type="submit" data-i18n="view.fbar.btn.add">Add</button>
             </form>
         </div>

@@ -47,7 +47,7 @@ export async function renderSection6111(mount, _appState) {
                 <label><span data-i18n="view.s6111.label.threshold">Fee threshold met?</span>
                     <input type="checkbox" name="threshold_fee_met" ${state.threshold_fee_met ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6111.label.fee">Fee amount ($)</span>
-                    <input type="number" step="1000" name="fee_amount" value="${state.fee_amount}"></label>
+                    <input type="number" step="0.01" name="fee_amount" value="${state.fee_amount}"></label>
                 <label><span data-i18n="view.s6111.label.reportable">Reportable transaction?</span>
                     <input type="checkbox" name="is_reportable_transaction" ${state.is_reportable_transaction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6111.label.rt_type">RT category</span>
@@ -78,7 +78,7 @@ export async function renderSection6111(mount, _appState) {
                 <label><span data-i18n="view.s6111.label.list">§ 6112 list maintained?</span>
                     <input type="checkbox" name="list_maintained" ${state.list_maintained ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6111.label.gross">Gross income from advice ($)</span>
-                    <input type="number" step="10000" name="gross_income_from_advice" value="${state.gross_income_from_advice}"></label>
+                    <input type="number" step="0.01" name="gross_income_from_advice" value="${state.gross_income_from_advice}"></label>
                 <label><span data-i18n="view.s6111.label.listed">Listed transaction?</span>
                     <input type="checkbox" name="is_listed_transaction" ${state.is_listed_transaction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6111.label.intentional">Intentional disregard?</span>

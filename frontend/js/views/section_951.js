@@ -39,15 +39,15 @@ export async function renderSection951(mount, _appState) {
             <h2 data-i18n="view.s951.h2.inputs">Inputs</h2>
             <form id="s951-form" class="inline-form">
                 <label><span data-i18n="view.s951.label.cfc_total">CFC gross income total ($)</span>
-                    <input type="number" step="1000" name="cfc_income_total" value="${state.cfc_income_total}"></label>
+                    <input type="number" step="0.01" name="cfc_income_total" value="${state.cfc_income_total}"></label>
                 <label><span data-i18n="view.s951.label.fbc_sales">FBC Sales income ($)</span>
-                    <input type="number" step="100" name="fbc_sales" value="${state.fbc_sales}"></label>
+                    <input type="number" step="0.01" name="fbc_sales" value="${state.fbc_sales}"></label>
                 <label><span data-i18n="view.s951.label.fbc_services">FBC Services income ($)</span>
-                    <input type="number" step="100" name="fbc_services" value="${state.fbc_services}"></label>
+                    <input type="number" step="0.01" name="fbc_services" value="${state.fbc_services}"></label>
                 <label><span data-i18n="view.s951.label.fpcsi">FPHC (interest, div, rents) ($)</span>
-                    <input type="number" step="100" name="fpcsi" value="${state.fpcsi}"></label>
+                    <input type="number" step="0.01" name="fpcsi" value="${state.fpcsi}"></label>
                 <label><span data-i18n="view.s951.label.insurance">Insurance income ($)</span>
-                    <input type="number" step="100" name="insurance" value="${state.insurance}"></label>
+                    <input type="number" step="0.01" name="insurance" value="${state.insurance}"></label>
                 <label><span data-i18n="view.s951.label.us_pct">US shareholder pct %</span>
                     <input type="number" step="0.01" name="us_shareholder_pct" value="${state.us_shareholder_pct}"></label>
                 <label><span data-i18n="view.s951.label.foreign_rate">Foreign effective tax rate %</span>
@@ -59,7 +59,7 @@ export async function renderSection951(mount, _appState) {
                 <label><span data-i18n="view.s951.label.full_inclusion">Full inclusion &gt; 70%?</span>
                     <input type="checkbox" name="full_inclusion_test" ${state.full_inclusion_test ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s951.label.dpc">§ 960 deemed paid credit ($)</span>
-                    <input type="number" step="100" name="deemed_paid_credit" value="${state.deemed_paid_credit}"></label>
+                    <input type="number" step="0.01" name="deemed_paid_credit" value="${state.deemed_paid_credit}"></label>
                 <label><span data-i18n="view.s951.label.s962">§ 962 election (individual)?</span>
                     <input type="checkbox" name="s962_election" ${state.s962_election ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s951.btn.compute">Compute</button>

@@ -41,11 +41,11 @@ export async function renderSection45W(mount, _appState) {
             <h2 data-i18n="view.s45W.h2.inputs">Inputs</h2>
             <form id="s45W-form" class="inline-form">
                 <label><span data-i18n="view.s45W.label.basis">Vehicle basis ($)</span>
-                    <input type="number" step="1000" name="vehicle_basis" value="${state.vehicle_basis}"></label>
+                    <input type="number" step="0.01" name="vehicle_basis" value="${state.vehicle_basis}"></label>
                 <label><span data-i18n="view.s45W.label.incremental">Incremental cost vs ICE ($)</span>
-                    <input type="number" step="500" name="incremental_cost" value="${state.incremental_cost}"></label>
+                    <input type="number" step="0.01" name="incremental_cost" value="${state.incremental_cost}"></label>
                 <label><span data-i18n="view.s45W.label.gvwr">GVWR (lbs)</span>
-                    <input type="number" step="100" name="gvwr_lbs" value="${state.gvwr_lbs}"></label>
+                    <input type="number" step="0.01" name="gvwr_lbs" value="${state.gvwr_lbs}"></label>
                 <label><span data-i18n="view.s45W.label.bev_fcv">BEV or FCV (30% rate)?</span>
                     <input type="checkbox" name="is_bev_or_fcv" ${state.is_bev_or_fcv ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s45W.label.phev">PHEV (15% rate)?</span>

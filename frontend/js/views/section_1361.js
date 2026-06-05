@@ -48,11 +48,11 @@ export async function renderSection1361(mount, _appState) {
             <h2 data-i18n="view.s1361.h2.inputs">Inputs</h2>
             <form id="s1361-form" class="inline-form">
                 <label><span data-i18n="view.s1361.label.gross_revenue">Gross revenue ($)</span>
-                    <input type="number" step="1000" name="gross_revenue" value="${state.gross_revenue}"></label>
+                    <input type="number" step="0.01" name="gross_revenue" value="${state.gross_revenue}"></label>
                 <label><span data-i18n="view.s1361.label.net_profit">Net profit before owner comp ($)</span>
-                    <input type="number" step="1000" name="net_profit_before_owner_comp" value="${state.net_profit_before_owner_comp}"></label>
+                    <input type="number" step="0.01" name="net_profit_before_owner_comp" value="${state.net_profit_before_owner_comp}"></label>
                 <label><span data-i18n="view.s1361.label.w2_planned">Owner W-2 wages planned ($)</span>
-                    <input type="number" step="1000" name="owner_w2_wages_planned" value="${state.owner_w2_wages_planned}"></label>
+                    <input type="number" step="0.01" name="owner_w2_wages_planned" value="${state.owner_w2_wages_planned}"></label>
                 <label><span data-i18n="view.s1361.label.industry">Industry</span>
                     <select name="industry">
                         <option value="trader" ${state.industry === 'trader' ? 'selected' : ''}>Trader (TTS)</option>
@@ -66,7 +66,7 @@ export async function renderSection1361(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1361.label.market_rate">Market rate comp (BLS / RC Reports) ($)</span>
-                    <input type="number" step="1000" name="market_rate_compensation" value="${state.market_rate_compensation}"></label>
+                    <input type="number" step="0.01" name="market_rate_compensation" value="${state.market_rate_compensation}"></label>
                 <label><span data-i18n="view.s1361.label.fed_marginal">Federal marginal %</span>
                     <input type="number" step="0.01" name="federal_marginal_rate" value="${state.federal_marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1361.btn.compute">Compute</button>

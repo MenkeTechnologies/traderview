@@ -70,7 +70,7 @@ export async function renderSection6601(mount, _appState) {
             <h2 data-i18n="view.s6601.h2.inputs">Inputs</h2>
             <form id="s6601-form" class="inline-form">
                 <label><span data-i18n="view.s6601.label.amount">Underpayment ($)</span>
-                    <input type="number" step="1000" name="underpayment_amount" value="${state.underpayment_amount}"></label>
+                    <input type="number" step="0.01" name="underpayment_amount" value="${state.underpayment_amount}"></label>
                 <label><span data-i18n="view.s6601.label.quarter">Quarter</span>
                     <select name="quarter">
                         <option value="Q1_2024" ${state.quarter === 'Q1_2024' ? 'selected' : ''}>Q1 2024 (8%)</option>
@@ -89,7 +89,7 @@ export async function renderSection6601(mount, _appState) {
                 <label><span data-i18n="view.s6601.label.is_large">Large corp underpayment?</span>
                     <input type="checkbox" name="is_large_corp_underpayment" ${state.is_large_corp_underpayment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.threshold">Corp threshold ($)</span>
-                    <input type="number" step="10000" name="corporate_threshold" value="${state.corporate_threshold}"></label>
+                    <input type="number" step="0.01" name="corporate_threshold" value="${state.corporate_threshold}"></label>
                 <label><span data-i18n="view.s6601.label.over_rate">§ 6621(a)(1) over %</span>
                     <input type="number" step="0.01" name="s6621_a_1_overpayment_rate" value="${state.s6621_a_1_overpayment_rate}"></label>
                 <label><span data-i18n="view.s6601.label.days">Days outstanding</span>
@@ -109,11 +109,11 @@ export async function renderSection6601(mount, _appState) {
                 <label><span data-i18n="view.s6601.label.grace">Grace period?</span>
                     <input type="checkbox" name="grace_period_extension" ${state.grace_period_extension ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.credited">Payments credited ($)</span>
-                    <input type="number" step="100" name="s6601_b_3_payments_credited" value="${state.s6601_b_3_payments_credited}"></label>
+                    <input type="number" step="0.01" name="s6601_b_3_payments_credited" value="${state.s6601_b_3_payments_credited}"></label>
                 <label><span data-i18n="view.s6601.label.int_paid">Interest paid?</span>
                     <input type="checkbox" name="is_interest_paid" ${state.is_interest_paid ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.int_amt">Interest amount ($)</span>
-                    <input type="number" step="100" name="interest_paid" value="${state.interest_paid}"></label>
+                    <input type="number" step="0.01" name="interest_paid" value="${state.interest_paid}"></label>
                 <label><span data-i18n="view.s6601.label.nol_carryback">§ 6601(e)(1) NOL carryback?</span>
                     <input type="checkbox" name="s6601_e_1_loss_carryback" ${state.s6601_e_1_loss_carryback ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.nol_yr">NOL carryback yr</span>
@@ -137,21 +137,21 @@ export async function renderSection6601(mount, _appState) {
                 <label><span data-i18n="view.s6601.label.s6166">§ 6166 estate install?</span>
                     <input type="checkbox" name="s6166_estate_tax_installment" ${state.s6166_estate_tax_installment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.s6166_2pct">§ 6166 2% rate ($)</span>
-                    <input type="number" step="10000" name="s6166_2pct_special_rate" value="${state.s6166_2pct_special_rate}"></label>
+                    <input type="number" step="0.01" name="s6166_2pct_special_rate" value="${state.s6166_2pct_special_rate}"></label>
                 <label><span data-i18n="view.s6601.label.indiv_penalty">Indiv FTP penalty ($)</span>
-                    <input type="number" step="100" name="individual_failure_to_pay_penalty" value="${state.individual_failure_to_pay_penalty}"></label>
+                    <input type="number" step="0.01" name="individual_failure_to_pay_penalty" value="${state.individual_failure_to_pay_penalty}"></label>
                 <label><span data-i18n="view.s6601.label.s6651a2">§ 6651(a)(2) ($)</span>
-                    <input type="number" step="100" name="s6651_a_2_penalty" value="${state.s6651_a_2_penalty}"></label>
+                    <input type="number" step="0.01" name="s6651_a_2_penalty" value="${state.s6651_a_2_penalty}"></label>
                 <label><span data-i18n="view.s6601.label.s6651a3">§ 6651(a)(3) ($)</span>
-                    <input type="number" step="100" name="s6651_a_3_penalty" value="${state.s6651_a_3_penalty}"></label>
+                    <input type="number" step="0.01" name="s6651_a_3_penalty" value="${state.s6651_a_3_penalty}"></label>
                 <label><span data-i18n="view.s6601.label.s6654">§ 6654 est tax ($)</span>
-                    <input type="number" step="100" name="s6654_estimated_tax_penalty" value="${state.s6654_estimated_tax_penalty}"></label>
+                    <input type="number" step="0.01" name="s6654_estimated_tax_penalty" value="${state.s6654_estimated_tax_penalty}"></label>
                 <label><span data-i18n="view.s6601.label.s6655">§ 6655 corp est ($)</span>
-                    <input type="number" step="100" name="s6655_corp_estimated_penalty" value="${state.s6655_corp_estimated_penalty}"></label>
+                    <input type="number" step="0.01" name="s6655_corp_estimated_penalty" value="${state.s6655_corp_estimated_penalty}"></label>
                 <label><span data-i18n="view.s6601.label.fraud">Fraud failure to pay?</span>
                     <input type="checkbox" name="fraud_failure_to_pay" ${state.fraud_failure_to_pay ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.s6651f">§ 6651(f) fraud ($)</span>
-                    <input type="number" step="100" name="s6651_f_fraud_penalty" value="${state.s6651_f_fraud_penalty}"></label>
+                    <input type="number" step="0.01" name="s6651_f_fraud_penalty" value="${state.s6651_f_fraud_penalty}"></label>
                 <label><span data-i18n="view.s6601.label.compound">Subject to compound?</span>
                     <input type="checkbox" name="is_subject_to_compounding" ${state.is_subject_to_compounding ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6601.label.history">Federal ST rate history</span>

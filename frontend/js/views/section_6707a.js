@@ -49,7 +49,7 @@ export async function renderSection6707a(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6707a.label.tax_savings">Tax decrease claimed ($)</span>
-                    <input type="number" step="1000" name="tax_savings_claimed" required></label>
+                    <input type="number" step="0.01" name="tax_savings_claimed" required></label>
                 <label><span data-i18n="view.s6707a.label.entity_type">Entity type</span>
                     <select name="entity_type">
                         <option value="individual">Individual / Sched K-1 owner</option>

@@ -68,33 +68,33 @@ export async function renderSection1250(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1250.label.cost">Original cost ($)</span>
-                    <input type="number" step="10000" name="original_cost" value="${state.original_cost}"></label>
+                    <input type="number" step="0.01" name="original_cost" value="${state.original_cost}"></label>
                 <label><span data-i18n="view.s1250.label.land">Land basis ($)</span>
-                    <input type="number" step="10000" name="land_basis" value="${state.land_basis}"></label>
+                    <input type="number" step="0.01" name="land_basis" value="${state.land_basis}"></label>
                 <label><span data-i18n="view.s1250.label.accum">Accumulated depreciation ($)</span>
-                    <input type="number" step="1000" name="accumulated_depreciation" value="${state.accumulated_depreciation}"></label>
+                    <input type="number" step="0.01" name="accumulated_depreciation" value="${state.accumulated_depreciation}"></label>
                 <label><span data-i18n="view.s1250.label.sl">Straight-line equivalent ($)</span>
-                    <input type="number" step="1000" name="straight_line_equivalent" value="${state.straight_line_equivalent}"></label>
+                    <input type="number" step="0.01" name="straight_line_equivalent" value="${state.straight_line_equivalent}"></label>
                 <label><span data-i18n="view.s1250.label.excess">Excess over SL ($)</span>
-                    <input type="number" step="1000" name="excess_over_sl" value="${state.excess_over_sl}"></label>
+                    <input type="number" step="0.01" name="excess_over_sl" value="${state.excess_over_sl}"></label>
                 <label><span data-i18n="view.s1250.label.proceeds">Sale proceeds ($)</span>
-                    <input type="number" step="10000" name="sale_proceeds" value="${state.sale_proceeds}"></label>
+                    <input type="number" step="0.01" name="sale_proceeds" value="${state.sale_proceeds}"></label>
                 <label><span data-i18n="view.s1250.label.basis">Adjusted basis ($)</span>
-                    <input type="number" step="10000" name="adjusted_basis" value="${state.adjusted_basis}"></label>
+                    <input type="number" step="0.01" name="adjusted_basis" value="${state.adjusted_basis}"></label>
                 <label><span data-i18n="view.s1250.label.gain">Realized gain ($)</span>
-                    <input type="number" step="10000" name="realized_gain" value="${state.realized_gain}"></label>
+                    <input type="number" step="0.01" name="realized_gain" value="${state.realized_gain}"></label>
                 <label><span data-i18n="view.s1250.label.unrec">Unrecaptured § 1250 gain ($)</span>
-                    <input type="number" step="10000" name="unrecaptured_s1250_gain" value="${state.unrecaptured_s1250_gain}"></label>
+                    <input type="number" step="0.01" name="unrecaptured_s1250_gain" value="${state.unrecaptured_s1250_gain}"></label>
                 <label><span data-i18n="view.s1250.label.ord">§ 1250 ordinary recapture ($)</span>
-                    <input type="number" step="10000" name="s1250_recapture_ordinary" value="${state.s1250_recapture_ordinary}"></label>
+                    <input type="number" step="0.01" name="s1250_recapture_ordinary" value="${state.s1250_recapture_ordinary}"></label>
                 <label><span data-i18n="view.s1250.label.cap">§ 1231 capital balance ($)</span>
-                    <input type="number" step="10000" name="s1231_capital_balance" value="${state.s1231_capital_balance}"></label>
+                    <input type="number" step="0.01" name="s1231_capital_balance" value="${state.s1231_capital_balance}"></label>
                 <label><span data-i18n="view.s1250.label.holding">Holding (months)</span>
                     <input type="number" step="1" name="holding_period_months" value="${state.holding_period_months}"></label>
                 <label><span data-i18n="view.s1250.label.corp">Corporate?</span>
                     <input type="checkbox" name="is_corporate" ${state.is_corporate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1250.label.s291">§ 291 corporate add ($)</span>
-                    <input type="number" step="1000" name="s291_corporate_add" value="${state.s291_corporate_add}"></label>
+                    <input type="number" step="0.01" name="s291_corporate_add" value="${state.s291_corporate_add}"></label>
                 <label><span data-i18n="view.s1250.label.pre1986">Pre-1986 property?</span>
                     <input type="checkbox" name="pre_1986_property" ${state.pre_1986_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1250.label.acrs">Pre-ACRS pre-1981?</span>
@@ -110,7 +110,7 @@ export async function renderSection1250(mount, _appState) {
                 <label><span data-i18n="view.s1250.label.cost_seg">Cost segregation split?</span>
                     <input type="checkbox" name="cost_segregation_split" ${state.cost_segregation_split ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1250.label.s1245">§ 1245 carved out ($)</span>
-                    <input type="number" step="1000" name="s1245_carved_out" value="${state.s1245_carved_out}"></label>
+                    <input type="number" step="0.01" name="s1245_carved_out" value="${state.s1245_carved_out}"></label>
                 <label><span data-i18n="view.s1250.label.placed">Placed in service date</span>
                     <input type="date" name="placed_in_service_date" value="${state.placed_in_service_date}"></label>
                 <label><span data-i18n="view.s1250.label.sold">Sale date</span>
@@ -120,7 +120,7 @@ export async function renderSection1250(mount, _appState) {
                 <label><span data-i18n="view.s1250.label.installment">§ 453 installment?</span>
                     <input type="checkbox" name="s453_installment" ${state.s453_installment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1250.label.deferred">Deferred gain ($)</span>
-                    <input type="number" step="10000" name="deferred_gain" value="${state.deferred_gain}"></label>
+                    <input type="number" step="0.01" name="deferred_gain" value="${state.deferred_gain}"></label>
                 <label><span data-i18n="view.s1250.label.niit">§ 1411 NIIT applies?</span>
                     <input type="checkbox" name="s1411_niit_applies" ${state.s1411_niit_applies ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1250.label.short_box">Short sale against box?</span>

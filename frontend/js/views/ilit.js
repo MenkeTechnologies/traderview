@@ -39,9 +39,9 @@ export async function renderIlit(mount, _appState) {
             <h2 data-i18n="view.ilit.h2.inputs">Inputs</h2>
             <form id="ilit-form" class="inline-form">
                 <label><span data-i18n="view.ilit.label.death_benefit">Death benefit ($)</span>
-                    <input type="number" step="100000" name="death_benefit" value="${state.death_benefit}"></label>
+                    <input type="number" step="0.01" name="death_benefit" value="${state.death_benefit}"></label>
                 <label><span data-i18n="view.ilit.label.annual_premium">Annual premium ($)</span>
-                    <input type="number" step="100" name="annual_premium" value="${state.annual_premium}"></label>
+                    <input type="number" step="0.01" name="annual_premium" value="${state.annual_premium}"></label>
                 <label><span data-i18n="view.ilit.label.crummey_count">Crummey beneficiary count</span>
                     <input type="number" step="1" name="crummey_beneficiaries" value="${state.crummey_beneficiaries}"></label>
                 <label><span data-i18n="view.ilit.label.mfj">MFJ (split gifts)?</span>
@@ -49,9 +49,9 @@ export async function renderIlit(mount, _appState) {
                 <label><span data-i18n="view.ilit.label.existing_years">Years since policy origination (if pre-existing)</span>
                     <input type="number" step="1" name="years_existing_policy" value="${state.years_existing_policy}"></label>
                 <label><span data-i18n="view.ilit.label.estate_value">Total taxable estate ($)</span>
-                    <input type="number" step="100000" name="estate_value" value="${state.estate_value}"></label>
+                    <input type="number" step="0.01" name="estate_value" value="${state.estate_value}"></label>
                 <label><span data-i18n="view.ilit.label.lifetime_remaining">Lifetime exemption remaining ($)</span>
-                    <input type="number" step="100000" name="lifetime_exemption_remaining" value="${state.lifetime_exemption_remaining}"></label>
+                    <input type="number" step="0.01" name="lifetime_exemption_remaining" value="${state.lifetime_exemption_remaining}"></label>
                 <label><span data-i18n="view.ilit.label.state_rate">State estate tax rate</span>
                     <input type="number" step="0.01" name="state_estate_rate" value="${state.state_estate_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.ilit.btn.compute">Compute</button>

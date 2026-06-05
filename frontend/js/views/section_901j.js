@@ -47,9 +47,9 @@ export async function renderSection901J(mount, _appState) {
                 <label><span data-i18n="view.s901j.label.sanctioned">Country sanctioned?</span>
                     <input type="checkbox" name="is_sanctioned" ${state.is_sanctioned ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s901j.label.tax">Foreign tax paid ($)</span>
-                    <input type="number" step="1000" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
                 <label><span data-i18n="view.s901j.label.income">Foreign source income ($)</span>
-                    <input type="number" step="10000" name="foreign_source_income" value="${state.foreign_source_income}"></label>
+                    <input type="number" step="0.01" name="foreign_source_income" value="${state.foreign_source_income}"></label>
                 <label><span data-i18n="view.s901j.label.direct">Direct payment to country?</span>
                     <input type="checkbox" name="direct_payment_to_country" ${state.direct_payment_to_country ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s901j.label.routed">Routed through 3rd country?</span>

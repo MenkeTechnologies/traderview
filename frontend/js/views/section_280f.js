@@ -48,7 +48,7 @@ export async function renderSection280f(mount, _appState) {
             <h2 data-i18n="view.s280f.h2.inputs">Inputs</h2>
             <form id="s280f-form" class="inline-form">
                 <label><span data-i18n="view.s280f.label.cost">Vehicle cost ($)</span>
-                    <input type="number" step="100" name="vehicle_cost" value="${state.vehicle_cost}"></label>
+                    <input type="number" step="0.01" name="vehicle_cost" value="${state.vehicle_cost}"></label>
                 <label><span data-i18n="view.s280f.label.business_use">Business use %</span>
                     <input type="number" step="1" name="business_use_pct" value="${state.business_use_pct}"></label>
                 <label><span data-i18n="view.s280f.label.is_heavy">Heavy SUV / pickup (GVWR &gt; 6,000)?</span>

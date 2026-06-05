@@ -49,15 +49,15 @@ export async function renderImplementationShortfall(mount, _appState) {
                         <option data-i18n="view.implementation_shortfall.opt.sell" value="sell" ${state.params.direction === 'sell' ? 'selected' : ''}>Sell</option>
                     </select></label>
                 <label><span data-i18n="view.implementation_shortfall.label.decision_mid">Decision mid</span>
-                    <input id="is-dm" type="number" step="any" min="0" value="${state.params.decision_mid}" data-tip="view.implementation_shortfall.tip.decision_mid"></label>
+                    <input id="is-dm" type="number" step="0.01" min="0" value="${state.params.decision_mid}" data-tip="view.implementation_shortfall.tip.decision_mid"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.arrival_mid">Arrival mid</span>
-                    <input id="is-am" type="number" step="any" min="0" value="${state.params.arrival_mid}" data-tip="view.implementation_shortfall.tip.arrival_mid"></label>
+                    <input id="is-am" type="number" step="0.01" min="0" value="${state.params.arrival_mid}" data-tip="view.implementation_shortfall.tip.arrival_mid"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.vwap_fill">VWAP fill</span>
-                    <input id="is-vw" type="number" step="any" min="0" value="${state.params.vwap_fill}" data-tip="view.implementation_shortfall.tip.vwap_fill"></label>
+                    <input id="is-vw" type="number" step="0.01" min="0" value="${state.params.vwap_fill}" data-tip="view.implementation_shortfall.tip.vwap_fill"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.final_mid">Final mid</span>
-                    <input id="is-fm" type="number" step="any" min="0" value="${state.params.final_mid}" data-tip="view.implementation_shortfall.tip.final_mid"></label>
+                    <input id="is-fm" type="number" step="0.01" min="0" value="${state.params.final_mid}" data-tip="view.implementation_shortfall.tip.final_mid"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.half_spread">½-spread @ decision</span>
-                    <input id="is-hs" type="number" step="any" min="0" value="${state.params.half_spread_at_decision}" data-tip="view.implementation_shortfall.tip.half_spread"></label>
+                    <input id="is-hs" type="number" step="0.01" min="0" value="${state.params.half_spread_at_decision}" data-tip="view.implementation_shortfall.tip.half_spread"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.intended_qty">Intended qty</span>
                     <input id="is-iq" type="number" step="1" min="1" value="${state.params.intended_qty}" data-tip="view.implementation_shortfall.tip.intended_qty"></label>
                 <label><span data-i18n="view.implementation_shortfall.label.filled_qty">Filled qty</span>

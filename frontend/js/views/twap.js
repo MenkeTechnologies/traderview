@@ -31,7 +31,7 @@ export async function renderTwap(mount, _appState) {
                         <option data-i18n="view.twap.opt.short_sell_entry" value="short" ${state.side === 'short' ? 'selected' : ''}>Short (sell entry)</option>
                     </select></label>
                 <label><span data-i18n="view.twap.label.fill_price">Fill price</span>
-                    <input id="tw-fill" type="number" step="any" min="0" value="${state.fillPrice}"></label>
+                    <input id="tw-fill" type="number" step="0.01" min="0" value="${state.fillPrice}"></label>
             </div>
         </div>
 

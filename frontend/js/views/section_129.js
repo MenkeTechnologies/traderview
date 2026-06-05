@@ -82,25 +82,25 @@ export async function renderSection129(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s129.label.contribution">DCAP contribution ($)</span>
-                    <input type="number" step="100" name="dcap_contribution" value="${state.dcap_contribution}"></label>
+                    <input type="number" step="0.01" name="dcap_contribution" value="${state.dcap_contribution}"></label>
                 <label><span data-i18n="view.s129.label.limit">2024 limit ($)</span>
-                    <input type="number" step="100" name="dcap_annual_limit_2024" value="${state.dcap_annual_limit_2024}"></label>
+                    <input type="number" step="0.01" name="dcap_annual_limit_2024" value="${state.dcap_annual_limit_2024}"></label>
                 <label><span data-i18n="view.s129.label.mfs">MFS limit ($)</span>
-                    <input type="number" step="100" name="dcap_mfs_limit" value="${state.dcap_mfs_limit}"></label>
+                    <input type="number" step="0.01" name="dcap_mfs_limit" value="${state.dcap_mfs_limit}"></label>
                 <label><span data-i18n="view.s129.label.children">Qualifying children &lt; 13</span>
                     <input type="number" step="1" name="qualifying_children_count" value="${state.qualifying_children_count}"></label>
                 <label><span data-i18n="view.s129.label.adults">Qualifying adults</span>
                     <input type="number" step="1" name="qualifying_adults_count" value="${state.qualifying_adults_count}"></label>
                 <label><span data-i18n="view.s129.label.income_tp">Earned income TP ($)</span>
-                    <input type="number" step="1000" name="earned_income_taxpayer" value="${state.earned_income_taxpayer}"></label>
+                    <input type="number" step="0.01" name="earned_income_taxpayer" value="${state.earned_income_taxpayer}"></label>
                 <label><span data-i18n="view.s129.label.income_sp">Earned income spouse ($)</span>
-                    <input type="number" step="1000" name="earned_income_spouse" value="${state.earned_income_spouse}"></label>
+                    <input type="number" step="0.01" name="earned_income_spouse" value="${state.earned_income_spouse}"></label>
                 <label><span data-i18n="view.s129.label.actual">Actual expenses ($)</span>
-                    <input type="number" step="100" name="actual_qualifying_expenses" value="${state.actual_qualifying_expenses}"></label>
+                    <input type="number" step="0.01" name="actual_qualifying_expenses" value="${state.actual_qualifying_expenses}"></label>
                 <label><span data-i18n="view.s129.label.used">Total DCAP used ($)</span>
-                    <input type="number" step="100" name="total_dcap_used" value="${state.total_dcap_used}"></label>
+                    <input type="number" step="0.01" name="total_dcap_used" value="${state.total_dcap_used}"></label>
                 <label><span data-i18n="view.s129.label.excess">Taxable excess ($)</span>
-                    <input type="number" step="100" name="taxable_excess" value="${state.taxable_excess}"></label>
+                    <input type="number" step="0.01" name="taxable_excess" value="${state.taxable_excess}"></label>
                 <label><span data-i18n="view.s129.label.qual_plan">Qualified employer plan?</span>
                     <input type="checkbox" name="is_qualified_dcap_employer_plan" ${state.is_qualified_dcap_employer_plan ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s129.label.elig">§ 129(d) eligibility?</span>
@@ -124,7 +124,7 @@ export async function renderSection129(mount, _appState) {
                 <label><span data-i18n="view.s129.label.hce">HCE?</span>
                     <input type="checkbox" name="is_higher_compensated_employee" ${state.is_higher_compensated_employee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s129.label.s125_thresh">§ 125 comp threshold ($)</span>
-                    <input type="number" step="1000" name="s125_compensation_threshold" value="${state.s125_compensation_threshold}"></label>
+                    <input type="number" step="0.01" name="s125_compensation_threshold" value="${state.s125_compensation_threshold}"></label>
                 <label><span data-i18n="view.s129.label.5pct_owner">5% owner?</span>
                     <input type="checkbox" name="is_5pct_owner" ${state.is_5pct_owner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s129.label.s129d4">§ 129(d)(4) communication?</span>
@@ -146,17 +146,17 @@ export async function renderSection129(mount, _appState) {
                 <label><span data-i18n="view.s129.label.agg_count">Aggregate count</span>
                     <input type="number" step="1" name="aggregate_count" value="${state.aggregate_count}"></label>
                 <label><span data-i18n="view.s129.label.s21">§ 21 credit ($)</span>
-                    <input type="number" step="100" name="s21_credit_coordination" value="${state.s21_credit_coordination}"></label>
+                    <input type="number" step="0.01" name="s21_credit_coordination" value="${state.s21_credit_coordination}"></label>
                 <label><span data-i18n="view.s129.label.s21_remaining">§ 21 remaining ($)</span>
-                    <input type="number" step="100" name="s21_credit_remaining_eligible" value="${state.s21_credit_remaining_eligible}"></label>
+                    <input type="number" step="0.01" name="s21_credit_remaining_eligible" value="${state.s21_credit_remaining_eligible}"></label>
                 <label><span data-i18n="view.s129.label.no_double">No double dip?</span>
                     <input type="checkbox" name="s129_no_double_dipping" ${state.s129_no_double_dipping ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s129.label.arpa">ARPA $10,500 (2021)?</span>
                     <input type="checkbox" name="arpa_2021_10500_temporary" ${state.arpa_2021_10500_temporary ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s129.label.match">Employer match ($)</span>
-                    <input type="number" step="100" name="employer_match" value="${state.employer_match}"></label>
+                    <input type="number" step="0.01" name="employer_match" value="${state.employer_match}"></label>
                 <label><span data-i18n="view.s129.label.employer">Employer contrib ($)</span>
-                    <input type="number" step="100" name="employer_employer_contribution" value="${state.employer_employer_contribution}"></label>
+                    <input type="number" step="0.01" name="employer_employer_contribution" value="${state.employer_employer_contribution}"></label>
                 <label><span data-i18n="view.s129.label.f2441">Form 2441 required?</span>
                     <input type="checkbox" name="s129_e_form_2441_required" ${state.s129_e_form_2441_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s129.label.household">Household employee paid?</span>

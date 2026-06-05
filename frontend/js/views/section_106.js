@@ -41,15 +41,15 @@ export async function renderSection106(mount, _appState) {
             <h2 data-i18n="view.s106.h2.inputs">Inputs</h2>
             <form id="s106-form" class="inline-form">
                 <label><span data-i18n="view.s106.label.premium">Employer health premium ($)</span>
-                    <input type="number" step="100" name="employer_health_premium" value="${state.employer_health_premium}"></label>
+                    <input type="number" step="0.01" name="employer_health_premium" value="${state.employer_health_premium}"></label>
                 <label><span data-i18n="view.s106.label.hsa">Employer HSA contribution ($)</span>
-                    <input type="number" step="100" name="employer_hsa_contribution" value="${state.employer_hsa_contribution}"></label>
+                    <input type="number" step="0.01" name="employer_hsa_contribution" value="${state.employer_hsa_contribution}"></label>
                 <label><span data-i18n="view.s106.label.hra">Employer HRA funding ($)</span>
-                    <input type="number" step="100" name="employer_hra_funding" value="${state.employer_hra_funding}"></label>
+                    <input type="number" step="0.01" name="employer_hra_funding" value="${state.employer_hra_funding}"></label>
                 <label><span data-i18n="view.s106.label.dv">Dental + vision ($)</span>
-                    <input type="number" step="100" name="employer_dental_vision" value="${state.employer_dental_vision}"></label>
+                    <input type="number" step="0.01" name="employer_dental_vision" value="${state.employer_dental_vision}"></label>
                 <label><span data-i18n="view.s106.label.cafeteria">§ 125 cafeteria pre-tax ($)</span>
-                    <input type="number" step="100" name="cafeteria_plan_pretax" value="${state.cafeteria_plan_pretax}"></label>
+                    <input type="number" step="0.01" name="cafeteria_plan_pretax" value="${state.cafeteria_plan_pretax}"></label>
                 <label><span data-i18n="view.s106.label.s_corp">2%+ S-corp owner?</span>
                     <input type="checkbox" name="is_2_pct_s_corp" ${state.is_2_pct_s_corp ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s106.label.partner">Partner / LLC member?</span>
@@ -61,13 +61,13 @@ export async function renderSection106(mount, _appState) {
                 <label><span data-i18n="view.s106.label.retired">Retired employee?</span>
                     <input type="checkbox" name="is_retired_employee" ${state.is_retired_employee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s106.label.dp">Domestic partner coverage ($)</span>
-                    <input type="number" step="100" name="domestic_partner_coverage" value="${state.domestic_partner_coverage}"></label>
+                    <input type="number" step="0.01" name="domestic_partner_coverage" value="${state.domestic_partner_coverage}"></label>
                 <label><span data-i18n="view.s106.label.kid_27">Kid &lt; 27 covered (PPACA)?</span>
                     <input type="checkbox" name="is_kid_under_27" ${state.is_kid_under_27 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s106.label.hdhp">Qualified high-deductible plan (for HSA)?</span>
                     <input type="checkbox" name="is_qualified_high_deductible" ${state.is_qualified_high_deductible ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s106.label.savings">HSA growth (untaxed savings) ($)</span>
-                    <input type="number" step="100" name="health_savings_per_year" value="${state.health_savings_per_year}"></label>
+                    <input type="number" step="0.01" name="health_savings_per_year" value="${state.health_savings_per_year}"></label>
                 <label><span data-i18n="view.s106.label.marginal">Marginal rate %</span>
                     <input type="number" step="0.1" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s106.btn.compute">Compute</button>

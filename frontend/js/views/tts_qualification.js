@@ -131,7 +131,7 @@ function renderFactorInput(f, i) {
             <span><strong>${i + 1}. ${esc(f.question)}</strong>${critBadge}
                 ${f.target ? `<span class="muted small">(target: ${f.invert ? '≤' : '≥'} ${f.target})</span>` : ''}
             </span>
-            <input type="number" step="any" name="${esc(f.key)}" value="${cur || ''}" style="margin-top:4px">
+            <input type="number" step="0.01" name="${esc(f.key)}" value="${cur || ''}" style="margin-top:4px">
         </label>
         <p class="muted small" style="margin:4px 0 0 0">${esc(f.hint)}</p>
     </div>`;

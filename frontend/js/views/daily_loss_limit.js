@@ -25,9 +25,9 @@ export async function renderDailyLossLimit(mount, _appState) {
             <h2 data-i18n="view.daily_loss_limit.h2.account">Account</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.daily_loss_limit.label.equity">Account equity ($)</span>
-                    <input id="dl-eq" type="number" step="any" min="0" value="${state.params.account_equity}" data-tip="view.daily_loss_limit.tip.equity"></label>
+                    <input id="dl-eq" type="number" step="0.01" min="0" value="${state.params.account_equity}" data-tip="view.daily_loss_limit.tip.equity"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.today_pnl">Today's P&L ($) — negative = loss</span>
-                    <input id="dl-pnl" type="number" step="any" value="${state.params.today_pnl}" data-tip="view.daily_loss_limit.tip.pnl"></label>
+                    <input id="dl-pnl" type="number" step="0.01" value="${state.params.today_pnl}" data-tip="view.daily_loss_limit.tip.pnl"></label>
             </div>
         </div>
 
@@ -35,17 +35,17 @@ export async function renderDailyLossLimit(mount, _appState) {
             <h2 data-i18n="view.daily_loss_limit.h2.limit_config">Limit config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.daily_loss_limit.label.max_dollars">Max daily $ loss (0 = pct only)</span>
-                    <input id="dl-md" type="number" step="any" min="0" value="${state.params.max_daily_loss_dollars}" data-tip="view.daily_loss_limit.tip.max_dollars"></label>
+                    <input id="dl-md" type="number" step="0.01" min="0" value="${state.params.max_daily_loss_dollars}" data-tip="view.daily_loss_limit.tip.max_dollars"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.max_pct">Max daily % loss (decimal; 0.02 = 2%)</span>
-                    <input id="dl-mp" type="number" step="any" min="0" max="1" value="${state.params.max_daily_loss_pct}" data-tip="view.daily_loss_limit.tip.max_pct"></label>
+                    <input id="dl-mp" type="number" step="0.01" min="0" max="1" value="${state.params.max_daily_loss_pct}" data-tip="view.daily_loss_limit.tip.max_pct"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.daily_loss_limit.label.warn">Warning threshold (decimal of binding limit)</span>
-                    <input id="dl-wt" type="number" step="any" min="0" max="5" value="${state.params.warning_threshold}" data-tip="view.daily_loss_limit.tip.warn"></label>
+                    <input id="dl-wt" type="number" step="0.01" min="0" max="5" value="${state.params.warning_threshold}" data-tip="view.daily_loss_limit.tip.warn"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.cut">Cut-size threshold</span>
-                    <input id="dl-ct" type="number" step="any" min="0" max="5" value="${state.params.cut_size_threshold}" data-tip="view.daily_loss_limit.tip.cut"></label>
+                    <input id="dl-ct" type="number" step="0.01" min="0" max="5" value="${state.params.cut_size_threshold}" data-tip="view.daily_loss_limit.tip.cut"></label>
                 <label><span data-i18n="view.daily_loss_limit.label.kill">Kill threshold</span>
-                    <input id="dl-kt" type="number" step="any" min="0" max="5" value="${state.params.kill_threshold}" data-tip="view.daily_loss_limit.tip.kill"></label>
+                    <input id="dl-kt" type="number" step="0.01" min="0" max="5" value="${state.params.kill_threshold}" data-tip="view.daily_loss_limit.tip.kill"></label>
                 <button data-i18n="view.daily_loss_limit.btn.evaluate" id="dl-run" class="primary" type="button" data-tip="view.daily_loss_limit.tip.run" data-shortcut="daily_loss_limit_run">Evaluate</button>
             </div>
             <div class="inline-form">

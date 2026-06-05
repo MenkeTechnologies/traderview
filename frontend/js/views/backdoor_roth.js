@@ -47,17 +47,17 @@ export async function renderBackdoorRoth(mount, _appState) {
                 <label><span data-i18n="view.bdr.label.age">Age</span>
                     <input type="number" step="1" name="age" value="${state.age}" min="18" max="100"></label>
                 <label><span data-i18n="view.bdr.label.contribution">Non-deductible contribution ($)</span>
-                    <input type="number" step="100" name="contribution" value="${state.contribution}"></label>
+                    <input type="number" step="0.01" name="contribution" value="${state.contribution}"></label>
                 <label><span data-i18n="view.bdr.label.pretax_trad">Pre-tax Traditional IRA balance ($)</span>
-                    <input type="number" step="1000" name="pretax_trad_ira_balance" value="${state.pretax_trad_ira_balance}"></label>
+                    <input type="number" step="0.01" name="pretax_trad_ira_balance" value="${state.pretax_trad_ira_balance}"></label>
                 <label><span data-i18n="view.bdr.label.rollover">Rollover IRA balance ($)</span>
-                    <input type="number" step="1000" name="rollover_ira_balance" value="${state.rollover_ira_balance}"></label>
+                    <input type="number" step="0.01" name="rollover_ira_balance" value="${state.rollover_ira_balance}"></label>
                 <label><span data-i18n="view.bdr.label.sep">SEP IRA balance ($)</span>
-                    <input type="number" step="1000" name="sep_ira_balance" value="${state.sep_ira_balance}"></label>
+                    <input type="number" step="0.01" name="sep_ira_balance" value="${state.sep_ira_balance}"></label>
                 <label><span data-i18n="view.bdr.label.simple">SIMPLE IRA balance ($)</span>
-                    <input type="number" step="1000" name="simple_ira_balance" value="${state.simple_ira_balance}"></label>
+                    <input type="number" step="0.01" name="simple_ira_balance" value="${state.simple_ira_balance}"></label>
                 <label><span data-i18n="view.bdr.label.basis">Existing non-deductible basis ($)</span>
-                    <input type="number" step="100" name="nondeductible_basis" value="${state.nondeductible_basis}"></label>
+                    <input type="number" step="0.01" name="nondeductible_basis" value="${state.nondeductible_basis}"></label>
                 <label><span data-i18n="view.bdr.label.marginal_rate">Marginal federal %</span>
                     <input type="number" step="0.5" name="your_marginal_rate" value="${(state.your_marginal_rate * 100).toFixed(1)}"></label>
                 <button class="primary" type="submit" data-i18n="view.bdr.btn.compute">Compute</button>

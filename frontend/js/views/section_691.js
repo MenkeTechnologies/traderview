@@ -54,9 +54,9 @@ export async function renderSection691(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s691.label.value">Value ($)</span>
-                    <input type="number" step="100" name="value" required></label>
+                    <input type="number" step="0.01" name="value" required></label>
                 <label><span data-i18n="view.s691.label.basis">Decedent's basis ($)</span>
-                    <input type="number" step="100" name="basis" value="0"></label>
+                    <input type="number" step="0.01" name="basis" value="0"></label>
                 <label><span data-i18n="view.s691.label.beneficiary">Beneficiary</span>
                     <input type="text" name="beneficiary" placeholder="Surviving spouse / child"></label>
                 <button class="primary" type="submit" data-i18n="view.s691.btn.add">Add</button>
@@ -65,9 +65,9 @@ export async function renderSection691(mount, _appState) {
         <div class="chart-panel">
             <div class="inline-form">
                 <label><span data-i18n="view.s691.label.estate_total">Total taxable estate ($)</span>
-                    <input type="number" step="100000" id="s691-estate" value="${state.estate_total}"></label>
+                    <input type="number" step="0.01" id="s691-estate" value="${state.estate_total}"></label>
                 <label><span data-i18n="view.s691.label.lifetime_used">Decedent lifetime used ($)</span>
-                    <input type="number" step="100000" id="s691-lifetime" value="${state.estate_lifetime_used}"></label>
+                    <input type="number" step="0.01" id="s691-lifetime" value="${state.estate_lifetime_used}"></label>
                 <label><span data-i18n="view.s691.label.estate_rate">Estate marginal rate</span>
                     <input type="number" step="0.01" id="s691-est-rate" value="${state.fed_estate_rate}"></label>
                 <label><span data-i18n="view.s691.label.beneficiary_rate">Beneficiary marginal rate</span>

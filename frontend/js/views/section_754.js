@@ -38,9 +38,9 @@ export async function renderSection754(mount, _appState) {
             <h2 data-i18n="view.s754.h2.inputs">Inputs</h2>
             <form id="s754-form" class="inline-form">
                 <label><span data-i18n="view.s754.label.purchase">Purchase price (outside basis) ($)</span>
-                    <input type="number" step="10000" name="purchase_price" value="${state.purchase_price}"></label>
+                    <input type="number" step="0.01" name="purchase_price" value="${state.purchase_price}"></label>
                 <label><span data-i18n="view.s754.label.inside">Proportionate inside basis ($)</span>
-                    <input type="number" step="10000" name="inside_basis_proportionate" value="${state.inside_basis_proportionate}"></label>
+                    <input type="number" step="0.01" name="inside_basis_proportionate" value="${state.inside_basis_proportionate}"></label>
                 <label><span data-i18n="view.s754.label.election">§ 754 election in effect?</span>
                     <input type="checkbox" name="section_754_election" ${state.section_754_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s754.label.type">Transfer type</span>
@@ -55,11 +55,11 @@ export async function renderSection754(mount, _appState) {
                 <label><span data-i18n="view.s754.label.sbil">Substantial built-in loss (> $250K)?</span>
                     <input type="checkbox" name="substantial_built_in_loss" ${state.substantial_built_in_loss ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s754.label.dist_prop">Distributed property basis ($)</span>
-                    <input type="number" step="10000" name="distributed_property_basis" value="${state.distributed_property_basis}"></label>
+                    <input type="number" step="0.01" name="distributed_property_basis" value="${state.distributed_property_basis}"></label>
                 <label><span data-i18n="view.s754.label.outside">Distributee outside basis ($)</span>
-                    <input type="number" step="10000" name="distributee_outside_basis" value="${state.distributee_outside_basis}"></label>
+                    <input type="number" step="0.01" name="distributee_outside_basis" value="${state.distributee_outside_basis}"></label>
                 <label><span data-i18n="view.s754.label.gain_dist">Gain recognized on distribution ($)</span>
-                    <input type="number" step="1000" name="gain_recognized_distribution" value="${state.gain_recognized_distribution}"></label>
+                    <input type="number" step="0.01" name="gain_recognized_distribution" value="${state.gain_recognized_distribution}"></label>
                 <label><span data-i18n="view.s754.label.real">Real estate assets?</span>
                     <input type="checkbox" name="is_real_estate" ${state.is_real_estate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s754.label.years">Years remaining depreciation</span>

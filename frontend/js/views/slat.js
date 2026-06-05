@@ -42,13 +42,13 @@ export async function renderSlat(mount, _appState) {
                 <label><span data-i18n="view.slat.label.gift_year">Gift year</span>
                     <input type="number" step="1" name="gift_year" value="${state.gift_year}"></label>
                 <label><span data-i18n="view.slat.label.gift_amount">Your gift to spouse's SLAT ($)</span>
-                    <input type="number" step="10000" name="gift_amount" value="${state.gift_amount}"></label>
+                    <input type="number" step="0.01" name="gift_amount" value="${state.gift_amount}"></label>
                 <label><span data-i18n="view.slat.label.other_gift">Spouse's gift to YOUR SLAT ($)</span>
-                    <input type="number" step="10000" name="other_spouse_gift" value="${state.other_spouse_gift}"></label>
+                    <input type="number" step="0.01" name="other_spouse_gift" value="${state.other_spouse_gift}"></label>
                 <label><span data-i18n="view.slat.label.lifetime_used">Your lifetime already used ($)</span>
-                    <input type="number" step="10000" name="current_lifetime_used" value="${state.current_lifetime_used}"></label>
+                    <input type="number" step="0.01" name="current_lifetime_used" value="${state.current_lifetime_used}"></label>
                 <label><span data-i18n="view.slat.label.spouse_lifetime_used">Spouse's lifetime used ($)</span>
-                    <input type="number" step="10000" name="spouse_current_lifetime_used" value="${state.spouse_current_lifetime_used}"></label>
+                    <input type="number" step="0.01" name="spouse_current_lifetime_used" value="${state.spouse_current_lifetime_used}"></label>
                 <label><span data-i18n="view.slat.label.growth_rate">Asset growth rate</span>
                     <input type="number" step="0.01" name="asset_growth_rate" value="${state.asset_growth_rate}"></label>
                 <label><span data-i18n="view.slat.label.years_death">Years until death</span>

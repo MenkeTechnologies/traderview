@@ -50,9 +50,9 @@ export async function renderSection911(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s911.label.feic">Foreign earned income ($)</span>
-                    <input type="number" step="1000" name="foreign_earned_income" value="${state.foreign_earned_income}"></label>
+                    <input type="number" step="0.01" name="foreign_earned_income" value="${state.foreign_earned_income}"></label>
                 <label><span data-i18n="view.s911.label.housing">Foreign housing paid ($)</span>
-                    <input type="number" step="100" name="foreign_housing_paid" value="${state.foreign_housing_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_housing_paid" value="${state.foreign_housing_paid}"></label>
                 <label><span data-i18n="view.s911.label.city">City of residence</span>
                     <input type="text" name="foreign_city" value="${state.foreign_city}" placeholder="e.g. Tokyo, Berlin"></label>
                 <label><span data-i18n="view.s911.label.days">Days abroad</span>
@@ -60,7 +60,7 @@ export async function renderSection911(mount, _appState) {
                 <label><span data-i18n="view.s911.label.is_employee">Employee (vs SE)?</span>
                     <input type="checkbox" name="is_employee" ${state.is_employee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s911.label.foreign_tax">Foreign taxes paid ($)</span>
-                    <input type="number" step="100" name="foreign_taxes_paid" value="${state.foreign_taxes_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_taxes_paid" value="${state.foreign_taxes_paid}"></label>
                 <label><span data-i18n="view.s911.label.marginal">US marginal %</span>
                     <input type="number" step="0.01" name="us_marginal_rate" value="${state.us_marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s911.btn.compute">Compute</button>

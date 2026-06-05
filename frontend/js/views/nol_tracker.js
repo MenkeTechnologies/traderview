@@ -38,7 +38,7 @@ export async function renderNolTracker(mount, _appState) {
                 <label><span data-i18n="view.nol.label.year">Tax year</span>
                     <input type="number" step="1" name="year" value="${new Date().getFullYear()}" required></label>
                 <label><span data-i18n="view.nol.label.income_before">Taxable income BEFORE NOL ($)</span>
-                    <input type="number" step="100" name="taxable_income_before_nol" required></label>
+                    <input type="number" step="0.01" name="taxable_income_before_nol" required></label>
                 <label><span data-i18n="view.nol.label.notes">Notes</span>
                     <input type="text" name="notes" placeholder="Trading loss year / catastrophic drawdown"></label>
                 <button class="primary" type="submit" data-i18n="view.nol.btn.add">Add</button>

@@ -61,7 +61,7 @@ export async function renderBocpd(mount, _appState) {
             <h2 data-i18n="view.bocpd.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.bocpd.label.hazard">Hazard rate (per-bar prior)</span>
-                    <input id="bo-hazard" type="number" step="any" min="0.0001" max="0.5" value="${state.hazard}" data-tip="view.bocpd.tip.hazard"></label>
+                    <input id="bo-hazard" type="number" step="0.01" min="0.0001" max="0.5" value="${state.hazard}" data-tip="view.bocpd.tip.hazard"></label>
                 <label><span data-i18n="view.bocpd.label.threshold">Threshold (P ≥)</span>
                     <input id="bo-thresh" type="number" step="0.01" min="0" max="1" value="${state.threshold}" data-tip="view.bocpd.tip.threshold"></label>
                 <label><span data-i18n="view.bocpd.label.top_k">Show top-K</span>

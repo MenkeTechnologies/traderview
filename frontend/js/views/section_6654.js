@@ -42,21 +42,21 @@ export async function renderSection6654(mount, _appState) {
             <h2 data-i18n="view.s6654.h2.inputs">Inputs</h2>
             <form id="s6654-form" class="inline-form">
                 <label><span data-i18n="view.s6654.label.current_est">Current-year tax (est) ($)</span>
-                    <input type="number" step="100" name="current_year_estimated_tax" value="${state.current_year_estimated_tax}"></label>
+                    <input type="number" step="0.01" name="current_year_estimated_tax" value="${state.current_year_estimated_tax}"></label>
                 <label><span data-i18n="view.s6654.label.prior_tax">Prior-year total tax ($)</span>
-                    <input type="number" step="100" name="prior_year_total_tax" value="${state.prior_year_total_tax}"></label>
+                    <input type="number" step="0.01" name="prior_year_total_tax" value="${state.prior_year_total_tax}"></label>
                 <label><span data-i18n="view.s6654.label.prior_agi">Prior-year AGI ($)</span>
-                    <input type="number" step="1000" name="prior_year_agi" value="${state.prior_year_agi}"></label>
+                    <input type="number" step="0.01" name="prior_year_agi" value="${state.prior_year_agi}"></label>
                 <label><span data-i18n="view.s6654.label.q1">Q1 paid ($)</span>
-                    <input type="number" step="100" name="q1_paid" value="${state.q1_paid}"></label>
+                    <input type="number" step="0.01" name="q1_paid" value="${state.q1_paid}"></label>
                 <label><span data-i18n="view.s6654.label.q2">Q2 paid ($)</span>
-                    <input type="number" step="100" name="q2_paid" value="${state.q2_paid}"></label>
+                    <input type="number" step="0.01" name="q2_paid" value="${state.q2_paid}"></label>
                 <label><span data-i18n="view.s6654.label.q3">Q3 paid ($)</span>
-                    <input type="number" step="100" name="q3_paid" value="${state.q3_paid}"></label>
+                    <input type="number" step="0.01" name="q3_paid" value="${state.q3_paid}"></label>
                 <label><span data-i18n="view.s6654.label.q4">Q4 paid ($)</span>
-                    <input type="number" step="100" name="q4_paid" value="${state.q4_paid}"></label>
+                    <input type="number" step="0.01" name="q4_paid" value="${state.q4_paid}"></label>
                 <label><span data-i18n="view.s6654.label.withholding">Total withholding ($)</span>
-                    <input type="number" step="100" name="withholding" value="${state.withholding}"></label>
+                    <input type="number" step="0.01" name="withholding" value="${state.withholding}"></label>
                 <label><span data-i18n="view.s6654.label.farmer">Farmer / fisherman?</span>
                     <input type="checkbox" name="is_farmer_fisherman" ${state.is_farmer_fisherman ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s6654.btn.compute">Compute</button>

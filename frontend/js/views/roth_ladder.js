@@ -52,11 +52,11 @@ export async function renderRothLadder(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.roth.label.trad_balance">Current Traditional balance ($)</span>
-                    <input type="number" step="1000" name="current_trad_balance" value="${state.current_trad_balance}"></label>
+                    <input type="number" step="0.01" name="current_trad_balance" value="${state.current_trad_balance}"></label>
                 <label><span data-i18n="view.roth.label.current_age">Current age</span>
                     <input type="number" step="1" name="current_age" value="${state.current_age}" min="18" max="80"></label>
                 <label><span data-i18n="view.roth.label.other_income">Annual other income ($)</span>
-                    <input type="number" step="1000" name="annual_other_income" value="${state.annual_other_income}"></label>
+                    <input type="number" step="0.01" name="annual_other_income" value="${state.annual_other_income}"></label>
                 <label><span data-i18n="view.roth.label.annual_growth">Expected annual growth %</span>
                     <input type="number" step="0.5" name="annual_growth" value="${(state.annual_growth * 100).toFixed(1)}"></label>
                 <button class="primary" type="submit" data-i18n="view.roth.btn.plan">Plan</button>

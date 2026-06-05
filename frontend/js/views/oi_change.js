@@ -30,7 +30,7 @@ export async function renderOiChange(mount, _appState) {
             <textarea id="oi-snap" rows="8" placeholder="500 25000 6000 24000 6200&#10;510 32000 3000 12000 3100&#10;..."></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.oi_change.label.pct_threshold">Pct threshold (e.g. 0.25 = 25%)</span>
-                    <input id="oi-pct" type="number" step="any" min="0" value="${state.pctThreshold}"></label>
+                    <input id="oi-pct" type="number" step="0.01" min="0" value="${state.pctThreshold}"></label>
                 <label><span data-i18n="view.oi_change.label.min_oi">Min OI (suppress micro-strike noise)</span>
                     <input id="oi-min" type="number" step="1" min="0" value="${state.minOi}"></label>
                 <button data-i18n="view.oi_change.btn.load_demo_8_strikes_surge_call_put" id="oi-demo" class="secondary" type="button">Load demo (8 strikes, surge call+put)</button>

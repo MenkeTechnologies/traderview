@@ -47,11 +47,11 @@ export async function renderSection475f(mount, _appState) {
                 <label><span data-i18n="view.475f.label.has_tts">TTS qualified?</span>
                     <input type="checkbox" name="has_tts" ${state.has_tts ? 'checked' : ''}></label>
                 <label><span data-i18n="view.475f.label.avg_pnl">Avg annual P&L (last 3 yr) ($)</span>
-                    <input type="number" step="1000" name="avg_annual_pnl" value="${state.avg_annual_pnl}"></label>
+                    <input type="number" step="0.01" name="avg_annual_pnl" value="${state.avg_annual_pnl}"></label>
                 <label><span data-i18n="view.475f.label.avg_wash">Avg annual wash-sale loss disallowed ($)</span>
-                    <input type="number" step="100" name="avg_annual_wash_loss" value="${state.avg_annual_wash_loss}"></label>
+                    <input type="number" step="0.01" name="avg_annual_wash_loss" value="${state.avg_annual_wash_loss}"></label>
                 <label><span data-i18n="view.475f.label.cap_carryover">Existing capital loss carryover ($)</span>
-                    <input type="number" step="1000" name="capital_loss_carryover" value="${state.capital_loss_carryover}"></label>
+                    <input type="number" step="0.01" name="capital_loss_carryover" value="${state.capital_loss_carryover}"></label>
                 <label><span data-i18n="view.475f.label.marginal">Marginal tax %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.475f.btn.evaluate">Evaluate</button>

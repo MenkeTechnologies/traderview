@@ -40,7 +40,7 @@ export async function renderDefinedBenefit(mount, _appState) {
                 <label><span data-i18n="view.db.label.retire_age">Target retirement age</span>
                     <input type="number" step="1" name="target_retirement_age" value="${state.target_retirement_age}"></label>
                 <label><span data-i18n="view.db.label.comp">Annual W-2 / net SE comp ($)</span>
-                    <input type="number" step="1000" name="annual_compensation" value="${state.annual_compensation}"></label>
+                    <input type="number" step="0.01" name="annual_compensation" value="${state.annual_compensation}"></label>
                 <label><span data-i18n="view.db.label.has_401k">Have a separate Solo 401(k)?</span>
                     <input type="checkbox" name="has_other_401k" ${state.has_other_401k ? 'checked' : ''}></label>
                 <label><span data-i18n="view.db.label.cash_balance">Cash Balance plan?</span>

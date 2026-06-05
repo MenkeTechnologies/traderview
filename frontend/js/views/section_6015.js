@@ -40,9 +40,9 @@ export async function renderSection6015(mount, _appState) {
                 <label><span data-i18n="view.s6015.label.filed_joint">Filed joint return?</span>
                     <input type="checkbox" name="filed_jointly" ${state.filed_jointly ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6015.label.understatement">Understatement attributable to spouse ($)</span>
-                    <input type="number" step="1000" name="understatement_attributable_to_spouse" value="${state.understatement_attributable_to_spouse}"></label>
+                    <input type="number" step="0.01" name="understatement_attributable_to_spouse" value="${state.understatement_attributable_to_spouse}"></label>
                 <label><span data-i18n="view.s6015.label.requester_share">Requester's share of understatement ($)</span>
-                    <input type="number" step="1000" name="requester_share_of_understatement" value="${state.requester_share_of_understatement}"></label>
+                    <input type="number" step="0.01" name="requester_share_of_understatement" value="${state.requester_share_of_understatement}"></label>
                 <label><span data-i18n="view.s6015.label.knew">Knew or had reason to know?</span>
                     <input type="checkbox" name="knew_or_had_reason" ${state.knew_or_had_reason ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6015.label.separated">Currently separated / divorced?</span>

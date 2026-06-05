@@ -41,7 +41,7 @@ export async function renderSection42(mount, _appState) {
             <h2 data-i18n="view.s42.h2.inputs">Inputs</h2>
             <form id="s42-form" class="inline-form">
                 <label><span data-i18n="view.s42.label.basis">Qualified basis ($)</span>
-                    <input type="number" step="100000" name="qualified_basis" value="${state.qualified_basis}"></label>
+                    <input type="number" step="0.01" name="qualified_basis" value="${state.qualified_basis}"></label>
                 <label><span data-i18n="view.s42.label.rate">Credit rate %</span>
                     <input type="number" step="0.1" name="credit_rate_pct" value="${state.credit_rate_pct}"></label>
                 <label><span data-i18n="view.s42.label.9pct">9% competitive allocation?</span>

@@ -82,13 +82,13 @@ export async function renderSection988(mount, _appState) {
                 <label><span data-i18n="view.s988.label.pair">Currency pair</span>
                     <input type="text" name="currency_pair" value="${esc(state.currency_pair)}"></label>
                 <label><span data-i18n="view.s988.label.notional">Notional ($)</span>
-                    <input type="number" step="10000" name="notional_amount" value="${state.notional_amount}"></label>
+                    <input type="number" step="0.01" name="notional_amount" value="${state.notional_amount}"></label>
                 <label><span data-i18n="view.s988.label.acq_rate">Acq rate</span>
                     <input type="number" step="0.0001" name="acquisition_rate" value="${state.acquisition_rate}"></label>
                 <label><span data-i18n="view.s988.label.settle_rate">Settle rate</span>
                     <input type="number" step="0.0001" name="settlement_rate" value="${state.settlement_rate}"></label>
                 <label><span data-i18n="view.s988.label.gain">Gain/loss ($)</span>
-                    <input type="number" step="100" name="gain_loss_amount" value="${state.gain_loss_amount}"></label>
+                    <input type="number" step="0.01" name="gain_loss_amount" value="${state.gain_loss_amount}"></label>
                 <label><span data-i18n="view.s988.label.ordinary">Ordinary?</span>
                     <input type="checkbox" name="is_ordinary_character" ${state.is_ordinary_character ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s988.label.is_988">Is § 988 transaction?</span>
@@ -126,9 +126,9 @@ export async function renderSection988(mount, _appState) {
                 <label><span data-i18n="view.s988.label.branch">Branch remittance?</span>
                     <input type="checkbox" name="is_branch_remittance" ${state.is_branch_remittance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s988.label.s987">§ 987 remittance ($)</span>
-                    <input type="number" step="10000" name="s987_remittance_amount" value="${state.s987_remittance_amount}"></label>
+                    <input type="number" step="0.01" name="s987_remittance_amount" value="${state.s987_remittance_amount}"></label>
                 <label><span data-i18n="view.s988.label.s987_gain">§ 987 gain/loss ($)</span>
-                    <input type="number" step="10000" name="s987_gain_loss_recognized" value="${state.s987_gain_loss_recognized}"></label>
+                    <input type="number" step="0.01" name="s987_gain_loss_recognized" value="${state.s987_gain_loss_recognized}"></label>
                 <label><span data-i18n="view.s988.label.passive">Passive?</span>
                     <input type="checkbox" name="is_passive_activity" ${state.is_passive_activity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s988.label.foreign_ps">Foreign PS?</span>
@@ -144,11 +144,11 @@ export async function renderSection988(mount, _appState) {
                 <label><span data-i18n="view.s988.label.s988b">§ 988(b) NFC payment?</span>
                     <input type="checkbox" name="s988_b_payment_in_non_functional" ${state.s988_b_payment_in_non_functional ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s988.label.principal">Loan principal ($)</span>
-                    <input type="number" step="10000" name="s988_b_loan_principal" value="${state.s988_b_loan_principal}"></label>
+                    <input type="number" step="0.01" name="s988_b_loan_principal" value="${state.s988_b_loan_principal}"></label>
                 <label><span data-i18n="view.s988.label.interest">Accrued interest ($)</span>
-                    <input type="number" step="100" name="s988_b_accrued_interest" value="${state.s988_b_accrued_interest}"></label>
+                    <input type="number" step="0.01" name="s988_b_accrued_interest" value="${state.s988_b_accrued_interest}"></label>
                 <label><span data-i18n="view.s988.label.borrowed">NFC borrowed ($)</span>
-                    <input type="number" step="10000" name="nonfunctional_currency_borrowed" value="${state.nonfunctional_currency_borrowed}"></label>
+                    <input type="number" step="0.01" name="nonfunctional_currency_borrowed" value="${state.nonfunctional_currency_borrowed}"></label>
                 <label><span data-i18n="view.s988.label.repayment">Loan repayment?</span>
                     <input type="checkbox" name="treated_as_loan_principal_repayment" ${state.treated_as_loan_principal_repayment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s988.label.hedge_id">§ 988(d) hedge ID?</span>

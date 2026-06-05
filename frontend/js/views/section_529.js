@@ -60,17 +60,17 @@ export async function renderSection529(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s529.label.contribution">Annual contribution ($)</span>
-                    <input type="number" step="1000" name="contribution_amount" value="${state.contribution_amount}"></label>
+                    <input type="number" step="0.01" name="contribution_amount" value="${state.contribution_amount}"></label>
                 <label><span data-i18n="view.s529.label.super">5-year super-fund?</span>
                     <input type="checkbox" name="super_fund" ${state.super_fund ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s529.label.mfj">MFJ?</span>
                     <input type="checkbox" name="is_mfj" ${state.is_mfj ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s529.label.dist">Total distributions ($)</span>
-                    <input type="number" step="100" name="annual_distributions" value="${state.annual_distributions}"></label>
+                    <input type="number" step="0.01" name="annual_distributions" value="${state.annual_distributions}"></label>
                 <label><span data-i18n="view.s529.label.qualified">Qualified higher-ed expenses ($)</span>
-                    <input type="number" step="100" name="qualified_expenses" value="${state.qualified_expenses}"></label>
+                    <input type="number" step="0.01" name="qualified_expenses" value="${state.qualified_expenses}"></label>
                 <label><span data-i18n="view.s529.label.k12">K-12 distributions ($)</span>
-                    <input type="number" step="100" name="k12_distributions" value="${state.k12_distributions}"></label>
+                    <input type="number" step="0.01" name="k12_distributions" value="${state.k12_distributions}"></label>
                 <label><span data-i18n="view.s529.label.in_state">In-state plan?</span>
                     <input type="checkbox" name="is_in_state_plan" ${state.is_in_state_plan ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s529.label.age">Account age (years)</span>

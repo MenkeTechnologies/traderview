@@ -42,13 +42,13 @@ export async function renderSection1374(mount, _appState) {
                 <label><span data-i18n="view.s1374.label.current_year">Current year</span>
                     <input type="number" step="1" name="current_year" value="${state.current_year}"></label>
                 <label><span data-i18n="view.s1374.label.nubig">NUBIG at conversion ($)</span>
-                    <input type="number" step="10000" name="nubig_at_conversion" value="${state.nubig_at_conversion}"></label>
+                    <input type="number" step="0.01" name="nubig_at_conversion" value="${state.nubig_at_conversion}"></label>
                 <label><span data-i18n="view.s1374.label.nubig_used">NUBIG already used in prior years ($)</span>
-                    <input type="number" step="10000" name="nubig_used" value="${state.nubig_used}"></label>
+                    <input type="number" step="0.01" name="nubig_used" value="${state.nubig_used}"></label>
                 <label><span data-i18n="view.s1374.label.built_in">Current year built-in gain realized ($)</span>
-                    <input type="number" step="10000" name="current_year_built_in_gain" value="${state.current_year_built_in_gain}"></label>
+                    <input type="number" step="0.01" name="current_year_built_in_gain" value="${state.current_year_built_in_gain}"></label>
                 <label><span data-i18n="view.s1374.label.ti">Current year taxable income (if C) ($)</span>
-                    <input type="number" step="10000" name="current_year_taxable_income" value="${state.current_year_taxable_income}"></label>
+                    <input type="number" step="0.01" name="current_year_taxable_income" value="${state.current_year_taxable_income}"></label>
                 <label><span data-i18n="view.s1374.label.state_rate">State corp rate</span>
                     <input type="number" step="0.01" name="state_corp_rate" value="${state.state_corp_rate}"></label>
                 <label><span data-i18n="view.s1374.label.indiv_rate">Individual marginal %</span>

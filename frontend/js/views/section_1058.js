@@ -59,11 +59,11 @@ export async function renderSection1058(mount, _appState) {
             <h2 data-i18n="view.s1058.h2.inputs">Inputs</h2>
             <form id="s1058-form" class="inline-form">
                 <label><span data-i18n="view.s1058.label.basis">Lender basis ($)</span>
-                    <input type="number" step="1000" name="lender_basis" value="${state.lender_basis}"></label>
+                    <input type="number" step="0.01" name="lender_basis" value="${state.lender_basis}"></label>
                 <label><span data-i18n="view.s1058.label.fmv">Securities FMV ($)</span>
-                    <input type="number" step="1000" name="securities_fmv" value="${state.securities_fmv}"></label>
+                    <input type="number" step="0.01" name="securities_fmv" value="${state.securities_fmv}"></label>
                 <label><span data-i18n="view.s1058.label.collateral">Borrower collateral ($)</span>
-                    <input type="number" step="1000" name="borrower_collateral" value="${state.borrower_collateral}"></label>
+                    <input type="number" step="0.01" name="borrower_collateral" value="${state.borrower_collateral}"></label>
                 <label><span data-i18n="view.s1058.label.identical">Identical returned?</span>
                     <input type="checkbox" name="is_identical_returned" ${state.is_identical_returned ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1058.label.agreement">Agreement meets § 1058?</span>
@@ -79,13 +79,13 @@ export async function renderSection1058(mount, _appState) {
                 <label><span data-i18n="view.s1058.label.coll_pct">Collateral threshold %</span>
                     <input type="number" step="1" name="collateral_threshold_pct" value="${state.collateral_threshold_pct}"></label>
                 <label><span data-i18n="view.s1058.label.fees">Loan fees received ($)</span>
-                    <input type="number" step="100" name="s1058_b_2_fees_received" value="${state.s1058_b_2_fees_received}"></label>
+                    <input type="number" step="0.01" name="s1058_b_2_fees_received" value="${state.s1058_b_2_fees_received}"></label>
                 <label><span data-i18n="view.s1058.label.at_will">At-will termination?</span>
                     <input type="checkbox" name="s1058_b_3_at_will_termination" ${state.s1058_b_3_at_will_termination ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1058.label.substitute">Substitute payment?</span>
                     <input type="checkbox" name="is_substitute_payment" ${state.is_substitute_payment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1058.label.sub_amt">Substitute payment ($)</span>
-                    <input type="number" step="100" name="substitute_payment_received" value="${state.substitute_payment_received}"></label>
+                    <input type="number" step="0.01" name="substitute_payment_received" value="${state.substitute_payment_received}"></label>
                 <label><span data-i18n="view.s1058.label.div_sub">Dividend substitute?</span>
                     <input type="checkbox" name="is_dividend_substitute" ${state.is_dividend_substitute ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1058.label.int_sub">Interest substitute?</span>
@@ -95,7 +95,7 @@ export async function renderSection1058(mount, _appState) {
                 <label><span data-i18n="view.s1058.label.871m">§ 871(m) substitute?</span>
                     <input type="checkbox" name="s871_m_substitute" ${state.s871_m_substitute ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1058.label.s263g">§ 263(g) carrying ($)</span>
-                    <input type="number" step="100" name="s263_g_carrying_charges" value="${state.s263_g_carrying_charges}"></label>
+                    <input type="number" step="0.01" name="s263_g_carrying_charges" value="${state.s263_g_carrying_charges}"></label>
                 <label><span data-i18n="view.s1058.label.s246_a">§ 246 holding days</span>
                     <input type="number" step="1" name="s246_a_holding_period" value="${state.s246_a_holding_period}"></label>
                 <label><span data-i18n="view.s1058.label.s246_sat">§ 246 holding satisfied?</span>

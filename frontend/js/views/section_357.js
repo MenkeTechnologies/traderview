@@ -38,15 +38,15 @@ export async function renderSection357(mount, _appState) {
             <h2 data-i18n="view.s357.h2.inputs">Inputs</h2>
             <form id="s357-form" class="inline-form">
                 <label><span data-i18n="view.s357.label.basis">Property basis ($)</span>
-                    <input type="number" step="10000" name="property_basis" value="${state.property_basis}"></label>
+                    <input type="number" step="0.01" name="property_basis" value="${state.property_basis}"></label>
                 <label><span data-i18n="view.s357.label.fmv">Property FMV ($)</span>
-                    <input type="number" step="10000" name="property_fmv" value="${state.property_fmv}"></label>
+                    <input type="number" step="0.01" name="property_fmv" value="${state.property_fmv}"></label>
                 <label><span data-i18n="view.s357.label.liab">Liabilities assumed by corp ($)</span>
-                    <input type="number" step="10000" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
+                    <input type="number" step="0.01" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
                 <label><span data-i18n="view.s357.label.other_cons">Other consideration received ($)</span>
-                    <input type="number" step="10000" name="other_consideration_received" value="${state.other_consideration_received}"></label>
+                    <input type="number" step="0.01" name="other_consideration_received" value="${state.other_consideration_received}"></label>
                 <label><span data-i18n="view.s357.label.boot">Boot (cash, other) received ($)</span>
-                    <input type="number" step="10000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s357.label.avoid">Tax avoidance motive (§ 357(b))?</span>
                     <input type="checkbox" name="tax_avoidance_motive" ${state.tax_avoidance_motive ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s357.label.business">Business purpose for liabilities?</span>
@@ -54,11 +54,11 @@ export async function renderSection357(mount, _appState) {
                 <label><span data-i18n="view.s357.label.recourse">Recourse debt?</span>
                     <input type="checkbox" name="s357c_recourse" ${state.s357c_recourse ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s357.label.other_basis">Transferor's basis in OTHER prop transferred ($)</span>
-                    <input type="number" step="10000" name="transferor_other_basis" value="${state.transferor_other_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_other_basis" value="${state.transferor_other_basis}"></label>
                 <label><span data-i18n="view.s357.label.is351">§ 351 transfer (control 80%)?</span>
                     <input type="checkbox" name="is_s351_transfer" ${state.is_s351_transfer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s357.label.nqpref">Nonqualified preferred received ($)</span>
-                    <input type="number" step="10000" name="nq_preferred_received" value="${state.nq_preferred_received}"></label>
+                    <input type="number" step="0.01" name="nq_preferred_received" value="${state.nq_preferred_received}"></label>
                 <button class="primary" type="submit" data-i18n="view.s357.btn.compute">Compute</button>
             </form>
         </div>

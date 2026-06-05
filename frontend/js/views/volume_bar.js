@@ -31,7 +31,7 @@ export async function renderVolumeBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.vol_bar.label.volume">Volume per bar</span>
-                    <input id="vb-target" type="number" step="any" min="0" value="${state.volume_per_bar}"
+                    <input id="vb-target" type="number" step="0.01" min="0" value="${state.volume_per_bar}"
                            data-tip="view.vol_bar.tip.volume"></label>
                 <button data-i18n="view.vol_bar.btn.compute" id="vb-run" class="primary"
                         data-tip="view.vol_bar.tip.compute" data-shortcut="volume_bar_run" type="button">Build bars</button>

@@ -64,7 +64,7 @@ export async function renderHsaMax(mount, _appState) {
                 <label><span data-i18n="view.hsa.label.state_rate">State rate % (CA / NJ taxed)</span>
                     <input type="number" step="0.5" name="state_rate" value="${(state.state_rate * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.hsa.label.current_balance">Current HSA balance ($)</span>
-                    <input type="number" step="100" name="current_balance" value="${state.current_balance}"></label>
+                    <input type="number" step="0.01" name="current_balance" value="${state.current_balance}"></label>
                 <label><span data-i18n="view.hsa.label.expected_return">Expected return %</span>
                     <input type="number" step="0.5" name="expected_return" value="${(state.expected_return * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.hsa.label.years">Years to age 65</span>

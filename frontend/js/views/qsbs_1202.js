@@ -39,11 +39,11 @@ export async function renderQsbs1202(mount, _appState) {
                 <label><span data-i18n="view.qsbs.label.acquisition_date">Acquisition date</span>
                     <input type="date" name="acquisition_date" required></label>
                 <label><span data-i18n="view.qsbs.label.cost_basis">Cost basis ($)</span>
-                    <input type="number" step="100" name="cost_basis" required></label>
+                    <input type="number" step="0.01" name="cost_basis" required></label>
                 <label><span data-i18n="view.qsbs.label.current_value">Current FMV ($)</span>
-                    <input type="number" step="100" name="current_value" required></label>
+                    <input type="number" step="0.01" name="current_value" required></label>
                 <label><span data-i18n="view.qsbs.label.gross_assets_at_issue">Gross assets at issue ($)</span>
-                    <input type="number" step="10000" name="gross_assets_at_issue" placeholder="< 50M required"></label>
+                    <input type="number" step="0.01" name="gross_assets_at_issue" placeholder="< 50M required"></label>
                 <label><span data-i18n="view.qsbs.label.business_type">Business type</span>
                     <select name="business_type">
                         <option value="qualified">Qualified (SaaS / hardware / biotech / consumer)</option>

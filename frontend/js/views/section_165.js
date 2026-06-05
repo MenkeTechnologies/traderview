@@ -64,15 +64,15 @@ export async function renderSection165(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s165.label.amount">Loss amount ($)</span>
-                    <input type="number" step="1000" name="loss_amount" value="${state.loss_amount}"></label>
+                    <input type="number" step="0.01" name="loss_amount" value="${state.loss_amount}"></label>
                 <label><span data-i18n="view.s165.label.fmv_before">FMV before ($)</span>
-                    <input type="number" step="1000" name="fmv_before" value="${state.fmv_before}"></label>
+                    <input type="number" step="0.01" name="fmv_before" value="${state.fmv_before}"></label>
                 <label><span data-i18n="view.s165.label.fmv_after">FMV after ($)</span>
-                    <input type="number" step="1000" name="fmv_after" value="${state.fmv_after}"></label>
+                    <input type="number" step="0.01" name="fmv_after" value="${state.fmv_after}"></label>
                 <label><span data-i18n="view.s165.label.basis">Adjusted basis ($)</span>
-                    <input type="number" step="1000" name="adjusted_basis" value="${state.adjusted_basis}"></label>
+                    <input type="number" step="0.01" name="adjusted_basis" value="${state.adjusted_basis}"></label>
                 <label><span data-i18n="view.s165.label.insurance">Insurance reimbursement ($)</span>
-                    <input type="number" step="1000" name="insurance_reimbursement" value="${state.insurance_reimbursement}"></label>
+                    <input type="number" step="0.01" name="insurance_reimbursement" value="${state.insurance_reimbursement}"></label>
                 <label><span data-i18n="view.s165.label.fdda">Federally declared disaster?</span>
                     <input type="checkbox" name="is_federally_declared_disaster" ${state.is_federally_declared_disaster ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165.label.personal">Personal use?</span>
@@ -88,17 +88,17 @@ export async function renderSection165(mount, _appState) {
                 <label><span data-i18n="view.s165.label.worthless">Worthless security?</span>
                     <input type="checkbox" name="is_worthless_security" ${state.is_worthless_security ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165.label.sec_basis">Security basis ($)</span>
-                    <input type="number" step="1000" name="security_basis" value="${state.security_basis}"></label>
+                    <input type="number" step="0.01" name="security_basis" value="${state.security_basis}"></label>
                 <label><span data-i18n="view.s165.label.wagering">Wagering loss?</span>
                     <input type="checkbox" name="is_wagering_loss" ${state.is_wagering_loss ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165.label.gains">Wagering gains ($)</span>
-                    <input type="number" step="1000" name="wagering_gains" value="${state.wagering_gains}"></label>
+                    <input type="number" step="0.01" name="wagering_gains" value="${state.wagering_gains}"></label>
                 <label><span data-i18n="view.s165.label.losses">Wagering losses ($)</span>
-                    <input type="number" step="1000" name="wagering_losses" value="${state.wagering_losses}"></label>
+                    <input type="number" step="0.01" name="wagering_losses" value="${state.wagering_losses}"></label>
                 <label><span data-i18n="view.s165.label.abandon">Abandonment?</span>
                     <input type="checkbox" name="is_abandonment" ${state.is_abandonment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165.label.abandon_basis">Abandonment basis ($)</span>
-                    <input type="number" step="1000" name="abandonment_basis" value="${state.abandonment_basis}"></label>
+                    <input type="number" step="0.01" name="abandonment_basis" value="${state.abandonment_basis}"></label>
                 <label><span data-i18n="view.s165.label.ponzi">Ponzi?</span>
                     <input type="checkbox" name="is_ponzi" ${state.is_ponzi ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165.label.rp_2009">Rev Proc 2009-20 election?</span>

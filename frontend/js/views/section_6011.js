@@ -72,7 +72,7 @@ export async function renderSection6011(mount, _appState) {
                 <label><span data-i18n="view.s6011.label.late">Days late</span>
                     <input type="number" step="1" name="days_late" value="${state.days_late}"></label>
                 <label><span data-i18n="view.s6011.label.s6707a">§ 6707A penalty ($)</span>
-                    <input type="number" step="1000" name="s6707a_penalty_assessed" value="${state.s6707a_penalty_assessed}"></label>
+                    <input type="number" step="0.01" name="s6707a_penalty_assessed" value="${state.s6707a_penalty_assessed}"></label>
                 <label><span data-i18n="view.s6011.label.protected">§ 6011(b) protected?</span>
                     <input type="checkbox" name="s6011_b_protected_disclosure" ${state.s6011_b_protected_disclosure ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6011.label.shelter">Tax shelter?</span>
@@ -82,11 +82,11 @@ export async function renderSection6011(mount, _appState) {
                 <label><span data-i18n="view.s6011.label.similar">Substantially similar?</span>
                     <input type="checkbox" name="is_substantially_similar" ${state.is_substantially_similar ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6011.label.loss">Loss transaction ($)</span>
-                    <input type="number" step="100000" name="loss_transaction_amount" value="${state.loss_transaction_amount}"></label>
+                    <input type="number" step="0.01" name="loss_transaction_amount" value="${state.loss_transaction_amount}"></label>
                 <label><span data-i18n="view.s6011.label.confidential">Confidential obligation?</span>
                     <input type="checkbox" name="confidential_obligation" ${state.confidential_obligation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6011.label.contractual">Contractual protection ($)</span>
-                    <input type="number" step="1000" name="contractual_protection_amount" value="${state.contractual_protection_amount}"></label>
+                    <input type="number" step="0.01" name="contractual_protection_amount" value="${state.contractual_protection_amount}"></label>
                 <label><span data-i18n="view.s6011.label.no_filing">§ 6011(e) no filing?</span>
                     <input type="checkbox" name="s6011_e_no_filing_required" ${state.s6011_e_no_filing_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6011.label.advance">Advance disclosure?</span>
@@ -94,9 +94,9 @@ export async function renderSection6011(mount, _appState) {
                 <label><span data-i18n="view.s6011.label.engaged_year">First engaged year</span>
                     <input type="number" step="1" name="transaction_year_first_engaged" value="${state.transaction_year_first_engaged}"></label>
                 <label><span data-i18n="view.s6011.label.benefit">Tax benefit ($)</span>
-                    <input type="number" step="10000" name="tax_benefit_amount" value="${state.tax_benefit_amount}"></label>
+                    <input type="number" step="0.01" name="tax_benefit_amount" value="${state.tax_benefit_amount}"></label>
                 <label><span data-i18n="view.s6011.label.reportable">Reportable amount ($)</span>
-                    <input type="number" step="10000" name="s6011_reportable_amount" value="${state.s6011_reportable_amount}"></label>
+                    <input type="number" step="0.01" name="s6011_reportable_amount" value="${state.s6011_reportable_amount}"></label>
                 <label><span data-i18n="view.s6011.label.sol">§ 6501(c)(10) SOL ext?</span>
                     <input type="checkbox" name="s6501_c_10_sol_extension" ${state.s6501_c_10_sol_extension ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6011.label.s7203">§ 7203 failure to file?</span>

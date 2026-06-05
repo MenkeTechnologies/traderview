@@ -30,10 +30,10 @@ export async function renderBeta(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.beta.label.notional">Hedge notional ($)</span>
-                    <input id="bt-notional" type="number" step="any" min="0" value="${state.notional}"
+                    <input id="bt-notional" type="number" step="0.01" min="0" value="${state.notional}"
                            data-tip="view.beta.tip.notional"></label>
                 <label><span data-i18n="view.beta.label.periods">Periods / yr</span>
-                    <input id="bt-periods" type="number" step="any" min="1" value="${state.periods_per_year}"
+                    <input id="bt-periods" type="number" step="0.01" min="1" value="${state.periods_per_year}"
                            data-tip="view.beta.tip.periods"></label>
                 <button data-i18n="view.beta.btn.compute" id="bt-run" class="primary"
                         data-tip="view.beta.tip.compute" data-shortcut="beta_run" type="button">Estimate β</button>

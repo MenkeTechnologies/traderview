@@ -53,19 +53,19 @@ export async function renderSection743(mount, _appState) {
             <h2 data-i18n="view.s743.h2.inputs">Inputs</h2>
             <form id="s743-form" class="inline-form">
                 <label><span data-i18n="view.s743.label.transferor_basis">Transferor outside basis ($)</span>
-                    <input type="number" step="10000" name="transferor_outside_basis" value="${state.transferor_outside_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_outside_basis" value="${state.transferor_outside_basis}"></label>
                 <label><span data-i18n="view.s743.label.purchase_price">Transferee purchase price ($)</span>
-                    <input type="number" step="10000" name="transferee_purchase_price" value="${state.transferee_purchase_price}"></label>
+                    <input type="number" step="0.01" name="transferee_purchase_price" value="${state.transferee_purchase_price}"></label>
                 <label><span data-i18n="view.s743.label.inside_share">Inside basis share ($)</span>
-                    <input type="number" step="10000" name="partnership_inside_basis_share" value="${state.partnership_inside_basis_share}"></label>
+                    <input type="number" step="0.01" name="partnership_inside_basis_share" value="${state.partnership_inside_basis_share}"></label>
                 <label><span data-i18n="view.s743.label.s743b">§ 743(b) adjustment ($)</span>
-                    <input type="number" step="10000" name="s743_b_adjustment" value="${state.s743_b_adjustment}"></label>
+                    <input type="number" step="0.01" name="s743_b_adjustment" value="${state.s743_b_adjustment}"></label>
                 <label><span data-i18n="view.s743.label.s754">§ 754 election?</span>
                     <input type="checkbox" name="is_s754_election" ${state.is_s754_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s743.label.sbil">Substantial built-in loss?</span>
                     <input type="checkbox" name="substantial_built_in_loss" ${state.substantial_built_in_loss ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s743.label.bil_amt">Built-in loss amount ($)</span>
-                    <input type="number" step="10000" name="built_in_loss_amount" value="${state.built_in_loss_amount}"></label>
+                    <input type="number" step="0.01" name="built_in_loss_amount" value="${state.built_in_loss_amount}"></label>
                 <label><span data-i18n="view.s743.label.year">§ 754 election year</span>
                     <input type="number" step="1" name="s754_election_year" value="${state.s754_election_year}"></label>
                 <label><span data-i18n="view.s743.label.date">Transfer date</span>
@@ -79,19 +79,19 @@ export async function renderSection743(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s743.label.cap_gain">Cap gain property share ($)</span>
-                    <input type="number" step="10000" name="capital_gain_property_share" value="${state.capital_gain_property_share}"></label>
+                    <input type="number" step="0.01" name="capital_gain_property_share" value="${state.capital_gain_property_share}"></label>
                 <label><span data-i18n="view.s743.label.ord_inc">Ord inc property share ($)</span>
-                    <input type="number" step="10000" name="ordinary_income_property_share" value="${state.ordinary_income_property_share}"></label>
+                    <input type="number" step="0.01" name="ordinary_income_property_share" value="${state.ordinary_income_property_share}"></label>
                 <label><span data-i18n="view.s743.label.hot">§ 751 hot assets ($)</span>
-                    <input type="number" step="10000" name="s751_hot_assets" value="${state.s751_hot_assets}"></label>
+                    <input type="number" step="0.01" name="s751_hot_assets" value="${state.s751_hot_assets}"></label>
                 <label><span data-i18n="view.s743.label.collapsible">§ 751(a) collapsible gain ($)</span>
-                    <input type="number" step="10000" name="s751_a_collapsible_gain" value="${state.s751_a_collapsible_gain}"></label>
+                    <input type="number" step="0.01" name="s751_a_collapsible_gain" value="${state.s751_a_collapsible_gain}"></label>
                 <label><span data-i18n="view.s743.label.test">§ 743(d) substantial loss test?</span>
                     <input type="checkbox" name="s743_d_substantial_loss_test" ${state.s743_d_substantial_loss_test ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s743.label.securitization">§ 743(e) securitization?</span>
                     <input type="checkbox" name="s743_e_securitization_partnership" ${state.s743_e_securitization_partnership ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s743.label.s197">§ 197 intangible ($)</span>
-                    <input type="number" step="10000" name="s197_intangible_amount" value="${state.s197_intangible_amount}"></label>
+                    <input type="number" step="0.01" name="s197_intangible_amount" value="${state.s197_intangible_amount}"></label>
                 <label><span data-i18n="view.s743.label.revoke">§ 754 revocation pending?</span>
                     <input type="checkbox" name="s754_revocation_pending" ${state.s754_revocation_pending ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s743.label.eligible_term">Eligible termination?</span>

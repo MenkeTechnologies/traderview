@@ -36,17 +36,17 @@ export async function renderSection59A(mount, _appState) {
             <h2 data-i18n="view.s59A.h2.inputs">Inputs</h2>
             <form id="s59A-form" class="inline-form">
                 <label><span data-i18n="view.s59A.label.ti">Taxable income ($)</span>
-                    <input type="number" step="1000" name="taxable_income" value="${state.taxable_income}"></label>
+                    <input type="number" step="0.01" name="taxable_income" value="${state.taxable_income}"></label>
                 <label><span data-i18n="view.s59A.label.bep">Base-erosion payments to foreign related ($)</span>
-                    <input type="number" step="1000" name="base_erosion_payments" value="${state.base_erosion_payments}"></label>
+                    <input type="number" step="0.01" name="base_erosion_payments" value="${state.base_erosion_payments}"></label>
                 <label><span data-i18n="view.s59A.label.deductions">Total deductions ($)</span>
-                    <input type="number" step="1000" name="total_deductions" value="${state.total_deductions}"></label>
+                    <input type="number" step="0.01" name="total_deductions" value="${state.total_deductions}"></label>
                 <label><span data-i18n="view.s59A.label.gross">Avg gross receipts 3-yr ($)</span>
-                    <input type="number" step="1000000" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
                 <label><span data-i18n="view.s59A.label.regular_tax">Regular tax ($)</span>
-                    <input type="number" step="1000" name="regular_tax" value="${state.regular_tax}"></label>
+                    <input type="number" step="0.01" name="regular_tax" value="${state.regular_tax}"></label>
                 <label><span data-i18n="view.s59A.label.ftc">Foreign tax credit ($)</span>
-                    <input type="number" step="100" name="foreign_tax_credit" value="${state.foreign_tax_credit}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_credit" value="${state.foreign_tax_credit}"></label>
                 <label><span data-i18n="view.s59A.label.pre_2026">Pre-2026 (10%)?</span>
                     <input type="checkbox" name="pre_2026" ${state.pre_2026 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s59A.label.bank">Bank?</span>
@@ -54,7 +54,7 @@ export async function renderSection59A(mount, _appState) {
                 <label><span data-i18n="view.s59A.label.dealer">Securities dealer?</span>
                     <input type="checkbox" name="is_securities_dealer" ${state.is_securities_dealer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s59A.label.cogs_excluded">COGS payments (excluded from BEP) ($)</span>
-                    <input type="number" step="1000" name="cost_of_goods_excluded" value="${state.cost_of_goods_excluded}"></label>
+                    <input type="number" step="0.01" name="cost_of_goods_excluded" value="${state.cost_of_goods_excluded}"></label>
                 <button class="primary" type="submit" data-i18n="view.s59A.btn.compute">Compute</button>
             </form>
         </div>

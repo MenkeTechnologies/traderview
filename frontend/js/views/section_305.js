@@ -50,11 +50,11 @@ export async function renderSection305(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s305.label.fmv_dist">FMV of stock distributed ($)</span>
-                    <input type="number" step="10000" name="fmv_of_stock_distributed" value="${state.fmv_of_stock_distributed}"></label>
+                    <input type="number" step="0.01" name="fmv_of_stock_distributed" value="${state.fmv_of_stock_distributed}"></label>
                 <label><span data-i18n="view.s305.label.fmv_before">FMV of pre-dist stock ($)</span>
-                    <input type="number" step="10000" name="fmv_of_stock_before" value="${state.fmv_of_stock_before}"></label>
+                    <input type="number" step="0.01" name="fmv_of_stock_before" value="${state.fmv_of_stock_before}"></label>
                 <label><span data-i18n="view.s305.label.ep">Accumulated E&P ($)</span>
-                    <input type="number" step="10000" name="accumulated_ep" value="${state.accumulated_ep}"></label>
+                    <input type="number" step="0.01" name="accumulated_ep" value="${state.accumulated_ep}"></label>
                 <label><span data-i18n="view.s305.label.option">Cash or property option available?</span>
                     <input type="checkbox" name="cash_or_property_option" ${state.cash_or_property_option ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s305.label.dispro">Disproportionate distribution?</span>
@@ -68,7 +68,7 @@ export async function renderSection305(mount, _appState) {
                 <label><span data-i18n="view.s305.label.arrearages">Accrued dividend arrearages on preferred?</span>
                     <input type="checkbox" name="accrued_dividend_arrearages" ${state.accrued_dividend_arrearages ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s305.label.basis">Shareholder original basis ($)</span>
-                    <input type="number" step="10000" name="shareholder_basis_orig" value="${state.shareholder_basis_orig}"></label>
+                    <input type="number" step="0.01" name="shareholder_basis_orig" value="${state.shareholder_basis_orig}"></label>
                 <button class="primary" type="submit" data-i18n="view.s305.btn.compute">Compute</button>
             </form>
         </div>

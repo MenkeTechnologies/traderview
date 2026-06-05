@@ -64,13 +64,13 @@ export async function renderSection446(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s446.label.revenue">Annual revenue ($)</span>
-                    <input type="number" step="100000" name="annual_revenue" value="${state.annual_revenue}"></label>
+                    <input type="number" step="0.01" name="annual_revenue" value="${state.annual_revenue}"></label>
                 <label><span data-i18n="view.s446.label.inventory">Average inventory ($)</span>
-                    <input type="number" step="10000" name="average_inventory" value="${state.average_inventory}"></label>
+                    <input type="number" step="0.01" name="average_inventory" value="${state.average_inventory}"></label>
                 <label><span data-i18n="view.s446.label.ar">A/R year-end ($)</span>
-                    <input type="number" step="10000" name="accounts_receivable_year_end" value="${state.accounts_receivable_year_end}"></label>
+                    <input type="number" step="0.01" name="accounts_receivable_year_end" value="${state.accounts_receivable_year_end}"></label>
                 <label><span data-i18n="view.s446.label.ap">A/P year-end ($)</span>
-                    <input type="number" step="10000" name="accounts_payable_year_end" value="${state.accounts_payable_year_end}"></label>
+                    <input type="number" step="0.01" name="accounts_payable_year_end" value="${state.accounts_payable_year_end}"></label>
                 <label><span data-i18n="view.s446.label.has_inventory">Has inventory?</span>
                     <input type="checkbox" name="has_inventory" ${state.has_inventory ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s446.label.farming">Farming business?</span>
@@ -78,7 +78,7 @@ export async function renderSection446(mount, _appState) {
                 <label><span data-i18n="view.s446.label.corp_partner">Partnership with C-corp partner?</span>
                     <input type="checkbox" name="is_partnership_corporate_partner" ${state.is_partnership_corporate_partner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s446.label.gross_3yr">Avg gross receipts 3-yr ($)</span>
-                    <input type="number" step="100000" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
                 <label><span data-i18n="view.s446.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s446.btn.compute">Compute</button>

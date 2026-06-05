@@ -41,27 +41,27 @@ export async function renderSection1366(mount, _appState) {
                 <label><span data-i18n="view.s1366.label.ownership">Ownership %</span>
                     <input type="number" step="0.01" name="ownership_pct" value="${state.ownership_pct}"></label>
                 <label><span data-i18n="view.s1366.label.obi">Ordinary biz income / loss ($)</span>
-                    <input type="number" step="10000" name="ordinary_business_income" value="${state.ordinary_business_income}"></label>
+                    <input type="number" step="0.01" name="ordinary_business_income" value="${state.ordinary_business_income}"></label>
                 <label><span data-i18n="view.s1366.label.ltcg">Sep stated LTCG ($)</span>
-                    <input type="number" step="1000" name="sep_stated_ltcg" value="${state.sep_stated_ltcg}"></label>
+                    <input type="number" step="0.01" name="sep_stated_ltcg" value="${state.sep_stated_ltcg}"></label>
                 <label><span data-i18n="view.s1366.label.qdiv">Qualified dividends ($)</span>
-                    <input type="number" step="1000" name="sep_stated_qualified_div" value="${state.sep_stated_qualified_div}"></label>
+                    <input type="number" step="0.01" name="sep_stated_qualified_div" value="${state.sep_stated_qualified_div}"></label>
                 <label><span data-i18n="view.s1366.label.s1231">§ 1231 gain / loss ($)</span>
-                    <input type="number" step="1000" name="sep_stated_s1231_gain" value="${state.sep_stated_s1231_gain}"></label>
+                    <input type="number" step="0.01" name="sep_stated_s1231_gain" value="${state.sep_stated_s1231_gain}"></label>
                 <label><span data-i18n="view.s1366.label.charitable">Charitable contributions ($)</span>
-                    <input type="number" step="1000" name="sep_stated_charitable" value="${state.sep_stated_charitable}"></label>
+                    <input type="number" step="0.01" name="sep_stated_charitable" value="${state.sep_stated_charitable}"></label>
                 <label><span data-i18n="view.s1366.label.int">Tax-exempt int income ($)</span>
-                    <input type="number" step="1000" name="sep_stated_int_income" value="${state.sep_stated_int_income}"></label>
+                    <input type="number" step="0.01" name="sep_stated_int_income" value="${state.sep_stated_int_income}"></label>
                 <label><span data-i18n="view.s1366.label.days">Days owned</span>
                     <input type="number" step="1" name="days_owned" value="${state.days_owned}"></label>
                 <label><span data-i18n="view.s1366.label.outside">Outside basis ($)</span>
-                    <input type="number" step="10000" name="outside_basis" value="${state.outside_basis}"></label>
+                    <input type="number" step="0.01" name="outside_basis" value="${state.outside_basis}"></label>
                 <label><span data-i18n="view.s1366.label.at_risk">At-risk amount ($)</span>
-                    <input type="number" step="10000" name="at_risk_amount" value="${state.at_risk_amount}"></label>
+                    <input type="number" step="0.01" name="at_risk_amount" value="${state.at_risk_amount}"></label>
                 <label><span data-i18n="view.s1366.label.passive">Passive shareholder (PAL applies)?</span>
                     <input type="checkbox" name="is_passive" ${state.is_passive ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1366.label.qbi">QBI § 199A eligible portion ($)</span>
-                    <input type="number" step="1000" name="qbi_eligible_amount" value="${state.qbi_eligible_amount}"></label>
+                    <input type="number" step="0.01" name="qbi_eligible_amount" value="${state.qbi_eligible_amount}"></label>
                 <label><span data-i18n="view.s1366.label.marginal">Marginal rate %</span>
                     <input type="number" step="0.1" name="shareholder_marginal" value="${state.shareholder_marginal}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1366.btn.compute">Compute</button>

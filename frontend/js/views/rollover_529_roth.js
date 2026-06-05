@@ -44,11 +44,11 @@ export async function renderRollover529Roth(mount, _appState) {
                 <label><span data-i18n="view.529roth.label.plan_open_date">529 plan open date</span>
                     <input type="date" name="plan_open_date" value="${state.plan_open_date}"></label>
                 <label><span data-i18n="view.529roth.label.current_529_balance">Current 529 balance ($)</span>
-                    <input type="number" step="1000" name="current_529_balance" value="${state.current_529_balance}"></label>
+                    <input type="number" step="0.01" name="current_529_balance" value="${state.current_529_balance}"></label>
                 <label><span data-i18n="view.529roth.label.earned_income">Beneficiary annual earned income ($)</span>
-                    <input type="number" step="1000" name="beneficiary_earned_income" value="${state.beneficiary_earned_income}"></label>
+                    <input type="number" step="0.01" name="beneficiary_earned_income" value="${state.beneficiary_earned_income}"></label>
                 <label><span data-i18n="view.529roth.label.rollovers_to_date">Rollovers already done ($)</span>
-                    <input type="number" step="100" name="rollovers_to_date" value="${state.rollovers_to_date}"></label>
+                    <input type="number" step="0.01" name="rollovers_to_date" value="${state.rollovers_to_date}"></label>
                 <label><span data-i18n="view.529roth.label.target_year">Target start year</span>
                     <input type="number" step="1" name="target_start_year" value="${state.target_start_year}"></label>
                 <button class="primary" type="submit" data-i18n="view.529roth.btn.plan">Plan</button>

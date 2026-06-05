@@ -37,10 +37,10 @@ export async function renderBreadthThrust(mount, _appState) {
                     <input id="bt-window" type="number" step="1" min="2" value="${state.max_window_bars}"
                            data-tip="view.breadth.tip.window"></label>
                 <label><span data-i18n="view.breadth.label.low">Low threshold</span>
-                    <input id="bt-low" type="number" step="any" min="0" max="1" value="${state.low_threshold}"
+                    <input id="bt-low" type="number" step="0.01" min="0" max="1" value="${state.low_threshold}"
                            data-tip="view.breadth.tip.low"></label>
                 <label><span data-i18n="view.breadth.label.high">High threshold</span>
-                    <input id="bt-high" type="number" step="any" min="0" max="1" value="${state.high_threshold}"
+                    <input id="bt-high" type="number" step="0.01" min="0" max="1" value="${state.high_threshold}"
                            data-tip="view.breadth.tip.high"></label>
                 <button data-i18n="view.breadth.btn.compute" id="bt-run" class="primary"
                         data-tip="view.breadth.tip.compute" data-shortcut="breadth_thrust_run" type="button">Detect thrust</button>

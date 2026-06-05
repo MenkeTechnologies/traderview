@@ -57,11 +57,11 @@ export async function renderPassiveLoss(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.pal.label.income">Passive income ($)</span>
-                    <input type="number" step="100" name="income" value="0"></label>
+                    <input type="number" step="0.01" name="income" value="0"></label>
                 <label><span data-i18n="view.pal.label.loss">Passive loss ($)</span>
-                    <input type="number" step="100" name="loss" value="0"></label>
+                    <input type="number" step="0.01" name="loss" value="0"></label>
                 <label><span data-i18n="view.pal.label.suspended_pal">Prior suspended PAL ($)</span>
-                    <input type="number" step="100" name="suspended_pal_prior" value="0"></label>
+                    <input type="number" step="0.01" name="suspended_pal_prior" value="0"></label>
                 <label><span data-i18n="view.pal.label.fully_disposed">Fully disposed this year?</span>
                     <input type="checkbox" name="fully_disposed"></label>
                 <button class="primary" type="submit" data-i18n="view.pal.btn.add">Add</button>
@@ -73,7 +73,7 @@ export async function renderPassiveLoss(mount, _appState) {
                 <label><span data-i18n="view.pal.label.view_year">View year</span>
                     <input type="number" id="pal-year" value="${state.year}"></label>
                 <label><span data-i18n="view.pal.label.magi">MAGI ($)</span>
-                    <input type="number" id="pal-magi" step="1000" value="${state.magi}"></label>
+                    <input type="number" id="pal-magi" step="0.01" value="${state.magi}"></label>
                 <label><span data-i18n="view.pal.label.is_rep">Real Estate Professional Status?</span>
                     <input type="checkbox" id="pal-rep" ${state.is_rep ? 'checked' : ''}></label>
                 <label><span data-i18n="view.pal.label.active_participation">Active participation in rentals?</span>

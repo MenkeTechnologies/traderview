@@ -95,13 +95,13 @@ export async function renderSection134(mount, _appState) {
                 <label><span data-i18n="view.s134.label.combat">Combat zone?</span>
                     <input type="checkbox" name="is_combat_zone_service" ${state.is_combat_zone_service ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s134.label.s112_combat">§ 112 combat pay ($)</span>
-                    <input type="number" step="100" name="s112_combat_pay_total" value="${state.s112_combat_pay_total}"></label>
+                    <input type="number" step="0.01" name="s112_combat_pay_total" value="${state.s112_combat_pay_total}"></label>
                 <label><span data-i18n="view.s134.label.enlisted">Enlisted excluded ($)</span>
-                    <input type="number" step="100" name="enlisted_combat_pay_excluded" value="${state.enlisted_combat_pay_excluded}"></label>
+                    <input type="number" step="0.01" name="enlisted_combat_pay_excluded" value="${state.enlisted_combat_pay_excluded}"></label>
                 <label><span data-i18n="view.s134.label.officer_cap">Officer capped ($)</span>
-                    <input type="number" step="100" name="officer_combat_pay_capped" value="${state.officer_combat_pay_capped}"></label>
+                    <input type="number" step="0.01" name="officer_combat_pay_capped" value="${state.officer_combat_pay_capped}"></label>
                 <label><span data-i18n="view.s134.label.officer_2024">2024 officer cap ($)</span>
-                    <input type="number" step="100" name="officer_pay_cap_2024" value="${state.officer_pay_cap_2024}"></label>
+                    <input type="number" step="0.01" name="officer_pay_cap_2024" value="${state.officer_pay_cap_2024}"></label>
                 <label><span data-i18n="view.s134.label.cz_start">CZ start</span>
                     <input type="date" name="combat_zone_start_date" value="${state.combat_zone_start_date}"></label>
                 <label><span data-i18n="view.s134.label.cz_end">CZ end</span>
@@ -111,25 +111,25 @@ export async function renderSection134(mount, _appState) {
                 <label><span data-i18n="view.s134.label.months">Months qualifying</span>
                     <input type="number" step="1" name="months_qualifying" value="${state.months_qualifying}"></label>
                 <label><span data-i18n="view.s134.label.qual_ben">§ 134 qualified benefit ($)</span>
-                    <input type="number" step="100" name="s134_qualified_benefit" value="${state.s134_qualified_benefit}"></label>
+                    <input type="number" step="0.01" name="s134_qualified_benefit" value="${state.s134_qualified_benefit}"></label>
                 <label><span data-i18n="view.s134.label.education">Education benefits ($)</span>
-                    <input type="number" step="100" name="benefits_dependents_education" value="${state.benefits_dependents_education}"></label>
+                    <input type="number" step="0.01" name="benefits_dependents_education" value="${state.benefits_dependents_education}"></label>
                 <label><span data-i18n="view.s134.label.dep_care">Dep care benefits ($)</span>
-                    <input type="number" step="100" name="benefits_dependents_dependent_care" value="${state.benefits_dependents_dependent_care}"></label>
+                    <input type="number" step="0.01" name="benefits_dependents_dependent_care" value="${state.benefits_dependents_dependent_care}"></label>
                 <label><span data-i18n="view.s134.label.housing_in_kind">Housing in-kind ($)</span>
-                    <input type="number" step="100" name="benefits_housing_in_kind" value="${state.benefits_housing_in_kind}"></label>
+                    <input type="number" step="0.01" name="benefits_housing_in_kind" value="${state.benefits_housing_in_kind}"></label>
                 <label><span data-i18n="view.s134.label.housing_bah">BAH ($)</span>
-                    <input type="number" step="100" name="benefits_housing_allowance_bah" value="${state.benefits_housing_allowance_bah}"></label>
+                    <input type="number" step="0.01" name="benefits_housing_allowance_bah" value="${state.benefits_housing_allowance_bah}"></label>
                 <label><span data-i18n="view.s134.label.bah_amt">BAH amount ($)</span>
-                    <input type="number" step="100" name="bah_amount" value="${state.bah_amount}"></label>
+                    <input type="number" step="0.01" name="bah_amount" value="${state.bah_amount}"></label>
                 <label><span data-i18n="view.s134.label.bas">BAS ($)</span>
-                    <input type="number" step="100" name="bas_amount" value="${state.bas_amount}"></label>
+                    <input type="number" step="0.01" name="bas_amount" value="${state.bas_amount}"></label>
                 <label><span data-i18n="view.s134.label.moving">PCS moving ($)</span>
-                    <input type="number" step="100" name="benefits_moving_expenses_pcs" value="${state.benefits_moving_expenses_pcs}"></label>
+                    <input type="number" step="0.01" name="benefits_moving_expenses_pcs" value="${state.benefits_moving_expenses_pcs}"></label>
                 <label><span data-i18n="view.s134.label.uniform">Uniform allow ($)</span>
-                    <input type="number" step="100" name="benefits_uniform_allowance" value="${state.benefits_uniform_allowance}"></label>
+                    <input type="number" step="0.01" name="benefits_uniform_allowance" value="${state.benefits_uniform_allowance}"></label>
                 <label><span data-i18n="view.s134.label.death">Death gratuity ($)</span>
-                    <input type="number" step="100" name="benefits_death_gratuity" value="${state.benefits_death_gratuity}"></label>
+                    <input type="number" step="0.01" name="benefits_death_gratuity" value="${state.benefits_death_gratuity}"></label>
                 <label><span data-i18n="view.s134.label.s134_b2a">§ 134(b)(2)(A) dep care?</span>
                     <input type="checkbox" name="s134_b_2_a_qualified_dep_care" ${state.s134_b_2_a_qualified_dep_care ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s134.label.dod">DoD authorized?</span>
@@ -143,9 +143,9 @@ export async function renderSection134(mount, _appState) {
                 <label><span data-i18n="view.s134.label.s32_elect">§ 32 combat elect?</span>
                     <input type="checkbox" name="s32_combat_pay_election" ${state.s32_combat_pay_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s134.label.s32_elect_amt">§ 32 elect amount ($)</span>
-                    <input type="number" step="100" name="s32_combat_pay_election_amount" value="${state.s32_combat_pay_election_amount}"></label>
+                    <input type="number" step="0.01" name="s32_combat_pay_election_amount" value="${state.s32_combat_pay_election_amount}"></label>
                 <label><span data-i18n="view.s134.label.s24">§ 24 CTC combat ($)</span>
-                    <input type="number" step="100" name="s24_combat_pay_inclusion" value="${state.s24_combat_pay_inclusion}"></label>
+                    <input type="number" step="0.01" name="s24_combat_pay_inclusion" value="${state.s24_combat_pay_inclusion}"></label>
                 <label><span data-i18n="view.s134.label.s1402h">§ 1402(h) clergy?</span>
                     <input type="checkbox" name="s1402_h_clergy_overlap" ${state.s1402_h_clergy_overlap ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s134.label.s7508">§ 7508 extension?</span>
@@ -157,9 +157,9 @@ export async function renderSection134(mount, _appState) {
                 <label><span data-i18n="view.s134.label.disability">AF disability?</span>
                     <input type="checkbox" name="is_armed_forces_disability" ${state.is_armed_forces_disability ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s134.label.s104a4">§ 104(a)(4) excl ($)</span>
-                    <input type="number" step="100" name="s104_a_4_disability_excluded" value="${state.s104_a_4_disability_excluded}"></label>
+                    <input type="number" step="0.01" name="s104_a_4_disability_excluded" value="${state.s104_a_4_disability_excluded}"></label>
                 <label><span data-i18n="view.s134.label.s104a5">§ 104(a)(5) excl ($)</span>
-                    <input type="number" step="100" name="s104_a_5_armed_forces_excluded" value="${state.s104_a_5_armed_forces_excluded}"></label>
+                    <input type="number" step="0.01" name="s104_a_5_armed_forces_excluded" value="${state.s104_a_5_armed_forces_excluded}"></label>
                 <button class="primary" type="submit" data-i18n="view.s134.btn.compute">Compute</button>
             </form>
         </div>

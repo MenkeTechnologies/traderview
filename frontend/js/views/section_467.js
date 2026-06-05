@@ -40,7 +40,7 @@ export async function renderSection467(mount, _appState) {
             <h2 data-i18n="view.s467.h2.inputs">Inputs</h2>
             <form id="s467-form" class="inline-form">
                 <label><span data-i18n="view.s467.label.total">Total rent obligation ($)</span>
-                    <input type="number" step="10000" name="total_rent_obligation" value="${state.total_rent_obligation}"></label>
+                    <input type="number" step="0.01" name="total_rent_obligation" value="${state.total_rent_obligation}"></label>
                 <label><span data-i18n="view.s467.label.term">Lease term years</span>
                     <input type="number" step="0.5" name="lease_term_years" value="${state.lease_term_years}"></label>
                 <label><span data-i18n="view.s467.label.pattern">Payment pattern</span>
@@ -71,9 +71,9 @@ export async function renderSection467(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s467.label.current">Current year cash payment ($)</span>
-                    <input type="number" step="1000" name="current_year_payment" value="${state.current_year_payment}"></label>
+                    <input type="number" step="0.01" name="current_year_payment" value="${state.current_year_payment}"></label>
                 <label><span data-i18n="view.s467.label.cumulative">Cumulative imputed rent ($)</span>
-                    <input type="number" step="1000" name="cumulative_imputed_rent" value="${state.cumulative_imputed_rent}"></label>
+                    <input type="number" step="0.01" name="cumulative_imputed_rent" value="${state.cumulative_imputed_rent}"></label>
                 <label><span data-i18n="view.s467.label.provisions">§ 467 provisions in lease?</span>
                     <input type="checkbox" name="has_section_467_provisions" ${state.has_section_467_provisions ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s467.btn.compute">Compute</button>

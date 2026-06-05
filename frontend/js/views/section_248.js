@@ -43,9 +43,9 @@ export async function renderSection248(mount, _appState) {
             <h2 data-i18n="view.s248.h2.inputs">Inputs</h2>
             <form id="s248-form" class="inline-form">
                 <label><span data-i18n="view.s248.label.expenditures">Org expenditures ($)</span>
-                    <input type="number" step="1000" name="organizational_expenditures" value="${state.organizational_expenditures}"></label>
+                    <input type="number" step="0.01" name="organizational_expenditures" value="${state.organizational_expenditures}"></label>
                 <label><span data-i18n="view.s248.label.immediate">Immediate $5K deduction ($)</span>
-                    <input type="number" step="100" name="immediate_5k_deduction" value="${state.immediate_5k_deduction}"></label>
+                    <input type="number" step="0.01" name="immediate_5k_deduction" value="${state.immediate_5k_deduction}"></label>
                 <label><span data-i18n="view.s248.label.amort">Amortization period (months)</span>
                     <input type="number" step="1" name="amortization_period_months" value="${state.amortization_period_months}"></label>
                 <label><span data-i18n="view.s248.label.year">First tax year</span>
@@ -57,9 +57,9 @@ export async function renderSection248(mount, _appState) {
                 <label><span data-i18n="view.s248.label.partnership">Partnership (§ 709)?</span>
                     <input type="checkbox" name="is_partnership" ${state.is_partnership ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s248.label.s195">§ 195 startup exp ($)</span>
-                    <input type="number" step="1000" name="s195_startup_exp" value="${state.s195_startup_exp}"></label>
+                    <input type="number" step="0.01" name="s195_startup_exp" value="${state.s195_startup_exp}"></label>
                 <label><span data-i18n="view.s248.label.s709">§ 709 partnership org ($)</span>
-                    <input type="number" step="1000" name="s709_partnership_org" value="${state.s709_partnership_org}"></label>
+                    <input type="number" step="0.01" name="s709_partnership_org" value="${state.s709_partnership_org}"></label>
                 <label><span data-i18n="view.s248.label.type">Type of expenditure</span>
                     <select name="type_of_expenditure">
                         <option value="legal" ${state.type_of_expenditure === 'legal' ? 'selected' : ''}>Legal fees</option>
@@ -79,7 +79,7 @@ export async function renderSection248(mount, _appState) {
                 <label><span data-i18n="view.s248.label.election">Election made (default)?</span>
                     <input type="checkbox" name="election_made" ${state.election_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s248.label.acc_amort">Accumulated amortization ($)</span>
-                    <input type="number" step="100" name="accumulated_amortization" value="${state.accumulated_amortization}"></label>
+                    <input type="number" step="0.01" name="accumulated_amortization" value="${state.accumulated_amortization}"></label>
                 <label><span data-i18n="view.s248.label.sale">Sale or liquidation?</span>
                     <input type="checkbox" name="sale_or_liquidation" ${state.sale_or_liquidation ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s248.btn.compute">Compute</button>

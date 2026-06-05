@@ -38,7 +38,7 @@ export async function renderSection30D(mount, _appState) {
             <h2 data-i18n="view.s30D.h2.inputs">Inputs</h2>
             <form id="s30D-form" class="inline-form">
                 <label><span data-i18n="view.s30D.label.msrp">MSRP ($)</span>
-                    <input type="number" step="1000" name="msrp" value="${state.msrp}"></label>
+                    <input type="number" step="0.01" name="msrp" value="${state.msrp}"></label>
                 <label><span data-i18n="view.s30D.label.type">Vehicle type</span>
                     <select name="vehicle_type">
                         <option value="car" ${state.vehicle_type === 'car' ? 'selected' : ''}>Car ($55K MSRP cap)</option>
@@ -54,7 +54,7 @@ export async function renderSection30D(mount, _appState) {
                 <label><span data-i18n="view.s30D.label.battery">Battery components qualifies ($3,750)?</span>
                     <input type="checkbox" name="battery_components_qualifies" ${state.battery_components_qualifies ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s30D.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s30D.label.filing">Filing status</span>
                     <select name="filing_status">
                         <option value="single" ${state.filing_status === 'single' ? 'selected' : ''}>Single / MFS</option>

@@ -104,27 +104,27 @@ export async function renderSection6672(mount, _appState) {
                 <label><span data-i18n="view.s6672.label.reckless">Reckless disregard?</span>
                     <input type="checkbox" name="reckless_disregard" ${state.reckless_disregard ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.amount">§ 6672(a) amount ($)</span>
-                    <input type="number" step="1000" name="s6672_a_amount" value="${state.s6672_a_amount}"></label>
+                    <input type="number" step="0.01" name="s6672_a_amount" value="${state.s6672_a_amount}"></label>
                 <label><span data-i18n="view.s6672.label.notice">§ 6672(b) notice required?</span>
                     <input type="checkbox" name="s6672_b_notice_required" ${state.s6672_b_notice_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.designated">Designated payment ($)</span>
-                    <input type="number" step="1000" name="s6672_b_designated_payment" value="${state.s6672_b_designated_payment}"></label>
+                    <input type="number" step="0.01" name="s6672_b_designated_payment" value="${state.s6672_b_designated_payment}"></label>
                 <label><span data-i18n="view.s6672.label.total">Employer trust fund ($)</span>
-                    <input type="number" step="1000" name="employer_total_trust_fund" value="${state.employer_total_trust_fund}"></label>
+                    <input type="number" step="0.01" name="employer_total_trust_fund" value="${state.employer_total_trust_fund}"></label>
                 <label><span data-i18n="view.s6672.label.withheld">Withheld income tax ($)</span>
-                    <input type="number" step="1000" name="withheld_income_tax" value="${state.withheld_income_tax}"></label>
+                    <input type="number" step="0.01" name="withheld_income_tax" value="${state.withheld_income_tax}"></label>
                 <label><span data-i18n="view.s6672.label.emp_fica">Employee FICA ($)</span>
-                    <input type="number" step="1000" name="employee_fica_share" value="${state.employee_fica_share}"></label>
+                    <input type="number" step="0.01" name="employee_fica_share" value="${state.employee_fica_share}"></label>
                 <label><span data-i18n="view.s6672.label.er_fica">Employer FICA ($)</span>
-                    <input type="number" step="1000" name="employer_fica_share" value="${state.employer_fica_share}"></label>
+                    <input type="number" step="0.01" name="employer_fica_share" value="${state.employer_fica_share}"></label>
                 <label><span data-i18n="view.s6672.label.medicare">Medicare ($)</span>
-                    <input type="number" step="1000" name="medicare_tax_withheld" value="${state.medicare_tax_withheld}"></label>
+                    <input type="number" step="0.01" name="medicare_tax_withheld" value="${state.medicare_tax_withheld}"></label>
                 <label><span data-i18n="view.s6672.label.futa">FUTA ($)</span>
-                    <input type="number" step="100" name="federal_unemployment_FUTA" value="${state.federal_unemployment_FUTA}"></label>
+                    <input type="number" step="0.01" name="federal_unemployment_FUTA" value="${state.federal_unemployment_FUTA}"></label>
                 <label><span data-i18n="view.s6672.label.suta">SUTA ($)</span>
-                    <input type="number" step="100" name="state_unemployment_SUTA" value="${state.state_unemployment_SUTA}"></label>
+                    <input type="number" step="0.01" name="state_unemployment_SUTA" value="${state.state_unemployment_SUTA}"></label>
                 <label><span data-i18n="view.s6672.label.excise">Collected excise ($)</span>
-                    <input type="number" step="100" name="collected_excise_taxes" value="${state.collected_excise_taxes}"></label>
+                    <input type="number" step="0.01" name="collected_excise_taxes" value="${state.collected_excise_taxes}"></label>
                 <label><span data-i18n="view.s6672.label.quarter">Quarter</span>
                     <select name="quarter_in_question">
                         <option value="Q1_2024" ${state.quarter_in_question === 'Q1_2024' ? 'selected' : ''}>Q1 2024</option>
@@ -144,9 +144,9 @@ export async function renderSection6672(mount, _appState) {
                 <label><span data-i18n="view.s6672.label.appeal">Admin appeal?</span>
                     <input type="checkbox" name="administrative_appeal" ${state.administrative_appeal ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.protest">30-day protest ($)</span>
-                    <input type="number" step="100" name="s6672_b_30_day_protest" value="${state.s6672_b_30_day_protest}"></label>
+                    <input type="number" step="0.01" name="s6672_b_30_day_protest" value="${state.s6672_b_30_day_protest}"></label>
                 <label><span data-i18n="view.s6672.label.s7430">§ 7430 fees ($)</span>
-                    <input type="number" step="100" name="s7430_attorney_fees" value="${state.s7430_attorney_fees}"></label>
+                    <input type="number" step="0.01" name="s7430_attorney_fees" value="${state.s7430_attorney_fees}"></label>
                 <label><span data-i18n="view.s6672.label.partial">Partial pmt designation?</span>
                     <input type="checkbox" name="s6672_e_partial_payment_designation" ${state.s6672_e_partial_payment_designation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.s7501">§ 7501 constr trust?</span>
@@ -156,7 +156,7 @@ export async function renderSection6672(mount, _appState) {
                 <label><span data-i18n="view.s6672.label.distress">Distress factor?</span>
                     <input type="checkbox" name="business_distress_factor" ${state.business_distress_factor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.creditors">Pmts to creditors ($)</span>
-                    <input type="number" step="1000" name="payments_to_creditors_during_period" value="${state.payments_to_creditors_during_period}"></label>
+                    <input type="number" step="0.01" name="payments_to_creditors_during_period" value="${state.payments_to_creditors_during_period}"></label>
                 <label><span data-i18n="view.s6672.label.joint">§ 6672(d) joint+sev?</span>
                     <input type="checkbox" name="s6672_d_joint_several_liability" ${state.s6672_d_joint_several_liability ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.multi">Multiple resp persons</span>
@@ -174,7 +174,7 @@ export async function renderSection6672(mount, _appState) {
                 <label><span data-i18n="view.s6672.label.s7202">§ 7202 criminal?</span>
                     <input type="checkbox" name="s7202_criminal_overlap" ${state.s7202_criminal_overlap ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.s7202_pen">§ 7202 penalty ($)</span>
-                    <input type="number" step="1000" name="s7202_criminal_penalty" value="${state.s7202_criminal_penalty}"></label>
+                    <input type="number" step="0.01" name="s7202_criminal_penalty" value="${state.s7202_criminal_penalty}"></label>
                 <label><span data-i18n="view.s6672.label.rea">REA received?</span>
                     <input type="checkbox" name="rea_appeal_received" ${state.rea_appeal_received ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6672.label.paid_post">Paid post-appeal?</span>

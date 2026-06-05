@@ -53,7 +53,7 @@ export async function renderSection457(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s457.label.annual">Annual deferral ($)</span>
-                    <input type="number" step="500" name="annual_deferral" value="${state.annual_deferral}"></label>
+                    <input type="number" step="0.01" name="annual_deferral" value="${state.annual_deferral}"></label>
                 <label><span data-i18n="view.s457.label.age">Employee age</span>
                     <input type="number" step="1" name="employee_age" value="${state.employee_age}"></label>
                 <label><span data-i18n="view.s457.label.60_63">Age 60-63 special catch-up?</span>
@@ -61,7 +61,7 @@ export async function renderSection457(mount, _appState) {
                 <label><span data-i18n="view.s457.label.triple">Triple catch-up last 3 yrs?</span>
                     <input type="checkbox" name="triple_catch_up_last_3yrs" ${state.triple_catch_up_last_3yrs ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s457.label.underutilized">Last 3-yr underutilized ($)</span>
-                    <input type="number" step="500" name="last_3_underutilized" value="${state.last_3_underutilized}"></label>
+                    <input type="number" step="0.01" name="last_3_underutilized" value="${state.last_3_underutilized}"></label>
                 <label><span data-i18n="view.s457.label.separated">Separated from service?</span>
                     <input type="checkbox" name="is_separated" ${state.is_separated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s457.label.457f">§ 457(f) ineligible plan?</span>
@@ -69,11 +69,11 @@ export async function renderSection457(mount, _appState) {
                 <label><span data-i18n="view.s457.label.vest">§ 457(f) vest year</span>
                     <input type="number" step="1" name="s457f_vest_year" value="${state.s457f_vest_year}"></label>
                 <label><span data-i18n="view.s457.label.value_vest">§ 457(f) value at vest ($)</span>
-                    <input type="number" step="1000" name="s457f_value_at_vest" value="${state.s457f_value_at_vest}"></label>
+                    <input type="number" step="0.01" name="s457f_value_at_vest" value="${state.s457f_value_at_vest}"></label>
                 <label><span data-i18n="view.s457.label.401k">Concurrent § 401(k) deferral ($)</span>
-                    <input type="number" step="500" name="s401k_concurrent" value="${state.s401k_concurrent}"></label>
+                    <input type="number" step="0.01" name="s401k_concurrent" value="${state.s401k_concurrent}"></label>
                 <label><span data-i18n="view.s457.label.403b">Concurrent § 403(b) deferral ($)</span>
-                    <input type="number" step="500" name="s403b_concurrent" value="${state.s403b_concurrent}"></label>
+                    <input type="number" step="0.01" name="s403b_concurrent" value="${state.s403b_concurrent}"></label>
                 <label><span data-i18n="view.s457.label.rollover">Roll over to IRA / 401(k)?</span>
                     <input type="checkbox" name="rollover_to_ira" ${state.rollover_to_ira ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s457.btn.compute">Compute</button>

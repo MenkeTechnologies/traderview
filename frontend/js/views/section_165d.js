@@ -41,19 +41,19 @@ export async function renderSection165D(mount, _appState) {
             <h2 data-i18n="view.s165d.h2.inputs">Inputs</h2>
             <form id="s165d-form" class="inline-form">
                 <label><span data-i18n="view.s165d.label.winnings">Total winnings ($)</span>
-                    <input type="number" step="100" name="total_winnings" value="${state.total_winnings}"></label>
+                    <input type="number" step="0.01" name="total_winnings" value="${state.total_winnings}"></label>
                 <label><span data-i18n="view.s165d.label.losses">Total losses ($)</span>
-                    <input type="number" step="100" name="total_losses" value="${state.total_losses}"></label>
+                    <input type="number" step="0.01" name="total_losses" value="${state.total_losses}"></label>
                 <label><span data-i18n="view.s165d.label.travel">Travel + lodging expenses ($)</span>
-                    <input type="number" step="100" name="travel_expenses" value="${state.travel_expenses}"></label>
+                    <input type="number" step="0.01" name="travel_expenses" value="${state.travel_expenses}"></label>
                 <label><span data-i18n="view.s165d.label.professional">Professional gambler (Schedule C)?</span>
                     <input type="checkbox" name="is_professional" ${state.is_professional ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165d.label.itemized">Itemizing (Schedule A)?</span>
                     <input type="checkbox" name="is_itemized" ${state.is_itemized ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165d.label.std_ded">Standard deduction 2025 ($)</span>
-                    <input type="number" step="100" name="standard_deduction_2025" value="${state.standard_deduction_2025}"></label>
+                    <input type="number" step="0.01" name="standard_deduction_2025" value="${state.standard_deduction_2025}"></label>
                 <label><span data-i18n="view.s165d.label.other_item">Other itemized deductions ($)</span>
-                    <input type="number" step="100" name="other_itemized" value="${state.other_itemized}"></label>
+                    <input type="number" step="0.01" name="other_itemized" value="${state.other_itemized}"></label>
                 <label><span data-i18n="view.s165d.label.marginal">Marginal federal rate %</span>
                     <input type="number" step="0.1" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <label><span data-i18n="view.s165d.label.state_rate">State tax rate %</span>

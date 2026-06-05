@@ -26,13 +26,13 @@ export async function renderRiskOnOff(mount, _appState) {
             <h2 data-i18n="view.risk_on_off.h2.snapshot">Cross-asset snapshot</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.risk_on_off.label.spy">SPY change %  (decimal — 0.01 = +1%)</span>
-                    <input id="ro-spy" type="number" step="any" value="${state.spy_change_pct}" data-tip="view.risk_on_off.tip.spy"></label>
+                    <input id="ro-spy" type="number" step="0.01" value="${state.spy_change_pct}" data-tip="view.risk_on_off.tip.spy"></label>
                 <label><span data-i18n="view.risk_on_off.label.gold">Gold change %</span>
-                    <input id="ro-gold" type="number" step="any" value="${state.gold_change_pct}" data-tip="view.risk_on_off.tip.gold"></label>
+                    <input id="ro-gold" type="number" step="0.01" value="${state.gold_change_pct}" data-tip="view.risk_on_off.tip.gold"></label>
                 <label><span data-i18n="view.risk_on_off.label.dxy">DXY change %</span>
-                    <input id="ro-dxy" type="number" step="any" value="${state.dxy_change_pct}" data-tip="view.risk_on_off.tip.dxy"></label>
+                    <input id="ro-dxy" type="number" step="0.01" value="${state.dxy_change_pct}" data-tip="view.risk_on_off.tip.dxy"></label>
                 <label><span data-i18n="view.risk_on_off.label.yields">10Y yield Δbps</span>
-                    <input id="ro-yld" type="number" step="any" value="${state.ten_year_yield_bps_change}" data-tip="view.risk_on_off.tip.yields"></label>
+                    <input id="ro-yld" type="number" step="0.01" value="${state.ten_year_yield_bps_change}" data-tip="view.risk_on_off.tip.yields"></label>
                 <button data-i18n="view.risk_on_off.btn.evaluate" id="ro-run" class="primary"
                         data-tip="view.risk_on_off.tip.evaluate" data-shortcut="risk_on_off_run" type="button">Evaluate</button>
             </div>

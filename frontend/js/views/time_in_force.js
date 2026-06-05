@@ -26,9 +26,9 @@ export async function renderTimeInForce(mount, _appState) {
                         ${TIF_KINDS.map(k => `<option value="${k}" ${state.order.tif === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.time_in_force.label.orig_qty">Original qty</span>
-                    <input id="tif-oq" type="number" step="any" min="0" value="${state.order.original_qty}" data-tip="view.time_in_force.tip.orig_qty"></label>
+                    <input id="tif-oq" type="number" step="0.01" min="0" value="${state.order.original_qty}" data-tip="view.time_in_force.tip.orig_qty"></label>
                 <label><span data-i18n="view.time_in_force.label.filled_qty">Filled qty</span>
-                    <input id="tif-fq" type="number" step="any" min="0" value="${state.order.filled_qty}" data-tip="view.time_in_force.tip.filled_qty"></label>
+                    <input id="tif-fq" type="number" step="0.01" min="0" value="${state.order.filled_qty}" data-tip="view.time_in_force.tip.filled_qty"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.time_in_force.label.placed_at">Placed at</span> <small class="muted" data-i18n="view.time_in_force.label.placed_at_hint">(your local time → UTC at the wire)</small>

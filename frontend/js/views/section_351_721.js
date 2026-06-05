@@ -48,17 +48,17 @@ export async function renderSection351721(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s351.label.fmv">Property FMV ($)</span>
-                    <input type="number" step="10000" name="property_fmv" value="${state.property_fmv}"></label>
+                    <input type="number" step="0.01" name="property_fmv" value="${state.property_fmv}"></label>
                 <label><span data-i18n="view.s351.label.basis">Property basis ($)</span>
-                    <input type="number" step="10000" name="property_basis" value="${state.property_basis}"></label>
+                    <input type="number" step="0.01" name="property_basis" value="${state.property_basis}"></label>
                 <label><span data-i18n="view.s351.label.liabilities">Liabilities assumed by entity ($)</span>
-                    <input type="number" step="10000" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
+                    <input type="number" step="0.01" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
                 <label><span data-i18n="view.s351.label.boot">Boot received (cash / non-stock) ($)</span>
-                    <input type="number" step="1000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s351.label.control">Your control % post-transfer</span>
                     <input type="number" step="0.01" name="control_post_transfer_pct" value="${state.control_post_transfer_pct}"></label>
                 <label><span data-i18n="view.s351.label.additional">Other contributors property FMV ($)</span>
-                    <input type="number" step="10000" name="additional_contributors_property_fmv" value="${state.additional_contributors_property_fmv}"></label>
+                    <input type="number" step="0.01" name="additional_contributors_property_fmv" value="${state.additional_contributors_property_fmv}"></label>
                 <label><span data-i18n="view.s351.label.your_pct">Your ownership %</span>
                     <input type="number" step="0.01" name="ownership_pct" value="${state.ownership_pct}"></label>
                 <label><span data-i18n="view.s351.label.marginal">Ordinary marginal %</span>

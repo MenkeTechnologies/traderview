@@ -52,13 +52,13 @@ export async function renderSection1014(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1014.label.basis">Decedent's basis ($)</span>
-                    <input type="number" step="1000" name="decedent_basis" value="${state.decedent_basis}"></label>
+                    <input type="number" step="0.01" name="decedent_basis" value="${state.decedent_basis}"></label>
                 <label><span data-i18n="view.s1014.label.fmv">FMV at death ($)</span>
-                    <input type="number" step="10000" name="fmv_at_death" value="${state.fmv_at_death}"></label>
+                    <input type="number" step="0.01" name="fmv_at_death" value="${state.fmv_at_death}"></label>
                 <label><span data-i18n="view.s1014.label.alt_val">Use alternate valuation (6 mo)?</span>
                     <input type="checkbox" name="use_alt_valuation" ${state.use_alt_valuation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1014.label.fmv_alt">FMV at alt date ($)</span>
-                    <input type="number" step="10000" name="fmv_at_alt_date" value="${state.fmv_at_alt_date}"></label>
+                    <input type="number" step="0.01" name="fmv_at_alt_date" value="${state.fmv_at_alt_date}"></label>
                 <label><span data-i18n="view.s1014.label.ownership">Ownership kind</span>
                     <select name="ownership_kind">
                         <option value="sole" ${state.ownership_kind === 'sole' ? 'selected' : ''}>Sole-owned</option>
@@ -69,7 +69,7 @@ export async function renderSection1014(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1014.label.spouse_basis">Spouse's basis in joint share ($)</span>
-                    <input type="number" step="1000" name="spouse_basis_in_share" value="${state.spouse_basis_in_share}"></label>
+                    <input type="number" step="0.01" name="spouse_basis_in_share" value="${state.spouse_basis_in_share}"></label>
                 <label><span data-i18n="view.s1014.label.community">Community property state?</span>
                     <input type="checkbox" name="is_community_property" ${state.is_community_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1014.label.ird">Income in Respect of Decedent (IRD)?</span>

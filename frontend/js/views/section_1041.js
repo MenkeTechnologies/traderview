@@ -43,9 +43,9 @@ export async function renderSection1041(mount, _appState) {
             <h2 data-i18n="view.s1041.h2.inputs">Inputs</h2>
             <form id="s1041-form" class="inline-form">
                 <label><span data-i18n="view.s1041.label.fmv">Asset FMV ($)</span>
-                    <input type="number" step="1000" name="asset_fmv" value="${state.asset_fmv}"></label>
+                    <input type="number" step="0.01" name="asset_fmv" value="${state.asset_fmv}"></label>
                 <label><span data-i18n="view.s1041.label.basis">Transferor's basis ($)</span>
-                    <input type="number" step="1000" name="transferor_basis" value="${state.transferor_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_basis" value="${state.transferor_basis}"></label>
                 <label><span data-i18n="view.s1041.label.type">Transfer type</span>
                     <select name="transfer_type">
                         <option value="spouse_living" ${state.transfer_type === 'spouse_living' ? 'selected' : ''}>Living spouse (intact marriage)</option>
@@ -71,13 +71,13 @@ export async function renderSection1041(mount, _appState) {
                 <label><span data-i18n="view.s1041.label.alimony_post">Post-TCJA alimony (non-deductible)?</span>
                     <input type="checkbox" name="post_tcja_alimony" ${state.post_tcja_alimony ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1041.label.liab">Liabilities assumed by recipient ($)</span>
-                    <input type="number" step="1000" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
+                    <input type="number" step="0.01" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
                 <label><span data-i18n="view.s1041.label.appreciated">Appreciated asset?</span>
                     <input type="checkbox" name="is_appreciated" ${state.is_appreciated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1041.label.holding">Holding period transferred (days)</span>
                     <input type="number" step="1" name="holding_period_days" value="${state.holding_period_days}"></label>
                 <label><span data-i18n="view.s1041.label.sale">Later sale price ($)</span>
-                    <input type="number" step="1000" name="later_sale_price" value="${state.later_sale_price}"></label>
+                    <input type="number" step="0.01" name="later_sale_price" value="${state.later_sale_price}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1041.btn.compute">Compute</button>
             </form>
         </div>

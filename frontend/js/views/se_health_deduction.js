@@ -40,15 +40,15 @@ export async function renderSeHealthDeduction(mount, _appState) {
             <h2 data-i18n="view.sehealth.h2.inputs">Inputs</h2>
             <form id="seh-form" class="inline-form">
                 <label><span data-i18n="view.sehealth.label.se_net_income">SE net income ($)</span>
-                    <input type="number" step="1000" name="se_net_income" value="${state.se_net_income}"></label>
+                    <input type="number" step="0.01" name="se_net_income" value="${state.se_net_income}"></label>
                 <label><span data-i18n="view.sehealth.label.health_premium">Health premium ($/yr)</span>
-                    <input type="number" step="100" name="health_premium" value="${state.health_premium}"></label>
+                    <input type="number" step="0.01" name="health_premium" value="${state.health_premium}"></label>
                 <label><span data-i18n="view.sehealth.label.dental_premium">Dental premium ($/yr)</span>
-                    <input type="number" step="100" name="dental_premium" value="${state.dental_premium}"></label>
+                    <input type="number" step="0.01" name="dental_premium" value="${state.dental_premium}"></label>
                 <label><span data-i18n="view.sehealth.label.vision_premium">Vision premium ($/yr)</span>
-                    <input type="number" step="100" name="vision_premium" value="${state.vision_premium}"></label>
+                    <input type="number" step="0.01" name="vision_premium" value="${state.vision_premium}"></label>
                 <label><span data-i18n="view.sehealth.label.ltc_premium">LTC premium ($/yr)</span>
-                    <input type="number" step="100" name="ltc_premium" value="${state.ltc_premium}"></label>
+                    <input type="number" step="0.01" name="ltc_premium" value="${state.ltc_premium}"></label>
                 <label><span data-i18n="view.sehealth.label.age">Age (for LTC cap)</span>
                     <input type="number" step="1" name="age" value="${state.age}" min="0" max="100"></label>
                 <label><span data-i18n="view.sehealth.label.has_employer">Have employer-subsidized health?</span>

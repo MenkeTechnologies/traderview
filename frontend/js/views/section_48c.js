@@ -41,7 +41,7 @@ export async function renderSection48C(mount, _appState) {
             <h2 data-i18n="view.s48C.h2.inputs">Inputs</h2>
             <form id="s48C-form" class="inline-form">
                 <label><span data-i18n="view.s48C.label.basis">Project basis ($)</span>
-                    <input type="number" step="100000" name="project_basis" value="${state.project_basis}"></label>
+                    <input type="number" step="0.01" name="project_basis" value="${state.project_basis}"></label>
                 <label><span data-i18n="view.s48C.label.category">Project category</span>
                     <select name="project_category">
                         <option value="renewable_energy_property" ${state.project_category === 'renewable_energy_property' ? 'selected' : ''}>Renewable energy property</option>
@@ -65,7 +65,7 @@ export async function renderSection48C(mount, _appState) {
                 <label><span data-i18n="view.s48C.label.allocation">DOE allocation received?</span>
                     <input type="checkbox" name="doe_allocation_received" ${state.doe_allocation_received ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s48C.label.amount">Allocation amount ($)</span>
-                    <input type="number" step="100000" name="allocation_amount" value="${state.allocation_amount}"></label>
+                    <input type="number" step="0.01" name="allocation_amount" value="${state.allocation_amount}"></label>
                 <label><span data-i18n="view.s48C.label.minerals">Critical minerals?</span>
                     <input type="checkbox" name="is_critical_minerals" ${state.is_critical_minerals ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s48C.label.domestic">Domestic content compliant?</span>

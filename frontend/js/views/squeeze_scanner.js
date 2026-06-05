@@ -58,7 +58,7 @@ export async function renderSqueezeScanner(mount, _state) {
                 <label><span data-i18n="view.squeeze_scanner.label.min_price">min price $</span>
                     <input type="number" step="0.1" name="min_price" value="${cfg.min_price}"></label>
                 <label><span data-i18n="view.squeeze_scanner.label.min_burst_volume">min burst vol</span>
-                    <input type="number" step="1000" name="min_burst_volume" value="${cfg.min_burst_volume}"></label>
+                    <input type="number" step="0.01" name="min_burst_volume" value="${cfg.min_burst_volume}"></label>
                 <label><span data-i18n="view.squeeze_scanner.label.cooldown">cooldown (sec)</span>
                     <input type="number" step="1" name="cooldown_secs" value="${cfg.cooldown_secs}"></label>
                 <button type="submit" class="primary" data-i18n="view.squeeze_scanner.btn.save_config">Save thresholds</button>

@@ -66,13 +66,13 @@ export async function renderSection24(mount, _appState) {
                 <label><span data-i18n="view.s24.label.od">Other dependents (ODC)</span>
                     <input type="number" step="1" name="other_dependents_count" value="${state.other_dependents_count}"></label>
                 <label><span data-i18n="view.s24.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s24.label.earned">Earned income ($)</span>
-                    <input type="number" step="1000" name="earned_income" value="${state.earned_income}"></label>
+                    <input type="number" step="0.01" name="earned_income" value="${state.earned_income}"></label>
                 <label><span data-i18n="view.s24.label.year">Tax year</span>
                     <input type="number" step="1" name="tax_year" value="${state.tax_year}"></label>
                 <label><span data-i18n="view.s24.label.actc_taken">ACTC refundable taken ($)</span>
-                    <input type="number" step="100" name="refundable_actc_taken" value="${state.refundable_actc_taken}"></label>
+                    <input type="number" step="0.01" name="refundable_actc_taken" value="${state.refundable_actc_taken}"></label>
                 <label><span data-i18n="view.s24.label.ages">Children ages (csv)</span>
                     <input type="text" name="children_ages" value="${esc(state.children_ages)}"></label>
                 <label><span data-i18n="view.s24.label.ssn">Children w/ SSN</span>
@@ -86,27 +86,27 @@ export async function renderSection24(mount, _appState) {
                 <label><span data-i18n="view.s24.label.arpa_6_17">ARPA age 6-17 count</span>
                     <input type="number" step="1" name="arpa_age_6_17" value="${state.arpa_age_6_17}"></label>
                 <label><span data-i18n="view.s24.label.arpa_adv">ARPA advance payment ($)</span>
-                    <input type="number" step="100" name="arpa_advance_payment" value="${state.arpa_advance_payment}"></label>
+                    <input type="number" step="0.01" name="arpa_advance_payment" value="${state.arpa_advance_payment}"></label>
                 <label><span data-i18n="view.s24.label.clawback">Excessive ACTC clawback?</span>
                     <input type="checkbox" name="is_excessive_actc_clawback" ${state.is_excessive_actc_clawback ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s24.label.s24h">SSN required?</span>
                     <input type="checkbox" name="s24_h_ssn_required" ${state.s24_h_ssn_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s24.label.s24d15">§ 24(d) 15% calc ($)</span>
-                    <input type="number" step="100" name="s24_d_15pct_calculation" value="${state.s24_d_15pct_calculation}"></label>
+                    <input type="number" step="0.01" name="s24_d_15pct_calculation" value="${state.s24_d_15pct_calculation}"></label>
                 <label><span data-i18n="view.s24.label.threshold">$2,500 threshold ($)</span>
-                    <input type="number" step="100" name="earned_income_2500_threshold" value="${state.earned_income_2500_threshold}"></label>
+                    <input type="number" step="0.01" name="earned_income_2500_threshold" value="${state.earned_income_2500_threshold}"></label>
                 <label><span data-i18n="view.s24.label.max_refund">Max refundable ($)</span>
-                    <input type="number" step="100" name="s24_d_max_refundable" value="${state.s24_d_max_refundable}"></label>
+                    <input type="number" step="0.01" name="s24_d_max_refundable" value="${state.s24_d_max_refundable}"></label>
                 <label><span data-i18n="view.s24.label.full_refund">Fully refundable?</span>
                     <input type="checkbox" name="s24_d_full_refundable" ${state.s24_d_full_refundable ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s24.label.complete">Phase-out complete?</span>
                     <input type="checkbox" name="s24_phaseout_complete" ${state.s24_phaseout_complete ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s24.label.excess">Excess advance 2021 ($)</span>
-                    <input type="number" step="100" name="excess_advance_2021" value="${state.excess_advance_2021}"></label>
+                    <input type="number" step="0.01" name="excess_advance_2021" value="${state.excess_advance_2021}"></label>
                 <label><span data-i18n="view.s24.label.safe_harbor">Safe harbor 2021?</span>
                     <input type="checkbox" name="safe_harbor_2021" ${state.safe_harbor_2021 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s24.label.repay_protect">Repayment protection income ($)</span>
-                    <input type="number" step="1000" name="repayment_protection_income" value="${state.repayment_protection_income}"></label>
+                    <input type="number" step="0.01" name="repayment_protection_income" value="${state.repayment_protection_income}"></label>
                 <button class="primary" type="submit" data-i18n="view.s24.btn.compute">Compute</button>
             </form>
         </div>

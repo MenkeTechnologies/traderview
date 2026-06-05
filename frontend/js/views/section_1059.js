@@ -61,9 +61,9 @@ export async function renderSection1059(mount, _appState) {
             <h2 data-i18n="view.s1059.h2.inputs">Inputs</h2>
             <form id="s1059-form" class="inline-form">
                 <label><span data-i18n="view.s1059.label.dividend">Dividend ($)</span>
-                    <input type="number" step="10000" name="dividend_amount" value="${state.dividend_amount}"></label>
+                    <input type="number" step="0.01" name="dividend_amount" value="${state.dividend_amount}"></label>
                 <label><span data-i18n="view.s1059.label.basis">Shareholder basis ($)</span>
-                    <input type="number" step="10000" name="shareholder_basis" value="${state.shareholder_basis}"></label>
+                    <input type="number" step="0.01" name="shareholder_basis" value="${state.shareholder_basis}"></label>
                 <label><span data-i18n="view.s1059.label.preferred">Preferred stock?</span>
                     <input type="checkbox" name="is_preferred_stock" ${state.is_preferred_stock ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.pct">Dividend % of basis</span>
@@ -77,21 +77,21 @@ export async function renderSection1059(mount, _appState) {
                 <label><span data-i18n="view.s1059.label.s1059d">§ 1059(d) 2-yr required?</span>
                     <input type="checkbox" name="s1059_d_2_year_holding_required" ${state.s1059_d_2_year_holding_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.nontaxed">Non-taxed portion ($)</span>
-                    <input type="number" step="10000" name="nontaxed_portion" value="${state.nontaxed_portion}"></label>
+                    <input type="number" step="0.01" name="nontaxed_portion" value="${state.nontaxed_portion}"></label>
                 <label><span data-i18n="view.s1059.label.s243">§ 243 DRD %</span>
                     <input type="number" step="0.1" name="s243_drd_pct" value="${state.s243_drd_pct}"></label>
                 <label><span data-i18n="view.s1059.label.s246a">§ 246A holding sat?</span>
                     <input type="checkbox" name="s246a_holding_period_satisfied" ${state.s246a_holding_period_satisfied ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.basis_red">§ 1059(a) basis reduction ($)</span>
-                    <input type="number" step="10000" name="s1059_a_basis_reduction" value="${state.s1059_a_basis_reduction}"></label>
+                    <input type="number" step="0.01" name="s1059_a_basis_reduction" value="${state.s1059_a_basis_reduction}"></label>
                 <label><span data-i18n="view.s1059.label.excess">Excess capital gain ($)</span>
-                    <input type="number" step="10000" name="excess_capital_gain_on_disposition" value="${state.excess_capital_gain_on_disposition}"></label>
+                    <input type="number" step="0.01" name="excess_capital_gain_on_disposition" value="${state.excess_capital_gain_on_disposition}"></label>
                 <label><span data-i18n="view.s1059.label.aggregation">§ 1059(c) aggregation?</span>
                     <input type="checkbox" name="s1059_c_aggregation_rule" ${state.s1059_c_aggregation_rule ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.window">Aggregation window (days)</span>
                     <input type="number" step="1" name="aggregation_window_days" value="${state.aggregation_window_days}"></label>
                 <label><span data-i18n="view.s1059.label.agg_amt">Aggregated div ($)</span>
-                    <input type="number" step="10000" name="aggregated_dividend_amount" value="${state.aggregated_dividend_amount}"></label>
+                    <input type="number" step="0.01" name="aggregated_dividend_amount" value="${state.aggregated_dividend_amount}"></label>
                 <label><span data-i18n="view.s1059.label.s1059e">§ 1059(e) extraordinary redemption?</span>
                     <input type="checkbox" name="s1059_e_extraordinary_redemption" ${state.s1059_e_extraordinary_redemption ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.partial">Partial liquidation?</span>
@@ -107,19 +107,19 @@ export async function renderSection1059(mount, _appState) {
                 <label><span data-i18n="view.s1059.label.ep_election">§ 1059(d)(2)(A) E&P election?</span>
                     <input type="checkbox" name="is_e_p_basis_test_election" ${state.is_e_p_basis_test_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.ep">E&P at dividend ($)</span>
-                    <input type="number" step="10000" name="e_p_at_dividend" value="${state.e_p_at_dividend}"></label>
+                    <input type="number" step="0.01" name="e_p_at_dividend" value="${state.e_p_at_dividend}"></label>
                 <label><span data-i18n="view.s1059.label.s1059_d2a">§ 1059(d)(2)(A) alt basis?</span>
                     <input type="checkbox" name="s1059_d_2_a_basis_alternative" ${state.s1059_d_2_a_basis_alternative ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.s248">§ 248 org exp ($)</span>
-                    <input type="number" step="1000" name="s248_organizational_expense" value="${state.s248_organizational_expense}"></label>
+                    <input type="number" step="0.01" name="s248_organizational_expense" value="${state.s248_organizational_expense}"></label>
                 <label><span data-i18n="view.s1059.label.multi">Multiple extraordinary?</span>
                     <input type="checkbox" name="multiple_extraordinary_dividends" ${state.multiple_extraordinary_dividends ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.cumul">Cumulative ($)</span>
-                    <input type="number" step="10000" name="cumulative_extraordinary" value="${state.cumulative_extraordinary}"></label>
+                    <input type="number" step="0.01" name="cumulative_extraordinary" value="${state.cumulative_extraordinary}"></label>
                 <label><span data-i18n="view.s1059.label.fairmark">Fairmark safe harbor?</span>
                     <input type="checkbox" name="fairmark_safe_harbor" ${state.fairmark_safe_harbor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1059.label.after">§ 1059(b) after-basis ($)</span>
-                    <input type="number" step="10000" name="s1059_b_after_basis_reduction" value="${state.s1059_b_after_basis_reduction}"></label>
+                    <input type="number" step="0.01" name="s1059_b_after_basis_reduction" value="${state.s1059_b_after_basis_reduction}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1059.btn.compute">Compute</button>
             </form>
         </div>

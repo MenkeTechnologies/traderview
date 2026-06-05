@@ -122,7 +122,7 @@ export async function renderSection421(mount, _appState) {
                 <label><span data-i18n="view.s421.label.lookback">ESPP lookback?</span>
                     <input type="checkbox" name="s423_lookback_provision" ${state.s423_lookback_provision ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s421.label.s422d">§ 422(d) $100K limit ($)</span>
-                    <input type="number" step="1000" name="s422_d_100k_annual_limit_iso" value="${state.s422_d_100k_annual_limit_iso}"></label>
+                    <input type="number" step="0.01" name="s422_d_100k_annual_limit_iso" value="${state.s422_d_100k_annual_limit_iso}"></label>
                 <label><span data-i18n="view.s421.label.employment">§ 422(b)(2) empl?</span>
                     <input type="checkbox" name="s422_b_2_employment_requirement" ${state.s422_b_2_employment_requirement ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s421.label.5pct">5%+ owner?</span>
@@ -132,19 +132,19 @@ export async function renderSection421(mount, _appState) {
                 <label><span data-i18n="view.s421.label.terms">§ 422(c)(3) terms?</span>
                     <input type="checkbox" name="s422_c_3_terms_of_option" ${state.s422_c_3_terms_of_option ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s421.label.amt">§ 56(b)(3) AMT spread ($)</span>
-                    <input type="number" step="100" name="s56_b_3_amt_spread" value="${state.s56_b_3_amt_spread}"></label>
+                    <input type="number" step="0.01" name="s56_b_3_amt_spread" value="${state.s56_b_3_amt_spread}"></label>
                 <label><span data-i18n="view.s421.label.amt_credit">§ 53 AMT credit ($)</span>
-                    <input type="number" step="100" name="s53_amt_credit_recovery" value="${state.s53_amt_credit_recovery}"></label>
+                    <input type="number" step="0.01" name="s53_amt_credit_recovery" value="${state.s53_amt_credit_recovery}"></label>
                 <label><span data-i18n="view.s421.label.box12v">W-2 Box 12 V?</span>
                     <input type="checkbox" name="s421_b_w2_box_12_v_code" ${state.s421_b_w2_box_12_v_code ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s421.label.box12q">W-2 Box 12 Q?</span>
                     <input type="checkbox" name="s421_b_w2_box_12_q_code" ${state.s421_b_w2_box_12_q_code ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s421.label.ord">Ordinary income ($)</span>
-                    <input type="number" step="100" name="s421_b_ordinary_income" value="${state.s421_b_ordinary_income}"></label>
+                    <input type="number" step="0.01" name="s421_b_ordinary_income" value="${state.s421_b_ordinary_income}"></label>
                 <label><span data-i18n="view.s421.label.cap_gain">Cap gain ($)</span>
-                    <input type="number" step="100" name="s421_b_capital_gain" value="${state.s421_b_capital_gain}"></label>
+                    <input type="number" step="0.01" name="s421_b_capital_gain" value="${state.s421_b_capital_gain}"></label>
                 <label><span data-i18n="view.s421.label.cap_loss">Cap loss ($)</span>
-                    <input type="number" step="100" name="s421_b_capital_loss" value="${state.s421_b_capital_loss}"></label>
+                    <input type="number" step="0.01" name="s421_b_capital_loss" value="${state.s421_b_capital_loss}"></label>
                 <label><span data-i18n="view.s421.label.f3921">Form 3921?</span>
                     <input type="checkbox" name="s6039_form_3921_filed" ${state.s6039_form_3921_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s421.label.f3922">Form 3922?</span>

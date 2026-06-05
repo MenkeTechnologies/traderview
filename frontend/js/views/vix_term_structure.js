@@ -27,7 +27,7 @@ export async function renderVixTermStructure(mount, _appState) {
             <div class="inline-form">
                 ${TENORS.map(k => `
                     <label><span data-i18n="view.vix_term_structure.label.${k}">${k.toUpperCase()}</span>
-                        <input id="vix-${k}" type="number" step="any" min="0" value="${state[k]}" data-tip="view.vix_term_structure.tip.${k}"></label>
+                        <input id="vix-${k}" type="number" step="0.01" min="0" value="${state[k]}" data-tip="view.vix_term_structure.tip.${k}"></label>
                 `).join('')}
                 <button data-i18n="view.vix_term_structure.btn.analyze" id="vix-run" class="primary"
                         data-tip="view.vix_term_structure.tip.analyze" data-shortcut="vix_term_structure_run" type="button">Analyze</button>

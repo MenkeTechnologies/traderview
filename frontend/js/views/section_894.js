@@ -77,7 +77,7 @@ export async function renderSection894(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s894.label.reduction">US tax reduction ($)</span>
-                    <input type="number" step="1000" name="us_tax_reduction" value="${state.us_tax_reduction}"></label>
+                    <input type="number" step="0.01" name="us_tax_reduction" value="${state.us_tax_reduction}"></label>
                 <label><span data-i18n="view.s894.label.filed">Form 8833 filed?</span>
                     <input type="checkbox" name="form_8833_filed" ${state.form_8833_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s894.label.dual">Dual-resident?</span>
@@ -87,7 +87,7 @@ export async function renderSection894(mount, _appState) {
                 <label><span data-i18n="view.s894.label.pe">Permanent establishment?</span>
                     <input type="checkbox" name="is_permanent_establishment" ${state.is_permanent_establishment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s894.label.business_excluded">Business profits excluded ($)</span>
-                    <input type="number" step="10000" name="business_profits_excluded" value="${state.business_profits_excluded}"></label>
+                    <input type="number" step="0.01" name="business_profits_excluded" value="${state.business_profits_excluded}"></label>
                 <label><span data-i18n="view.s894.label.div_rate">Dividend treaty %</span>
                     <input type="number" step="0.1" name="dividend_treaty_rate" value="${state.dividend_treaty_rate}"></label>
                 <label><span data-i18n="view.s894.label.int_rate">Interest treaty %</span>

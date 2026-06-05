@@ -39,17 +39,17 @@ export async function renderTradePlanChecklist(mount, _appState) {
                         <option data-i18n="view.trade_plan_checklist.opt.short" value="short" ${!state.plan.is_long ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.entry">Entry $</span>
-                    <input id="tpc-entry" type="number" step="any" min="0" value="${state.plan.entry_price}" data-tip="view.trade_plan_checklist.tip.entry"></label>
+                    <input id="tpc-entry" type="number" step="0.01" min="0" value="${state.plan.entry_price}" data-tip="view.trade_plan_checklist.tip.entry"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.stop">Stop $ (blank = none)</span>
-                    <input id="tpc-stop"  type="number" step="any" min="0" value="${state.plan.stop_price ?? ''}" data-tip="view.trade_plan_checklist.tip.stop"></label>
+                    <input id="tpc-stop"  type="number" step="0.01" min="0" value="${state.plan.stop_price ?? ''}" data-tip="view.trade_plan_checklist.tip.stop"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.target">Target $ (blank = none)</span>
-                    <input id="tpc-tgt"   type="number" step="any" min="0" value="${state.plan.target_price ?? ''}" data-tip="view.trade_plan_checklist.tip.target"></label>
+                    <input id="tpc-tgt"   type="number" step="0.01" min="0" value="${state.plan.target_price ?? ''}" data-tip="view.trade_plan_checklist.tip.target"></label>
             </div>
             <div class="inline-form">
                 <label><span data-i18n="view.trade_plan_checklist.label.risk">Risk $ (notional dollars on this trade)</span>
-                    <input id="tpc-risk" type="number" step="any" min="0" value="${state.plan.risk_dollars}" data-tip="view.trade_plan_checklist.tip.risk"></label>
+                    <input id="tpc-risk" type="number" step="0.01" min="0" value="${state.plan.risk_dollars}" data-tip="view.trade_plan_checklist.tip.risk"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.equity">Account equity $</span>
-                    <input id="tpc-eq" type="number" step="any" min="0" value="${state.plan.account_equity}" data-tip="view.trade_plan_checklist.tip.equity"></label>
+                    <input id="tpc-eq" type="number" step="0.01" min="0" value="${state.plan.account_equity}" data-tip="view.trade_plan_checklist.tip.equity"></label>
             </div>
         </div>
 
@@ -59,9 +59,9 @@ export async function renderTradePlanChecklist(mount, _appState) {
                 <label><span data-i18n="view.trade_plan_checklist.label.min_words">Min thesis words</span>
                     <input id="tpc-mw" type="number" step="1" min="0" value="${state.config.min_thesis_words}" data-tip="view.trade_plan_checklist.tip.min_words"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.min_r">Min R-multiple</span>
-                    <input id="tpc-mr" type="number" step="any" min="0" value="${state.config.min_r_multiple}" data-tip="view.trade_plan_checklist.tip.min_r"></label>
+                    <input id="tpc-mr" type="number" step="0.01" min="0" value="${state.config.min_r_multiple}" data-tip="view.trade_plan_checklist.tip.min_r"></label>
                 <label><span data-i18n="view.trade_plan_checklist.label.max_risk_pct">Max risk % (decimal — 0.02 = 2%)</span>
-                    <input id="tpc-mrp" type="number" step="any" min="0" max="1" value="${state.config.max_risk_pct_per_trade}" data-tip="view.trade_plan_checklist.tip.max_risk_pct"></label>
+                    <input id="tpc-mrp" type="number" step="0.01" min="0" max="1" value="${state.config.max_risk_pct_per_trade}" data-tip="view.trade_plan_checklist.tip.max_risk_pct"></label>
                 <button data-i18n="view.trade_plan_checklist.btn.evaluate" id="tpc-run" class="primary" type="button" data-tip="view.trade_plan_checklist.tip.run" data-shortcut="trade_plan_checklist_run">Evaluate</button>
             </div>
             <div class="inline-form">

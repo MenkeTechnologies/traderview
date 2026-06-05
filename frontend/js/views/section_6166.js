@@ -43,17 +43,17 @@ export async function renderSection6166(mount, _appState) {
             <h2 data-i18n="view.s6166.h2.inputs">Inputs</h2>
             <form id="s6166-form" class="inline-form">
                 <label><span data-i18n="view.s6166.label.gross">Gross estate ($)</span>
-                    <input type="number" step="100000" name="gross_estate" value="${state.gross_estate}"></label>
+                    <input type="number" step="0.01" name="gross_estate" value="${state.gross_estate}"></label>
                 <label><span data-i18n="view.s6166.label.business">Closely-held business value ($)</span>
-                    <input type="number" step="100000" name="closely_held_business_value" value="${state.closely_held_business_value}"></label>
+                    <input type="number" step="0.01" name="closely_held_business_value" value="${state.closely_held_business_value}"></label>
                 <label><span data-i18n="view.s6166.label.active_pct">Business active (vs passive) %</span>
                     <input type="number" step="0.01" name="business_active_pct" value="${state.business_active_pct}"></label>
                 <label><span data-i18n="view.s6166.label.lifetime">Lifetime exemption used ($)</span>
-                    <input type="number" step="100000" name="lifetime_used" value="${state.lifetime_used}"></label>
+                    <input type="number" step="0.01" name="lifetime_used" value="${state.lifetime_used}"></label>
                 <label><span data-i18n="view.s6166.label.dsue">Spouse DSUE ($)</span>
-                    <input type="number" step="100000" name="spouse_dsue" value="${state.spouse_dsue}"></label>
+                    <input type="number" step="0.01" name="spouse_dsue" value="${state.spouse_dsue}"></label>
                 <label><span data-i18n="view.s6166.label.debts">Debts + admin expenses ($)</span>
-                    <input type="number" step="10000" name="debts_and_admin" value="${state.debts_and_admin}"></label>
+                    <input type="number" step="0.01" name="debts_and_admin" value="${state.debts_and_admin}"></label>
                 <label><span data-i18n="view.s6166.label.state_rate">State estate rate</span>
                     <input type="number" step="0.01" name="state_estate_rate" value="${state.state_estate_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s6166.btn.compute">Compute</button>

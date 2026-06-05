@@ -48,11 +48,11 @@ export async function renderRsuVestTracker(mount, _appState) {
                 <label><span data-i18n="view.rsu.label.shares_withheld">Shares withheld (sell-to-cover)</span>
                     <input type="number" step="1" name="shares_withheld" value="0"></label>
                 <label><span data-i18n="view.rsu.label.fed_w_h">Federal W/H ($)</span>
-                    <input type="number" step="100" name="fed_w_h" value="0"></label>
+                    <input type="number" step="0.01" name="fed_w_h" value="0"></label>
                 <label><span data-i18n="view.rsu.label.fica_w_h">FICA W/H ($)</span>
-                    <input type="number" step="100" name="fica_w_h" value="0"></label>
+                    <input type="number" step="0.01" name="fica_w_h" value="0"></label>
                 <label><span data-i18n="view.rsu.label.state_w_h">State W/H ($)</span>
-                    <input type="number" step="100" name="state_w_h" value="0"></label>
+                    <input type="number" step="0.01" name="state_w_h" value="0"></label>
                 <button class="primary" type="submit" data-i18n="view.rsu.btn.add">Add</button>
             </form>
         </div>

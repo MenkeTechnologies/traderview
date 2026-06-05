@@ -166,9 +166,9 @@ export async function renderTradeDetail(mount, state, tradeId) {
                       `<option ${s === e.side ? 'selected' : ''}>${s}</option>`).join('')}
                   </select>
                 </td>
-                <td><input class="ex-qty" type="number" step="any" value="${e.qty}"></td>
-                <td><input class="ex-price" type="number" step="any" value="${e.price}"></td>
-                <td><input class="ex-fee" type="number" step="any" value="${e.fee}"></td>
+                <td><input class="ex-qty" type="number" step="0.01" value="${e.qty}"></td>
+                <td><input class="ex-price" type="number" step="0.01" value="${e.price}"></td>
+                <td><input class="ex-fee" type="number" step="0.01" value="${e.fee}"></td>
                 <td>
                   <button data-i18n="view.trade_detail.btn.save" class="link" data-save-ex="${e.id}">save</button>
                   <button data-i18n="view.trade_detail.btn.trash" class="link" data-del-ex="${e.id}">trash</button>
@@ -182,9 +182,9 @@ export async function renderTradeDetail(mount, state, tradeId) {
                   <option data-i18n="view.trade_detail.opt.buy" value="buy">buy</option><option data-i18n="view.trade_detail.opt.sell" value="sell">sell</option>
                   <option data-i18n="view.trade_detail.opt.short" value="short">short</option><option data-i18n="view.trade_detail.opt.cover" value="cover">cover</option>
                 </select>
-                <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
-                <input name="price" type="number" step="any" placeholder="price" data-i18n-placeholder="common.placeholder.price" required>
-                <input name="fee" type="number" step="any" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" value="0">
+                <input name="qty" type="number" step="0.01" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
+                <input name="price" type="number" step="0.01" placeholder="price" data-i18n-placeholder="common.placeholder.price" required>
+                <input name="fee" type="number" step="0.01" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" value="0">
                 <input name="executed_at" type="datetime-local" required>
                 <button data-i18n="view.trade_detail.btn.add" class="primary" type="submit">Add</button>
               </form>
@@ -210,11 +210,11 @@ export async function renderTradeDetail(mount, state, tradeId) {
             <h2 data-i18n="view.trade_detail.h2.risk_plan">Risk Plan</h2>
             <form id="risk-form" class="risk-form">
               <label><span data-i18n="view.trade_detail.label.stop_loss">Stop loss</span>
-                  <input name="stop_loss" type="number" step="any" value="${trade.stop_loss ?? ''}"></label>
+                  <input name="stop_loss" type="number" step="0.01" value="${trade.stop_loss ?? ''}"></label>
               <label><span data-i18n="view.trade_detail.label.risk_amount">Risk $</span>
-                  <input name="risk_amount" type="number" step="any" value="${trade.risk_amount ?? ''}"></label>
+                  <input name="risk_amount" type="number" step="0.01" value="${trade.risk_amount ?? ''}"></label>
               <label><span data-i18n="view.trade_detail.label.target">Target</span>
-                  <input name="initial_target" type="number" step="any" value="${trade.initial_target ?? ''}"></label>
+                  <input name="initial_target" type="number" step="0.01" value="${trade.initial_target ?? ''}"></label>
               <button data-i18n="view.trade_detail.btn.save_2" class="primary" type="submit">Save</button>
             </form>
           </div>

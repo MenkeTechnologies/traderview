@@ -58,7 +58,7 @@ export async function renderNsoExercise(mount, _appState) {
                 <label><span data-i18n="view.nso.label.shares">Shares</span>
                     <input type="number" step="1" name="shares" value="${state.shares}"></label>
                 <label><span data-i18n="view.nso.label.ytd_w2_wages">YTD W-2 wages BEFORE this exercise ($)</span>
-                    <input type="number" step="1000" name="ytd_w2_wages" value="${state.ytd_w2_wages}"></label>
+                    <input type="number" step="0.01" name="ytd_w2_wages" value="${state.ytd_w2_wages}"></label>
                 <label><span data-i18n="view.nso.label.marginal_rate">Marginal federal %</span>
                     <input type="number" step="0.5" name="marginal_rate" value="${(state.marginal_rate * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.nso.label.lt_cap_gains_rate">LT cap-gains %</span>

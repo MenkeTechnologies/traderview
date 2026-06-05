@@ -47,17 +47,17 @@ export async function renderSection511(mount, _appState) {
             <h2 data-i18n="view.s511.h2.inputs">Inputs</h2>
             <form id="s511-form" class="inline-form">
                 <label><span data-i18n="view.s511.label.gross">Gross unrelated income ($)</span>
-                    <input type="number" step="1000" name="gross_unrelated_income" value="${state.gross_unrelated_income}"></label>
+                    <input type="number" step="0.01" name="gross_unrelated_income" value="${state.gross_unrelated_income}"></label>
                 <label><span data-i18n="view.s511.label.direct">Directly related expenses ($)</span>
-                    <input type="number" step="1000" name="directly_related_expenses" value="${state.directly_related_expenses}"></label>
+                    <input type="number" step="0.01" name="directly_related_expenses" value="${state.directly_related_expenses}"></label>
                 <label><span data-i18n="view.s511.label.indirect">Indirect allocations ($)</span>
-                    <input type="number" step="1000" name="indirect_allocations" value="${state.indirect_allocations}"></label>
+                    <input type="number" step="0.01" name="indirect_allocations" value="${state.indirect_allocations}"></label>
                 <label><span data-i18n="view.s511.label.other">Other deductions ($)</span>
-                    <input type="number" step="1000" name="other_deductions" value="${state.other_deductions}"></label>
+                    <input type="number" step="0.01" name="other_deductions" value="${state.other_deductions}"></label>
                 <label><span data-i18n="view.s511.label.nol">NOL carryforward ($)</span>
-                    <input type="number" step="1000" name="nol_carryforward" value="${state.nol_carryforward}"></label>
+                    <input type="number" step="0.01" name="nol_carryforward" value="${state.nol_carryforward}"></label>
                 <label><span data-i18n="view.s511.label.specific">Specific deduction ($)</span>
-                    <input type="number" step="100" name="specific_deduction" value="${state.specific_deduction}"></label>
+                    <input type="number" step="0.01" name="specific_deduction" value="${state.specific_deduction}"></label>
                 <label><span data-i18n="view.s511.label.university">University?</span>
                     <input type="checkbox" name="is_university" ${state.is_university ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s511.label.hospital">Hospital?</span>
@@ -91,7 +91,7 @@ export async function renderSection511(mount, _appState) {
                 <label><span data-i18n="view.s511.label.debt">Debt-financed property?</span>
                     <input type="checkbox" name="debt_financed_property" ${state.debt_financed_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s511.label.silo">Siloed other businesses loss ($)</span>
-                    <input type="number" step="1000" name="siloed_other_businesses_loss" value="${state.siloed_other_businesses_loss}"></label>
+                    <input type="number" step="0.01" name="siloed_other_businesses_loss" value="${state.siloed_other_businesses_loss}"></label>
                 <button class="primary" type="submit" data-i18n="view.s511.btn.compute">Compute</button>
             </form>
         </div>

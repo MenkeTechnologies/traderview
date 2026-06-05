@@ -38,9 +38,9 @@ export async function renderSection897(mount, _appState) {
             <h2 data-i18n="view.s897.h2.inputs">Inputs</h2>
             <form id="s897-form" class="inline-form">
                 <label><span data-i18n="view.s897.label.sale">Sale price ($)</span>
-                    <input type="number" step="10000" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s897.label.basis">Adjusted basis ($)</span>
-                    <input type="number" step="10000" name="adjusted_basis" value="${state.adjusted_basis}"></label>
+                    <input type="number" step="0.01" name="adjusted_basis" value="${state.adjusted_basis}"></label>
                 <label><span data-i18n="view.s897.label.type">USRPI type</span>
                     <select name="usrpi_type">
                         <option value="direct" ${state.usrpi_type === 'direct' ? 'selected' : ''}>Direct real estate</option>

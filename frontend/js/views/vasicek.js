@@ -49,13 +49,13 @@ export async function renderVasicek(mount, _appState) {
             <h2 data-i18n="view.vasicek.h2.sde_parameters">SDE parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vasicek.label.r0">r₀ (initial rate)</span>
-                    <input id="va-r0"    type="number" step="any" value="${state.params.r0}" data-tip="view.vasicek.tip.r0"></label>
+                    <input id="va-r0"    type="number" step="0.01" value="${state.params.r0}" data-tip="view.vasicek.tip.r0"></label>
                 <label><span data-i18n="view.vasicek.label.a">a (mean-reversion speed)</span>
-                    <input id="va-a"     type="number" step="any" min="0" value="${state.params.a}" data-tip="view.vasicek.tip.a"></label>
+                    <input id="va-a"     type="number" step="0.01" min="0" value="${state.params.a}" data-tip="view.vasicek.tip.a"></label>
                 <label><span data-i18n="view.vasicek.label.b">b (long-run mean)</span>
-                    <input id="va-b"     type="number" step="any" value="${state.params.b}" data-tip="view.vasicek.tip.b"></label>
+                    <input id="va-b"     type="number" step="0.01" value="${state.params.b}" data-tip="view.vasicek.tip.b"></label>
                 <label><span data-i18n="view.vasicek.label.sigma">σ (vol)</span>
-                    <input id="va-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.vasicek.tip.sigma"></label>
+                    <input id="va-sigma" type="number" step="0.01" min="0" value="${state.params.sigma}" data-tip="view.vasicek.tip.sigma"></label>
             </div>
         </div>
 
@@ -63,11 +63,11 @@ export async function renderVasicek(mount, _appState) {
             <h2 data-i18n="view.vasicek.h2.simulation_grid">Simulation grid</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vasicek.label.dt">dt (years)</span>
-                    <input id="va-dt"    type="number" step="any" min="0" value="${state.params.dt}" data-tip="view.vasicek.tip.dt"></label>
+                    <input id="va-dt"    type="number" step="0.01" min="0" value="${state.params.dt}" data-tip="view.vasicek.tip.dt"></label>
                 <label><span data-i18n="view.vasicek.label.steps">Steps</span>
                     <input id="va-steps" type="number" step="1"   min="1" value="${state.params.steps}" data-tip="view.vasicek.tip.steps"></label>
                 <label><span data-i18n="view.vasicek.label.paths">Paths</span>
-                    <input id="va-paths" type="number" step="100" min="10" value="${state.params.paths}" data-tip="view.vasicek.tip.paths"></label>
+                    <input id="va-paths" type="number" step="0.01" min="10" value="${state.params.paths}" data-tip="view.vasicek.tip.paths"></label>
                 <label><span data-i18n="view.vasicek.label.seed">Seed (0 = auto)</span>
                     <input id="va-seed"  type="number" step="1"   min="0" value="${state.params.seed}" data-tip="view.vasicek.tip.seed"></label>
                 <button data-i18n="view.vasicek.btn.simulate" data-tip="view.vasicek.tip.simulate" data-shortcut="vasicek_simulate" id="va-run" class="primary" type="button">Simulate</button>

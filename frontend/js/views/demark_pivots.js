@@ -29,13 +29,13 @@ export async function renderDemarkPivots(mount, _appState) {
             <h2 data-i18n="view.demark_pivots.h2.prior_session_ohlc">Prior session OHLC</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.demark_pivots.label.open">Open</span>
-                    <input id="dp-o" type="number" step="any" min="0" value="${state.session.open}" data-tip="view.demark_pivots.tip.open"></label>
+                    <input id="dp-o" type="number" step="0.01" min="0" value="${state.session.open}" data-tip="view.demark_pivots.tip.open"></label>
                 <label><span data-i18n="view.demark_pivots.label.high">High</span>
-                    <input id="dp-h" type="number" step="any" min="0" value="${state.session.high}" data-tip="view.demark_pivots.tip.high"></label>
+                    <input id="dp-h" type="number" step="0.01" min="0" value="${state.session.high}" data-tip="view.demark_pivots.tip.high"></label>
                 <label><span data-i18n="view.demark_pivots.label.low">Low</span>
-                    <input id="dp-l" type="number" step="any" min="0" value="${state.session.low}" data-tip="view.demark_pivots.tip.low"></label>
+                    <input id="dp-l" type="number" step="0.01" min="0" value="${state.session.low}" data-tip="view.demark_pivots.tip.low"></label>
                 <label><span data-i18n="view.demark_pivots.label.close">Close</span>
-                    <input id="dp-c" type="number" step="any" min="0" value="${state.session.close}" data-tip="view.demark_pivots.tip.close"></label>
+                    <input id="dp-c" type="number" step="0.01" min="0" value="${state.session.close}" data-tip="view.demark_pivots.tip.close"></label>
             </div>
             <div class="inline-form">
                 <button data-i18n="view.demark_pivots.btn.demo_bullish_session" id="dp-demo-bull"   class="secondary" type="button" data-tip="view.demark_pivots.tip.demo_bull">Demo: bullish session</button>
@@ -49,7 +49,7 @@ export async function renderDemarkPivots(mount, _appState) {
             <h2 data-i18n="view.demark_pivots.h2.today_s_spot">Today's spot</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.demark_pivots.label.spot_now">Spot now (for trade-bias card)</span>
-                    <input id="dp-spot" type="number" step="any" min="0" value="${state.spotNow}" data-tip="view.demark_pivots.tip.spot"></label>
+                    <input id="dp-spot" type="number" step="0.01" min="0" value="${state.spotNow}" data-tip="view.demark_pivots.tip.spot"></label>
                 <button data-i18n="view.demark_pivots.btn.compute" id="dp-run" class="primary" type="button" data-tip="view.demark_pivots.tip.run" data-shortcut="demark_pivots_run">Compute</button>
             </div>
             <p data-i18n="view.demark_pivots.hint.demark_s_x_base_formula_switches_on_close_vs_open_" class="muted">DeMark's X-base formula switches on close-vs-open direction:

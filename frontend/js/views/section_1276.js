@@ -39,9 +39,9 @@ export async function renderSection1276(mount, _appState) {
             <h2 data-i18n="view.s1276.h2.inputs">Inputs</h2>
             <form id="s1276-form" class="inline-form">
                 <label><span data-i18n="view.s1276.label.face">Face value ($)</span>
-                    <input type="number" step="1000" name="face_value" value="${state.face_value}"></label>
+                    <input type="number" step="0.01" name="face_value" value="${state.face_value}"></label>
                 <label><span data-i18n="view.s1276.label.purchase">Purchase price ($)</span>
-                    <input type="number" step="100" name="purchase_price" value="${state.purchase_price}"></label>
+                    <input type="number" step="0.01" name="purchase_price" value="${state.purchase_price}"></label>
                 <label><span data-i18n="view.s1276.label.maturity">Years to maturity at purchase</span>
                     <input type="number" step="0.25" name="years_to_maturity" value="${state.years_to_maturity}"></label>
                 <label><span data-i18n="view.s1276.label.coupon">Coupon rate</span>

@@ -50,15 +50,15 @@ export async function renderSection471(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s471.label.gross_3yr">Avg gross receipts 3-yr ($)</span>
-                    <input type="number" step="100000" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
                 <label><span data-i18n="view.s471.label.beg_inv">Beginning inventory ($)</span>
-                    <input type="number" step="10000" name="beginning_inventory" value="${state.beginning_inventory}"></label>
+                    <input type="number" step="0.01" name="beginning_inventory" value="${state.beginning_inventory}"></label>
                 <label><span data-i18n="view.s471.label.purchases">Purchases during year ($)</span>
-                    <input type="number" step="10000" name="purchases" value="${state.purchases}"></label>
+                    <input type="number" step="0.01" name="purchases" value="${state.purchases}"></label>
                 <label><span data-i18n="view.s471.label.end_fifo">Ending inventory FIFO ($)</span>
-                    <input type="number" step="10000" name="ending_inventory_fifo" value="${state.ending_inventory_fifo}"></label>
+                    <input type="number" step="0.01" name="ending_inventory_fifo" value="${state.ending_inventory_fifo}"></label>
                 <label><span data-i18n="view.s471.label.end_lifo">Ending inventory LIFO ($)</span>
-                    <input type="number" step="10000" name="ending_inventory_lifo" value="${state.ending_inventory_lifo}"></label>
+                    <input type="number" step="0.01" name="ending_inventory_lifo" value="${state.ending_inventory_lifo}"></label>
                 <label><span data-i18n="view.s471.label.price_direction">Price direction</span>
                     <select name="rising_or_falling_prices">
                         <option value="rising" ${state.rising_or_falling_prices === 'rising' ? 'selected' : ''}>Rising prices</option>

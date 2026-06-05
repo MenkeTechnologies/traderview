@@ -84,13 +84,13 @@ export async function renderSection1234(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1234.label.premium">Option premium ($)</span>
-                    <input type="number" step="100" name="option_premium" value="${state.option_premium}"></label>
+                    <input type="number" step="0.01" name="option_premium" value="${state.option_premium}"></label>
                 <label><span data-i18n="view.s1234.label.strike">Option strike ($)</span>
                     <input type="number" step="1" name="option_strike" value="${state.option_strike}"></label>
                 <label><span data-i18n="view.s1234.label.basis">Underlying basis ($)</span>
-                    <input type="number" step="100" name="underlying_basis" value="${state.underlying_basis}"></label>
+                    <input type="number" step="0.01" name="underlying_basis" value="${state.underlying_basis}"></label>
                 <label><span data-i18n="view.s1234.label.fmv">Underlying FMV ($)</span>
-                    <input type="number" step="100" name="underlying_fmv" value="${state.underlying_fmv}"></label>
+                    <input type="number" step="0.01" name="underlying_fmv" value="${state.underlying_fmv}"></label>
                 <label><span data-i18n="view.s1234.label.is_capital">Capital asset?</span>
                     <input type="checkbox" name="is_capital_asset_underlying" ${state.is_capital_asset_underlying ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1234.label.days">Days held</span>
@@ -133,7 +133,7 @@ export async function renderSection1234(mount, _appState) {
                 <label><span data-i18n="view.s1234.label.s1259">§ 1259 constructive sale?</span>
                     <input type="checkbox" name="s1259_constructive_sale" ${state.s1259_constructive_sale ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1234.label.gain">Gain/loss ($)</span>
-                    <input type="number" step="100" name="gain_loss_amount" value="${state.gain_loss_amount}"></label>
+                    <input type="number" step="0.01" name="gain_loss_amount" value="${state.gain_loss_amount}"></label>
                 <label><span data-i18n="view.s1234.label.tacks">Holding tacks?</span>
                     <input type="checkbox" name="holding_period_tacks" ${state.holding_period_tacks ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1234.label.leap">LEAP long-dated?</span>

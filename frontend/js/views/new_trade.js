@@ -28,9 +28,9 @@ export async function renderNewTrade(mount, state) {
                     <option data-i18n="view.new_trade.opt.short" value="short">short</option>
                     <option data-i18n="view.new_trade.opt.cover" value="cover">cover</option>
                 </select>
-                <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" data-tip="view.new_trade.tip.qty" required>
-                <input name="price" type="number" step="any" placeholder="price" data-i18n-placeholder="common.placeholder.price" data-tip="view.new_trade.tip.price" required>
-                <input name="fee" type="number" step="any" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" data-tip="view.new_trade.tip.fee" value="0">
+                <input name="qty" type="number" step="0.01" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" data-tip="view.new_trade.tip.qty" required>
+                <input name="price" type="number" step="0.01" placeholder="price" data-i18n-placeholder="common.placeholder.price" data-tip="view.new_trade.tip.price" required>
+                <input name="fee" type="number" step="0.01" placeholder="fee" data-i18n-placeholder="common.placeholder.fee" data-tip="view.new_trade.tip.fee" value="0">
                 <input name="executed_at" type="datetime-local" data-tip="view.new_trade.tip.executed_at" required>
                 <select name="asset_class" data-tip="view.new_trade.tip.asset_class">
                     <option data-i18n="view.new_trade.opt.stock" value="stock">stock</option>
@@ -43,10 +43,10 @@ export async function renderNewTrade(mount, state) {
                     <option data-i18n="view.new_trade.opt.call" value="call">call</option>
                     <option data-i18n="view.new_trade.opt.put" value="put">put</option>
                 </select>
-                <input name="strike"     type="number" step="any" placeholder="strike" data-i18n-placeholder="common.placeholder.strike" style="display:none">
+                <input name="strike"     type="number" step="0.01" placeholder="strike" data-i18n-placeholder="common.placeholder.strike" style="display:none">
                 <input name="expiration" type="date"   placeholder="exp" data-i18n-placeholder="common.placeholder.exp" style="display:none">
-                <input name="multiplier" type="number" step="any" placeholder="multiplier" data-i18n-placeholder="common.placeholder.multiplier" style="display:none">
-                <input name="stop_loss"  type="number" step="any" placeholder="stop (for Risk Gate)" data-i18n-placeholder="view.new_trade.placeholder.stop" data-tip="view.new_trade.tip.stop_loss">
+                <input name="multiplier" type="number" step="0.01" placeholder="multiplier" data-i18n-placeholder="common.placeholder.multiplier" style="display:none">
+                <input name="stop_loss"  type="number" step="0.01" placeholder="stop (for Risk Gate)" data-i18n-placeholder="view.new_trade.placeholder.stop" data-tip="view.new_trade.tip.stop_loss">
                 <label style="display:flex;align-items:center;gap:4px;" data-tip="view.new_trade.tip.plan">
                     <input type="checkbox" name="has_attached_plan"> plan attached
                 </label>

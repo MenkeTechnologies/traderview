@@ -43,17 +43,17 @@ export async function renderSection125(mount, _appState) {
             <h2 data-i18n="view.s125.h2.inputs">Inputs</h2>
             <form id="s125-form" class="inline-form">
                 <label><span data-i18n="view.s125.label.salary">Annual salary ($)</span>
-                    <input type="number" step="1000" name="annual_salary" value="${state.annual_salary}"></label>
+                    <input type="number" step="0.01" name="annual_salary" value="${state.annual_salary}"></label>
                 <label><span data-i18n="view.s125.label.health_ins">Health insurance pre-tax ($)</span>
-                    <input type="number" step="100" name="health_insurance_pretax" value="${state.health_insurance_pretax}"></label>
+                    <input type="number" step="0.01" name="health_insurance_pretax" value="${state.health_insurance_pretax}"></label>
                 <label><span data-i18n="view.s125.label.fsa">Health FSA election ($)</span>
-                    <input type="number" step="100" name="health_fsa_election" value="${state.health_fsa_election}"></label>
+                    <input type="number" step="0.01" name="health_fsa_election" value="${state.health_fsa_election}"></label>
                 <label><span data-i18n="view.s125.label.dcfsa">Dependent Care FSA ($)</span>
-                    <input type="number" step="100" name="dependent_care_fsa" value="${state.dependent_care_fsa}"></label>
+                    <input type="number" step="0.01" name="dependent_care_fsa" value="${state.dependent_care_fsa}"></label>
                 <label><span data-i18n="view.s125.label.hsa">HSA pre-tax contribution ($)</span>
-                    <input type="number" step="100" name="hsa_pretax_contribution" value="${state.hsa_pretax_contribution}"></label>
+                    <input type="number" step="0.01" name="hsa_pretax_contribution" value="${state.hsa_pretax_contribution}"></label>
                 <label><span data-i18n="view.s125.label.other">Other qualified benefits ($)</span>
-                    <input type="number" step="100" name="other_qualified_benefits" value="${state.other_qualified_benefits}"></label>
+                    <input type="number" step="0.01" name="other_qualified_benefits" value="${state.other_qualified_benefits}"></label>
                 <label><span data-i18n="view.s125.label.fed_rate">Federal marginal %</span>
                     <input type="number" step="0.01" name="fed_marginal_rate" value="${state.fed_marginal_rate}"></label>
                 <label><span data-i18n="view.s125.label.state_rate">State marginal %</span>

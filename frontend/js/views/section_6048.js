@@ -50,7 +50,7 @@ export async function renderSection6048(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6048.label.amount">Amount ($)</span>
-                    <input type="number" step="100" name="amount" required></label>
+                    <input type="number" step="0.01" name="amount" required></label>
                 <label><span data-i18n="view.s6048.label.country">Country</span>
                     <input type="text" name="country" required></label>
                 <label><span data-i18n="view.s6048.label.donor">Donor / trust name</span>

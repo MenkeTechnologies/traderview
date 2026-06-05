@@ -37,17 +37,17 @@ export async function renderSection1368(mount, _appState) {
             <h2 data-i18n="view.s1368.h2.inputs">Inputs</h2>
             <form id="s1368-form" class="inline-form">
                 <label><span data-i18n="view.s1368.label.dist">Distribution amount ($)</span>
-                    <input type="number" step="10000" name="distribution_amount" value="${state.distribution_amount}"></label>
+                    <input type="number" step="0.01" name="distribution_amount" value="${state.distribution_amount}"></label>
                 <label><span data-i18n="view.s1368.label.aaa">AAA balance ($)</span>
-                    <input type="number" step="10000" name="aaa_balance" value="${state.aaa_balance}"></label>
+                    <input type="number" step="0.01" name="aaa_balance" value="${state.aaa_balance}"></label>
                 <label><span data-i18n="view.s1368.label.ep">Accumulated C-corp E&P ($)</span>
-                    <input type="number" step="10000" name="accumulated_e_and_p" value="${state.accumulated_e_and_p}"></label>
+                    <input type="number" step="0.01" name="accumulated_e_and_p" value="${state.accumulated_e_and_p}"></label>
                 <label><span data-i18n="view.s1368.label.pti">PTI balance ($)</span>
-                    <input type="number" step="10000" name="pti_balance" value="${state.pti_balance}"></label>
+                    <input type="number" step="0.01" name="pti_balance" value="${state.pti_balance}"></label>
                 <label><span data-i18n="view.s1368.label.oaa">OAA balance ($)</span>
-                    <input type="number" step="10000" name="oaa_balance" value="${state.oaa_balance}"></label>
+                    <input type="number" step="0.01" name="oaa_balance" value="${state.oaa_balance}"></label>
                 <label><span data-i18n="view.s1368.label.basis">Shareholder stock basis ($)</span>
-                    <input type="number" step="10000" name="stock_basis" value="${state.stock_basis}"></label>
+                    <input type="number" step="0.01" name="stock_basis" value="${state.stock_basis}"></label>
                 <label><span data-i18n="view.s1368.label.history">Has C-corp E&P history?</span>
                     <input type="checkbox" name="has_c_corp_history" ${state.has_c_corp_history ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1368.label.bypass">§ 1368(e)(3) AAA bypass election?</span>

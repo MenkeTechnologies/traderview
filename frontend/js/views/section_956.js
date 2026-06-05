@@ -68,21 +68,21 @@ export async function renderSection956(mount, _appState) {
                 <label><span data-i18n="view.s956.label.country">CFC country</span>
                     <input type="text" name="cfc_country" value="${esc(state.cfc_country)}"></label>
                 <label><span data-i18n="view.s956.label.ep">CFC E&P ($)</span>
-                    <input type="number" step="100000" name="cfc_e_p" value="${state.cfc_e_p}"></label>
+                    <input type="number" step="0.01" name="cfc_e_p" value="${state.cfc_e_p}"></label>
                 <label><span data-i18n="view.s956.label.property_increase">US property increase ($)</span>
-                    <input type="number" step="100000" name="us_property_increase" value="${state.us_property_increase}"></label>
+                    <input type="number" step="0.01" name="us_property_increase" value="${state.us_property_increase}"></label>
                 <label><span data-i18n="view.s956.label.inclusion">§ 956(a) inclusion ($)</span>
-                    <input type="number" step="100000" name="s956_a_inclusion_amount" value="${state.s956_a_inclusion_amount}"></label>
+                    <input type="number" step="0.01" name="s956_a_inclusion_amount" value="${state.s956_a_inclusion_amount}"></label>
                 <label><span data-i18n="view.s956.label.avg_quarterly">Avg quarterly ($)</span>
-                    <input type="number" step="100000" name="s956_a_2_b_average_quarterly_balance" value="${state.s956_a_2_b_average_quarterly_balance}"></label>
+                    <input type="number" step="0.01" name="s956_a_2_b_average_quarterly_balance" value="${state.s956_a_2_b_average_quarterly_balance}"></label>
                 <label><span data-i18n="view.s956.label.real_property">US real property ($)</span>
-                    <input type="number" step="100000" name="s956_b_1_us_real_property" value="${state.s956_b_1_us_real_property}"></label>
+                    <input type="number" step="0.01" name="s956_b_1_us_real_property" value="${state.s956_b_1_us_real_property}"></label>
                 <label><span data-i18n="view.s956.label.obligations">US obligations ($)</span>
-                    <input type="number" step="100000" name="s956_b_1_us_obligations" value="${state.s956_b_1_us_obligations}"></label>
+                    <input type="number" step="0.01" name="s956_b_1_us_obligations" value="${state.s956_b_1_us_obligations}"></label>
                 <label><span data-i18n="view.s956.label.stock">US corp stock ($)</span>
-                    <input type="number" step="100000" name="s956_b_1_us_corporation_stock" value="${state.s956_b_1_us_corporation_stock}"></label>
+                    <input type="number" step="0.01" name="s956_b_1_us_corporation_stock" value="${state.s956_b_1_us_corporation_stock}"></label>
                 <label><span data-i18n="view.s956.label.rights">Rights to acquire US ($)</span>
-                    <input type="number" step="100000" name="s956_b_1_right_to_acquire_us_property" value="${state.s956_b_1_right_to_acquire_us_property}"></label>
+                    <input type="number" step="0.01" name="s956_b_1_right_to_acquire_us_property" value="${state.s956_b_1_right_to_acquire_us_property}"></label>
                 <label><span data-i18n="view.s956.label.inv_excluded">Inventory excluded?</span>
                     <input type="checkbox" name="s956_c_excluded_inventory" ${state.s956_c_excluded_inventory ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.treasury_excluded">Treasury excluded?</span>
@@ -90,41 +90,41 @@ export async function renderSection956(mount, _appState) {
                 <label><span data-i18n="view.s956.label.short_term">Short-term excluded?</span>
                     <input type="checkbox" name="s956_c_us_obligation_short_term" ${state.s956_c_us_obligation_short_term ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.short_loan">30-day loan ($)</span>
-                    <input type="number" step="100000" name="cfc_short_term_loan_30day" value="${state.cfc_short_term_loan_30day}"></label>
+                    <input type="number" step="0.01" name="cfc_short_term_loan_30day" value="${state.cfc_short_term_loan_30day}"></label>
                 <label><span data-i18n="view.s956.label.qualified_inv">Qualified inv excluded?</span>
                     <input type="checkbox" name="is_qualified_investment_excluded" ${state.is_qualified_investment_excluded ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.consolidated">Consolidated sub?</span>
                     <input type="checkbox" name="is_consolidated_subsidiary" ${state.is_consolidated_subsidiary ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.pledge">Pledge / guarantee ($)</span>
-                    <input type="number" step="100000" name="s956_d_pledge_or_guarantee" value="${state.s956_d_pledge_or_guarantee}"></label>
+                    <input type="number" step="0.01" name="s956_d_pledge_or_guarantee" value="${state.s956_d_pledge_or_guarantee}"></label>
                 <label><span data-i18n="view.s956.label.anti_avoid">§ 956(e) anti-avoid?</span>
                     <input type="checkbox" name="s956_e_anti_avoidance" ${state.s956_e_anti_avoidance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.s245a_eligible">§ 245A eligible div ($)</span>
-                    <input type="number" step="100000" name="s245a_eligible_dividend" value="${state.s245a_eligible_dividend}"></label>
+                    <input type="number" step="0.01" name="s245a_eligible_dividend" value="${state.s245a_eligible_dividend}"></label>
                 <label><span data-i18n="view.s956.label.s245a_drd">§ 245A DRD ($)</span>
-                    <input type="number" step="100000" name="s245a_drd_amount" value="${state.s245a_drd_amount}"></label>
+                    <input type="number" step="0.01" name="s245a_drd_amount" value="${state.s245a_drd_amount}"></label>
                 <label><span data-i18n="view.s956.label.proposed">2018 proposed regs?</span>
                     <input type="checkbox" name="s956_proposed_regs_2018" ${state.s956_proposed_regs_2018 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.final">2019 final regs?</span>
                     <input type="checkbox" name="s956_final_regs_2019" ${state.s956_final_regs_2019 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.ps_interest">Partnership interest ($)</span>
-                    <input type="number" step="100000" name="s956_e_partnership_interest" value="${state.s956_e_partnership_interest}"></label>
+                    <input type="number" step="0.01" name="s956_e_partnership_interest" value="${state.s956_e_partnership_interest}"></label>
                 <label><span data-i18n="view.s956.label.dre">DRE?</span>
                     <input type="checkbox" name="s956_e_disregarded_entity" ${state.s956_e_disregarded_entity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.pti">PTI distribution?</span>
                     <input type="checkbox" name="is_pti_distribution" ${state.is_pti_distribution ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.pti_amt">PTI ($)</span>
-                    <input type="number" step="100000" name="pti_previously_taxed_income" value="${state.pti_previously_taxed_income}"></label>
+                    <input type="number" step="0.01" name="pti_previously_taxed_income" value="${state.pti_previously_taxed_income}"></label>
                 <label><span data-i18n="view.s956.label.gilti">§ 951A GILTI ($)</span>
-                    <input type="number" step="100000" name="s951a_gilti_inclusion" value="${state.s951a_gilti_inclusion}"></label>
+                    <input type="number" step="0.01" name="s951a_gilti_inclusion" value="${state.s951a_gilti_inclusion}"></label>
                 <label><span data-i18n="view.s956.label.s962">§ 962 election?</span>
                     <input type="checkbox" name="s962_election_made" ${state.s962_election_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.s960">§ 960 FTC ($)</span>
-                    <input type="number" step="100000" name="s960_foreign_tax_credit" value="${state.s960_foreign_tax_credit}"></label>
+                    <input type="number" step="0.01" name="s960_foreign_tax_credit" value="${state.s960_foreign_tax_credit}"></label>
                 <label><span data-i18n="view.s956.label.qbai">QBAI ($)</span>
-                    <input type="number" step="100000" name="cfc_qbai" value="${state.cfc_qbai}"></label>
+                    <input type="number" step="0.01" name="cfc_qbai" value="${state.cfc_qbai}"></label>
                 <label><span data-i18n="view.s956.label.active">Active biz income ($)</span>
-                    <input type="number" step="100000" name="cfc_active_business_income" value="${state.cfc_active_business_income}"></label>
+                    <input type="number" step="0.01" name="cfc_active_business_income" value="${state.cfc_active_business_income}"></label>
                 <label><span data-i18n="view.s956.label.treaty">Treaty country?</span>
                     <input type="checkbox" name="is_treaty_country" ${state.is_treaty_country ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s956.label.treaty_rate">Treaty div rate %</span>

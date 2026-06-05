@@ -41,9 +41,9 @@ export async function renderSection1239(mount, _appState) {
             <h2 data-i18n="view.s1239.h2.inputs">Inputs</h2>
             <form id="s1239-form" class="inline-form">
                 <label><span data-i18n="view.s1239.label.sale">Sale price ($)</span>
-                    <input type="number" step="10000" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s1239.label.basis">Seller's basis ($)</span>
-                    <input type="number" step="10000" name="seller_basis" value="${state.seller_basis}"></label>
+                    <input type="number" step="0.01" name="seller_basis" value="${state.seller_basis}"></label>
                 <label><span data-i18n="view.s1239.label.related">Related party?</span>
                     <input type="checkbox" name="is_related_party" ${state.is_related_party ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1239.label.depreciable">Depreciable in buyer's hands?</span>

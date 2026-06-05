@@ -34,17 +34,17 @@ export async function renderSection250(mount, _appState) {
             <h2 data-i18n="view.s250.h2.inputs">Inputs</h2>
             <form id="s250-form" class="inline-form">
                 <label><span data-i18n="view.s250.label.fdii_gross">FDII gross (foreign-use income) ($)</span>
-                    <input type="number" step="1000" name="fdii_gross" value="${state.fdii_gross}"></label>
+                    <input type="number" step="0.01" name="fdii_gross" value="${state.fdii_gross}"></label>
                 <label><span data-i18n="view.s250.label.qbai">Domestic QBAI ($)</span>
-                    <input type="number" step="1000" name="qbai" value="${state.qbai}"></label>
+                    <input type="number" step="0.01" name="qbai" value="${state.qbai}"></label>
                 <label><span data-i18n="view.s250.label.foreign_pct">Foreign-use % of income</span>
                     <input type="number" step="0.1" name="foreign_use_pct" value="${state.foreign_use_pct}"></label>
                 <label><span data-i18n="view.s250.label.foreign_doc">Foreign-use documentation in place?</span>
                     <input type="checkbox" name="foreign_use_doc" ${state.foreign_use_doc ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s250.label.gilti">GILTI inclusion ($)</span>
-                    <input type="number" step="1000" name="gilti_inclusion" value="${state.gilti_inclusion}"></label>
+                    <input type="number" step="0.01" name="gilti_inclusion" value="${state.gilti_inclusion}"></label>
                 <label><span data-i18n="view.s250.label.ti">Taxable income pre-§ 250 ($)</span>
-                    <input type="number" step="1000" name="taxable_income_before_250" value="${state.taxable_income_before_250}"></label>
+                    <input type="number" step="0.01" name="taxable_income_before_250" value="${state.taxable_income_before_250}"></label>
                 <label><span data-i18n="view.s250.label.pre_2026">Pre-2026 (50% / 37.5%)?</span>
                     <input type="checkbox" name="pre_2026" ${state.pre_2026 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s250.label.c_corp">C-corp?</span>

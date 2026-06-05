@@ -41,11 +41,11 @@ export async function renderSection7701o(mount, _appState) {
             <h2 data-i18n="view.s7701o.h2.inputs">Inputs</h2>
             <form id="s7701o-form" class="inline-form">
                 <label><span data-i18n="view.s7701o.label.value">Transaction value ($)</span>
-                    <input type="number" step="10000" name="transaction_value" value="${state.transaction_value}"></label>
+                    <input type="number" step="0.01" name="transaction_value" value="${state.transaction_value}"></label>
                 <label><span data-i18n="view.s7701o.label.tax_benefit">Tax benefits claimed ($)</span>
-                    <input type="number" step="10000" name="tax_benefits_claimed" value="${state.tax_benefits_claimed}"></label>
+                    <input type="number" step="0.01" name="tax_benefits_claimed" value="${state.tax_benefits_claimed}"></label>
                 <label><span data-i18n="view.s7701o.label.pre_tax_profit">Pre-tax economic profit ($)</span>
-                    <input type="number" step="10000" name="pre_tax_profit" value="${state.pre_tax_profit}"></label>
+                    <input type="number" step="0.01" name="pre_tax_profit" value="${state.pre_tax_profit}"></label>
                 <label><span data-i18n="view.s7701o.label.non_tax">Substantial non-tax purpose?</span>
                     <input type="checkbox" name="non_tax_purpose" ${state.non_tax_purpose ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7701o.label.meaningful">Meaningful change in economic position?</span>

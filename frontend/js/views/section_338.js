@@ -41,17 +41,17 @@ export async function renderSection338(mount, _appState) {
             <h2 data-i18n="view.s338.h2.inputs">Inputs</h2>
             <form id="s338-form" class="inline-form">
                 <label><span data-i18n="view.s338.label.price">Purchase price (stock) ($)</span>
-                    <input type="number" step="100000" name="purchase_price" value="${state.purchase_price}"></label>
+                    <input type="number" step="0.01" name="purchase_price" value="${state.purchase_price}"></label>
                 <label><span data-i18n="view.s338.label.inside">Target inside basis ($)</span>
-                    <input type="number" step="100000" name="target_inside_basis" value="${state.target_inside_basis}"></label>
+                    <input type="number" step="0.01" name="target_inside_basis" value="${state.target_inside_basis}"></label>
                 <label><span data-i18n="view.s338.label.outside">Target outside basis ($)</span>
-                    <input type="number" step="100000" name="target_outside_basis" value="${state.target_outside_basis}"></label>
+                    <input type="number" step="0.01" name="target_outside_basis" value="${state.target_outside_basis}"></label>
                 <label><span data-i18n="view.s338.label.liab">Target liabilities ($)</span>
-                    <input type="number" step="100000" name="target_liabilities" value="${state.target_liabilities}"></label>
+                    <input type="number" step="0.01" name="target_liabilities" value="${state.target_liabilities}"></label>
                 <label><span data-i18n="view.s338.label.nol">Target NOL carryforward ($)</span>
-                    <input type="number" step="10000" name="target_nol_carryforward" value="${state.target_nol_carryforward}"></label>
+                    <input type="number" step="0.01" name="target_nol_carryforward" value="${state.target_nol_carryforward}"></label>
                 <label><span data-i18n="view.s338.label.credits">Target unused credits ($)</span>
-                    <input type="number" step="10000" name="target_unused_credits" value="${state.target_unused_credits}"></label>
+                    <input type="number" step="0.01" name="target_unused_credits" value="${state.target_unused_credits}"></label>
                 <label><span data-i18n="view.s338.label.type">Election type</span>
                     <select name="election_type">
                         <option value="338g" ${state.election_type === '338g' ? 'selected' : ''}>§ 338(g) — unilateral</option>
@@ -75,11 +75,11 @@ export async function renderSection338(mount, _appState) {
                 <label><span data-i18n="view.s338.label.rate">Seller marginal rate %</span>
                     <input type="number" step="0.1" name="seller_marginal_rate" value="${state.seller_marginal_rate}"></label>
                 <label><span data-i18n="view.s338.label.intangible">Asset Class VI/VII (intangible) ($)</span>
-                    <input type="number" step="100000" name="asset_class_intangible" value="${state.asset_class_intangible}"></label>
+                    <input type="number" step="0.01" name="asset_class_intangible" value="${state.asset_class_intangible}"></label>
                 <label><span data-i18n="view.s338.label.real_estate">Asset Class V (real estate) ($)</span>
-                    <input type="number" step="100000" name="asset_class_real_estate" value="${state.asset_class_real_estate}"></label>
+                    <input type="number" step="0.01" name="asset_class_real_estate" value="${state.asset_class_real_estate}"></label>
                 <label><span data-i18n="view.s338.label.personal">Asset Class IV/V (personal prop) ($)</span>
-                    <input type="number" step="100000" name="asset_class_personal_property" value="${state.asset_class_personal_property}"></label>
+                    <input type="number" step="0.01" name="asset_class_personal_property" value="${state.asset_class_personal_property}"></label>
                 <button class="primary" type="submit" data-i18n="view.s338.btn.compute">Compute</button>
             </form>
         </div>

@@ -48,7 +48,7 @@ export async function renderSection4941(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s4941.label.amount">Amount involved ($)</span>
-                    <input type="number" step="1000" name="amount_involved" value="${state.amount_involved}"></label>
+                    <input type="number" step="0.01" name="amount_involved" value="${state.amount_involved}"></label>
                 <label><span data-i18n="view.s4941.label.years">Years uncorrected</span>
                     <input type="number" step="1" name="years_uncorrected" value="${state.years_uncorrected}"></label>
                 <label><span data-i18n="view.s4941.label.manager">Manager knowingly participated?</span>

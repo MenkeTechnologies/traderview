@@ -43,7 +43,7 @@ export async function renderSection1377(mount, _appState) {
             <h2 data-i18n="view.s1377.h2.inputs">Inputs</h2>
             <form id="s1377-form" class="inline-form">
                 <label><span data-i18n="view.s1377.label.income">Total year income ($)</span>
-                    <input type="number" step="10000" name="total_year_income" value="${state.total_year_income}"></label>
+                    <input type="number" step="0.01" name="total_year_income" value="${state.total_year_income}"></label>
                 <label><span data-i18n="view.s1377.label.days">Days in year</span>
                     <input type="number" step="1" name="days_in_year" value="${state.days_in_year}"></label>
                 <label><span data-i18n="view.s1377.label.before">Days before change</span>
@@ -55,17 +55,17 @@ export async function renderSection1377(mount, _appState) {
                 <label><span data-i18n="view.s1377.label.new">New shareholder %</span>
                     <input type="number" step="0.1" name="new_shareholder_pct" value="${state.new_shareholder_pct}"></label>
                 <label><span data-i18n="view.s1377.label.pre_actual">Actual pre-change income ($)</span>
-                    <input type="number" step="10000" name="pre_change_actual_income" value="${state.pre_change_actual_income}"></label>
+                    <input type="number" step="0.01" name="pre_change_actual_income" value="${state.pre_change_actual_income}"></label>
                 <label><span data-i18n="view.s1377.label.post_actual">Actual post-change income ($)</span>
-                    <input type="number" step="10000" name="post_change_actual_income" value="${state.post_change_actual_income}"></label>
+                    <input type="number" step="0.01" name="post_change_actual_income" value="${state.post_change_actual_income}"></label>
                 <label><span data-i18n="view.s1377.label.election">§ 1377(a)(2) closing-books election?</span>
                     <input type="checkbox" name="closing_books_election" ${state.closing_books_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1377.label.consent">All affected shareholders consent?</span>
                     <input type="checkbox" name="all_shareholders_consent" ${state.all_shareholders_consent ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1377.label.pttp_dist">PTTP distribution ($)</span>
-                    <input type="number" step="10000" name="pttp_distribution" value="${state.pttp_distribution}"></label>
+                    <input type="number" step="0.01" name="pttp_distribution" value="${state.pttp_distribution}"></label>
                 <label><span data-i18n="view.s1377.label.aaa">AAA at termination ($)</span>
-                    <input type="number" step="10000" name="aaa_at_termination" value="${state.aaa_at_termination}"></label>
+                    <input type="number" step="0.01" name="aaa_at_termination" value="${state.aaa_at_termination}"></label>
                 <label><span data-i18n="view.s1377.label.terminated">S election terminated?</span>
                     <input type="checkbox" name="is_s_corp_terminated" ${state.is_s_corp_terminated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1377.label.year">Election year</span>

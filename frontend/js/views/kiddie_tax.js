@@ -49,9 +49,9 @@ export async function renderKiddieTax(mount, _appState) {
                 <label><span data-i18n="view.kiddie.label.kid_age">Kid age</span>
                     <input type="number" step="1" name="kid_age" value="${state.kid_age}" min="0" max="25"></label>
                 <label><span data-i18n="view.kiddie.label.kid_earned">Kid earned income ($)</span>
-                    <input type="number" step="100" name="kid_earned_income" value="${state.kid_earned_income}"></label>
+                    <input type="number" step="0.01" name="kid_earned_income" value="${state.kid_earned_income}"></label>
                 <label><span data-i18n="view.kiddie.label.kid_unearned">Kid unearned income ($)</span>
-                    <input type="number" step="100" name="kid_unearned_income" value="${state.kid_unearned_income}"></label>
+                    <input type="number" step="0.01" name="kid_unearned_income" value="${state.kid_unearned_income}"></label>
                 <label><span data-i18n="view.kiddie.label.parent_rate">Parent's marginal rate %</span>
                     <input type="number" step="0.5" name="parent_marginal_rate" value="${(state.parent_marginal_rate * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.kiddie.label.parent_lt_rate">Parent's LT cap-gains rate %</span>

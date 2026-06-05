@@ -31,7 +31,7 @@ export async function renderAlerts(mount) {
                 <select name="trigger" data-tip="view.alerts.tip.trigger">
                     ${TRIGGERS.map(trig => `<option value="${trig}" data-i18n="view.alerts.trigger.${trig}">${esc(trig)}</option>`).join('')}
                 </select>
-                <input name="threshold" type="number" step="any" placeholder="threshold" data-i18n-placeholder="common.placeholder.threshold" data-tip="view.alerts.tip.threshold">
+                <input name="threshold" type="number" step="0.01" placeholder="threshold" data-i18n-placeholder="common.placeholder.threshold" data-tip="view.alerts.tip.threshold">
                 <select name="sound" data-tip="view.alerts.tip.sound">
                     ${SOUNDS.map(s => `<option value="${s}" data-i18n="view.alerts.sound.${s}">${esc(s)}</option>`).join('')}
                 </select>

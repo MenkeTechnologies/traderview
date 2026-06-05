@@ -44,7 +44,7 @@ export async function renderSection119(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s119.label.value">Annual value ($)</span>
-                    <input type="number" step="500" name="annual_value" value="${state.annual_value}"></label>
+                    <input type="number" step="0.01" name="annual_value" value="${state.annual_value}"></label>
                 <label><span data-i18n="view.s119.label.premises">On business premises?</span>
                     <input type="checkbox" name="on_business_premises" ${state.on_business_premises ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s119.label.convenience">For convenience of employer?</span>

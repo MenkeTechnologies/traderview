@@ -59,19 +59,19 @@ export async function renderSecondOrderGreeks(mount, _appState) {
                         <option data-i18n="view.second_order_greeks.opt.call" value="call" ${state.params.kind === 'call' ? 'selected' : ''}>Call</option>
                         <option data-i18n="view.second_order_greeks.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
-                <label><span data-i18n="view.second_order_greeks.label.strike">Strike</span> <input id="sg-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.second_order_greeks.tip.strike"></label>
-                <label><span data-i18n="view.second_order_greeks.label.t">T (years)</span> <input id="sg-t" type="number" step="any" min="0" value="${state.params.time_to_expiry}" data-tip="view.second_order_greeks.tip.t"></label>
-                <label><span data-i18n="view.second_order_greeks.label.r">Rate r</span> <input id="sg-r" type="number" step="any" value="${state.params.risk_free}" data-tip="view.second_order_greeks.tip.r"></label>
-                <label><span data-i18n="view.second_order_greeks.label.q">Dividend q</span> <input id="sg-q" type="number" step="any" min="0" value="${state.params.dividend_yield}" data-tip="view.second_order_greeks.tip.q"></label>
-                <label><span data-i18n="view.second_order_greeks.label.sigma">σ</span> <input id="sg-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.second_order_greeks.tip.sigma"></label>
+                <label><span data-i18n="view.second_order_greeks.label.strike">Strike</span> <input id="sg-strike" type="number" step="0.01" min="0" value="${state.params.strike}" data-tip="view.second_order_greeks.tip.strike"></label>
+                <label><span data-i18n="view.second_order_greeks.label.t">T (years)</span> <input id="sg-t" type="number" step="0.01" min="0" value="${state.params.time_to_expiry}" data-tip="view.second_order_greeks.tip.t"></label>
+                <label><span data-i18n="view.second_order_greeks.label.r">Rate r</span> <input id="sg-r" type="number" step="0.01" value="${state.params.risk_free}" data-tip="view.second_order_greeks.tip.r"></label>
+                <label><span data-i18n="view.second_order_greeks.label.q">Dividend q</span> <input id="sg-q" type="number" step="0.01" min="0" value="${state.params.dividend_yield}" data-tip="view.second_order_greeks.tip.q"></label>
+                <label><span data-i18n="view.second_order_greeks.label.sigma">σ</span> <input id="sg-sigma" type="number" step="0.01" min="0" value="${state.params.sigma}" data-tip="view.second_order_greeks.tip.sigma"></label>
             </div>
         </div>
 
         <div class="chart-panel">
             <h2 data-i18n="view.second_order_greeks.h2.spot_grid">Spot grid</h2>
             <div class="inline-form">
-                <label><span data-i18n="view.second_order_greeks.label.low">Low</span> <input id="sg-low" type="number" step="any" min="0" value="${state.params.spot_grid_low}" data-tip="view.second_order_greeks.tip.low"></label>
-                <label><span data-i18n="view.second_order_greeks.label.high">High</span> <input id="sg-high" type="number" step="any" min="0" value="${state.params.spot_grid_high}" data-tip="view.second_order_greeks.tip.high"></label>
+                <label><span data-i18n="view.second_order_greeks.label.low">Low</span> <input id="sg-low" type="number" step="0.01" min="0" value="${state.params.spot_grid_low}" data-tip="view.second_order_greeks.tip.low"></label>
+                <label><span data-i18n="view.second_order_greeks.label.high">High</span> <input id="sg-high" type="number" step="0.01" min="0" value="${state.params.spot_grid_high}" data-tip="view.second_order_greeks.tip.high"></label>
                 <label><span data-i18n="view.second_order_greeks.label.points">Points</span> <input id="sg-n" type="number" step="1" min="5" max="501" value="${state.params.n_points}" data-tip="view.second_order_greeks.tip.points"></label>
                 <button data-i18n="view.second_order_greeks.btn.50_from_strike" id="sg-defaults" class="secondary" type="button" data-tip="view.second_order_greeks.tip.defaults">±50% from strike</button>
                 <button data-i18n="view.second_order_greeks.btn.compute" id="sg-run" class="primary" type="button" data-tip="view.second_order_greeks.tip.run" data-shortcut="second_order_greeks_run">Compute</button>

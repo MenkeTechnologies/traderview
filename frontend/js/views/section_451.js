@@ -36,11 +36,11 @@ export async function renderSection451(mount, _appState) {
             <h2 data-i18n="view.s451.h2.inputs">Inputs</h2>
             <form id="s451-form" class="inline-form">
                 <label><span data-i18n="view.s451.label.payment">Advance payment received ($)</span>
-                    <input type="number" step="1000" name="advance_payment_received" value="${state.advance_payment_received}"></label>
+                    <input type="number" step="0.01" name="advance_payment_received" value="${state.advance_payment_received}"></label>
                 <label><span data-i18n="view.s451.label.year_1_services">Services delivered year 1 ($)</span>
-                    <input type="number" step="1000" name="services_provided_year_1" value="${state.services_provided_year_1}"></label>
+                    <input type="number" step="0.01" name="services_provided_year_1" value="${state.services_provided_year_1}"></label>
                 <label><span data-i18n="view.s451.label.year_2_services">Services delivered year 2 ($)</span>
-                    <input type="number" step="1000" name="services_provided_year_2" value="${state.services_provided_year_2}"></label>
+                    <input type="number" step="0.01" name="services_provided_year_2" value="${state.services_provided_year_2}"></label>
                 <label><span data-i18n="view.s451.label.type">Payment type</span>
                     <select name="payment_type">
                         <option value="mixed_goods_services" ${state.payment_type === 'mixed_goods_services' ? 'selected' : ''}>Mixed goods + services</option>

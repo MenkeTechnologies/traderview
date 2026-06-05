@@ -42,9 +42,9 @@ export async function renderPyramid(mount, _appState) {
                         <option data-i18n="view.pyramid.opt.short" value="short" ${state.side === 'short' ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.pyramid.label.initial_qty">Initial qty</span>
-                    <input id="py-iq" type="number" step="any" min="0" value="${state.initialQty}" data-tip="view.pyramid.tip.initial_qty"></label>
+                    <input id="py-iq" type="number" step="0.01" min="0" value="${state.initialQty}" data-tip="view.pyramid.tip.initial_qty"></label>
                 <label><span data-i18n="view.pyramid.label.initial_entry">Initial entry $</span>
-                    <input id="py-ie" type="number" step="any" min="0" value="${state.initialEntry}" data-tip="view.pyramid.tip.initial_entry"></label>
+                    <input id="py-ie" type="number" step="0.01" min="0" value="${state.initialEntry}" data-tip="view.pyramid.tip.initial_entry"></label>
             </div>
         </div>
 

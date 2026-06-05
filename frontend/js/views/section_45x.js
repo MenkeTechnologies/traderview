@@ -55,7 +55,7 @@ export async function renderSection45X(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s45X.label.units">Units sold / produced</span>
-                    <input type="number" step="100" name="units_sold" value="${state.units_sold}"></label>
+                    <input type="number" step="0.01" name="units_sold" value="${state.units_sold}"></label>
                 <label><span data-i18n="view.s45X.label.capacity">Capacity per unit (W or kWh)</span>
                     <input type="number" step="0.1" name="capacity_per_unit" value="${state.capacity_per_unit}"></label>
                 <label><span data-i18n="view.s45X.label.year">Sale / placed-in-service year</span>

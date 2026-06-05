@@ -34,7 +34,7 @@ export async function renderCypherPattern(mount, _appState) {
             <textarea id="cy-pivots" rows="6" placeholder="0 100 L&#10;10 130 H&#10;20 115 L&#10;30 134.08 H&#10;40 106.42 L" data-tip="view.cypher_pattern.tip.pivots"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.cypher_pattern.label.tolerance">Tolerance (typical 0.03-0.10)</span>
-                    <input id="cy-tol" type="number" step="any" min="0" max="0.5" value="${state.tolerance}" data-tip="view.cypher_pattern.tip.tolerance"></label>
+                    <input id="cy-tol" type="number" step="0.01" min="0" max="0.5" value="${state.tolerance}" data-tip="view.cypher_pattern.tip.tolerance"></label>
                 <button data-i18n="view.cypher_pattern.btn.load_demo_5_pivot_bullish_cypher_tol_0_10" id="cy-demo" class="secondary" type="button" data-tip="view.cypher_pattern.tip.demo" data-shortcut="cypher_pattern_demo">Load demo (5-pivot bullish Cypher, tol=0.10)</button>
                 <button data-i18n="view.cypher_pattern.btn.clear" id="cy-clear" class="secondary" type="button" data-tip="view.cypher_pattern.tip.clear">Clear</button>
                 <button data-i18n="view.cypher_pattern.btn.detect" id="cy-run" class="primary" type="button" data-tip="view.cypher_pattern.tip.run" data-shortcut="cypher_pattern_run">Detect</button>

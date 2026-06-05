@@ -42,11 +42,11 @@ export async function renderSection412(mount, _appState) {
             <h2 data-i18n="view.s412.h2.inputs">Inputs</h2>
             <form id="s412-form" class="inline-form">
                 <label><span data-i18n="view.s412.label.assets">Plan assets ($)</span>
-                    <input type="number" step="100000" name="plan_assets" value="${state.plan_assets}"></label>
+                    <input type="number" step="0.01" name="plan_assets" value="${state.plan_assets}"></label>
                 <label><span data-i18n="view.s412.label.target">Funding target ($)</span>
-                    <input type="number" step="100000" name="funding_target" value="${state.funding_target}"></label>
+                    <input type="number" step="0.01" name="funding_target" value="${state.funding_target}"></label>
                 <label><span data-i18n="view.s412.label.normal">Target normal cost ($)</span>
-                    <input type="number" step="10000" name="target_normal_cost" value="${state.target_normal_cost}"></label>
+                    <input type="number" step="0.01" name="target_normal_cost" value="${state.target_normal_cost}"></label>
                 <label><span data-i18n="view.s412.label.single">Single-employer (§ 430)?</span>
                     <input type="checkbox" name="is_single_employer" ${state.is_single_employer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s412.label.multi">Multi-employer (§ 431)?</span>
@@ -56,17 +56,17 @@ export async function renderSection412(mount, _appState) {
                 <label><span data-i18n="view.s412.label.benefit">Benefit restrictions?</span>
                     <input type="checkbox" name="benefit_restrictions" ${state.benefit_restrictions ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s412.label.pbgc_var">PBGC variable premium ($)</span>
-                    <input type="number" step="1000" name="pbgc_variable_premium" value="${state.pbgc_variable_premium}"></label>
+                    <input type="number" step="0.01" name="pbgc_variable_premium" value="${state.pbgc_variable_premium}"></label>
                 <label><span data-i18n="view.s412.label.pbgc_flat">PBGC flat premium ($)</span>
-                    <input type="number" step="100" name="pbgc_flat_premium" value="${state.pbgc_flat_premium}"></label>
+                    <input type="number" step="0.01" name="pbgc_flat_premium" value="${state.pbgc_flat_premium}"></label>
                 <label><span data-i18n="view.s412.label.excise">§ 4971 excise tax %</span>
                     <input type="number" step="0.1" name="s4971_excise_tax_pct" value="${state.s4971_excise_tax_pct}"></label>
                 <label><span data-i18n="view.s412.label.deficiency">Accumulated funding deficiency ($)</span>
-                    <input type="number" step="10000" name="accumulated_funding_deficiency" value="${state.accumulated_funding_deficiency}"></label>
+                    <input type="number" step="0.01" name="accumulated_funding_deficiency" value="${state.accumulated_funding_deficiency}"></label>
                 <label><span data-i18n="view.s412.label.quarterly">Quarterly contributions ($)</span>
-                    <input type="number" step="10000" name="quarterly_contributions" value="${state.quarterly_contributions}"></label>
+                    <input type="number" step="0.01" name="quarterly_contributions" value="${state.quarterly_contributions}"></label>
                 <label><span data-i18n="view.s412.label.limit">Contribution deduction limit ($)</span>
-                    <input type="number" step="10000" name="contribution_deduction_limit" value="${state.contribution_deduction_limit}"></label>
+                    <input type="number" step="0.01" name="contribution_deduction_limit" value="${state.contribution_deduction_limit}"></label>
                 <label><span data-i18n="view.s412.label.segment">Segment rates (e.g. 5.0%)</span>
                     <input type="text" name="fr_segment_rates" value="${esc(state.fr_segment_rates)}"></label>
                 <label><span data-i18n="view.s412.label.yield">Yield curve method</span>

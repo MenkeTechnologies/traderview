@@ -43,7 +43,7 @@ export async function renderSection7122(mount, _appState) {
             <h2 data-i18n="view.s7122.h2.inputs">Inputs</h2>
             <form id="s7122-form" class="inline-form">
                 <label><span data-i18n="view.s7122.label.tax_debt">Total tax debt ($)</span>
-                    <input type="number" step="1000" name="total_tax_debt" value="${state.total_tax_debt}"></label>
+                    <input type="number" step="0.01" name="total_tax_debt" value="${state.total_tax_debt}"></label>
                 <label><span data-i18n="view.s7122.label.grounds">Grounds</span>
                     <select name="grounds">
                         <option value="datc" ${state.grounds === 'datc' ? 'selected' : ''}>Doubt as to Collectibility (DATC)</option>
@@ -53,22 +53,22 @@ export async function renderSection7122(mount, _appState) {
                 </label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s7122.label.gross_income">Monthly gross income ($)</span>
-                    <input type="number" step="100" name="monthly_gross_income" value="${state.monthly_gross_income}"></label>
+                    <input type="number" step="0.01" name="monthly_gross_income" value="${state.monthly_gross_income}"></label>
                 <label><span data-i18n="view.s7122.label.expenses">Monthly allowable expenses ($)</span>
-                    <input type="number" step="100" name="monthly_allowable_expenses" value="${state.monthly_allowable_expenses}"></label>
+                    <input type="number" step="0.01" name="monthly_allowable_expenses" value="${state.monthly_allowable_expenses}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s7122.label.home_equity">Home equity ($)</span>
-                    <input type="number" step="10000" name="home_equity" value="${state.home_equity}"></label>
+                    <input type="number" step="0.01" name="home_equity" value="${state.home_equity}"></label>
                 <label><span data-i18n="view.s7122.label.vehicle">Vehicle equity ($)</span>
-                    <input type="number" step="1000" name="vehicle_equity" value="${state.vehicle_equity}"></label>
+                    <input type="number" step="0.01" name="vehicle_equity" value="${state.vehicle_equity}"></label>
                 <label><span data-i18n="view.s7122.label.retirement">Retirement equity (× 0.80) ($)</span>
-                    <input type="number" step="10000" name="retirement_equity" value="${state.retirement_equity}"></label>
+                    <input type="number" step="0.01" name="retirement_equity" value="${state.retirement_equity}"></label>
                 <label><span data-i18n="view.s7122.label.investments">Investments ($)</span>
-                    <input type="number" step="1000" name="investments_value" value="${state.investments_value}"></label>
+                    <input type="number" step="0.01" name="investments_value" value="${state.investments_value}"></label>
                 <label><span data-i18n="view.s7122.label.bank">Bank balance ($)</span>
-                    <input type="number" step="100" name="bank_balance" value="${state.bank_balance}"></label>
+                    <input type="number" step="0.01" name="bank_balance" value="${state.bank_balance}"></label>
                 <label><span data-i18n="view.s7122.label.other">Other assets ($)</span>
-                    <input type="number" step="1000" name="other_assets" value="${state.other_assets}"></label>
+                    <input type="number" step="0.01" name="other_assets" value="${state.other_assets}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s7122.label.payment">Payment option</span>
                     <select name="payment_option">

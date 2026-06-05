@@ -87,11 +87,11 @@ export async function renderSection6404(mount, _appState) {
                 <label><span data-i18n="view.s6404.label.year">Tax period</span>
                     <input type="number" step="1" name="tax_period" value="${state.tax_period}"></label>
                 <label><span data-i18n="view.s6404.label.tax">Tax owed ($)</span>
-                    <input type="number" step="100" name="tax_owed" value="${state.tax_owed}"></label>
+                    <input type="number" step="0.01" name="tax_owed" value="${state.tax_owed}"></label>
                 <label><span data-i18n="view.s6404.label.interest">Interest ($)</span>
-                    <input type="number" step="100" name="interest_assessed" value="${state.interest_assessed}"></label>
+                    <input type="number" step="0.01" name="interest_assessed" value="${state.interest_assessed}"></label>
                 <label><span data-i18n="view.s6404.label.penalty">Penalty ($)</span>
-                    <input type="number" step="100" name="penalty_assessed" value="${state.penalty_assessed}"></label>
+                    <input type="number" step="0.01" name="penalty_assessed" value="${state.penalty_assessed}"></label>
                 <label><span data-i18n="view.s6404.label.uncollect">Uncollectible?</span>
                     <input type="checkbox" name="s6404_a_uncollectible" ${state.s6404_a_uncollectible ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6404.label.erroneous">Erroneous?</span>
@@ -119,21 +119,21 @@ export async function renderSection6404(mount, _appState) {
                 <label><span data-i18n="view.s6404.label.rc">Reasonable cause?</span>
                     <input type="checkbox" name="reasonable_cause_demonstrated" ${state.reasonable_cause_demonstrated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6404.label.ftf">§ 6651 FTF ($)</span>
-                    <input type="number" step="100" name="s6651_failure_to_file_penalty" value="${state.s6651_failure_to_file_penalty}"></label>
+                    <input type="number" step="0.01" name="s6651_failure_to_file_penalty" value="${state.s6651_failure_to_file_penalty}"></label>
                 <label><span data-i18n="view.s6404.label.ftp">§ 6651 FTP ($)</span>
-                    <input type="number" step="100" name="s6651_failure_to_pay_penalty" value="${state.s6651_failure_to_pay_penalty}"></label>
+                    <input type="number" step="0.01" name="s6651_failure_to_pay_penalty" value="${state.s6651_failure_to_pay_penalty}"></label>
                 <label><span data-i18n="view.s6404.label.ftp_demand">§ 6651(a)(3) demand ($)</span>
-                    <input type="number" step="100" name="s6651_a_3_failure_to_pay_penalty_on_demand" value="${state.s6651_a_3_failure_to_pay_penalty_on_demand}"></label>
+                    <input type="number" step="0.01" name="s6651_a_3_failure_to_pay_penalty_on_demand" value="${state.s6651_a_3_failure_to_pay_penalty_on_demand}"></label>
                 <label><span data-i18n="view.s6404.label.s6654">§ 6654 est tax ($)</span>
-                    <input type="number" step="100" name="s6654_estimated_tax_penalty" value="${state.s6654_estimated_tax_penalty}"></label>
+                    <input type="number" step="0.01" name="s6654_estimated_tax_penalty" value="${state.s6654_estimated_tax_penalty}"></label>
                 <label><span data-i18n="view.s6404.label.s6655">§ 6655 corp est ($)</span>
-                    <input type="number" step="100" name="s6655_corporate_estimated_penalty" value="${state.s6655_corporate_estimated_penalty}"></label>
+                    <input type="number" step="0.01" name="s6655_corporate_estimated_penalty" value="${state.s6655_corporate_estimated_penalty}"></label>
                 <label><span data-i18n="view.s6404.label.s6662">§ 6662 accuracy ($)</span>
-                    <input type="number" step="100" name="s6662_accuracy_penalty" value="${state.s6662_accuracy_penalty}"></label>
+                    <input type="number" step="0.01" name="s6662_accuracy_penalty" value="${state.s6662_accuracy_penalty}"></label>
                 <label><span data-i18n="view.s6404.label.s6663">§ 6663 fraud ($)</span>
-                    <input type="number" step="100" name="s6663_fraud_penalty" value="${state.s6663_fraud_penalty}"></label>
+                    <input type="number" step="0.01" name="s6663_fraud_penalty" value="${state.s6663_fraud_penalty}"></label>
                 <label><span data-i18n="view.s6404.label.requested">Requested ($)</span>
-                    <input type="number" step="100" name="abatement_amount_requested" value="${state.abatement_amount_requested}"></label>
+                    <input type="number" step="0.01" name="abatement_amount_requested" value="${state.abatement_amount_requested}"></label>
                 <label><span data-i18n="view.s6404.label.f843">Form 843 filed?</span>
                     <input type="checkbox" name="form_843_filed" ${state.form_843_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6404.label.attached">Explanation attached?</span>
@@ -153,7 +153,7 @@ export async function renderSection6404(mount, _appState) {
                 <label><span data-i18n="view.s6404.label.petition">Petition filed?</span>
                     <input type="checkbox" name="s6404_h_petition_filed" ${state.s6404_h_petition_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6404.label.s7430">§ 7430 fees ($)</span>
-                    <input type="number" step="100" name="s7430_attorney_fees" value="${state.s7430_attorney_fees}"></label>
+                    <input type="number" step="0.01" name="s7430_attorney_fees" value="${state.s7430_attorney_fees}"></label>
                 <label><span data-i18n="view.s6404.label.s6404g">§ 6404(g) failure?</span>
                     <input type="checkbox" name="s6404_g_failure_to_provide_notice" ${state.s6404_g_failure_to_provide_notice ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6404.label.no_36">No 36-mo notice?</span>
@@ -169,7 +169,7 @@ export async function renderSection6404(mount, _appState) {
                 <label><span data-i18n="view.s6404.label.granted">Granted?</span>
                     <input type="checkbox" name="abatement_granted" ${state.abatement_granted ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6404.label.abated_amt">Abated total ($)</span>
-                    <input type="number" step="100" name="abated_amount_total" value="${state.abated_amount_total}"></label>
+                    <input type="number" step="0.01" name="abated_amount_total" value="${state.abated_amount_total}"></label>
                 <button class="primary" type="submit" data-i18n="view.s6404.btn.compute">Compute</button>
             </form>
         </div>

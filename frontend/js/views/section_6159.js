@@ -51,11 +51,11 @@ export async function renderSection6159(mount, _appState) {
             <h2 data-i18n="view.s6159.h2.inputs">Inputs</h2>
             <form id="s6159-form" class="inline-form">
                 <label><span data-i18n="view.s6159.label.debt">Total debt ($)</span>
-                    <input type="number" step="1000" name="total_debt" value="${state.total_debt}"></label>
+                    <input type="number" step="0.01" name="total_debt" value="${state.total_debt}"></label>
                 <label><span data-i18n="view.s6159.label.csed_months">Months until CSED</span>
                     <input type="number" step="1" name="months_until_csed" value="${state.months_until_csed}"></label>
                 <label><span data-i18n="view.s6159.label.income">Monthly disposable income ($)</span>
-                    <input type="number" step="100" name="monthly_disposable_income" value="${state.monthly_disposable_income}"></label>
+                    <input type="number" step="0.01" name="monthly_disposable_income" value="${state.monthly_disposable_income}"></label>
                 <label><span data-i18n="view.s6159.label.business">Business taxpayer?</span>
                     <input type="checkbox" name="is_business" ${state.is_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6159.label.direct_debit">Direct debit?</span>

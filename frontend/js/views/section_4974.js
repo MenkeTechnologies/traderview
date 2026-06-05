@@ -56,9 +56,9 @@ export async function renderSection4974(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s4974.label.required">RMD required ($)</span>
-                    <input type="number" step="1000" name="rmd_required" value="${state.rmd_required}"></label>
+                    <input type="number" step="0.01" name="rmd_required" value="${state.rmd_required}"></label>
                 <label><span data-i18n="view.s4974.label.actual">Actual distribution ($)</span>
-                    <input type="number" step="1000" name="actual_distribution" value="${state.actual_distribution}"></label>
+                    <input type="number" step="0.01" name="actual_distribution" value="${state.actual_distribution}"></label>
                 <label><span data-i18n="view.s4974.label.age">Current age</span>
                     <input type="number" step="1" name="age_current" value="${state.age_current}"></label>
                 <label><span data-i18n="view.s4974.label.post_rbd">Post-RBD?</span>
@@ -76,7 +76,7 @@ export async function renderSection4974(mount, _appState) {
                 <label><span data-i18n="view.s4974.label.qcd">QCD offset applied?</span>
                     <input type="checkbox" name="is_qcd_offset" ${state.is_qcd_offset ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4974.label.qcd_amount">QCD amount ($)</span>
-                    <input type="number" step="1000" name="qcd_amount" value="${state.qcd_amount}"></label>
+                    <input type="number" step="0.01" name="qcd_amount" value="${state.qcd_amount}"></label>
                 <label><span data-i18n="view.s4974.label.s20_25pct">SECURE 2.0 25% rate (post-2022)?</span>
                     <input type="checkbox" name="secure_2_0_25pct_rate" ${state.secure_2_0_25pct_rate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4974.label.correction_2yr">Correction within 2-yr window?</span>

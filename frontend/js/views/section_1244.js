@@ -52,9 +52,9 @@ export async function renderSection1244(mount, _appState) {
             <h2 data-i18n="view.s1244.h2.inputs">Inputs</h2>
             <form id="s1244-form" class="inline-form">
                 <label><span data-i18n="view.s1244.label.cost_basis">Your cost basis ($)</span>
-                    <input type="number" step="100" name="cost_basis" value="${state.cost_basis}"></label>
+                    <input type="number" step="0.01" name="cost_basis" value="${state.cost_basis}"></label>
                 <label><span data-i18n="view.s1244.label.sale_price">Sale or worthless price ($)</span>
-                    <input type="number" step="100" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s1244.label.filing">Filing status</span>
                     <select name="filing_status">
                         <option value="single" ${state.filing_status === 'single' ? 'selected' : ''}>Single / HoH</option>
@@ -64,7 +64,7 @@ export async function renderSection1244(mount, _appState) {
                 <label><span data-i18n="view.s1244.label.is_original">Original issuee?</span>
                     <input type="checkbox" name="is_original_issuee" ${state.is_original_issuee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1244.label.corp_capital">Corp aggregate capital raised at issuance ($)</span>
-                    <input type="number" step="1000" name="corp_aggregate_capital" value="${state.corp_aggregate_capital}"></label>
+                    <input type="number" step="0.01" name="corp_aggregate_capital" value="${state.corp_aggregate_capital}"></label>
                 <label><span data-i18n="view.s1244.label.passive_pct">Corp 5-yr passive income %</span>
                     <input type="number" step="0.01" name="corp_passive_income_pct" value="${state.corp_passive_income_pct}"></label>
                 <label><span data-i18n="view.s1244.label.is_domestic">Domestic corp?</span>

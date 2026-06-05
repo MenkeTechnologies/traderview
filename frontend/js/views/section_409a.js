@@ -42,7 +42,7 @@ export async function renderSection409A(mount, _appState) {
             <h2 data-i18n="view.s409A.h2.inputs">Inputs</h2>
             <form id="s409A-form" class="inline-form">
                 <label><span data-i18n="view.s409A.label.deferred">Total deferred amount ($)</span>
-                    <input type="number" step="1000" name="deferred_amount" value="${state.deferred_amount}"></label>
+                    <input type="number" step="0.01" name="deferred_amount" value="${state.deferred_amount}"></label>
                 <label><span data-i18n="view.s409A.label.event">Distribution event</span>
                     <select name="distribution_event">
                         <option value="separation" ${state.distribution_event === 'separation' ? 'selected' : ''}>Separation from service</option>
@@ -77,7 +77,7 @@ export async function renderSection409A(mount, _appState) {
                 <label><span data-i18n="view.s409A.label.specified">Specified employee (public)?</span>
                     <input type="checkbox" name="is_specified_employee" ${state.is_specified_employee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s409A.label.violation">Violation: tax in current year?</span>
-                    <input type="number" step="1000" name="violation_year_tax" value="${state.violation_year_tax}"></label>
+                    <input type="number" step="0.01" name="violation_year_tax" value="${state.violation_year_tax}"></label>
                 <label><span data-i18n="view.s409A.label.market_rate">Market rate interest %</span>
                     <input type="number" step="0.1" name="market_rate_interest" value="${state.market_rate_interest}"></label>
                 <label><span data-i18n="view.s409A.label.contractor">Independent contractor?</span>

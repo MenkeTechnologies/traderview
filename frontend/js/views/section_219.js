@@ -61,11 +61,11 @@ export async function renderSection219(mount, _appState) {
                 <label><span data-i18n="view.s219.label.spouse_active">Spouse active in employer plan?</span>
                     <input type="checkbox" name="spouse_active_in_plan" ${state.spouse_active_in_plan ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s219.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s219.label.contribution">Intended contribution ($)</span>
-                    <input type="number" step="100" name="intended_contribution" value="${state.intended_contribution}"></label>
+                    <input type="number" step="0.01" name="intended_contribution" value="${state.intended_contribution}"></label>
                 <label><span data-i18n="view.s219.label.earned">Earned income ($)</span>
-                    <input type="number" step="1000" name="earned_income" value="${state.earned_income}"></label>
+                    <input type="number" step="0.01" name="earned_income" value="${state.earned_income}"></label>
                 <label><span data-i18n="view.s219.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s219.btn.compute">Compute</button>

@@ -54,9 +54,9 @@ export async function renderCrut(mount, _appState) {
             <h2 data-i18n="view.crut.h2.inputs">Inputs</h2>
             <form id="crut-form" class="inline-form">
                 <label><span data-i18n="view.crut.label.fmv">Asset FMV ($)</span>
-                    <input type="number" step="10000" name="asset_fmv" value="${state.asset_fmv}"></label>
+                    <input type="number" step="0.01" name="asset_fmv" value="${state.asset_fmv}"></label>
                 <label><span data-i18n="view.crut.label.basis">Asset basis ($)</span>
-                    <input type="number" step="1000" name="asset_basis" value="${state.asset_basis}"></label>
+                    <input type="number" step="0.01" name="asset_basis" value="${state.asset_basis}"></label>
                 <label><span data-i18n="view.crut.label.payout_pct">Annual payout %</span>
                     <input type="number" step="0.005" name="payout_pct" value="${state.payout_pct}"></label>
                 <label><span data-i18n="view.crut.label.is_lifetime">Lifetime CRUT?</span>

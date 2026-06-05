@@ -41,13 +41,13 @@ export async function renderSection336(mount, _appState) {
             <h2 data-i18n="view.s336.h2.inputs">Inputs</h2>
             <form id="s336-form" class="inline-form">
                 <label><span data-i18n="view.s336.label.fmv">Total asset FMV ($)</span>
-                    <input type="number" step="100000" name="asset_fmv_total" value="${state.asset_fmv_total}"></label>
+                    <input type="number" step="0.01" name="asset_fmv_total" value="${state.asset_fmv_total}"></label>
                 <label><span data-i18n="view.s336.label.basis">Total asset basis ($)</span>
-                    <input type="number" step="100000" name="asset_basis_total" value="${state.asset_basis_total}"></label>
+                    <input type="number" step="0.01" name="asset_basis_total" value="${state.asset_basis_total}"></label>
                 <label><span data-i18n="view.s336.label.liab">Liabilities assumed by shareholder ($)</span>
-                    <input type="number" step="100000" name="liab_assumed" value="${state.liab_assumed}"></label>
+                    <input type="number" step="0.01" name="liab_assumed" value="${state.liab_assumed}"></label>
                 <label><span data-i18n="view.s336.label.stock_basis">Shareholder stock basis ($)</span>
-                    <input type="number" step="100000" name="shareholder_basis_in_stock" value="${state.shareholder_basis_in_stock}"></label>
+                    <input type="number" step="0.01" name="shareholder_basis_in_stock" value="${state.shareholder_basis_in_stock}"></label>
                 <label><span data-i18n="view.s336.label.complete">Complete liquidation?</span>
                     <input type="checkbox" name="is_complete_liquidation" ${state.is_complete_liquidation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s336.label.solvent">Solvent?</span>
@@ -63,9 +63,9 @@ export async function renderSection336(mount, _appState) {
                 <label><span data-i18n="view.s336.label.foreign">Foreign distributee?</span>
                     <input type="checkbox" name="foreign_distributee" ${state.foreign_distributee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s336.label.app">Appreciation amount ($)</span>
-                    <input type="number" step="100000" name="appreciation_amount" value="${state.appreciation_amount}"></label>
+                    <input type="number" step="0.01" name="appreciation_amount" value="${state.appreciation_amount}"></label>
                 <label><span data-i18n="view.s336.label.dep">Depreciation amount ($)</span>
-                    <input type="number" step="100000" name="depreciation_amount" value="${state.depreciation_amount}"></label>
+                    <input type="number" step="0.01" name="depreciation_amount" value="${state.depreciation_amount}"></label>
                 <button class="primary" type="submit" data-i18n="view.s336.btn.compute">Compute</button>
             </form>
         </div>

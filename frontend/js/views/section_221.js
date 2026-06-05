@@ -43,9 +43,9 @@ export async function renderSection221(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s221.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s221.label.interest_paid">Interest paid this year ($)</span>
-                    <input type="number" step="10" name="interest_paid" value="${state.interest_paid}"></label>
+                    <input type="number" step="0.01" name="interest_paid" value="${state.interest_paid}"></label>
                 <label><span data-i18n="view.s221.label.dependent">Claimed as dependent on another return?</span>
                     <input type="checkbox" name="is_dependent_of_someone" ${state.is_dependent_of_someone ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s221.label.marginal">Marginal tax %</span>

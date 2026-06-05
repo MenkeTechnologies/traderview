@@ -73,13 +73,13 @@ export async function renderSection482(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s482.label.price_used">Intercompany price used ($)</span>
-                    <input type="number" step="1000" name="intercompany_price_used" value="${state.intercompany_price_used}"></label>
+                    <input type="number" step="0.01" name="intercompany_price_used" value="${state.intercompany_price_used}"></label>
                 <label><span data-i18n="view.s482.label.low_quartile">Arm's-length range LOW (25th %) ($)</span>
-                    <input type="number" step="1000" name="arms_length_low_quartile" value="${state.arms_length_low_quartile}"></label>
+                    <input type="number" step="0.01" name="arms_length_low_quartile" value="${state.arms_length_low_quartile}"></label>
                 <label><span data-i18n="view.s482.label.high_quartile">Arm's-length range HIGH (75th %) ($)</span>
-                    <input type="number" step="1000" name="arms_length_high_quartile" value="${state.arms_length_high_quartile}"></label>
+                    <input type="number" step="0.01" name="arms_length_high_quartile" value="${state.arms_length_high_quartile}"></label>
                 <label><span data-i18n="view.s482.label.volume">Transaction volume ($)</span>
-                    <input type="number" step="10000" name="transaction_volume" value="${state.transaction_volume}"></label>
+                    <input type="number" step="0.01" name="transaction_volume" value="${state.transaction_volume}"></label>
                 <label><span data-i18n="view.s482.label.doc">Contemporaneous documentation?</span>
                     <input type="checkbox" name="has_contemporaneous_documentation" ${state.has_contemporaneous_documentation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s482.label.six_documents">6 principal documents complete?</span>

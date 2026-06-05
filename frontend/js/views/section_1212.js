@@ -53,17 +53,17 @@ export async function renderSection1212(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1212.label.st_loss">ST capital loss current ($)</span>
-                    <input type="number" step="100" name="st_loss_current" value="${state.st_loss_current}"></label>
+                    <input type="number" step="0.01" name="st_loss_current" value="${state.st_loss_current}"></label>
                 <label><span data-i18n="view.s1212.label.lt_loss">LT capital loss current ($)</span>
-                    <input type="number" step="100" name="lt_loss_current" value="${state.lt_loss_current}"></label>
+                    <input type="number" step="0.01" name="lt_loss_current" value="${state.lt_loss_current}"></label>
                 <label><span data-i18n="view.s1212.label.st_gain">ST capital gain current ($)</span>
-                    <input type="number" step="100" name="st_gain_current" value="${state.st_gain_current}"></label>
+                    <input type="number" step="0.01" name="st_gain_current" value="${state.st_gain_current}"></label>
                 <label><span data-i18n="view.s1212.label.lt_gain">LT capital gain current ($)</span>
-                    <input type="number" step="100" name="lt_gain_current" value="${state.lt_gain_current}"></label>
+                    <input type="number" step="0.01" name="lt_gain_current" value="${state.lt_gain_current}"></label>
                 <label><span data-i18n="view.s1212.label.st_carry">ST carryforward from prior ($)</span>
-                    <input type="number" step="100" name="st_carryforward_prior" value="${state.st_carryforward_prior}"></label>
+                    <input type="number" step="0.01" name="st_carryforward_prior" value="${state.st_carryforward_prior}"></label>
                 <label><span data-i18n="view.s1212.label.lt_carry">LT carryforward from prior ($)</span>
-                    <input type="number" step="100" name="lt_carryforward_prior" value="${state.lt_carryforward_prior}"></label>
+                    <input type="number" step="0.01" name="lt_carryforward_prior" value="${state.lt_carryforward_prior}"></label>
                 <label><span data-i18n="view.s1212.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <label><span data-i18n="view.s1212.label.ltcg">LTCG %</span>

@@ -52,13 +52,13 @@ export async function renderSection351(mount, _appState) {
                 <label><span data-i18n="view.s351.label.count">Transferor count</span>
                     <input type="number" step="1" name="transferor_count" value="${state.transferor_count}"></label>
                 <label><span data-i18n="view.s351.label.fmv">Property FMV transferred ($)</span>
-                    <input type="number" step="10000" name="property_fmv_transferred" value="${state.property_fmv_transferred}"></label>
+                    <input type="number" step="0.01" name="property_fmv_transferred" value="${state.property_fmv_transferred}"></label>
                 <label><span data-i18n="view.s351.label.basis">Property basis ($)</span>
-                    <input type="number" step="10000" name="property_basis_transferred" value="${state.property_basis_transferred}"></label>
+                    <input type="number" step="0.01" name="property_basis_transferred" value="${state.property_basis_transferred}"></label>
                 <label><span data-i18n="view.s351.label.stock">Stock received FMV ($)</span>
-                    <input type="number" step="10000" name="stock_received_fmv" value="${state.stock_received_fmv}"></label>
+                    <input type="number" step="0.01" name="stock_received_fmv" value="${state.stock_received_fmv}"></label>
                 <label><span data-i18n="view.s351.label.boot">Boot received ($)</span>
-                    <input type="number" step="10000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s351.label.boot_type">Boot type</span>
                     <select name="boot_type">
                         <option value="cash" ${state.boot_type === 'cash' ? 'selected' : ''}>Cash</option>
@@ -68,13 +68,13 @@ export async function renderSection351(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s351.label.liabilities">Liabilities assumed by corp ($)</span>
-                    <input type="number" step="10000" name="liabilities_assumed_by_corp" value="${state.liabilities_assumed_by_corp}"></label>
+                    <input type="number" step="0.01" name="liabilities_assumed_by_corp" value="${state.liabilities_assumed_by_corp}"></label>
                 <label><span data-i18n="view.s351.label.control">Control % post-transfer</span>
                     <input type="number" step="0.1" name="control_post_transfer_pct" value="${state.control_post_transfer_pct}"></label>
                 <label><span data-i18n="view.s351.label.s357c">§ 357(c) excess?</span>
                     <input type="checkbox" name="has_section_357c_excess" ${state.has_section_357c_excess ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s351.label.s357c_amt">§ 357(c) excess ($)</span>
-                    <input type="number" step="10000" name="s357_c_excess_amount" value="${state.s357_c_excess_amount}"></label>
+                    <input type="number" step="0.01" name="s357_c_excess_amount" value="${state.s357_c_excess_amount}"></label>
                 <label><span data-i18n="view.s351.label.s357c_avoidance">§ 357(b) tax avoidance?</span>
                     <input type="checkbox" name="s357_c_tax_avoidance" ${state.s357_c_tax_avoidance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s351.label.disqualified">Disqualified property?</span>
@@ -82,11 +82,11 @@ export async function renderSection351(mount, _appState) {
                 <label><span data-i18n="view.s351.label.services">Services in exchange?</span>
                     <input type="checkbox" name="services_in_exchange" ${state.services_in_exchange ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s351.label.services_val">Services value ($)</span>
-                    <input type="number" step="10000" name="services_value" value="${state.services_value}"></label>
+                    <input type="number" step="0.01" name="services_value" value="${state.services_value}"></label>
                 <label><span data-i18n="view.s351.label.nqps">§ 351(g) NQPS?</span>
                     <input type="checkbox" name="s351g_nq_preferred_stock" ${state.s351g_nq_preferred_stock ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s351.label.nqps_val">NQPS value ($)</span>
-                    <input type="number" step="10000" name="nqps_value" value="${state.nqps_value}"></label>
+                    <input type="number" step="0.01" name="nqps_value" value="${state.nqps_value}"></label>
                 <label><span data-i18n="view.s351.label.existing">Existing corp?</span>
                     <input type="checkbox" name="is_existing_corp" ${state.is_existing_corp ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s351.label.invested">Affected by investment company rule?</span>

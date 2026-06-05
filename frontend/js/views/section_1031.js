@@ -38,19 +38,19 @@ export async function renderSection1031(mount, _appState) {
                 <label><span data-i18n="view.s1031.label.relinquished_close">Relinquished property closed</span>
                     <input type="date" name="relinquished_close_date" required></label>
                 <label><span data-i18n="view.s1031.label.relinquished_basis">Relinquished basis ($)</span>
-                    <input type="number" step="1000" name="relinquished_basis" required></label>
+                    <input type="number" step="0.01" name="relinquished_basis" required></label>
                 <label><span data-i18n="view.s1031.label.relinquished_sale_price">Sale price ($)</span>
-                    <input type="number" step="1000" name="sale_price" required></label>
+                    <input type="number" step="0.01" name="sale_price" required></label>
                 <label><span data-i18n="view.s1031.label.relinquished_debt">Debt paid off ($)</span>
-                    <input type="number" step="1000" name="relinquished_debt" value="0"></label>
+                    <input type="number" step="0.01" name="relinquished_debt" value="0"></label>
                 <label><span data-i18n="view.s1031.label.replacement_address">Replacement property</span>
                     <input type="text" name="replacement_address" placeholder="Address or TBD"></label>
                 <label><span data-i18n="view.s1031.label.replacement_purchase_price">Replacement purchase price ($)</span>
-                    <input type="number" step="1000" name="replacement_purchase_price" value="0"></label>
+                    <input type="number" step="0.01" name="replacement_purchase_price" value="0"></label>
                 <label><span data-i18n="view.s1031.label.new_debt">New debt incurred ($)</span>
-                    <input type="number" step="1000" name="new_debt" value="0"></label>
+                    <input type="number" step="0.01" name="new_debt" value="0"></label>
                 <label><span data-i18n="view.s1031.label.cash_boot">Cash boot received ($)</span>
-                    <input type="number" step="1000" name="cash_boot" value="0"></label>
+                    <input type="number" step="0.01" name="cash_boot" value="0"></label>
                 <label><span data-i18n="view.s1031.label.qi">QI used?</span>
                     <input type="checkbox" name="qi_used" checked></label>
                 <button class="primary" type="submit" data-i18n="view.s1031.btn.add">Add</button>

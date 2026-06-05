@@ -60,7 +60,7 @@ export async function renderCleanEnergy25D(mount, _appState) {
                     ).join('')}</select>
                 </label>
                 <label><span data-i18n="view.ce25d.label.cost">Total qualified cost ($)</span>
-                    <input type="number" step="100" name="cost" required></label>
+                    <input type="number" step="0.01" name="cost" required></label>
                 <label><span data-i18n="view.ce25d.label.kw">kW capacity (fuel cell only)</span>
                     <input type="number" step="0.1" name="kw" value="0"></label>
                 <label><span data-i18n="view.ce25d.label.description">Description</span>
@@ -72,9 +72,9 @@ export async function renderCleanEnergy25D(mount, _appState) {
             <h2 data-i18n="view.ce25d.h2.tax_context">Tax context</h2>
             <form id="ce-tax-form" class="inline-form">
                 <label><span data-i18n="view.ce25d.label.tax_liability">Current year tax liability ($)</span>
-                    <input type="number" step="100" name="tax_liability" value="${state.tax_liability}"></label>
+                    <input type="number" step="0.01" name="tax_liability" value="${state.tax_liability}"></label>
                 <label><span data-i18n="view.ce25d.label.prior_carryforward">Prior carryforward ($)</span>
-                    <input type="number" step="100" name="prior_year_carryforward" value="${state.prior_year_carryforward}"></label>
+                    <input type="number" step="0.01" name="prior_year_carryforward" value="${state.prior_year_carryforward}"></label>
                 <button class="primary" type="submit" data-i18n="view.ce25d.btn.update">Update</button>
             </form>
         </div>

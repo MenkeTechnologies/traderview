@@ -64,9 +64,9 @@ export async function renderSection6038(mount, _appState) {
                 <label><span data-i18n="view.s6038.label.us_aggregate">Total US ownership %</span>
                     <input type="number" step="0.01" min="0" max="100" name="us_aggregate_pct" required></label>
                 <label><span data-i18n="view.s6038.label.subpart_f">Subpart F income (your share) ($)</span>
-                    <input type="number" step="100" name="subpart_f_income" value="0"></label>
+                    <input type="number" step="0.01" name="subpart_f_income" value="0"></label>
                 <label><span data-i18n="view.s6038.label.gilti">GILTI inclusion (your share) ($)</span>
-                    <input type="number" step="100" name="gilti_inclusion" value="0"></label>
+                    <input type="number" step="0.01" name="gilti_inclusion" value="0"></label>
                 <label><span data-i18n="view.s6038.label.acq_year">Acquisition year</span>
                     <input type="number" step="1" name="acquired_year" value="${new Date().getFullYear()}"></label>
                 <label><span data-i18n="view.s6038.label.years_missed">Years missed filing</span>

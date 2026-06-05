@@ -53,7 +53,7 @@ export async function renderRetirementMax(mount, _appState) {
             <h2 data-i18n="view.retire.h2.inputs">Inputs</h2>
             <form id="ret-form" class="inline-form">
                 <label><span data-i18n="view.retire.label.se_income">SE net business income ($)</span>
-                    <input type="number" step="100" name="se_income" value="${state.se_income}"></label>
+                    <input type="number" step="0.01" name="se_income" value="${state.se_income}"></label>
                 <label><span data-i18n="view.retire.label.age">Age</span>
                     <input type="number" step="1" name="age" value="${state.age}" min="18" max="100"></label>
                 <label><span data-i18n="view.retire.label.year">Year</span>
@@ -66,7 +66,7 @@ export async function renderRetirementMax(mount, _appState) {
                 <label><span data-i18n="view.retire.label.marginal_rate">Marginal tax rate %</span>
                     <input type="number" step="0.5" name="marginal_rate" value="${(state.marginal_rate * 100).toFixed(1)}" min="10" max="50"></label>
                 <label><span data-i18n="view.retire.label.spouse_income">Spouse W-2 income ($)</span>
-                    <input type="number" step="100" name="spouse_income" value="${state.spouse_income}"></label>
+                    <input type="number" step="0.01" name="spouse_income" value="${state.spouse_income}"></label>
                 <button class="primary" type="submit" data-i18n="view.retire.btn.recompute">Recompute</button>
             </form>
         </div>

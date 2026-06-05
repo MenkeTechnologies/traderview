@@ -56,37 +56,37 @@ export async function renderSection1231(mount, _appState) {
             <h2 data-i18n="view.s1231.h2.inputs">Inputs</h2>
             <form id="s1231-form" class="inline-form">
                 <label><span data-i18n="view.s1231.label.gains">Current year § 1231 gains ($)</span>
-                    <input type="number" step="1000" name="current_year_s1231_gains" value="${state.current_year_s1231_gains}"></label>
+                    <input type="number" step="0.01" name="current_year_s1231_gains" value="${state.current_year_s1231_gains}"></label>
                 <label><span data-i18n="view.s1231.label.losses">Current year § 1231 losses ($)</span>
-                    <input type="number" step="1000" name="current_year_s1231_losses" value="${state.current_year_s1231_losses}"></label>
+                    <input type="number" step="0.01" name="current_year_s1231_losses" value="${state.current_year_s1231_losses}"></label>
                 <label><span data-i18n="view.s1231.label.net_gain">Net § 1231 gain ($)</span>
-                    <input type="number" step="1000" name="net_s1231_gain" value="${state.net_s1231_gain}"></label>
+                    <input type="number" step="0.01" name="net_s1231_gain" value="${state.net_s1231_gain}"></label>
                 <label><span data-i18n="view.s1231.label.net_loss">Net § 1231 loss ($)</span>
-                    <input type="number" step="1000" name="net_s1231_loss" value="${state.net_s1231_loss}"></label>
+                    <input type="number" step="0.01" name="net_s1231_loss" value="${state.net_s1231_loss}"></label>
                 <label><span data-i18n="view.s1231.label.cum_5yr">Cumulative 5-yr losses ($)</span>
-                    <input type="number" step="1000" name="cumulative_5yr_losses" value="${state.cumulative_5yr_losses}"></label>
+                    <input type="number" step="0.01" name="cumulative_5yr_losses" value="${state.cumulative_5yr_losses}"></label>
                 <label><span data-i18n="view.s1231.label.recapture">Look-back recapture ($)</span>
-                    <input type="number" step="1000" name="look_back_recapture" value="${state.look_back_recapture}"></label>
+                    <input type="number" step="0.01" name="look_back_recapture" value="${state.look_back_recapture}"></label>
                 <label><span data-i18n="view.s1231.label.after_rec">After-recapture capital ($)</span>
-                    <input type="number" step="1000" name="after_recapture_capital" value="${state.after_recapture_capital}"></label>
+                    <input type="number" step="0.01" name="after_recapture_capital" value="${state.after_recapture_capital}"></label>
                 <label><span data-i18n="view.s1231.label.holding">Holding period (months)</span>
                     <input type="number" step="1" name="holding_period_months" value="${state.holding_period_months}"></label>
                 <label><span data-i18n="view.s1231.label.dep_biz">Depreciable business ($)</span>
-                    <input type="number" step="1000" name="depreciable_business_property" value="${state.depreciable_business_property}"></label>
+                    <input type="number" step="0.01" name="depreciable_business_property" value="${state.depreciable_business_property}"></label>
                 <label><span data-i18n="view.s1231.label.real_estate">Real estate (biz use) ($)</span>
-                    <input type="number" step="10000" name="real_estate_used_business" value="${state.real_estate_used_business}"></label>
+                    <input type="number" step="0.01" name="real_estate_used_business" value="${state.real_estate_used_business}"></label>
                 <label><span data-i18n="view.s1231.label.timber">Timber / iron / coal ($)</span>
-                    <input type="number" step="1000" name="timber_iron_coal" value="${state.timber_iron_coal}"></label>
+                    <input type="number" step="0.01" name="timber_iron_coal" value="${state.timber_iron_coal}"></label>
                 <label><span data-i18n="view.s1231.label.livestock_12">Livestock 12-mo ($)</span>
-                    <input type="number" step="1000" name="livestock_held_12mo" value="${state.livestock_held_12mo}"></label>
+                    <input type="number" step="0.01" name="livestock_held_12mo" value="${state.livestock_held_12mo}"></label>
                 <label><span data-i18n="view.s1231.label.livestock_24">Cattle/horses 24-mo ($)</span>
-                    <input type="number" step="1000" name="livestock_cattle_24mo" value="${state.livestock_cattle_24mo}"></label>
+                    <input type="number" step="0.01" name="livestock_cattle_24mo" value="${state.livestock_cattle_24mo}"></label>
                 <label><span data-i18n="view.s1231.label.crops">Unharvested crops ($)</span>
-                    <input type="number" step="1000" name="unharvested_crops" value="${state.unharvested_crops}"></label>
+                    <input type="number" step="0.01" name="unharvested_crops" value="${state.unharvested_crops}"></label>
                 <label><span data-i18n="view.s1231.label.inv_conv">Involuntary conv gain ($)</span>
-                    <input type="number" step="1000" name="involuntary_conversion_gain" value="${state.involuntary_conversion_gain}"></label>
+                    <input type="number" step="0.01" name="involuntary_conversion_gain" value="${state.involuntary_conversion_gain}"></label>
                 <label><span data-i18n="view.s1231.label.casualty">Casualty loss ($)</span>
-                    <input type="number" step="1000" name="casualty_loss" value="${state.casualty_loss}"></label>
+                    <input type="number" step="0.01" name="casualty_loss" value="${state.casualty_loss}"></label>
                 <label><span data-i18n="view.s1231.label.inventory">Inventory?</span>
                     <input type="checkbox" name="is_inventory" ${state.is_inventory ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1231.label.capital">Capital asset?</span>
@@ -96,17 +96,17 @@ export async function renderSection1231(mount, _appState) {
                 <label><span data-i18n="view.s1231.label.s1250">§ 1250 property?</span>
                     <input type="checkbox" name="is_s1250_property" ${state.is_s1250_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1231.label.s1245_rec">§ 1245 recapture first ($)</span>
-                    <input type="number" step="1000" name="s1245_recapture_first" value="${state.s1245_recapture_first}"></label>
+                    <input type="number" step="0.01" name="s1245_recapture_first" value="${state.s1245_recapture_first}"></label>
                 <label><span data-i18n="view.s1231.label.s1250_rec">§ 1250 recapture first ($)</span>
-                    <input type="number" step="1000" name="s1250_recapture_first" value="${state.s1250_recapture_first}"></label>
+                    <input type="number" step="0.01" name="s1250_recapture_first" value="${state.s1250_recapture_first}"></label>
                 <label><span data-i18n="view.s1231.label.post_rec">§ 1231 post-recapture ($)</span>
-                    <input type="number" step="1000" name="s1231_post_recapture" value="${state.s1231_post_recapture}"></label>
+                    <input type="number" step="0.01" name="s1231_post_recapture" value="${state.s1231_post_recapture}"></label>
                 <label><span data-i18n="view.s1231.label.partnership">Partnership distribution?</span>
                     <input type="checkbox" name="is_partnership_distribution" ${state.is_partnership_distribution ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1231.label.s751">§ 751 hot adj ($)</span>
-                    <input type="number" step="1000" name="s751_hot_asset_adjustment" value="${state.s751_hot_asset_adjustment}"></label>
+                    <input type="number" step="0.01" name="s751_hot_asset_adjustment" value="${state.s751_hot_asset_adjustment}"></label>
                 <label><span data-i18n="view.s1231.label.s732_e">§ 732(e) basis adj ($)</span>
-                    <input type="number" step="1000" name="s732_e_basis_adjust" value="${state.s732_e_basis_adjust}"></label>
+                    <input type="number" step="0.01" name="s732_e_basis_adjust" value="${state.s732_e_basis_adjust}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1231.btn.compute">Compute</button>
             </form>
         </div>

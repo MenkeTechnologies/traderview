@@ -53,7 +53,7 @@ export async function renderEvCredit(mount, _appState) {
                 <label><span data-i18n="view.ev.label.is_truck_suv_van">SUV / truck / van?</span>
                     <input type="checkbox" name="is_truck_suv_van" ${state.is_truck_suv_van ? 'checked' : ''}></label>
                 <label><span data-i18n="view.ev.label.msrp_or_price">MSRP (new) or price (used) ($)</span>
-                    <input type="number" step="500" name="msrp_or_price" value="${state.msrp_or_price}"></label>
+                    <input type="number" step="0.01" name="msrp_or_price" value="${state.msrp_or_price}"></label>
                 <label><span data-i18n="view.ev.label.filing">Filing</span>
                     <select name="filing">
                         <option value="single" ${state.filing === 'single' ? 'selected' : ''}>Single</option>
@@ -62,7 +62,7 @@ export async function renderEvCredit(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.ev.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.ev.label.critical_minerals">Critical minerals criteria met?</span>
                     <input type="checkbox" name="critical_minerals_met" ${state.critical_minerals_met ? 'checked' : ''}></label>
                 <label><span data-i18n="view.ev.label.battery_components">Battery components criteria met?</span>

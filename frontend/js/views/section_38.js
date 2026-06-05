@@ -40,29 +40,29 @@ export async function renderSection38(mount, _appState) {
             <h2 data-i18n="view.s38.h2.inputs">Inputs</h2>
             <form id="s38-form" class="inline-form">
                 <label><span data-i18n="view.s38.label.s41">§ 41 Research credit ($)</span>
-                    <input type="number" step="1000" name="s41_research" value="${state.s41_research}"></label>
+                    <input type="number" step="0.01" name="s41_research" value="${state.s41_research}"></label>
                 <label><span data-i18n="view.s38.label.s45">§ 45 PTC (wind, biomass, etc.) ($)</span>
-                    <input type="number" step="1000" name="s45_ptc_wind_etc" value="${state.s45_ptc_wind_etc}"></label>
+                    <input type="number" step="0.01" name="s45_ptc_wind_etc" value="${state.s45_ptc_wind_etc}"></label>
                 <label><span data-i18n="view.s38.label.s48">§ 48 ITC (solar, energy property) ($)</span>
-                    <input type="number" step="1000" name="s48_itc" value="${state.s48_itc}"></label>
+                    <input type="number" step="0.01" name="s48_itc" value="${state.s48_itc}"></label>
                 <label><span data-i18n="view.s38.label.s45q">§ 45Q Carbon capture ($)</span>
-                    <input type="number" step="1000" name="s45q_carbon" value="${state.s45q_carbon}"></label>
+                    <input type="number" step="0.01" name="s45q_carbon" value="${state.s45q_carbon}"></label>
                 <label><span data-i18n="view.s38.label.s30d">§ 30D Clean vehicle ($)</span>
-                    <input type="number" step="100" name="s30d_clean_vehicle" value="${state.s30d_clean_vehicle}"></label>
+                    <input type="number" step="0.01" name="s30d_clean_vehicle" value="${state.s30d_clean_vehicle}"></label>
                 <label><span data-i18n="view.s38.label.s45w">§ 45W Commercial EV ($)</span>
-                    <input type="number" step="1000" name="s45w_commercial_ev" value="${state.s45w_commercial_ev}"></label>
+                    <input type="number" step="0.01" name="s45w_commercial_ev" value="${state.s45w_commercial_ev}"></label>
                 <label><span data-i18n="view.s38.label.s45l">§ 45L Residential energy ($)</span>
-                    <input type="number" step="1000" name="s45l_residential" value="${state.s45l_residential}"></label>
+                    <input type="number" step="0.01" name="s45l_residential" value="${state.s45l_residential}"></label>
                 <label><span data-i18n="view.s38.label.s45x">§ 45X Advanced mfg ($)</span>
-                    <input type="number" step="1000" name="s45x_advanced_mfg" value="${state.s45x_advanced_mfg}"></label>
+                    <input type="number" step="0.01" name="s45x_advanced_mfg" value="${state.s45x_advanced_mfg}"></label>
                 <label><span data-i18n="view.s38.label.other">Other business credits ($)</span>
-                    <input type="number" step="1000" name="other_business_credits" value="${state.other_business_credits}"></label>
+                    <input type="number" step="0.01" name="other_business_credits" value="${state.other_business_credits}"></label>
                 <label><span data-i18n="view.s38.label.regular">Net regular tax ($)</span>
-                    <input type="number" step="1000" name="regular_tax" value="${state.regular_tax}"></label>
+                    <input type="number" step="0.01" name="regular_tax" value="${state.regular_tax}"></label>
                 <label><span data-i18n="view.s38.label.tmt">Tentative minimum tax ($)</span>
-                    <input type="number" step="1000" name="tentative_minimum_tax" value="${state.tentative_minimum_tax}"></label>
+                    <input type="number" step="0.01" name="tentative_minimum_tax" value="${state.tentative_minimum_tax}"></label>
                 <label><span data-i18n="view.s38.label.carry">Prior-year carryforward ($)</span>
-                    <input type="number" step="1000" name="carryforward_prior" value="${state.carryforward_prior}"></label>
+                    <input type="number" step="0.01" name="carryforward_prior" value="${state.carryforward_prior}"></label>
                 <label><span data-i18n="view.s38.label.direct">§ 6417 direct pay (some credits)?</span>
                     <input type="checkbox" name="elect_direct_pay" ${state.elect_direct_pay ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s38.label.transfer">§ 6418 transferability (some credits)?</span>

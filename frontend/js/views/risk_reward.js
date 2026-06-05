@@ -31,15 +31,15 @@ export async function renderRiskReward(mount, _appState) {
                         <option value="short" ${state.side === 'short' ? 'selected' : ''} data-i18n="view.risk_reward.option.short">Short</option>
                     </select></label>
                 <label><span data-i18n="view.risk_reward.label.entry">Entry</span>
-                    <input id="rr-entry" type="number" step="any" min="0" value="${state.entry}" data-tip="view.risk_reward.tip.entry"></label>
+                    <input id="rr-entry" type="number" step="0.01" min="0" value="${state.entry}" data-tip="view.risk_reward.tip.entry"></label>
                 <label><span data-i18n="view.risk_reward.label.stop">Stop</span>
-                    <input id="rr-stop" type="number" step="any" min="0" value="${state.stop}" data-tip="view.risk_reward.tip.stop"></label>
+                    <input id="rr-stop" type="number" step="0.01" min="0" value="${state.stop}" data-tip="view.risk_reward.tip.stop"></label>
                 <label><span data-i18n="view.risk_reward.label.target">Target</span>
-                    <input id="rr-target" type="number" step="any" min="0" value="${state.target}" data-tip="view.risk_reward.tip.target"></label>
+                    <input id="rr-target" type="number" step="0.01" min="0" value="${state.target}" data-tip="view.risk_reward.tip.target"></label>
                 <label><span data-i18n="view.risk_reward.label.risk_budget">Risk budget ($)</span>
-                    <input id="rr-budget" type="number" step="any" min="0" value="${state.risk_budget}" data-tip="view.risk_reward.tip.budget"></label>
+                    <input id="rr-budget" type="number" step="0.01" min="0" value="${state.risk_budget}" data-tip="view.risk_reward.tip.budget"></label>
                 <label><span data-i18n="view.risk_reward.label.multiplier">Multiplier (100 for options, 50 for ES, …)</span>
-                    <input id="rr-mult" type="number" step="any" min="0" value="${state.multiplier}" data-tip="view.risk_reward.tip.multiplier"></label>
+                    <input id="rr-mult" type="number" step="0.01" min="0" value="${state.multiplier}" data-tip="view.risk_reward.tip.multiplier"></label>
                 <button data-i18n="view.risk_reward.btn.compute" id="rr-run" class="primary"
                         data-tip="view.risk_reward.tip.compute" data-shortcut="risk_reward_run" type="button">Compute</button>
             </div>

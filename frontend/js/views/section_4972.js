@@ -57,11 +57,11 @@ export async function renderSection4972(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s4972.label.employer">Total employer contribution ($)</span>
-                    <input type="number" step="1000" name="employer_contribution" value="${state.employer_contribution}"></label>
+                    <input type="number" step="0.01" name="employer_contribution" value="${state.employer_contribution}"></label>
                 <label><span data-i18n="view.s4972.label.s404">§ 404 deduction limit ($)</span>
-                    <input type="number" step="1000" name="s404_limit" value="${state.s404_limit}"></label>
+                    <input type="number" step="0.01" name="s404_limit" value="${state.s404_limit}"></label>
                 <label><span data-i18n="view.s4972.label.nondeductible">Computed nondeductible amount ($)</span>
-                    <input type="number" step="1000" name="nondeductible_amount" value="${state.nondeductible_amount}"></label>
+                    <input type="number" step="0.01" name="nondeductible_amount" value="${state.nondeductible_amount}"></label>
                 <label><span data-i18n="view.s4972.label.year">Plan year</span>
                     <input type="number" step="1" name="plan_year" value="${state.plan_year}"></label>
                 <label><span data-i18n="view.s4972.label.month">Year-end month</span>
@@ -71,23 +71,23 @@ export async function renderSection4972(mount, _appState) {
                 <label><span data-i18n="view.s4972.label.correction">Correction made?</span>
                     <input type="checkbox" name="correction_made" ${state.correction_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4972.label.s402g">§ 402(g) excess elective ($)</span>
-                    <input type="number" step="1000" name="s402g_excess_elective" value="${state.s402g_excess_elective}"></label>
+                    <input type="number" step="0.01" name="s402g_excess_elective" value="${state.s402g_excess_elective}"></label>
                 <label><span data-i18n="view.s4972.label.catchup">Catch-up eligible?</span>
                     <input type="checkbox" name="catchup_eligible" ${state.catchup_eligible ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4972.label.catchup_amount">Catch-up amount ($)</span>
-                    <input type="number" step="1000" name="catchup_amount" value="${state.catchup_amount}"></label>
+                    <input type="number" step="0.01" name="catchup_amount" value="${state.catchup_amount}"></label>
                 <label><span data-i18n="view.s4972.label.topheavy">Top-heavy plan?</span>
                     <input type="checkbox" name="is_top_heavy" ${state.is_top_heavy ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4972.label.safe_harbor">Safe harbor?</span>
                     <input type="checkbox" name="is_safe_harbor" ${state.is_safe_harbor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4972.label.matching">Matching contribution ($)</span>
-                    <input type="number" step="1000" name="matching_contribution" value="${state.matching_contribution}"></label>
+                    <input type="number" step="0.01" name="matching_contribution" value="${state.matching_contribution}"></label>
                 <label><span data-i18n="view.s4972.label.ps">Profit-sharing contribution ($)</span>
-                    <input type="number" step="1000" name="profit_sharing_contribution" value="${state.profit_sharing_contribution}"></label>
+                    <input type="number" step="0.01" name="profit_sharing_contribution" value="${state.profit_sharing_contribution}"></label>
                 <label><span data-i18n="view.s4972.label.carryover">Multi-year carryover?</span>
                     <input type="checkbox" name="is_multi_year_carryover" ${state.is_multi_year_carryover ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4972.label.prior">Prior year excess ($)</span>
-                    <input type="number" step="1000" name="prior_year_excess" value="${state.prior_year_excess}"></label>
+                    <input type="number" step="0.01" name="prior_year_excess" value="${state.prior_year_excess}"></label>
                 <button class="primary" type="submit" data-i18n="view.s4972.btn.compute">Compute</button>
             </form>
         </div>

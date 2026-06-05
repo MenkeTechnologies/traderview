@@ -70,7 +70,7 @@ export async function renderSection7491(mount, _appState) {
                 <label><span data-i18n="view.s7491.label.criminal">Criminal case?</span>
                     <input type="checkbox" name="is_criminal" ${state.is_criminal ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7491.label.penalty">Penalty amount at issue ($)</span>
-                    <input type="number" step="10000" name="penalty_amount_at_issue" value="${state.penalty_amount_at_issue}"></label>
+                    <input type="number" step="0.01" name="penalty_amount_at_issue" value="${state.penalty_amount_at_issue}"></label>
                 <label><span data-i18n="view.s7491.label.individual">Individual under $1M AGI?</span>
                     <input type="checkbox" name="is_individual_under_1m_agi" ${state.is_individual_under_1m_agi ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7491.label.corp">Corporation?</span>

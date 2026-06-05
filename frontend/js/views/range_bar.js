@@ -31,7 +31,7 @@ export async function renderRangeBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.range_bar.label.target">Target range ($)</span>
-                    <input id="rb-target" type="number" step="any" min="0" value="${state.target_range}" data-tip="view.range_bar.tip.target"></label>
+                    <input id="rb-target" type="number" step="0.01" min="0" value="${state.target_range}" data-tip="view.range_bar.tip.target"></label>
                 <button data-i18n="view.range_bar.btn.compute" id="rb-run" class="primary"
                         data-tip="view.range_bar.tip.compute" data-shortcut="range_bar_run" type="button">Build bars</button>
             </div>

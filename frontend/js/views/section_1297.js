@@ -43,19 +43,19 @@ export async function renderSection1297(mount, _appState) {
             <h2 data-i18n="view.s1297.h2.inputs">Inputs</h2>
             <form id="s1297-form" class="inline-form">
                 <label><span data-i18n="view.s1297.label.gross">Gross income total ($)</span>
-                    <input type="number" step="10000" name="gross_income_total" value="${state.gross_income_total}"></label>
+                    <input type="number" step="0.01" name="gross_income_total" value="${state.gross_income_total}"></label>
                 <label><span data-i18n="view.s1297.label.passive_inc">Passive income amount ($)</span>
-                    <input type="number" step="10000" name="passive_income_amount" value="${state.passive_income_amount}"></label>
+                    <input type="number" step="0.01" name="passive_income_amount" value="${state.passive_income_amount}"></label>
                 <label><span data-i18n="view.s1297.label.assets">Total assets FMV ($)</span>
-                    <input type="number" step="100000" name="total_assets_fmv" value="${state.total_assets_fmv}"></label>
+                    <input type="number" step="0.01" name="total_assets_fmv" value="${state.total_assets_fmv}"></label>
                 <label><span data-i18n="view.s1297.label.passive_assets">Passive assets FMV ($)</span>
-                    <input type="number" step="100000" name="passive_assets_fmv" value="${state.passive_assets_fmv}"></label>
+                    <input type="number" step="0.01" name="passive_assets_fmv" value="${state.passive_assets_fmv}"></label>
                 <label><span data-i18n="view.s1297.label.lookthrough">25%+ sub look-through?</span>
                     <input type="checkbox" name="look_through_25pct_sub" ${state.look_through_25pct_sub ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1297.label.sub_passive_inc">Sub passive income share ($)</span>
-                    <input type="number" step="10000" name="sub_passive_income_share" value="${state.sub_passive_income_share}"></label>
+                    <input type="number" step="0.01" name="sub_passive_income_share" value="${state.sub_passive_income_share}"></label>
                 <label><span data-i18n="view.s1297.label.sub_passive_assets">Sub passive assets share ($)</span>
-                    <input type="number" step="100000" name="sub_passive_assets_share" value="${state.sub_passive_assets_share}"></label>
+                    <input type="number" step="0.01" name="sub_passive_assets_share" value="${state.sub_passive_assets_share}"></label>
                 <label><span data-i18n="view.s1297.label.startup">Startup year (§ 1298(b)(2))?</span>
                     <input type="checkbox" name="is_startup_year" ${state.is_startup_year ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1297.label.cfc">CFC overlap (§ 1298(b)(8))?</span>

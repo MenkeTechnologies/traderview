@@ -42,9 +42,9 @@ export async function renderSection367D(mount, _appState) {
             <h2 data-i18n="view.s367d.h2.inputs">Inputs</h2>
             <form id="s367d-form" class="inline-form">
                 <label><span data-i18n="view.s367d.label.fmv">IP FMV at transfer ($)</span>
-                    <input type="number" step="100000" name="ip_fmv_at_transfer" value="${state.ip_fmv_at_transfer}"></label>
+                    <input type="number" step="0.01" name="ip_fmv_at_transfer" value="${state.ip_fmv_at_transfer}"></label>
                 <label><span data-i18n="view.s367d.label.royalty">Annual arm's-length royalty ($)</span>
-                    <input type="number" step="10000" name="annual_arm_length_royalty" value="${state.annual_arm_length_royalty}"></label>
+                    <input type="number" step="0.01" name="annual_arm_length_royalty" value="${state.annual_arm_length_royalty}"></label>
                 <label><span data-i18n="view.s367d.label.life">Useful life years</span>
                     <input type="number" step="1" name="useful_life_years" value="${state.useful_life_years}"></label>
                 <label><span data-i18n="view.s367d.label.recipient">Foreign recipient corp type</span>
@@ -60,11 +60,11 @@ export async function renderSection367D(mount, _appState) {
                 <label><span data-i18n="view.s367d.label.csa">Cost Sharing Arrangement § 482?</span>
                     <input type="checkbox" name="cost_sharing_arrangement" ${state.cost_sharing_arrangement ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s367d.label.csa_costs">CSA share of costs ($)</span>
-                    <input type="number" step="10000" name="csa_share_costs" value="${state.csa_share_costs}"></label>
+                    <input type="number" step="0.01" name="csa_share_costs" value="${state.csa_share_costs}"></label>
                 <label><span data-i18n="view.s367d.label.buyin">CSA buy-in payment ($)</span>
-                    <input type="number" step="10000" name="csa_buy_in_payment" value="${state.csa_buy_in_payment}"></label>
+                    <input type="number" step="0.01" name="csa_buy_in_payment" value="${state.csa_buy_in_payment}"></label>
                 <label><span data-i18n="view.s367d.label.basis">Transferor's basis ($)</span>
-                    <input type="number" step="100000" name="transferor_basis" value="${state.transferor_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_basis" value="${state.transferor_basis}"></label>
                 <label><span data-i18n="view.s367d.label.tcja">TCJA broad definition?</span>
                     <input type="checkbox" name="tcja_broad_definition" ${state.tcja_broad_definition ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s367d.label.us_corp">US filing corp transferor?</span>
@@ -72,7 +72,7 @@ export async function renderSection367D(mount, _appState) {
                 <label><span data-i18n="view.s367d.label.year">Transfer year</span>
                     <input type="number" step="1" name="transfer_year" value="${state.transfer_year}"></label>
                 <label><span data-i18n="view.s367d.label.received">Annual royalty received ($)</span>
-                    <input type="number" step="10000" name="annual_royalty_received" value="${state.annual_royalty_received}"></label>
+                    <input type="number" step="0.01" name="annual_royalty_received" value="${state.annual_royalty_received}"></label>
                 <button class="primary" type="submit" data-i18n="view.s367d.btn.compute">Compute</button>
             </form>
         </div>

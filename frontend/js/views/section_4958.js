@@ -83,13 +83,13 @@ export async function renderSection4958(mount, _appState) {
                 <label><span data-i18n="view.s4958.label.applicable">Applicable exempt?</span>
                     <input type="checkbox" name="is_applicable_tax_exempt" ${state.is_applicable_tax_exempt ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.amount">Transaction amount ($)</span>
-                    <input type="number" step="1000" name="transaction_amount" value="${state.transaction_amount}"></label>
+                    <input type="number" step="0.01" name="transaction_amount" value="${state.transaction_amount}"></label>
                 <label><span data-i18n="view.s4958.label.fmv">FMV provided to org ($)</span>
-                    <input type="number" step="1000" name="fair_market_value_provided" value="${state.fair_market_value_provided}"></label>
+                    <input type="number" step="0.01" name="fair_market_value_provided" value="${state.fair_market_value_provided}"></label>
                 <label><span data-i18n="view.s4958.label.consideration">Consideration paid ($)</span>
-                    <input type="number" step="1000" name="consideration_paid_by_org" value="${state.consideration_paid_by_org}"></label>
+                    <input type="number" step="0.01" name="consideration_paid_by_org" value="${state.consideration_paid_by_org}"></label>
                 <label><span data-i18n="view.s4958.label.excess">Excess benefit ($)</span>
-                    <input type="number" step="1000" name="excess_benefit_amount" value="${state.excess_benefit_amount}"></label>
+                    <input type="number" step="0.01" name="excess_benefit_amount" value="${state.excess_benefit_amount}"></label>
                 <label><span data-i18n="view.s4958.label.dp">Disqualified person?</span>
                     <input type="checkbox" name="is_disqualified_person" ${state.is_disqualified_person ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.influence">Substantial influence?</span>
@@ -109,17 +109,17 @@ export async function renderSection4958(mount, _appState) {
                 <label><span data-i18n="view.s4958.label.entity_35">35% entity?</span>
                     <input type="checkbox" name="dp_35pct_controlled_entity" ${state.dp_35pct_controlled_entity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.25pct">§ 4958(a)(1) 25% ($)</span>
-                    <input type="number" step="1000" name="s4958_a_1_25pct_excise" value="${state.s4958_a_1_25pct_excise}"></label>
+                    <input type="number" step="0.01" name="s4958_a_1_25pct_excise" value="${state.s4958_a_1_25pct_excise}"></label>
                 <label><span data-i18n="view.s4958.label.200pct">§ 4958(b) 200% ($)</span>
-                    <input type="number" step="1000" name="s4958_b_200pct_correction_failure" value="${state.s4958_b_200pct_correction_failure}"></label>
+                    <input type="number" step="0.01" name="s4958_b_200pct_correction_failure" value="${state.s4958_b_200pct_correction_failure}"></label>
                 <label><span data-i18n="view.s4958.label.corrected">Corrected?</span>
                     <input type="checkbox" name="has_been_corrected" ${state.has_been_corrected ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.timely">Timely correction?</span>
                     <input type="checkbox" name="timely_correction_window" ${state.timely_correction_window ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.om_10">OM 10% ($)</span>
-                    <input type="number" step="1000" name="organization_manager_penalty_10pct" value="${state.organization_manager_penalty_10pct}"></label>
+                    <input type="number" step="0.01" name="organization_manager_penalty_10pct" value="${state.organization_manager_penalty_10pct}"></label>
                 <label><span data-i18n="view.s4958.label.om_max">OM max $20K</span>
-                    <input type="number" step="1000" name="om_max_20k_per_transaction" value="${state.om_max_20k_per_transaction}"></label>
+                    <input type="number" step="0.01" name="om_max_20k_per_transaction" value="${state.om_max_20k_per_transaction}"></label>
                 <label><span data-i18n="view.s4958.label.om_knowing">OM knowing?</span>
                     <input type="checkbox" name="om_knowing_participation" ${state.om_knowing_participation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.daf_advisor">DAF advisor?</span>
@@ -139,15 +139,15 @@ export async function renderSection4958(mount, _appState) {
                 <label><span data-i18n="view.s4958.label.doc">Contemp docs?</span>
                     <input type="checkbox" name="contemporaneous_documentation" ${state.contemporaneous_documentation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4958.label.s4960_1m">§ 4960 over $1M ($)</span>
-                    <input type="number" step="10000" name="s4960_executive_comp_excess_1m" value="${state.s4960_executive_comp_excess_1m}"></label>
+                    <input type="number" step="0.01" name="s4960_executive_comp_excess_1m" value="${state.s4960_executive_comp_excess_1m}"></label>
                 <label><span data-i18n="view.s4958.label.s4960_21">§ 4960 21% ($)</span>
-                    <input type="number" step="1000" name="s4960_21pct_excise" value="${state.s4960_21pct_excise}"></label>
+                    <input type="number" step="0.01" name="s4960_21pct_excise" value="${state.s4960_21pct_excise}"></label>
                 <label><span data-i18n="view.s4958.label.excess_1m">Excess over $1M ($)</span>
-                    <input type="number" step="10000" name="excess_comp_over_1m" value="${state.excess_comp_over_1m}"></label>
+                    <input type="number" step="0.01" name="excess_comp_over_1m" value="${state.excess_comp_over_1m}"></label>
                 <label><span data-i18n="view.s4958.label.parachute">Excess parachute ($)</span>
-                    <input type="number" step="10000" name="excess_parachute_payment" value="${state.excess_parachute_payment}"></label>
+                    <input type="number" step="0.01" name="excess_parachute_payment" value="${state.excess_parachute_payment}"></label>
                 <label><span data-i18n="view.s4958.label.rev">Org revenue ($)</span>
-                    <input type="number" step="100000" name="organization_revenue" value="${state.organization_revenue}"></label>
+                    <input type="number" step="0.01" name="organization_revenue" value="${state.organization_revenue}"></label>
                 <label><span data-i18n="view.s4958.label.top5">Top 5 highest paid?</span>
                     <input type="number" step="1" name="employee_top_5_highest_paid" value="${state.employee_top_5_highest_paid}"></label>
                 <label><span data-i18n="view.s4958.label.pc">Public charity?</span>

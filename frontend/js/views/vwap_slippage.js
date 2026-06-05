@@ -30,7 +30,7 @@ export async function renderVwapSlippage(mount, _appState) {
                         <option data-i18n="view.vwap_slippage.opt.short_sell_entry" value="short" ${state.side === 'short' ? 'selected' : ''}>Short (sell entry)</option>
                     </select></label>
                 <label><span data-i18n="view.vwap_slippage.label.fill_price">Fill price</span>
-                    <input id="vw-fill" type="number" step="any" min="0" value="${state.fillPrice}" data-tip="view.vwap_slippage.tip.fill"></label>
+                    <input id="vw-fill" type="number" step="0.01" min="0" value="${state.fillPrice}" data-tip="view.vwap_slippage.tip.fill"></label>
             </div>
         </div>
 

@@ -46,7 +46,7 @@ export async function renderSection408d3(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s408d3.label.amount">Distribution amount ($)</span>
-                    <input type="number" step="100" name="amount" required></label>
+                    <input type="number" step="0.01" name="amount" required></label>
                 <label><span data-i18n="view.s408d3.label.source_account">Source IRA</span>
                     <input type="text" name="source_account" required></label>
                 <label><span data-i18n="view.s408d3.label.dest_account">Destination IRA</span>

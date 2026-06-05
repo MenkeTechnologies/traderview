@@ -40,13 +40,13 @@ export async function renderSection904(mount, _appState) {
             <h2 data-i18n="view.s904.h2.inputs">Inputs</h2>
             <form id="s904-form" class="inline-form">
                 <label><span data-i18n="view.s904.label.foreign_ti">Foreign source taxable income ($)</span>
-                    <input type="number" step="1000" name="foreign_source_taxable_income" value="${state.foreign_source_taxable_income}"></label>
+                    <input type="number" step="0.01" name="foreign_source_taxable_income" value="${state.foreign_source_taxable_income}"></label>
                 <label><span data-i18n="view.s904.label.worldwide">Worldwide taxable income ($)</span>
-                    <input type="number" step="1000" name="worldwide_taxable_income" value="${state.worldwide_taxable_income}"></label>
+                    <input type="number" step="0.01" name="worldwide_taxable_income" value="${state.worldwide_taxable_income}"></label>
                 <label><span data-i18n="view.s904.label.us_tax">US tax pre-FTC ($)</span>
-                    <input type="number" step="1000" name="us_tax_pre_ftc" value="${state.us_tax_pre_ftc}"></label>
+                    <input type="number" step="0.01" name="us_tax_pre_ftc" value="${state.us_tax_pre_ftc}"></label>
                 <label><span data-i18n="view.s904.label.foreign_tax">Foreign taxes paid ($)</span>
-                    <input type="number" step="100" name="foreign_taxes_paid" value="${state.foreign_taxes_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_taxes_paid" value="${state.foreign_taxes_paid}"></label>
                 <label><span data-i18n="view.s904.label.basket">Basket</span>
                     <select name="basket">
                         <option value="general" ${state.basket === 'general' ? 'selected' : ''}>General (active biz)</option>
@@ -61,15 +61,15 @@ export async function renderSection904(mount, _appState) {
                 <label><span data-i18n="view.s904.label.de_minimis">§ 904(j) de minimis election?</span>
                     <input type="checkbox" name="de_minimis_election" ${state.de_minimis_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s904.label.carry_back">Carry back 1-yr ($)</span>
-                    <input type="number" step="100" name="carry_back_1yr" value="${state.carry_back_1yr}"></label>
+                    <input type="number" step="0.01" name="carry_back_1yr" value="${state.carry_back_1yr}"></label>
                 <label><span data-i18n="view.s904.label.carry_forward">Carry forward available ($)</span>
-                    <input type="number" step="100" name="carry_forward_avail" value="${state.carry_forward_avail}"></label>
+                    <input type="number" step="0.01" name="carry_forward_avail" value="${state.carry_forward_avail}"></label>
                 <label><span data-i18n="view.s904.label.corporate">C-corp?</span>
                     <input type="checkbox" name="is_corporate" ${state.is_corporate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s904.label.s250">§ 250 deduction (GILTI/FDII) ($)</span>
-                    <input type="number" step="1000" name="section_250_deduction" value="${state.section_250_deduction}"></label>
+                    <input type="number" step="0.01" name="section_250_deduction" value="${state.section_250_deduction}"></label>
                 <label><span data-i18n="view.s904.label.expense">US expenses allocated to foreign ($)</span>
-                    <input type="number" step="1000" name="expense_allocated_foreign" value="${state.expense_allocated_foreign}"></label>
+                    <input type="number" step="0.01" name="expense_allocated_foreign" value="${state.expense_allocated_foreign}"></label>
                 <button class="primary" type="submit" data-i18n="view.s904.btn.compute">Compute</button>
             </form>
         </div>

@@ -52,27 +52,27 @@ export async function renderSection1411(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1411.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s1411.label.interest">Interest income ($)</span>
-                    <input type="number" step="100" name="interest" value="${state.interest}"></label>
+                    <input type="number" step="0.01" name="interest" value="${state.interest}"></label>
                 <label><span data-i18n="view.s1411.label.dividends">Dividends (qual + ord) ($)</span>
-                    <input type="number" step="100" name="dividends" value="${state.dividends}"></label>
+                    <input type="number" step="0.01" name="dividends" value="${state.dividends}"></label>
                 <label><span data-i18n="view.s1411.label.cap_gains">Capital gains ($)</span>
-                    <input type="number" step="100" name="capital_gains" value="${state.capital_gains}"></label>
+                    <input type="number" step="0.01" name="capital_gains" value="${state.capital_gains}"></label>
                 <label><span data-i18n="view.s1411.label.rental">Rental income (net) ($)</span>
-                    <input type="number" step="100" name="rental_income" value="${state.rental_income}"></label>
+                    <input type="number" step="0.01" name="rental_income" value="${state.rental_income}"></label>
                 <label><span data-i18n="view.s1411.label.passive_k1">Passive K-1 income ($)</span>
-                    <input type="number" step="100" name="passive_kone_income" value="${state.passive_kone_income}"></label>
+                    <input type="number" step="0.01" name="passive_kone_income" value="${state.passive_kone_income}"></label>
                 <label><span data-i18n="view.s1411.label.expenses">Investment expenses ($)</span>
-                    <input type="number" step="100" name="investment_expenses" value="${state.investment_expenses}"></label>
+                    <input type="number" step="0.01" name="investment_expenses" value="${state.investment_expenses}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s1411.label.mtm">§ 475(f) MTM ordinary (EXCLUDED) ($)</span>
-                    <input type="number" step="100" name="mtm_475f_ordinary" value="${state.mtm_475f_ordinary}"></label>
+                    <input type="number" step="0.01" name="mtm_475f_ordinary" value="${state.mtm_475f_ordinary}"></label>
                 <label><span data-i18n="view.s1411.label.active_biz">Active S-corp / SE earnings (EXCLUDED) ($)</span>
-                    <input type="number" step="100" name="active_business_income" value="${state.active_business_income}"></label>
+                    <input type="number" step="0.01" name="active_business_income" value="${state.active_business_income}"></label>
                 <label><span data-i18n="view.s1411.label.retirement">Retirement distributions (EXCLUDED) ($)</span>
-                    <input type="number" step="100" name="retirement_distributions" value="${state.retirement_distributions}"></label>
+                    <input type="number" step="0.01" name="retirement_distributions" value="${state.retirement_distributions}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1411.btn.compute">Compute</button>
             </form>
         </div>

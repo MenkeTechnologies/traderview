@@ -63,11 +63,11 @@ export async function renderSection152(mount, _appState) {
                 <label><span data-i18n="view.s152.label.months">Months lived with you</span>
                     <input type="number" step="1" min="0" max="12" name="months_lived_with_you" value="${state.months_lived_with_you}"></label>
                 <label><span data-i18n="view.s152.label.your_support">Your support provided ($)</span>
-                    <input type="number" step="100" name="your_support_provided" value="${state.your_support_provided}"></label>
+                    <input type="number" step="0.01" name="your_support_provided" value="${state.your_support_provided}"></label>
                 <label><span data-i18n="view.s152.label.total_support">Their total support ($)</span>
-                    <input type="number" step="100" name="their_total_support" value="${state.their_total_support}"></label>
+                    <input type="number" step="0.01" name="their_total_support" value="${state.their_total_support}"></label>
                 <label><span data-i18n="view.s152.label.gross_income">Their gross income ($)</span>
-                    <input type="number" step="100" name="their_gross_income" value="${state.their_gross_income}"></label>
+                    <input type="number" step="0.01" name="their_gross_income" value="${state.their_gross_income}"></label>
                 <label><span data-i18n="view.s152.label.citizen">US citizen / resident?</span>
                     <input type="checkbox" name="is_us_citizen_or_resident" ${state.is_us_citizen_or_resident ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s152.label.joint">Filing joint return?</span>

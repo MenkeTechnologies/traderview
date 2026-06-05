@@ -57,11 +57,11 @@ export async function renderSection51(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s51.label.year1">Year-1 wages ($)</span>
-                    <input type="number" step="500" name="wages_year_1" value="${state.wages_year_1}"></label>
+                    <input type="number" step="0.01" name="wages_year_1" value="${state.wages_year_1}"></label>
                 <label><span data-i18n="view.s51.label.year2">Year-2 wages ($, long-term TANF only)</span>
-                    <input type="number" step="500" name="wages_year_2" value="${state.wages_year_2}"></label>
+                    <input type="number" step="0.01" name="wages_year_2" value="${state.wages_year_2}"></label>
                 <label><span data-i18n="view.s51.label.hours">Hours worked Year 1</span>
-                    <input type="number" step="10" name="hours_worked_year_1" value="${state.hours_worked_year_1}"></label>
+                    <input type="number" step="0.01" name="hours_worked_year_1" value="${state.hours_worked_year_1}"></label>
                 <label><span data-i18n="view.s51.label.form8850">Form 8850 filed in 28 days?</span>
                     <input type="checkbox" name="form_8850_filed_in_28_days" ${state.form_8850_filed_in_28_days ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s51.label.swa">State agency certified?</span>

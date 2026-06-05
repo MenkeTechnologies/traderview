@@ -111,7 +111,7 @@ export async function renderSection6045A(mount, _appState) {
                 <label><span data-i18n="view.s6045a.label.failure">Failure to furnish?</span>
                     <input type="checkbox" name="is_failure_to_furnish" ${state.is_failure_to_furnish ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6045a.label.s6722">§ 6722 per-form ($)</span>
-                    <input type="number" step="10" name="s6722_penalty_per_form" value="${state.s6722_penalty_per_form}"></label>
+                    <input type="number" step="0.01" name="s6722_penalty_per_form" value="${state.s6722_penalty_per_form}"></label>
                 <label><span data-i18n="view.s6045a.label.count">Forms failed</span>
                     <input type="number" step="1" name="forms_failed_count" value="${state.forms_failed_count}"></label>
                 <label><span data-i18n="view.s6045a.label.intentional">Intentional disregard?</span>

@@ -67,7 +67,7 @@ export async function renderSection7811(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s7811.label.loss">Estimated loss amount ($)</span>
-                    <input type="number" step="1000" name="estimated_loss_amount" value="${state.estimated_loss_amount}"></label>
+                    <input type="number" step="0.01" name="estimated_loss_amount" value="${state.estimated_loss_amount}"></label>
                 <label><span data-i18n="view.s7811.label.multiple">Multiple IRS contacts tried?</span>
                     <input type="checkbox" name="multiple_irs_contacts" ${state.multiple_irs_contacts ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s7811.btn.compute">Compute</button>

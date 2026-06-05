@@ -40,7 +40,7 @@ export async function renderSection45V(mount, _appState) {
             <h2 data-i18n="view.s45V.h2.inputs">Inputs</h2>
             <form id="s45V-form" class="inline-form">
                 <label><span data-i18n="view.s45V.label.kg">kg hydrogen produced / yr</span>
-                    <input type="number" step="100" name="kg_hydrogen_produced" value="${state.kg_hydrogen_produced}"></label>
+                    <input type="number" step="0.01" name="kg_hydrogen_produced" value="${state.kg_hydrogen_produced}"></label>
                 <label><span data-i18n="view.s45V.label.ghg">Lifecycle GHG kg CO2e / kg H2</span>
                     <input type="number" step="0.05" name="lifecycle_ghg_kg_co2e" value="${state.lifecycle_ghg_kg_co2e}"></label>
                 <label><span data-i18n="view.s45V.label.wage">Prevailing wage compliant?</span>

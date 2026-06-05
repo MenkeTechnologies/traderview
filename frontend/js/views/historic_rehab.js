@@ -49,7 +49,7 @@ export async function renderHistoricRehab(mount, _appState) {
                 <label><span data-i18n="view.hrc.label.placed_year">Placed in service year</span>
                     <input type="number" step="1" name="placed_year" value="${state.placed_year}" required></label>
                 <label><span data-i18n="view.hrc.label.qre">Qualified Rehab Expenditures ($)</span>
-                    <input type="number" step="1000" name="qre" value="${state.qre}"></label>
+                    <input type="number" step="0.01" name="qre" value="${state.qre}"></label>
                 <label><span data-i18n="view.hrc.label.is_certified">Certified Historic Structure?</span>
                     <input type="checkbox" name="is_certified_historic" ${state.is_certified_historic ? 'checked' : ''}></label>
                 <label><span data-i18n="view.hrc.label.is_passive">Passive investor?</span>
@@ -59,7 +59,7 @@ export async function renderHistoricRehab(mount, _appState) {
                 <label><span data-i18n="view.hrc.label.marginal">Marginal tax %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <label><span data-i18n="view.hrc.label.passive_income">Other passive income ($)</span>
-                    <input type="number" step="1000" name="other_passive_income" value="${state.other_passive_income}"></label>
+                    <input type="number" step="0.01" name="other_passive_income" value="${state.other_passive_income}"></label>
                 <button class="primary" type="submit" data-i18n="view.hrc.btn.compute">Compute</button>
             </form>
         </div>

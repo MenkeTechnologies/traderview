@@ -69,9 +69,30 @@ async fn get_json(path: &str, query: &[(&str, &str)]) -> anyhow::Result<Value> {
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
+        // Finnhub returns 403 Forbidden for endpoints not included in
+        // the caller's plan. Mark these with a sentinel prefix so
+        // route handlers can map to ApiError::Forbidden (HTTP 403)
+        // instead of a generic 500. The frontend then renders a
+        // "premium required" affordance rather than a server-error
+        // toast.
+        if status == reqwest::StatusCode::FORBIDDEN {
+            anyhow::bail!(
+                "FINNHUB_PREMIUM_REQUIRED: {path} — your Finnhub plan does not include this endpoint. Body: {}",
+                body.chars().take(300).collect::<String>(),
+            );
+        }
         anyhow::bail!("finnhub {path} HTTP {status}: {}", body.chars().take(300).collect::<String>());
     }
     Ok(resp.json().await?)
+}
+
+/// Convert an `anyhow::Error` from a Finnhub call into the right HTTP
+/// status. Caller's plan doesn't include the endpoint → 403; anything
+/// else → 500 with the original cause attached. Pub so the
+/// `finnhub_extras` route module can use it without duplicating the
+/// sentinel-string check.
+pub fn is_premium_required(err: &anyhow::Error) -> bool {
+    err.to_string().starts_with("FINNHUB_PREMIUM_REQUIRED")
 }
 
 // ──────────────────────────────────────────────────────────────────────

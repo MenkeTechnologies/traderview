@@ -49,7 +49,7 @@ export async function renderQcdTracker(mount, _appState) {
                 <label><span data-i18n="view.qcd.label.charity">Charity name</span>
                     <input type="text" name="charity" required></label>
                 <label><span data-i18n="view.qcd.label.amount">Amount ($)</span>
-                    <input type="number" step="100" name="amount" required></label>
+                    <input type="number" step="0.01" name="amount" required></label>
                 <label><span data-i18n="view.qcd.label.is_split_interest">Split-interest (CRT/CGA)?</span>
                     <input type="checkbox" name="is_split_interest"></label>
                 <label><span data-i18n="view.qcd.label.notes">Notes</span>
@@ -62,7 +62,7 @@ export async function renderQcdTracker(mount, _appState) {
                 <label><span data-i18n="view.qcd.label.view_year">View year</span>
                     <input type="number" id="qcd-year" value="${state.year}"></label>
                 <label><span data-i18n="view.qcd.label.rmd_amount">${state.year} RMD amount ($)</span>
-                    <input type="number" step="100" id="qcd-rmd" value="${state.rmd_required_amount}"></label>
+                    <input type="number" step="0.01" id="qcd-rmd" value="${state.rmd_required_amount}"></label>
             </div>
         </div>
         <div id="qcd-summary"></div>

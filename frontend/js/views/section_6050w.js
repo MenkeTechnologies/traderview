@@ -41,7 +41,7 @@ export async function renderSection6050W(mount, _appState) {
             <h2 data-i18n="view.s6050W.h2.inputs">Inputs</h2>
             <form id="s6050W-form" class="inline-form">
                 <label><span data-i18n="view.s6050W.label.gross">Gross payments received ($)</span>
-                    <input type="number" step="100" name="gross_payments_received" value="${state.gross_payments_received}"></label>
+                    <input type="number" step="0.01" name="gross_payments_received" value="${state.gross_payments_received}"></label>
                 <label><span data-i18n="view.s6050W.label.txns">Transaction count</span>
                     <input type="number" step="1" name="transaction_count" value="${state.transaction_count}"></label>
                 <label><span data-i18n="view.s6050W.label.year">Tax year</span>
@@ -60,9 +60,9 @@ export async function renderSection6050W(mount, _appState) {
                 <label><span data-i18n="view.s6050W.label.personal">Personal transfers (friends/family)?</span>
                     <input type="checkbox" name="is_personal_transfer" ${state.is_personal_transfer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6050W.label.cogs">Cost of goods sold ($)</span>
-                    <input type="number" step="100" name="cost_of_goods" value="${state.cost_of_goods}"></label>
+                    <input type="number" step="0.01" name="cost_of_goods" value="${state.cost_of_goods}"></label>
                 <label><span data-i18n="view.s6050W.label.expenses">Business expenses ($)</span>
-                    <input type="number" step="100" name="business_expenses" value="${state.business_expenses}"></label>
+                    <input type="number" step="0.01" name="business_expenses" value="${state.business_expenses}"></label>
                 <label><span data-i18n="view.s6050W.label.loss">Sale at LOSS (personal items)?</span>
                     <input type="checkbox" name="sale_was_loss" ${state.sale_was_loss ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6050W.label.pse">PSE type</span>

@@ -55,7 +55,7 @@ export async function renderSection6041(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6041.label.total">Total payment for year ($)</span>
-                    <input type="number" step="100" name="total_payment_year" value="${state.total_payment_year}"></label>
+                    <input type="number" step="0.01" name="total_payment_year" value="${state.total_payment_year}"></label>
                 <label><span data-i18n="view.s6041.label.recipient">Recipient type</span>
                     <select name="recipient_type">
                         <option value="individual" ${state.recipient_type === 'individual' ? 'selected' : ''}>Individual</option>
@@ -75,7 +75,7 @@ export async function renderSection6041(mount, _appState) {
                 <label><span data-i18n="view.s6041.label.backup">Backup withholding applied?</span>
                     <input type="checkbox" name="backup_withholding_applied" ${state.backup_withholding_applied ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6041.label.backup_amt">Backup withholding amount ($)</span>
-                    <input type="number" step="10" name="backup_withholding_amount" value="${state.backup_withholding_amount}"></label>
+                    <input type="number" step="0.01" name="backup_withholding_amount" value="${state.backup_withholding_amount}"></label>
                 <label><span data-i18n="view.s6041.label.efile">E-file required?</span>
                     <input type="checkbox" name="e_file_required" ${state.e_file_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6041.label.deadline">Deadline met?</span>
@@ -89,9 +89,9 @@ export async function renderSection6041(mount, _appState) {
                 <label><span data-i18n="view.s6041.label.attorney_exc">Attorney fees exception?</span>
                     <input type="checkbox" name="attorney_fees" ${state.attorney_fees ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6041.label.rent">Rent box 1 ($)</span>
-                    <input type="number" step="100" name="rent_box1" value="${state.rent_box1}"></label>
+                    <input type="number" step="0.01" name="rent_box1" value="${state.rent_box1}"></label>
                 <label><span data-i18n="view.s6041.label.royalty">Royalties box 2 ($)</span>
-                    <input type="number" step="100" name="royalties_box2" value="${state.royalties_box2}"></label>
+                    <input type="number" step="0.01" name="royalties_box2" value="${state.royalties_box2}"></label>
                 <button class="primary" type="submit" data-i18n="view.s6041.btn.compute">Compute</button>
             </form>
         </div>

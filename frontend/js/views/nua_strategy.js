@@ -37,11 +37,11 @@ export async function renderNuaStrategy(mount, _appState) {
             <h2 data-i18n="view.nua.h2.inputs">Inputs</h2>
             <form id="nua-form" class="inline-form">
                 <label><span data-i18n="view.nua.label.basis">Employer stock cost basis ($)</span>
-                    <input type="number" step="1000" name="employer_stock_basis" value="${state.employer_stock_basis}"></label>
+                    <input type="number" step="0.01" name="employer_stock_basis" value="${state.employer_stock_basis}"></label>
                 <label><span data-i18n="view.nua.label.fmv">Employer stock FMV ($)</span>
-                    <input type="number" step="1000" name="employer_stock_fmv" value="${state.employer_stock_fmv}"></label>
+                    <input type="number" step="0.01" name="employer_stock_fmv" value="${state.employer_stock_fmv}"></label>
                 <label><span data-i18n="view.nua.label.other_balance">Other 401(k) balance ($)</span>
-                    <input type="number" step="1000" name="other_401k_balance" value="${state.other_401k_balance}"></label>
+                    <input type="number" step="0.01" name="other_401k_balance" value="${state.other_401k_balance}"></label>
                 <label><span data-i18n="view.nua.label.ordinary_rate">Ordinary rate %</span>
                     <input type="number" step="0.5" name="ordinary_rate" value="${(state.ordinary_rate * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.nua.label.lt_cap_gains_rate">LT cap-gains rate %</span>

@@ -58,7 +58,7 @@ export async function renderStateTax(mount, _appState) {
         <div class="chart-panel">
             <form id="st-form" class="inline-form">
                 <label><span data-i18n="view.statetax.label.income">Annual income ($)</span>
-                    <input type="number" step="1000" name="income" value="${state.income}"></label>
+                    <input type="number" step="0.01" name="income" value="${state.income}"></label>
                 <button class="primary" type="submit" data-i18n="view.statetax.btn.recompute">Recompute</button>
             </form>
         </div>

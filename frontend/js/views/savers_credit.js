@@ -60,11 +60,11 @@ export async function renderSaversCredit(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.savers.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.savers.label.self_contrib">Self retirement contributions ($)</span>
-                    <input type="number" step="100" name="self_contribution" value="${state.self_contribution}"></label>
+                    <input type="number" step="0.01" name="self_contribution" value="${state.self_contribution}"></label>
                 <label><span data-i18n="view.savers.label.spouse_contrib">Spouse contributions ($)</span>
-                    <input type="number" step="100" name="spouse_contribution" value="${state.spouse_contribution}"></label>
+                    <input type="number" step="0.01" name="spouse_contribution" value="${state.spouse_contribution}"></label>
                 <label><span data-i18n="view.savers.label.age">Age</span>
                     <input type="number" step="1" name="age" value="${state.age}" min="14" max="100"></label>
                 <label><span data-i18n="view.savers.label.is_student">Full-time student?</span>

@@ -44,9 +44,9 @@ export async function renderSqueezeAlerts(mount, _appState) {
             <h2 data-i18n="view.squeeze_alerts.h2.settings">Settings</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.squeeze_alerts.label.price_threshold">Price threshold (% as decimal, 0.05 = 5%)</span>
-                    <input id="sq-pt" type="number" step="any" min="0" value="${settings.price_threshold_pct}"></label>
+                    <input id="sq-pt" type="number" step="0.01" min="0" value="${settings.price_threshold_pct}"></label>
                 <label><span data-i18n="view.squeeze_alerts.label.volume_threshold">Volume threshold (× ADV in window)</span>
-                    <input id="sq-vt" type="number" step="any" min="0" value="${settings.volume_threshold}"></label>
+                    <input id="sq-vt" type="number" step="0.01" min="0" value="${settings.volume_threshold}"></label>
                 <label><span data-i18n="view.squeeze_alerts.label.window_seconds">Window (seconds)</span>
                     <input id="sq-ws" type="number" step="1" min="1" value="${settings.window_seconds}"></label>
                 <label><span data-i18n="view.squeeze_alerts.label.cooldown">Cooldown (seconds)</span>

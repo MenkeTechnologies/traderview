@@ -37,15 +37,15 @@ export async function renderSection1400z(mount, _appState) {
             <h2 data-i18n="view.s1400z.h2.inputs">Inputs</h2>
             <form id="s1400z-form" class="inline-form">
                 <label><span data-i18n="view.s1400z.label.gain">Deferred capital gain ($)</span>
-                    <input type="number" step="10000" name="deferred_gain" value="${state.deferred_gain}"></label>
+                    <input type="number" step="0.01" name="deferred_gain" value="${state.deferred_gain}"></label>
                 <label><span data-i18n="view.s1400z.label.invested">Invested in QOF ($)</span>
-                    <input type="number" step="10000" name="invested_in_qof" value="${state.invested_in_qof}"></label>
+                    <input type="number" step="0.01" name="invested_in_qof" value="${state.invested_in_qof}"></label>
                 <label><span data-i18n="view.s1400z.label.year">Investment year</span>
                     <input type="number" step="1" name="investment_year" value="${state.investment_year}"></label>
                 <label><span data-i18n="view.s1400z.label.years_held">Years held</span>
                     <input type="number" step="0.5" name="years_held" value="${state.years_held}"></label>
                 <label><span data-i18n="view.s1400z.label.fmv">QOF FMV at sale (year 10+) ($)</span>
-                    <input type="number" step="10000" name="qof_fmv_at_sale" value="${state.qof_fmv_at_sale}"></label>
+                    <input type="number" step="0.01" name="qof_fmv_at_sale" value="${state.qof_fmv_at_sale}"></label>
                 <label><span data-i18n="view.s1400z.label.eligible">Eligible gain (capital, 180-day rule)?</span>
                     <input type="checkbox" name="eligible_gain_180_days" ${state.eligible_gain_180_days ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1400z.label.qof">QOF passes 90%+ asset test?</span>

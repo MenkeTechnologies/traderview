@@ -45,7 +45,7 @@ export async function renderSection6651(mount, _appState) {
             <h2 data-i18n="view.s6651.h2.inputs">Inputs</h2>
             <form id="s6651-form" class="inline-form">
                 <label><span data-i18n="view.s6651.label.tax">Tax owed ($)</span>
-                    <input type="number" step="1000" name="tax_owed" value="${state.tax_owed}"></label>
+                    <input type="number" step="0.01" name="tax_owed" value="${state.tax_owed}"></label>
                 <label><span data-i18n="view.s6651.label.ftf_months">Months late filing</span>
                     <input type="number" step="1" name="months_late_filing" value="${state.months_late_filing}"></label>
                 <label><span data-i18n="view.s6651.label.ftp_months">Months late paying</span>

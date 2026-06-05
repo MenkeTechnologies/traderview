@@ -92,7 +92,7 @@ export async function renderSection6221(mount, _appState) {
                 <label><span data-i18n="view.s6221.label.entity">Entity PR?</span>
                     <input type="checkbox" name="is_designated_entity" ${state.is_designated_entity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6221.label.imputed">Imputed underpayment ($)</span>
-                    <input type="number" step="10000" name="imputed_underpayment" value="${state.imputed_underpayment}"></label>
+                    <input type="number" step="0.01" name="imputed_underpayment" value="${state.imputed_underpayment}"></label>
                 <label><span data-i18n="view.s6221.label.rate">Imputed rate %</span>
                     <input type="number" step="0.1" name="imputed_rate" value="${state.imputed_rate}"></label>
                 <label><span data-i18n="view.s6221.label.modified">§ 6225 modified rate %</span>
@@ -116,7 +116,7 @@ export async function renderSection6221(mount, _appState) {
                 <label><span data-i18n="view.s6221.label.modifications">§ 6225 modifications via amended returns?</span>
                     <input type="checkbox" name="s6225_modifications_amended_returns" ${state.s6225_modifications_amended_returns ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6221.label.tax_attrib">§ 6225(b) tax attributes ($)</span>
-                    <input type="number" step="10000" name="s6225_b_tax_attributes" value="${state.s6225_b_tax_attributes}"></label>
+                    <input type="number" step="0.01" name="s6225_b_tax_attributes" value="${state.s6225_b_tax_attributes}"></label>
                 <label><span data-i18n="view.s6221.label.specific">§ 6225(c) specific mods?</span>
                     <input type="checkbox" name="s6225_c_specific_modifications" ${state.s6225_c_specific_modifications ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6221.label.c3">§ 6225(c)(3) higher tax rate?</span>

@@ -57,9 +57,9 @@ export async function renderCostSeg(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.costseg.label.purchase_price">Purchase price ($)</span>
-                    <input type="number" step="1000" name="purchase_price" required></label>
+                    <input type="number" step="0.01" name="purchase_price" required></label>
                 <label><span data-i18n="view.costseg.label.land_value">Land value (excluded) ($)</span>
-                    <input type="number" step="1000" name="land_value" required></label>
+                    <input type="number" step="0.01" name="land_value" required></label>
                 <label><span data-i18n="view.costseg.label.placed_year">Year placed in service</span>
                     <input type="number" step="1" name="placed_year" value="${new Date().getFullYear()}" required></label>
                 <button class="primary" type="submit" data-i18n="view.costseg.btn.add">Add</button>
@@ -71,7 +71,7 @@ export async function renderCostSeg(mount, _appState) {
                 <label><span data-i18n="view.costseg.label.marginal_rate">Marginal federal+state %</span>
                     <input type="number" step="0.5" name="marginal_rate" value="${(state.marginal_rate * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.costseg.label.study_cost">Study cost ($)</span>
-                    <input type="number" step="500" name="study_cost" value="${state.study_cost}"></label>
+                    <input type="number" step="0.01" name="study_cost" value="${state.study_cost}"></label>
                 <button class="primary" type="submit" data-i18n="view.costseg.btn.update">Update</button>
             </form>
         </div>

@@ -40,7 +40,7 @@ export async function renderSection30C(mount, _appState) {
             <h2 data-i18n="view.s30C.h2.inputs">Inputs</h2>
             <form id="s30C-form" class="inline-form">
                 <label><span data-i18n="view.s30C.label.cost">Project cost ($)</span>
-                    <input type="number" step="500" name="project_cost" value="${state.project_cost}"></label>
+                    <input type="number" step="0.01" name="project_cost" value="${state.project_cost}"></label>
                 <label><span data-i18n="view.s30C.label.business">Business use?</span>
                     <input type="checkbox" name="is_business" ${state.is_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s30C.label.non_urban">Non-urban area?</span>

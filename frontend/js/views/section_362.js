@@ -84,21 +84,21 @@ export async function renderSection362(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s362.label.basis">Transferor basis ($)</span>
-                    <input type="number" step="1000" name="transferor_adjusted_basis" value="${state.transferor_adjusted_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_adjusted_basis" value="${state.transferor_adjusted_basis}"></label>
                 <label><span data-i18n="view.s362.label.fmv">FMV at transfer ($)</span>
-                    <input type="number" step="1000" name="fmv_at_transfer" value="${state.fmv_at_transfer}"></label>
+                    <input type="number" step="0.01" name="fmv_at_transfer" value="${state.fmv_at_transfer}"></label>
                 <label><span data-i18n="view.s362.label.gain">Gain recognized ($)</span>
-                    <input type="number" step="1000" name="gain_recognized_by_transferor" value="${state.gain_recognized_by_transferor}"></label>
+                    <input type="number" step="0.01" name="gain_recognized_by_transferor" value="${state.gain_recognized_by_transferor}"></label>
                 <label><span data-i18n="view.s362.label.corp_basis">Corp basis ($)</span>
-                    <input type="number" step="1000" name="corporate_basis_in_property" value="${state.corporate_basis_in_property}"></label>
+                    <input type="number" step="0.01" name="corporate_basis_in_property" value="${state.corporate_basis_in_property}"></label>
                 <label><span data-i18n="view.s362.label.s362a">§ 362(a) carryover ($)</span>
-                    <input type="number" step="1000" name="s362_a_carryover_basis" value="${state.s362_a_carryover_basis}"></label>
+                    <input type="number" step="0.01" name="s362_a_carryover_basis" value="${state.s362_a_carryover_basis}"></label>
                 <label><span data-i18n="view.s362.label.s362b">§ 362(b) reorg basis ($)</span>
-                    <input type="number" step="1000" name="s362_b_reorganization_basis" value="${state.s362_b_reorganization_basis}"></label>
+                    <input type="number" step="0.01" name="s362_b_reorganization_basis" value="${state.s362_b_reorganization_basis}"></label>
                 <label><span data-i18n="view.s362.label.s362c">§ 362(c) purchase ($)</span>
-                    <input type="number" step="1000" name="s362_c_property_purchase" value="${state.s362_c_property_purchase}"></label>
+                    <input type="number" step="0.01" name="s362_c_property_purchase" value="${state.s362_c_property_purchase}"></label>
                 <label><span data-i18n="view.s362.label.s362d">§ 362(d) cap contrib ($)</span>
-                    <input type="number" step="1000" name="s362_d_contribution_to_capital" value="${state.s362_d_contribution_to_capital}"></label>
+                    <input type="number" step="0.01" name="s362_d_contribution_to_capital" value="${state.s362_d_contribution_to_capital}"></label>
                 <label><span data-i18n="view.s362.label.s362e2">§ 362(e)(2) anti-loss?</span>
                     <input type="checkbox" name="s362_e_2_anti_loss_duplication" ${state.s362_e_2_anti_loss_duplication ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s362.label.nbil">Net built-in loss?</span>
@@ -106,19 +106,19 @@ export async function renderSection362(mount, _appState) {
                 <label><span data-i18n="view.s362.label.multi">Multiple properties?</span>
                     <input type="checkbox" name="multiple_properties_transferred" ${state.multiple_properties_transferred ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s362.label.excess">Excess basis-over-FMV ($)</span>
-                    <input type="number" step="1000" name="aggregate_basis_excess_fmv" value="${state.aggregate_basis_excess_fmv}"></label>
+                    <input type="number" step="0.01" name="aggregate_basis_excess_fmv" value="${state.aggregate_basis_excess_fmv}"></label>
                 <label><span data-i18n="view.s362.label.s362e2a">§ 362(e)(2)(A) limit ($)</span>
-                    <input type="number" step="1000" name="s362_e_2_a_basis_limit_fmv" value="${state.s362_e_2_a_basis_limit_fmv}"></label>
+                    <input type="number" step="0.01" name="s362_e_2_a_basis_limit_fmv" value="${state.s362_e_2_a_basis_limit_fmv}"></label>
                 <label><span data-i18n="view.s362.label.s362e2b">§ 362(e)(2)(B) election?</span>
                     <input type="checkbox" name="s362_e_2_b_election_outside_basis_reduction" ${state.s362_e_2_b_election_outside_basis_reduction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s362.label.elect">Election made?</span>
                     <input type="checkbox" name="s362_e_election_made" ${state.s362_e_election_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s362.label.outside_after">Transferor stock basis after ($)</span>
-                    <input type="number" step="1000" name="transferor_stock_basis_after_election" value="${state.transferor_stock_basis_after_election}"></label>
+                    <input type="number" step="0.01" name="transferor_stock_basis_after_election" value="${state.transferor_stock_basis_after_election}"></label>
                 <label><span data-i18n="view.s362.label.boot">Boot received ($)</span>
-                    <input type="number" step="1000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s362.label.s357c">§ 357(c) excess ($)</span>
-                    <input type="number" step="1000" name="s357_c_liabilities_excess_basis" value="${state.s357_c_liabilities_excess_basis}"></label>
+                    <input type="number" step="0.01" name="s357_c_liabilities_excess_basis" value="${state.s357_c_liabilities_excess_basis}"></label>
                 <label><span data-i18n="view.s362.label.s357b">§ 357(b) avoidance?</span>
                     <input type="checkbox" name="s357_b_tax_avoidance" ${state.s357_b_tax_avoidance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s362.label.s351a">§ 351(a)?</span>
@@ -163,15 +163,15 @@ export async function renderSection362(mount, _appState) {
                 <label><span data-i18n="view.s362.label.s362b_solely">§ 362(b) solely stock?</span>
                     <input type="checkbox" name="s362_b_acquisition_solely_for_stock" ${state.s362_b_acquisition_solely_for_stock ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s362.label.s382h_gain">§ 382(h) gain ($)</span>
-                    <input type="number" step="10000" name="s382_h_built_in_gain" value="${state.s382_h_built_in_gain}"></label>
+                    <input type="number" step="0.01" name="s382_h_built_in_gain" value="${state.s382_h_built_in_gain}"></label>
                 <label><span data-i18n="view.s362.label.s382h_loss">§ 382(h) loss ($)</span>
-                    <input type="number" step="10000" name="s382_h_built_in_loss" value="${state.s382_h_built_in_loss}"></label>
+                    <input type="number" step="0.01" name="s382_h_built_in_loss" value="${state.s382_h_built_in_loss}"></label>
                 <label><span data-i18n="view.s362.label.agg_basis">Agg basis ($)</span>
-                    <input type="number" step="1000" name="aggregated_basis_in_property" value="${state.aggregated_basis_in_property}"></label>
+                    <input type="number" step="0.01" name="aggregated_basis_in_property" value="${state.aggregated_basis_in_property}"></label>
                 <label><span data-i18n="view.s362.label.agg_fmv">Agg FMV ($)</span>
-                    <input type="number" step="1000" name="aggregated_fmv" value="${state.aggregated_fmv}"></label>
+                    <input type="number" step="0.01" name="aggregated_fmv" value="${state.aggregated_fmv}"></label>
                 <label><span data-i18n="view.s362.label.nbil_amt">NBIL amount ($)</span>
-                    <input type="number" step="1000" name="net_built_in_loss_amount" value="${state.net_built_in_loss_amount}"></label>
+                    <input type="number" step="0.01" name="net_built_in_loss_amount" value="${state.net_built_in_loss_amount}"></label>
                 <label><span data-i18n="view.s362.label.consol">Consolidated transferor?</span>
                     <input type="checkbox" name="is_transferor_consolidated" ${state.is_transferor_consolidated ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s362.btn.compute">Compute</button>

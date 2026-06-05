@@ -58,15 +58,15 @@ export async function renderSection162l(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s162l.label.net_se">Net SE earnings ($)</span>
-                    <input type="number" step="1000" name="net_se_earnings" value="${state.net_se_earnings}"></label>
+                    <input type="number" step="0.01" name="net_se_earnings" value="${state.net_se_earnings}"></label>
                 <label><span data-i18n="view.s162l.label.s_corp_w2">S-corp W-2 wages ($)</span>
-                    <input type="number" step="1000" name="s_corp_w2_wages" value="${state.s_corp_w2_wages}"></label>
+                    <input type="number" step="0.01" name="s_corp_w2_wages" value="${state.s_corp_w2_wages}"></label>
                 <label><span data-i18n="view.s162l.label.medical">Medical premiums ($)</span>
-                    <input type="number" step="100" name="medical_premiums" value="${state.medical_premiums}"></label>
+                    <input type="number" step="0.01" name="medical_premiums" value="${state.medical_premiums}"></label>
                 <label><span data-i18n="view.s162l.label.dental">Dental / vision premiums ($)</span>
-                    <input type="number" step="100" name="dental_premiums" value="${state.dental_premiums}"></label>
+                    <input type="number" step="0.01" name="dental_premiums" value="${state.dental_premiums}"></label>
                 <label><span data-i18n="view.s162l.label.ltc">LTC premiums (age-limited) ($)</span>
-                    <input type="number" step="100" name="ltc_premiums" value="${state.ltc_premiums}"></label>
+                    <input type="number" step="0.01" name="ltc_premiums" value="${state.ltc_premiums}"></label>
                 <label><span data-i18n="view.s162l.label.age">Your age</span>
                     <input type="number" step="1" name="age" value="${state.age}"></label>
                 <label><span data-i18n="view.s162l.label.spouse_age">Spouse age</span>

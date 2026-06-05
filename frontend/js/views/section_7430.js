@@ -54,17 +54,17 @@ export async function renderSection7430(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s7430.label.net_worth">Net worth ($)</span>
-                    <input type="number" step="100000" name="net_worth" value="${state.net_worth}"></label>
+                    <input type="number" step="0.01" name="net_worth" value="${state.net_worth}"></label>
                 <label><span data-i18n="view.s7430.label.employees">Employees (corp only)</span>
                     <input type="number" step="1" name="employees" value="${state.employees}"></label>
                 <label><span data-i18n="view.s7430.label.hours">Attorney hours</span>
                     <input type="number" step="1" name="attorney_hours" value="${state.attorney_hours}"></label>
                 <label><span data-i18n="view.s7430.label.actual_rate">Actual hourly rate ($)</span>
-                    <input type="number" step="10" name="actual_hourly_rate" value="${state.actual_hourly_rate}"></label>
+                    <input type="number" step="0.01" name="actual_hourly_rate" value="${state.actual_hourly_rate}"></label>
                 <label><span data-i18n="view.s7430.label.expert">Expert witness fees ($)</span>
-                    <input type="number" step="100" name="expert_fees" value="${state.expert_fees}"></label>
+                    <input type="number" step="0.01" name="expert_fees" value="${state.expert_fees}"></label>
                 <label><span data-i18n="view.s7430.label.other">Other litigation costs ($)</span>
-                    <input type="number" step="100" name="other_litigation_costs" value="${state.other_litigation_costs}"></label>
+                    <input type="number" step="0.01" name="other_litigation_costs" value="${state.other_litigation_costs}"></label>
                 <label><span data-i18n="view.s7430.label.prevailed">Substantially prevailed?</span>
                     <input type="checkbox" name="substantially_prevailed" ${state.substantially_prevailed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7430.label.justified">IRS position substantially justified?</span>
@@ -72,9 +72,9 @@ export async function renderSection7430(mount, _appState) {
                 <label><span data-i18n="view.s7430.label.qualified_offer">Qualified offer made?</span>
                     <input type="checkbox" name="qualified_offer_made" ${state.qualified_offer_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7430.label.offer_amount">Qualified offer amount ($)</span>
-                    <input type="number" step="1000" name="qualified_offer_amount" value="${state.qualified_offer_amount}"></label>
+                    <input type="number" step="0.01" name="qualified_offer_amount" value="${state.qualified_offer_amount}"></label>
                 <label><span data-i18n="view.s7430.label.final">Final judgment amount ($)</span>
-                    <input type="number" step="1000" name="final_judgment_amount" value="${state.final_judgment_amount}"></label>
+                    <input type="number" step="0.01" name="final_judgment_amount" value="${state.final_judgment_amount}"></label>
                 <button class="primary" type="submit" data-i18n="view.s7430.btn.compute">Compute</button>
             </form>
         </div>

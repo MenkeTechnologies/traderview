@@ -31,9 +31,9 @@ export async function renderKelly(mount, _appState) {
             <h2 data-i18n="view.kelly.h2.static_kelly">Static Kelly</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.kelly.label.win_rate">Win rate (0–1)</span>
-                    <input id="kl-wr" type="number" step="any" min="0" max="1" value="${state.winRate}" data-tip="view.kelly.tip.win_rate"></label>
+                    <input id="kl-wr" type="number" step="0.01" min="0" max="1" value="${state.winRate}" data-tip="view.kelly.tip.win_rate"></label>
                 <label><span data-i18n="view.kelly.label.payoff_ratio">Payoff ratio (avg win / avg loss)</span>
-                    <input id="kl-payoff" type="number" step="any" min="0" value="${state.payoffRatio}" data-tip="view.kelly.tip.payoff"></label>
+                    <input id="kl-payoff" type="number" step="0.01" min="0" value="${state.payoffRatio}" data-tip="view.kelly.tip.payoff"></label>
                 <button data-i18n="view.kelly.btn.compute_static" data-tip="view.kelly.tip.run_static" data-shortcut="kelly_compute_static" id="kl-run-static" class="primary" type="button">Compute static</button>
             </div>
             <div class="inline-form">

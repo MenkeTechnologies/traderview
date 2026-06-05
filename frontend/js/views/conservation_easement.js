@@ -42,19 +42,19 @@ export async function renderConservationEasement(mount, _appState) {
             <h2 data-i18n="view.ce.h2.inputs">Inputs</h2>
             <form id="ce-form" class="inline-form">
                 <label><span data-i18n="view.ce.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.ce.label.is_farmer">Qualified farmer/rancher?</span>
                     <input type="checkbox" name="is_farmer" ${state.is_farmer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.ce.label.appraised_value">Appraised easement value ($)</span>
-                    <input type="number" step="1000" name="appraised_value" value="${state.appraised_value}"></label>
+                    <input type="number" step="0.01" name="appraised_value" value="${state.appraised_value}"></label>
                 <label><span data-i18n="view.ce.label.cost_basis">Cost basis in property ($)</span>
-                    <input type="number" step="1000" name="cost_basis" value="${state.cost_basis}"></label>
+                    <input type="number" step="0.01" name="cost_basis" value="${state.cost_basis}"></label>
                 <label><span data-i18n="view.ce.label.is_syndicated">Syndicated deal?</span>
                     <input type="checkbox" name="is_syndicated" ${state.is_syndicated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.ce.label.promoter_ratio">Promoter offering ratio (deduction / investment)</span>
                     <input type="number" step="0.1" name="promoter_offering_ratio" value="${state.promoter_offering_ratio}"></label>
                 <label><span data-i18n="view.ce.label.investment">Your investment ($)</span>
-                    <input type="number" step="1000" name="investment_in_syndication" value="${state.investment_in_syndication}"></label>
+                    <input type="number" step="0.01" name="investment_in_syndication" value="${state.investment_in_syndication}"></label>
                 <label><span data-i18n="view.ce.label.your_marginal_rate">Marginal federal %</span>
                     <input type="number" step="0.5" name="your_marginal_rate" value="${(state.your_marginal_rate * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.ce.label.state_rate">State %</span>

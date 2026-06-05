@@ -40,27 +40,27 @@ export async function renderSection213(mount, _appState) {
             <h2 data-i18n="view.s213.h2.inputs">Inputs</h2>
             <form id="s213-form" class="inline-form">
                 <label><span data-i18n="view.s213.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.s213.label.premiums">Health insurance premiums (after-tax) ($)</span>
-                    <input type="number" step="100" name="insurance_premiums" value="${state.insurance_premiums}"></label>
+                    <input type="number" step="0.01" name="insurance_premiums" value="${state.insurance_premiums}"></label>
                 <label><span data-i18n="view.s213.label.doctors">Doctors / dentists / hospitals ($)</span>
-                    <input type="number" step="100" name="doctor_dentist" value="${state.doctor_dentist}"></label>
+                    <input type="number" step="0.01" name="doctor_dentist" value="${state.doctor_dentist}"></label>
                 <label><span data-i18n="view.s213.label.hospital">Surgery / hospital ($)</span>
-                    <input type="number" step="100" name="hospital" value="${state.hospital}"></label>
+                    <input type="number" step="0.01" name="hospital" value="${state.hospital}"></label>
                 <label><span data-i18n="view.s213.label.prescriptions">Prescription drugs / insulin ($)</span>
-                    <input type="number" step="100" name="prescriptions" value="${state.prescriptions}"></label>
+                    <input type="number" step="0.01" name="prescriptions" value="${state.prescriptions}"></label>
                 <label><span data-i18n="view.s213.label.ltc_services">LTC services ($)</span>
-                    <input type="number" step="100" name="ltc_services" value="${state.ltc_services}"></label>
+                    <input type="number" step="0.01" name="ltc_services" value="${state.ltc_services}"></label>
                 <label><span data-i18n="view.s213.label.ltc_premiums">LTC premiums age-limited ($)</span>
-                    <input type="number" step="100" name="ltc_premiums_age_adjusted" value="${state.ltc_premiums_age_adjusted}"></label>
+                    <input type="number" step="0.01" name="ltc_premiums_age_adjusted" value="${state.ltc_premiums_age_adjusted}"></label>
                 <label><span data-i18n="view.s213.label.miles">Medical mileage (miles)</span>
                     <input type="number" step="1" name="mileage_miles" value="${state.mileage_miles}"></label>
                 <label><span data-i18n="view.s213.label.capital">Capital expenditures ($)</span>
-                    <input type="number" step="100" name="capital_expenditures" value="${state.capital_expenditures}"></label>
+                    <input type="number" step="0.01" name="capital_expenditures" value="${state.capital_expenditures}"></label>
                 <label><span data-i18n="view.s213.label.hsa">HSA-reimbursed ($)</span>
-                    <input type="number" step="100" name="hsa_reimbursed" value="${state.hsa_reimbursed}"></label>
+                    <input type="number" step="0.01" name="hsa_reimbursed" value="${state.hsa_reimbursed}"></label>
                 <label><span data-i18n="view.s213.label.employer">Employer-reimbursed ($)</span>
-                    <input type="number" step="100" name="employer_reimbursed" value="${state.employer_reimbursed}"></label>
+                    <input type="number" step="0.01" name="employer_reimbursed" value="${state.employer_reimbursed}"></label>
                 <label><span data-i18n="view.s213.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s213.btn.compute">Compute</button>

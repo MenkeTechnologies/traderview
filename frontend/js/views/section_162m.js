@@ -48,13 +48,13 @@ export async function renderSection162m(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s162m.label.total_comp">Total comp ($)</span>
-                    <input type="number" step="1000" name="total_comp" required></label>
+                    <input type="number" step="0.01" name="total_comp" required></label>
                 <label><span data-i18n="view.s162m.label.cash">Cash + bonus ($)</span>
-                    <input type="number" step="1000" name="cash_bonus"></label>
+                    <input type="number" step="0.01" name="cash_bonus"></label>
                 <label><span data-i18n="view.s162m.label.equity">Equity (vested) ($)</span>
-                    <input type="number" step="1000" name="equity"></label>
+                    <input type="number" step="0.01" name="equity"></label>
                 <label><span data-i18n="view.s162m.label.deferred">Deferred comp recognized ($)</span>
-                    <input type="number" step="1000" name="deferred_recognized"></label>
+                    <input type="number" step="0.01" name="deferred_recognized"></label>
                 <button class="primary" type="submit" data-i18n="view.s162m.btn.add">Add</button>
             </form>
         </div>

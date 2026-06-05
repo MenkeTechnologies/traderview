@@ -61,45 +61,45 @@ export async function renderSection164(mount, _appState) {
                 <label><span data-i18n="view.s164.label.year">Year</span>
                     <input type="number" step="1" name="year" value="${state.year}"></label>
                 <label><span data-i18n="view.s164.label.state_inc">State income tax ($)</span>
-                    <input type="number" step="1000" name="state_income_tax" value="${state.state_income_tax}"></label>
+                    <input type="number" step="0.01" name="state_income_tax" value="${state.state_income_tax}"></label>
                 <label><span data-i18n="view.s164.label.state_sales">State sales tax ($)</span>
-                    <input type="number" step="1000" name="state_sales_tax" value="${state.state_sales_tax}"></label>
+                    <input type="number" step="0.01" name="state_sales_tax" value="${state.state_sales_tax}"></label>
                 <label><span data-i18n="view.s164.label.elect_sales">Elect sales tax?</span>
                     <input type="checkbox" name="use_sales_election" ${state.use_sales_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s164.label.local_inc">Local income tax ($)</span>
-                    <input type="number" step="1000" name="local_income_tax" value="${state.local_income_tax}"></label>
+                    <input type="number" step="0.01" name="local_income_tax" value="${state.local_income_tax}"></label>
                 <label><span data-i18n="view.s164.label.real_residence">Real property tax (residence) ($)</span>
-                    <input type="number" step="1000" name="real_property_tax_residence" value="${state.real_property_tax_residence}"></label>
+                    <input type="number" step="0.01" name="real_property_tax_residence" value="${state.real_property_tax_residence}"></label>
                 <label><span data-i18n="view.s164.label.real_other">Real property tax (other) ($)</span>
-                    <input type="number" step="1000" name="real_property_tax_other" value="${state.real_property_tax_other}"></label>
+                    <input type="number" step="0.01" name="real_property_tax_other" value="${state.real_property_tax_other}"></label>
                 <label><span data-i18n="view.s164.label.personal_prop">Personal property tax ($)</span>
-                    <input type="number" step="100" name="personal_property_tax" value="${state.personal_property_tax}"></label>
+                    <input type="number" step="0.01" name="personal_property_tax" value="${state.personal_property_tax}"></label>
                 <label><span data-i18n="view.s164.label.foreign">Foreign income tax paid ($)</span>
-                    <input type="number" step="1000" name="foreign_income_tax_paid" value="${state.foreign_income_tax_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_income_tax_paid" value="${state.foreign_income_tax_paid}"></label>
                 <label><span data-i18n="view.s164.label.use_ftc">Use FTC instead?</span>
                     <input type="checkbox" name="use_foreign_tax_credit" ${state.use_foreign_tax_credit ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s164.label.fed_se">Federal SE tax paid ($)</span>
-                    <input type="number" step="100" name="federal_se_tax_paid" value="${state.federal_se_tax_paid}"></label>
+                    <input type="number" step="0.01" name="federal_se_tax_paid" value="${state.federal_se_tax_paid}"></label>
                 <label><span data-i18n="view.s164.label.business_prop">Business property tax?</span>
                     <input type="checkbox" name="is_business_property_tax" ${state.is_business_property_tax ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s164.label.business_amt">Business property tax ($)</span>
-                    <input type="number" step="1000" name="business_property_tax" value="${state.business_property_tax}"></label>
+                    <input type="number" step="0.01" name="business_property_tax" value="${state.business_property_tax}"></label>
                 <label><span data-i18n="view.s164.label.rental_prop">Rental property tax?</span>
                     <input type="checkbox" name="is_rental_property_tax" ${state.is_rental_property_tax ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s164.label.rental_amt">Rental property tax ($)</span>
-                    <input type="number" step="1000" name="rental_property_tax" value="${state.rental_property_tax}"></label>
+                    <input type="number" step="0.01" name="rental_property_tax" value="${state.rental_property_tax}"></label>
                 <label><span data-i18n="view.s164.label.ptet">PTET election?</span>
                     <input type="checkbox" name="salt_cap_workaround_ptet" ${state.salt_cap_workaround_ptet ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s164.label.ptet_amt">PTET paid ($)</span>
-                    <input type="number" step="1000" name="ptet_paid" value="${state.ptet_paid}"></label>
+                    <input type="number" step="0.01" name="ptet_paid" value="${state.ptet_paid}"></label>
                 <label><span data-i18n="view.s164.label.s164a5">§ 164(a)(5) state business ($)</span>
-                    <input type="number" step="1000" name="s164a_5_state_business" value="${state.s164a_5_state_business}"></label>
+                    <input type="number" step="0.01" name="s164a_5_state_business" value="${state.s164a_5_state_business}"></label>
                 <label><span data-i18n="view.s164.label.passive">Qualified passive activity ($)</span>
-                    <input type="number" step="1000" name="qualified_passive_activity" value="${state.qualified_passive_activity}"></label>
+                    <input type="number" step="0.01" name="qualified_passive_activity" value="${state.qualified_passive_activity}"></label>
                 <label><span data-i18n="view.s164.label.amt_paying">AMT paying?</span>
                     <input type="checkbox" name="is_amt_paying" ${state.is_amt_paying ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s164.label.s55_amt">§ 55 AMT calculation ($)</span>
-                    <input type="number" step="1000" name="s55_amt_calc" value="${state.s55_amt_calc}"></label>
+                    <input type="number" step="0.01" name="s55_amt_calc" value="${state.s55_amt_calc}"></label>
                 <label><span data-i18n="view.s164.label.obbba">OBBBA extension applies?</span>
                     <input type="checkbox" name="obbba_extension" ${state.obbba_extension ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s164.btn.compute">Compute</button>

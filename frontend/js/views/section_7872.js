@@ -49,7 +49,7 @@ export async function renderSection7872(mount, _appState) {
                 <label><span data-i18n="view.s7872.label.term_years">Term (years)</span>
                     <input type="number" step="1" name="term_years" value="${state.term_years}"></label>
                 <label><span data-i18n="view.s7872.label.loan_amount">Loan amount ($)</span>
-                    <input type="number" step="1000" name="loan_amount" value="${state.loan_amount}"></label>
+                    <input type="number" step="0.01" name="loan_amount" value="${state.loan_amount}"></label>
                 <label><span data-i18n="view.s7872.label.rate_charged">Interest rate charged</span>
                     <input type="number" step="0.0001" name="interest_rate_charged" value="${state.interest_rate_charged}"></label>
                 <label><span data-i18n="view.s7872.label.afr_st">AFR short-term (current month)</span>
@@ -59,7 +59,7 @@ export async function renderSection7872(mount, _appState) {
                 <label><span data-i18n="view.s7872.label.afr_lt">AFR long-term (current month)</span>
                     <input type="number" step="0.0001" name="afr_long_term" value="${state.afr_long_term}"></label>
                 <label><span data-i18n="view.s7872.label.nii">Borrower net investment income ($)</span>
-                    <input type="number" step="100" name="borrower_net_investment_income" value="${state.borrower_net_investment_income}"></label>
+                    <input type="number" step="0.01" name="borrower_net_investment_income" value="${state.borrower_net_investment_income}"></label>
                 <label><span data-i18n="view.s7872.label.is_corp">Corp-to-shareholder?</span>
                     <input type="checkbox" name="is_corp_to_shareholder" ${state.is_corp_to_shareholder ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7872.label.lender_rate">Lender marginal %</span>

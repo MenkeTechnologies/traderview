@@ -42,7 +42,7 @@ export async function renderGoals(mount, state) {
                 <label><span data-i18n="view.goals.label.end">End</span>
                     <input name="end_date"   type="date" required style="width:140px;" data-tip="view.goals.tip.end"></label>
                 <label><span data-i18n="view.goals.label.target_pnl">Target P/L $</span>
-                    <input name="target_pnl" type="number" step="any" style="width:110px;" data-tip="view.goals.tip.target_pnl"></label>
+                    <input name="target_pnl" type="number" step="0.01" style="width:110px;" data-tip="view.goals.tip.target_pnl"></label>
                 <label><span data-i18n="view.goals.label.target_win">Target win %</span>
                     <input name="target_win_rate" type="number" min="0" max="100" step="0.5" style="width:90px;" placeholder="60" data-tip="view.goals.tip.target_win"></label>
                 <label><span data-i18n="view.goals.label.max_dd">Max DD %</span>

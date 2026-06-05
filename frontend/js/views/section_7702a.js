@@ -37,12 +37,12 @@ export async function renderSection7702a(mount, _appState) {
             <h2 data-i18n="view.s7702a.h2.inputs">Inputs</h2>
             <form id="s7702a-form" class="inline-form">
                 <label><span data-i18n="view.s7702a.label.death_benefit">Death benefit ($)</span>
-                    <input type="number" step="10000" name="death_benefit" value="${state.death_benefit}"></label>
+                    <input type="number" step="0.01" name="death_benefit" value="${state.death_benefit}"></label>
                 <label><span data-i18n="view.s7702a.label.net_level">Net level annual premium (NLP) ($)</span>
-                    <input type="number" step="100" name="annual_net_level_premium" value="${state.annual_net_level_premium}"></label>
+                    <input type="number" step="0.01" name="annual_net_level_premium" value="${state.annual_net_level_premium}"></label>
                 ${state.cumulative_premiums_paid.map((p, i) => `
                     <label><span data-i18n="view.s7702a.label.year_n">Premium paid year ${i + 1} ($)</span>
-                        <input type="number" step="100" name="prem_${i + 1}" value="${p}"></label>
+                        <input type="number" step="0.01" name="prem_${i + 1}" value="${p}"></label>
                 `).join('')}
                 <label><span data-i18n="view.s7702a.label.material">Material change in year (0 = none)</span>
                     <input type="number" step="1" min="0" max="7" name="material_change_year" value="${state.material_change_year}"></label>
@@ -50,9 +50,9 @@ export async function renderSection7702a(mount, _appState) {
                 <label><span data-i18n="view.s7702a.label.age">Age at distribution / loan</span>
                     <input type="number" step="1" name="age_at_distribution" value="${state.age_at_distribution}"></label>
                 <label><span data-i18n="view.s7702a.label.dist">Distribution / loan amount ($)</span>
-                    <input type="number" step="1000" name="distribution_amount" value="${state.distribution_amount}"></label>
+                    <input type="number" step="0.01" name="distribution_amount" value="${state.distribution_amount}"></label>
                 <label><span data-i18n="view.s7702a.label.basis">Basis in contract (cum premiums - prior dist) ($)</span>
-                    <input type="number" step="1000" name="basis_in_contract" value="${state.basis_in_contract}"></label>
+                    <input type="number" step="0.01" name="basis_in_contract" value="${state.basis_in_contract}"></label>
                 <label><span data-i18n="view.s7702a.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s7702a.btn.compute">Compute</button>

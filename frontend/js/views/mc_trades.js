@@ -40,9 +40,9 @@ export async function renderMcTrades(mount, _appState) {
                 <label><span data-i18n="view.mc_trades.label.trades_per_curve">Trades / curve</span>
                     <input id="mct-tpc" type="number" step="1" min="1" max="10000" value="${state.cfg.trades_per_curve}" data-tip="view.mc_trades.tip.trades_per_curve"></label>
                 <label><span data-i18n="view.mc_trades.label.start_equity">Start equity ($)</span>
-                    <input id="mct-eq" type="number" step="any" min="0" value="${state.cfg.start_equity}" data-tip="view.mc_trades.tip.start_equity"></label>
+                    <input id="mct-eq" type="number" step="0.01" min="0" value="${state.cfg.start_equity}" data-tip="view.mc_trades.tip.start_equity"></label>
                 <label><span data-i18n="view.mc_trades.label.ruin_threshold">Ruin threshold ($)</span>
-                    <input id="mct-ruin" type="number" step="any" min="0" value="${state.cfg.ruin_threshold}" data-tip="view.mc_trades.tip.ruin_threshold"></label>
+                    <input id="mct-ruin" type="number" step="0.01" min="0" value="${state.cfg.ruin_threshold}" data-tip="view.mc_trades.tip.ruin_threshold"></label>
                 <label><span data-i18n="view.mc_trades.label.seed">RNG seed</span>
                     <input id="mct-seed" type="number" step="1" min="0" value="${state.cfg.seed}" data-tip="view.mc_trades.tip.seed"></label>
                 <button data-i18n="view.mc_trades.btn.simulate" id="mct-run" class="primary" type="button" data-tip="view.mc_trades.tip.run" data-shortcut="mc_trades_run">Simulate</button>

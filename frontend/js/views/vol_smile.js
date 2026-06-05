@@ -51,13 +51,13 @@ export async function renderVolSmile(mount, _appState) {
             <h2 data-i18n="view.vol_smile.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.vol_smile.label.spot">Spot</span>
-                    <input id="vs-spot" type="number" step="any" value="${state.spot}" data-tip="view.vol_smile.tip.spot"></label>
+                    <input id="vs-spot" type="number" step="0.01" value="${state.spot}" data-tip="view.vol_smile.tip.spot"></label>
                 <label><span data-i18n="view.vol_smile.label.t_years">Expiry (years)</span>
-                    <input id="vs-t" type="number" step="any" value="${state.t_years}" data-tip="view.vol_smile.tip.t_years"></label>
+                    <input id="vs-t" type="number" step="0.01" value="${state.t_years}" data-tip="view.vol_smile.tip.t_years"></label>
                 <label><span data-i18n="view.vol_smile.label.rate">Rate</span>
-                    <input id="vs-rate" type="number" step="any" value="${state.rate}" data-tip="view.vol_smile.tip.rate"></label>
+                    <input id="vs-rate" type="number" step="0.01" value="${state.rate}" data-tip="view.vol_smile.tip.rate"></label>
                 <label><span data-i18n="view.vol_smile.label.div_yield">Div yield</span>
-                    <input id="vs-q" type="number" step="any" value="${state.div_yield}" data-tip="view.vol_smile.tip.div_yield"></label>
+                    <input id="vs-q" type="number" step="0.01" value="${state.div_yield}" data-tip="view.vol_smile.tip.div_yield"></label>
                 <button data-i18n="view.vol_smile.btn.fit" data-tip="view.vol_smile.tip.fit" data-shortcut="vol_smile_fit" id="vs-fit" class="primary" type="button">Fit</button>
             </div>
             <p class="muted" data-i18n-html="view.vol_smile.intro">

@@ -38,7 +38,7 @@ export async function renderSection263a(mount, _appState) {
             <h2 data-i18n="view.s263a.h2.exempt_test">Exemption test</h2>
             <form id="s263a-form" class="inline-form">
                 <label><span data-i18n="view.s263a.label.avg_receipts">3-yr avg gross receipts ($)</span>
-                    <input type="number" step="100000" name="avg_gross_receipts" value="${state.avg_gross_receipts}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts" value="${state.avg_gross_receipts}"></label>
                 <label><span data-i18n="view.s263a.label.activity">Business activity</span>
                     <select name="business_activity">
                         <option value="producer" ${state.business_activity === 'producer' ? 'selected' : ''}>Producer / Manufacturer</option>
@@ -48,19 +48,19 @@ export async function renderSection263a(mount, _appState) {
                 </label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s263a.label.direct_materials">Direct materials ($)</span>
-                    <input type="number" step="1000" name="direct_materials" value="${state.direct_materials}"></label>
+                    <input type="number" step="0.01" name="direct_materials" value="${state.direct_materials}"></label>
                 <label><span data-i18n="view.s263a.label.direct_labor">Direct labor ($)</span>
-                    <input type="number" step="1000" name="direct_labor" value="${state.direct_labor}"></label>
+                    <input type="number" step="0.01" name="direct_labor" value="${state.direct_labor}"></label>
                 <label><span data-i18n="view.s263a.label.indirect_storage">Indirect storage / warehouse ($)</span>
-                    <input type="number" step="1000" name="indirect_storage" value="${state.indirect_storage}"></label>
+                    <input type="number" step="0.01" name="indirect_storage" value="${state.indirect_storage}"></label>
                 <label><span data-i18n="view.s263a.label.indirect_purchasing">Indirect purchasing ($)</span>
-                    <input type="number" step="1000" name="indirect_purchasing" value="${state.indirect_purchasing}"></label>
+                    <input type="number" step="0.01" name="indirect_purchasing" value="${state.indirect_purchasing}"></label>
                 <label><span data-i18n="view.s263a.label.indirect_handling">Indirect handling ($)</span>
-                    <input type="number" step="1000" name="indirect_handling" value="${state.indirect_handling}"></label>
+                    <input type="number" step="0.01" name="indirect_handling" value="${state.indirect_handling}"></label>
                 <label><span data-i18n="view.s263a.label.indirect_admin">Indirect admin / overhead ($)</span>
-                    <input type="number" step="1000" name="indirect_admin" value="${state.indirect_admin}"></label>
+                    <input type="number" step="0.01" name="indirect_admin" value="${state.indirect_admin}"></label>
                 <label><span data-i18n="view.s263a.label.indirect_distribution">Indirect distribution / shipping ($)</span>
-                    <input type="number" step="1000" name="indirect_distribution" value="${state.indirect_distribution}"></label>
+                    <input type="number" step="0.01" name="indirect_distribution" value="${state.indirect_distribution}"></label>
                 <label><span data-i18n="view.s263a.label.ending_pct">Ending inventory %</span>
                     <input type="number" step="0.01" name="ending_inventory_pct" value="${state.ending_inventory_pct}"></label>
                 <label><span data-i18n="view.s263a.label.marginal">Marginal tax %</span>

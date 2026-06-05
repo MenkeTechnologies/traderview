@@ -50,13 +50,13 @@ export async function renderAbleAccount(mount, _appState) {
                 <label><span data-i18n="view.able.label.disability_onset_age">Disability onset age</span>
                     <input type="number" step="1" name="disability_onset_age" value="${state.disability_onset_age}"></label>
                 <label><span data-i18n="view.able.label.annual_contribution">Annual contribution ($)</span>
-                    <input type="number" step="500" name="annual_contribution" value="${state.annual_contribution}"></label>
+                    <input type="number" step="0.01" name="annual_contribution" value="${state.annual_contribution}"></label>
                 <label><span data-i18n="view.able.label.employed">Beneficiary employed?</span>
                     <input type="checkbox" name="employed" ${state.employed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.able.label.earned_income">Beneficiary earned income ($)</span>
-                    <input type="number" step="1000" name="earned_income" value="${state.earned_income}"></label>
+                    <input type="number" step="0.01" name="earned_income" value="${state.earned_income}"></label>
                 <label><span data-i18n="view.able.label.current_balance">Current ABLE balance ($)</span>
-                    <input type="number" step="1000" name="current_balance" value="${state.current_balance}"></label>
+                    <input type="number" step="0.01" name="current_balance" value="${state.current_balance}"></label>
                 <label><span data-i18n="view.able.label.receives_ssi">Receives SSI?</span>
                     <input type="checkbox" name="receives_ssi" ${state.receives_ssi ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.able.btn.compute">Compute</button>

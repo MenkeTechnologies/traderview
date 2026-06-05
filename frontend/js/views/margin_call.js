@@ -24,11 +24,11 @@ export async function renderMarginCall(mount, _appState) {
             <h2 data-i18n="view.margin_call.h2.account">Account snapshot</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.margin_call.label.lmv">Long market value ($)</span>
-                    <input id="mc-lmv" type="number" step="any" min="0" value="${state.long_market_value}" data-tip="view.margin_call.tip.lmv"></label>
+                    <input id="mc-lmv" type="number" step="0.01" min="0" value="${state.long_market_value}" data-tip="view.margin_call.tip.lmv"></label>
                 <label><span data-i18n="view.margin_call.label.debt">Margin debt ($)</span>
-                    <input id="mc-debt" type="number" step="any" min="0" value="${state.margin_debt}" data-tip="view.margin_call.tip.debt"></label>
+                    <input id="mc-debt" type="number" step="0.01" min="0" value="${state.margin_debt}" data-tip="view.margin_call.tip.debt"></label>
                 <label><span data-i18n="view.margin_call.label.maint">Maintenance %  (decimal — 0.25 = 25%)</span>
-                    <input id="mc-mp" type="number" step="any" min="0" max="1" value="${state.maintenance_pct}" data-tip="view.margin_call.tip.maint"></label>
+                    <input id="mc-mp" type="number" step="0.01" min="0" max="1" value="${state.maintenance_pct}" data-tip="view.margin_call.tip.maint"></label>
                 <button data-i18n="view.margin_call.btn.evaluate" id="mc-run" class="primary"
                         data-tip="view.margin_call.tip.evaluate" data-shortcut="margin_call_run" type="button">Evaluate</button>
             </div>

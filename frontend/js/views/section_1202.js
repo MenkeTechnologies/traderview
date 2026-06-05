@@ -60,13 +60,13 @@ export async function renderSection1202(mount, _appState) {
                 <label><span data-i18n="view.s1202.label.holding">Holding days</span>
                     <input type="number" step="1" name="holding_days" value="${state.holding_days}"></label>
                 <label><span data-i18n="view.s1202.label.basis">Original basis ($)</span>
-                    <input type="number" step="10000" name="original_basis" value="${state.original_basis}"></label>
+                    <input type="number" step="0.01" name="original_basis" value="${state.original_basis}"></label>
                 <label><span data-i18n="view.s1202.label.proceeds">Sale proceeds ($)</span>
-                    <input type="number" step="10000" name="sale_proceeds" value="${state.sale_proceeds}"></label>
+                    <input type="number" step="0.01" name="sale_proceeds" value="${state.sale_proceeds}"></label>
                 <label><span data-i18n="view.s1202.label.gain">Gain realized ($)</span>
-                    <input type="number" step="10000" name="gain_realized" value="${state.gain_realized}"></label>
+                    <input type="number" step="0.01" name="gain_realized" value="${state.gain_realized}"></label>
                 <label><span data-i18n="view.s1202.label.assets">Issuer gross assets at issuance ($)</span>
-                    <input type="number" step="100000" name="issuer_gross_assets_at_issuance" value="${state.issuer_gross_assets_at_issuance}"></label>
+                    <input type="number" step="0.01" name="issuer_gross_assets_at_issuance" value="${state.issuer_gross_assets_at_issuance}"></label>
                 <label><span data-i18n="view.s1202.label.ccorp">C-corporation?</span>
                     <input type="checkbox" name="is_c_corporation" ${state.is_c_corporation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1202.label.active">Active business (80% test)?</span>
@@ -90,17 +90,17 @@ export async function renderSection1202(mount, _appState) {
                 <label><span data-i18n="view.s1202.label.s1045">§ 1045 rollover election?</span>
                     <input type="checkbox" name="s1045_rollover_election" ${state.s1045_rollover_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1202.label.replacement">Replacement QSBS ($)</span>
-                    <input type="number" step="10000" name="s1045_replacement_qsbs" value="${state.s1045_replacement_qsbs}"></label>
+                    <input type="number" step="0.01" name="s1045_replacement_qsbs" value="${state.s1045_replacement_qsbs}"></label>
                 <label><span data-i18n="view.s1202.label.replacement_period">60-day period satisfied?</span>
                     <input type="checkbox" name="s1045_replacement_period_60d" ${state.s1045_replacement_period_60d ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1202.label.pct">Exclusion %</span>
                     <input type="number" step="1" name="exclusion_pct" value="${state.exclusion_pct}"></label>
                 <label><span data-i18n="view.s1202.label.cap_10m">$10M cap ($)</span>
-                    <input type="number" step="100000" name="cap_10m" value="${state.cap_10m}"></label>
+                    <input type="number" step="0.01" name="cap_10m" value="${state.cap_10m}"></label>
                 <label><span data-i18n="view.s1202.label.cap_basis">10× basis cap ($)</span>
-                    <input type="number" step="10000" name="cap_basis_10x_multiple" value="${state.cap_basis_10x_multiple}"></label>
+                    <input type="number" step="0.01" name="cap_basis_10x_multiple" value="${state.cap_basis_10x_multiple}"></label>
                 <label><span data-i18n="view.s1202.label.prior_excl">Prior cumulative exclusion ($)</span>
-                    <input type="number" step="10000" name="cumulative_exclusion_prior" value="${state.cumulative_exclusion_prior}"></label>
+                    <input type="number" step="0.01" name="cumulative_exclusion_prior" value="${state.cumulative_exclusion_prior}"></label>
                 <label><span data-i18n="view.s1202.label.passthrough">Pass-through holder?</span>
                     <input type="checkbox" name="is_pass_through_holder" ${state.is_pass_through_holder ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1202.label.amt_pref">§ 1202 AMT preference (pre-2010)?</span>

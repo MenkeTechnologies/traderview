@@ -79,9 +79,9 @@ export async function renderSection6039(mount, _appState) {
                 <label><span data-i18n="view.s6039.label.disqual">Disqualifying disposition?</span>
                     <input type="checkbox" name="is_disqualifying" ${state.is_disqualifying ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6039.label.amt">AMT adjustment ($)</span>
-                    <input type="number" step="100" name="amt_adjustment" value="${state.amt_adjustment}"></label>
+                    <input type="number" step="0.01" name="amt_adjustment" value="${state.amt_adjustment}"></label>
                 <label><span data-i18n="view.s6039.label.s421b">§ 421(b) gain ($)</span>
-                    <input type="number" step="100" name="s421_b_gain" value="${state.s421_b_gain}"></label>
+                    <input type="number" step="0.01" name="s421_b_gain" value="${state.s421_b_gain}"></label>
                 <label><span data-i18n="view.s6039.label.count">Forms filed count</span>
                     <input type="number" step="1" name="forms_filed_count" value="${state.forms_filed_count}"></label>
                 <label><span data-i18n="view.s6039.label.late">Days late</span>

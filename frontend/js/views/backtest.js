@@ -35,7 +35,7 @@ export async function renderBacktest(mount) {
                 <label><span data-i18n="view.backtest.label.capital">Capital</span>
                     <input name="capital" type="number" value="10000" style="width:110px" data-tip="view.backtest.tip.capital"></label>
                 <label><span data-i18n="view.backtest.label.fee_trade">Fee/trade</span>
-                    <input name="fee" type="number" step="any" value="1" style="width:80px" data-tip="view.backtest.tip.fee"></label>
+                    <input name="fee" type="number" step="0.01" value="1" style="width:80px" data-tip="view.backtest.tip.fee"></label>
                 <button data-i18n="view.backtest.btn.run" data-tip="view.backtest.tip.run" data-shortcut="backtest_run" class="primary" type="submit">Run</button>
             </form>
         </div>
@@ -47,7 +47,7 @@ export async function renderBacktest(mount) {
     const renderParams = () => {
         const p = PRESETS.find(x => x.id === ps.value);
         slot.innerHTML = Object.entries(p.defaults).map(([k, v]) =>
-            `<label>${k} <input name="${k}" type="number" step="any" value="${v}" style="width:80px"></label>`
+            `<label>${k} <input name="${k}" type="number" step="0.01" value="${v}" style="width:80px"></label>`
         ).join('');
     };
     ps.addEventListener('change', renderParams);

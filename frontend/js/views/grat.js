@@ -33,15 +33,15 @@ export async function renderGrat(mount, _appState) {
             <h2 data-i18n="view.grat.h2.inputs">Inputs</h2>
             <form id="grat-form" class="inline-form">
                 <label><span data-i18n="view.grat.label.principal">Asset contributed ($)</span>
-                    <input type="number" step="10000" name="principal" value="${state.principal}"></label>
+                    <input type="number" step="0.01" min="0" name="principal" value="${state.principal}"></label>
                 <label><span data-i18n="view.grat.label.7520">IRC § 7520 rate (current month)</span>
-                    <input type="number" step="0.0001" name="section_7520_rate" value="${state.section_7520_rate}"></label>
+                    <input type="number" step="0.0001" min="0" name="section_7520_rate" value="${state.section_7520_rate}"></label>
                 <label><span data-i18n="view.grat.label.term">GRAT term (years)</span>
                     <input type="number" step="1" min="2" max="20" name="term_years" value="${state.term_years}"></label>
                 <label><span data-i18n="view.grat.label.growth">Expected asset growth rate</span>
-                    <input type="number" step="0.01" name="growth_rate" value="${state.growth_rate}"></label>
+                    <input type="number" step="0.0001" name="growth_rate" value="${state.growth_rate}"></label>
                 <label><span data-i18n="view.grat.label.marginal">Grantor marginal rate</span>
-                    <input type="number" step="0.01" name="grantor_marginal_rate" value="${state.grantor_marginal_rate}"></label>
+                    <input type="number" step="0.0001" min="0" max="1" name="grantor_marginal_rate" value="${state.grantor_marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.grat.btn.compute">Compute</button>
             </form>
         </div>

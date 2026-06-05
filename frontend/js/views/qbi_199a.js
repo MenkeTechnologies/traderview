@@ -63,13 +63,13 @@ export async function renderQbi199A(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.qbi.label.qbi_income">QBI (net business income)</span>
-                    <input type="number" step="100" name="qbi_income" value="${state.qbi_income}"></label>
+                    <input type="number" step="0.01" name="qbi_income" value="${state.qbi_income}"></label>
                 <label><span data-i18n="view.qbi.label.total_taxable">Total taxable income</span>
-                    <input type="number" step="100" name="total_taxable_income" value="${state.total_taxable_income}"></label>
+                    <input type="number" step="0.01" name="total_taxable_income" value="${state.total_taxable_income}"></label>
                 <label><span data-i18n="view.qbi.label.w2_wages">W-2 wages paid</span>
-                    <input type="number" step="100" name="w2_wages_paid" value="${state.w2_wages_paid}"></label>
+                    <input type="number" step="0.01" name="w2_wages_paid" value="${state.w2_wages_paid}"></label>
                 <label><span data-i18n="view.qbi.label.property">Qualified property basis</span>
-                    <input type="number" step="100" name="qualified_property_basis" value="${state.qualified_property_basis}"></label>
+                    <input type="number" step="0.01" name="qualified_property_basis" value="${state.qualified_property_basis}"></label>
                 <label><span data-i18n="view.qbi.label.is_sstb">SSTB? (trading = yes)</span>
                     <input type="checkbox" name="is_sstb" ${state.is_sstb ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.qbi.btn.recompute">Recompute</button>

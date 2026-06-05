@@ -36,7 +36,7 @@ export async function renderAugustaRule(mount, _appState) {
             <h2 data-i18n="view.augusta.h2.settings">Daily rate</h2>
             <form id="ar-rate-form" class="inline-form">
                 <label><span data-i18n="view.augusta.label.daily_rate">Daily rate ($/day)</span>
-                    <input type="number" step="50" name="daily_rate" value="${state.daily_rate}"></label>
+                    <input type="number" step="0.01" name="daily_rate" value="${state.daily_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.augusta.btn.save_rate">Save rate</button>
             </form>
             <p class="muted small" data-i18n="view.augusta.rate.note">

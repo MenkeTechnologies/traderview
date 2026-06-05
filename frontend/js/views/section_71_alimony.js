@@ -49,16 +49,16 @@ export async function renderSection71Alimony(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.alimony.label.annual">Annual alimony ($)</span>
-                    <input type="number" step="1000" name="annual_alimony" value="${state.annual_alimony}"></label>
+                    <input type="number" step="0.01" name="annual_alimony" value="${state.annual_alimony}"></label>
                 <label><span data-i18n="view.alimony.label.payer_rate">Payer marginal %</span>
                     <input type="number" step="0.01" name="payer_marginal_rate" value="${state.payer_marginal_rate}"></label>
                 <label><span data-i18n="view.alimony.label.recipient_rate">Recipient marginal %</span>
                     <input type="number" step="0.01" name="recipient_marginal_rate" value="${state.recipient_marginal_rate}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.alimony.label.property_value">Spousal transfer FMV ($)</span>
-                    <input type="number" step="10000" name="transfer_property_value" value="${state.transfer_property_value}"></label>
+                    <input type="number" step="0.01" name="transfer_property_value" value="${state.transfer_property_value}"></label>
                 <label><span data-i18n="view.alimony.label.property_basis">Property basis ($)</span>
-                    <input type="number" step="10000" name="transfer_property_basis" value="${state.transfer_property_basis}"></label>
+                    <input type="number" step="0.01" name="transfer_property_basis" value="${state.transfer_property_basis}"></label>
                 <label><span data-i18n="view.alimony.label.home_residence">Used home as principal residence 2 of last 5 yrs?</span>
                     <input type="checkbox" name="home_used_as_residence_2_of_5" ${state.home_used_as_residence_2_of_5 ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.alimony.btn.compute">Compute</button>

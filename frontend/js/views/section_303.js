@@ -65,29 +65,29 @@ export async function renderSection303(mount, _appState) {
             <h2 data-i18n="view.s303.h2.inputs">Inputs</h2>
             <form id="s303-form" class="inline-form">
                 <label><span data-i18n="view.s303.label.estate_val">Estate value ($)</span>
-                    <input type="number" step="100000" name="decedent_estate_value" value="${state.decedent_estate_value}"></label>
+                    <input type="number" step="0.01" name="decedent_estate_value" value="${state.decedent_estate_value}"></label>
                 <label><span data-i18n="view.s303.label.stock_val">Stock value ($)</span>
-                    <input type="number" step="100000" name="closely_held_stock_value" value="${state.closely_held_stock_value}"></label>
+                    <input type="number" step="0.01" name="closely_held_stock_value" value="${state.closely_held_stock_value}"></label>
                 <label><span data-i18n="view.s303.label.age">Adj gross estate ($)</span>
-                    <input type="number" step="100000" name="adjusted_gross_estate" value="${state.adjusted_gross_estate}"></label>
+                    <input type="number" step="0.01" name="adjusted_gross_estate" value="${state.adjusted_gross_estate}"></label>
                 <label><span data-i18n="view.s303.label.35pct">35% threshold met?</span>
                     <input type="checkbox" name="s303_b_2_35pct_threshold_met" ${state.s303_b_2_35pct_threshold_met ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s303.label.pct">Stock % of AGE</span>
                     <input type="number" step="0.1" name="stock_value_pct_of_age" value="${state.stock_value_pct_of_age}"></label>
                 <label><span data-i18n="view.s303.label.fed_tax">Federal estate tax ($)</span>
-                    <input type="number" step="10000" name="federal_estate_tax" value="${state.federal_estate_tax}"></label>
+                    <input type="number" step="0.01" name="federal_estate_tax" value="${state.federal_estate_tax}"></label>
                 <label><span data-i18n="view.s303.label.state_tax">State estate tax ($)</span>
-                    <input type="number" step="10000" name="state_estate_tax" value="${state.state_estate_tax}"></label>
+                    <input type="number" step="0.01" name="state_estate_tax" value="${state.state_estate_tax}"></label>
                 <label><span data-i18n="view.s303.label.funeral">Funeral exp ($)</span>
-                    <input type="number" step="1000" name="funeral_expenses" value="${state.funeral_expenses}"></label>
+                    <input type="number" step="0.01" name="funeral_expenses" value="${state.funeral_expenses}"></label>
                 <label><span data-i18n="view.s303.label.admin">Admin exp ($)</span>
-                    <input type="number" step="1000" name="estate_administration_expenses" value="${state.estate_administration_expenses}"></label>
+                    <input type="number" step="0.01" name="estate_administration_expenses" value="${state.estate_administration_expenses}"></label>
                 <label><span data-i18n="view.s303.label.qual_total">Qualifying total ($)</span>
-                    <input type="number" step="10000" name="total_qualifying_expenses" value="${state.total_qualifying_expenses}"></label>
+                    <input type="number" step="0.01" name="total_qualifying_expenses" value="${state.total_qualifying_expenses}"></label>
                 <label><span data-i18n="view.s303.label.redemption">Redemption amount ($)</span>
-                    <input type="number" step="10000" name="s303_redemption_amount" value="${state.s303_redemption_amount}"></label>
+                    <input type="number" step="0.01" name="s303_redemption_amount" value="${state.s303_redemption_amount}"></label>
                 <label><span data-i18n="view.s303.label.excess">Excess over qual ($)</span>
-                    <input type="number" step="10000" name="excess_over_qualifying" value="${state.excess_over_qualifying}"></label>
+                    <input type="number" step="0.01" name="excess_over_qualifying" value="${state.excess_over_qualifying}"></label>
                 <label><span data-i18n="view.s303.label.3_3_timing">3yr 3mo timing?</span>
                     <input type="checkbox" name="s303_b_1_3_year_3_month_timing" ${state.s303_b_1_3_year_3_month_timing ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s303.label.4yr">4-yr timing?</span>
@@ -121,11 +121,11 @@ export async function renderSection303(mount, _appState) {
                 <label><span data-i18n="view.s303.label.s6166_4yr">§ 6166 4-yr grace?</span>
                     <input type="checkbox" name="s6166_4_year_grace_period" ${state.s6166_4_year_grace_period ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s303.label.multi_corp">Multi-corp aggregation ($)</span>
-                    <input type="number" step="10000" name="multiple_corp_aggregation_s303_b3" value="${state.multiple_corp_aggregation_s303_b3}"></label>
+                    <input type="number" step="0.01" name="multiple_corp_aggregation_s303_b3" value="${state.multiple_corp_aggregation_s303_b3}"></label>
                 <label><span data-i18n="view.s303.label.each_20pct">Each ≥ 20%?</span>
                     <input type="checkbox" name="multiple_corps_each_20pct" ${state.multiple_corps_each_20pct ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s303.label.estate_int">Estate includable ($)</span>
-                    <input type="number" step="10000" name="estate_includable_interest_total" value="${state.estate_includable_interest_total}"></label>
+                    <input type="number" step="0.01" name="estate_includable_interest_total" value="${state.estate_includable_interest_total}"></label>
                 <label><span data-i18n="view.s303.label.estate_pct">Estate includable %</span>
                     <input type="number" step="0.1" name="estate_includable_interest_pct" value="${state.estate_includable_interest_pct}"></label>
                 <label><span data-i18n="view.s303.label.spouse">Surviving spouse?</span>

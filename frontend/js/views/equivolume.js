@@ -30,7 +30,7 @@ export async function renderEquivolume(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.equivol.label.total_width">Total chart width</span>
-                    <input id="ev-width" type="number" step="any" min="0" value="${state.total_width}"></label>
+                    <input id="ev-width" type="number" step="0.01" min="0" value="${state.total_width}"></label>
                 <button data-i18n="view.equivol.btn.compute" id="ev-run" class="primary"
                         data-tip="view.equivol.tip.compute" type="button">Compute widths</button>
             </div>

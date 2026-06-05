@@ -54,13 +54,13 @@ export async function renderSection199A(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s199a.label.qbi">QBI ($)</span>
-                    <input type="number" step="10000" name="qbi" value="${state.qbi}"></label>
+                    <input type="number" step="0.01" name="qbi" value="${state.qbi}"></label>
                 <label><span data-i18n="view.s199a.label.wages">W-2 wages paid ($)</span>
-                    <input type="number" step="10000" name="w2_wages_paid" value="${state.w2_wages_paid}"></label>
+                    <input type="number" step="0.01" name="w2_wages_paid" value="${state.w2_wages_paid}"></label>
                 <label><span data-i18n="view.s199a.label.ubia">UBIA qualified property ($)</span>
-                    <input type="number" step="10000" name="ubia_qualified_property" value="${state.ubia_qualified_property}"></label>
+                    <input type="number" step="0.01" name="ubia_qualified_property" value="${state.ubia_qualified_property}"></label>
                 <label><span data-i18n="view.s199a.label.ti">Taxable income (before QBI) ($)</span>
-                    <input type="number" step="10000" name="taxable_income_before_qbi" value="${state.taxable_income_before_qbi}"></label>
+                    <input type="number" step="0.01" name="taxable_income_before_qbi" value="${state.taxable_income_before_qbi}"></label>
                 <label><span data-i18n="view.s199a.label.sstb">Is SSTB?</span>
                     <input type="checkbox" name="is_sstb" ${state.is_sstb ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s199a.label.aggregated">Aggregated under § 199A(b)?</span>
@@ -70,11 +70,11 @@ export async function renderSection199A(mount, _appState) {
                 <label><span data-i18n="view.s199a.label.reit_div">REIT dividends?</span>
                     <input type="checkbox" name="has_reit_dividends" ${state.has_reit_dividends ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s199a.label.reit_amt">REIT dividends ($)</span>
-                    <input type="number" step="1000" name="qualified_reit_dividends" value="${state.qualified_reit_dividends}"></label>
+                    <input type="number" step="0.01" name="qualified_reit_dividends" value="${state.qualified_reit_dividends}"></label>
                 <label><span data-i18n="view.s199a.label.ptp_inc">PTP income?</span>
                     <input type="checkbox" name="has_ptp_income" ${state.has_ptp_income ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s199a.label.ptp_amt">PTP qualified income ($)</span>
-                    <input type="number" step="1000" name="qualified_ptp_income" value="${state.qualified_ptp_income}"></label>
+                    <input type="number" step="0.01" name="qualified_ptp_income" value="${state.qualified_ptp_income}"></label>
                 <label><span data-i18n="view.s199a.label.rental">Rental real estate?</span>
                     <input type="checkbox" name="rental_real_estate" ${state.rental_real_estate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s199a.label.250hr">250-hr safe harbor (Rev Proc 2019-38)?</span>

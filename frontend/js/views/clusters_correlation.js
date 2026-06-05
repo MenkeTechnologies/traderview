@@ -33,7 +33,7 @@ export async function renderClustersCorrelation(mount, _appState) {
             <textarea id="cc-corr" rows="6" placeholder="AAPL MSFT 0.85" data-tip="view.clusters_correlation.tip.correlations">${esc(correlationsToBlob(state.correlations))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.clusters_correlation.label.threshold">Threshold |ρ|</span>
-                    <input id="cc-thr" type="number" step="any" min="0" max="1" value="${state.threshold}" data-tip="view.clusters_correlation.tip.threshold"></label>
+                    <input id="cc-thr" type="number" step="0.01" min="0" max="1" value="${state.threshold}" data-tip="view.clusters_correlation.tip.threshold"></label>
                 <button data-i18n="view.clusters_correlation.btn.cluster" id="cc-run" class="primary" type="button" data-tip="view.clusters_correlation.tip.run" data-shortcut="clusters_correlation_run">Cluster</button>
             </div>
             <div class="inline-form">

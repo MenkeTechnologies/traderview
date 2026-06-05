@@ -38,13 +38,13 @@ export async function renderScorpCalc(mount, _appState) {
             <h2 data-i18n="view.scorp.h2.inputs">Inputs</h2>
             <form id="sc-form" class="inline-form">
                 <label><span data-i18n="view.scorp.label.net_income">Net business income ($)</span>
-                    <input type="number" step="1000" name="net_income" value="${state.net_income}"></label>
+                    <input type="number" step="0.01" name="net_income" value="${state.net_income}"></label>
                 <label><span data-i18n="view.scorp.label.reasonable_comp_pct">Reasonable comp as % of net</span>
                     <input type="number" step="0.05" name="reasonable_comp_pct" value="${state.reasonable_comp_pct}" min="0.10" max="1.0"></label>
                 <label><span data-i18n="view.scorp.label.payroll_cost">Payroll service cost ($/yr)</span>
-                    <input type="number" step="50" name="payroll_cost" value="${state.payroll_cost}"></label>
+                    <input type="number" step="0.01" name="payroll_cost" value="${state.payroll_cost}"></label>
                 <label><span data-i18n="view.scorp.label.extra_filing">S-corp tax prep premium ($/yr)</span>
-                    <input type="number" step="50" name="extra_filing_cost" value="${state.extra_filing_cost}"></label>
+                    <input type="number" step="0.01" name="extra_filing_cost" value="${state.extra_filing_cost}"></label>
                 <label><span data-i18n="view.scorp.label.marginal_rate">Marginal federal rate %</span>
                     <input type="number" step="0.5" name="marginal_rate" value="${(state.marginal_rate * 100).toFixed(1)}"></label>
                 <button class="primary" type="submit" data-i18n="view.scorp.btn.recompute">Recompute</button>

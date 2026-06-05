@@ -59,27 +59,27 @@ export async function renderSection382(mount, _appState) {
             <h2 data-i18n="view.s382.h2.inputs">Inputs</h2>
             <form id="s382-form" class="inline-form">
                 <label><span data-i18n="view.s382.label.nols">Pre-change NOLs ($)</span>
-                    <input type="number" step="100000" name="pre_change_nols" value="${state.pre_change_nols}"></label>
+                    <input type="number" step="0.01" name="pre_change_nols" value="${state.pre_change_nols}"></label>
                 <label><span data-i18n="view.s382.label.cap_loss">Cap loss carryforward ($)</span>
-                    <input type="number" step="100000" name="capital_loss_carryforward" value="${state.capital_loss_carryforward}"></label>
+                    <input type="number" step="0.01" name="capital_loss_carryforward" value="${state.capital_loss_carryforward}"></label>
                 <label><span data-i18n="view.s382.label.fmv">FMV of loss corp ($)</span>
-                    <input type="number" step="100000" name="fmv_loss_corporation" value="${state.fmv_loss_corporation}"></label>
+                    <input type="number" step="0.01" name="fmv_loss_corporation" value="${state.fmv_loss_corporation}"></label>
                 <label><span data-i18n="view.s382.label.lttx">LT tax-exempt rate %</span>
                     <input type="number" step="0.01" name="long_term_tax_exempt_rate" value="${state.long_term_tax_exempt_rate}"></label>
                 <label><span data-i18n="view.s382.label.annual">§ 382 annual limit ($)</span>
-                    <input type="number" step="10000" name="annual_s382_limitation" value="${state.annual_s382_limitation}"></label>
+                    <input type="number" step="0.01" name="annual_s382_limitation" value="${state.annual_s382_limitation}"></label>
                 <label><span data-i18n="view.s382.label.rbig">RBIG 5-yr ($)</span>
-                    <input type="number" step="100000" name="rbig_5_year" value="${state.rbig_5_year}"></label>
+                    <input type="number" step="0.01" name="rbig_5_year" value="${state.rbig_5_year}"></label>
                 <label><span data-i18n="view.s382.label.rbil">RBIL 5-yr ($)</span>
-                    <input type="number" step="100000" name="rbil_5_year" value="${state.rbil_5_year}"></label>
+                    <input type="number" step="0.01" name="rbil_5_year" value="${state.rbil_5_year}"></label>
                 <label><span data-i18n="view.s382.label.s338">§ 338 election?</span>
                     <input type="checkbox" name="s338_election" ${state.s338_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s382.label.s338_basis">§ 338 election basis ($)</span>
-                    <input type="number" step="100000" name="s338_election_basis" value="${state.s338_election_basis}"></label>
+                    <input type="number" step="0.01" name="s338_election_basis" value="${state.s338_election_basis}"></label>
                 <label><span data-i18n="view.s382.label.bg_rec">§ 382(h) BIG recognized ($)</span>
-                    <input type="number" step="100000" name="s382_h_built_in_gain_recognition" value="${state.s382_h_built_in_gain_recognition}"></label>
+                    <input type="number" step="0.01" name="s382_h_built_in_gain_recognition" value="${state.s382_h_built_in_gain_recognition}"></label>
                 <label><span data-i18n="view.s382.label.bl_rec">§ 382(h) BIL recognized ($)</span>
-                    <input type="number" step="100000" name="s382_h_built_in_loss_recognition" value="${state.s382_h_built_in_loss_recognition}"></label>
+                    <input type="number" step="0.01" name="s382_h_built_in_loss_recognition" value="${state.s382_h_built_in_loss_recognition}"></label>
                 <label><span data-i18n="view.s382.label.change_date">Ownership change date</span>
                     <input type="date" name="ownership_change_date" value="${state.ownership_change_date}"></label>
                 <label><span data-i18n="view.s382.label.test_start">Testing period start</span>
@@ -109,11 +109,11 @@ export async function renderSection382(mount, _appState) {
                 <label><span data-i18n="view.s382.label.mult5">Multiple 5%+ count</span>
                     <input type="number" step="1" name="multiple_5_pct_shareholders" value="${state.multiple_5_pct_shareholders}"></label>
                 <label><span data-i18n="view.s382.label.s383">§ 383 credits ($)</span>
-                    <input type="number" step="10000" name="s383_credits" value="${state.s383_credits}"></label>
+                    <input type="number" step="0.01" name="s383_credits" value="${state.s383_credits}"></label>
                 <label><span data-i18n="view.s382.label.s269">§ 269 anti-abuse?</span>
                     <input type="checkbox" name="s269_anti_abuse" ${state.s269_anti_abuse ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s382.label.s384">§ 384 purchase ($)</span>
-                    <input type="number" step="100000" name="s384_purchase_amount" value="${state.s384_purchase_amount}"></label>
+                    <input type="number" step="0.01" name="s384_purchase_amount" value="${state.s384_purchase_amount}"></label>
                 <label><span data-i18n="view.s382.label.s269a">§ 269(a) purpose?</span>
                     <input type="checkbox" name="s269_a_purpose" ${state.s269_a_purpose ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s382.label.serial">Serial owner change?</span>

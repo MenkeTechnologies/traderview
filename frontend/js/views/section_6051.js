@@ -44,27 +44,27 @@ export async function renderSection6051(mount, _appState) {
             <h2 data-i18n="view.s6051.h2.inputs">Inputs</h2>
             <form id="s6051-form" class="inline-form">
                 <label><span data-i18n="view.s6051.label.gross">Gross wages ($)</span>
-                    <input type="number" step="1000" name="gross_wages" value="${state.gross_wages}"></label>
+                    <input type="number" step="0.01" name="gross_wages" value="${state.gross_wages}"></label>
                 <label><span data-i18n="view.s6051.label.401k">Pre-tax 401(k) ($)</span>
-                    <input type="number" step="100" name="pretax_401k" value="${state.pretax_401k}"></label>
+                    <input type="number" step="0.01" name="pretax_401k" value="${state.pretax_401k}"></label>
                 <label><span data-i18n="view.s6051.label.health">Pre-tax health insurance ($)</span>
-                    <input type="number" step="100" name="pretax_health_insurance" value="${state.pretax_health_insurance}"></label>
+                    <input type="number" step="0.01" name="pretax_health_insurance" value="${state.pretax_health_insurance}"></label>
                 <label><span data-i18n="view.s6051.label.hsa">Pre-tax HSA ($)</span>
-                    <input type="number" step="100" name="pretax_hsa" value="${state.pretax_hsa}"></label>
+                    <input type="number" step="0.01" name="pretax_hsa" value="${state.pretax_hsa}"></label>
                 <label><span data-i18n="view.s6051.label.dep_care">Pre-tax dep care ($)</span>
-                    <input type="number" step="100" name="pretax_dependent_care" value="${state.pretax_dependent_care}"></label>
+                    <input type="number" step="0.01" name="pretax_dependent_care" value="${state.pretax_dependent_care}"></label>
                 <label><span data-i18n="view.s6051.label.transit">Pre-tax transit ($)</span>
-                    <input type="number" step="100" name="pretax_transit" value="${state.pretax_transit}"></label>
+                    <input type="number" step="0.01" name="pretax_transit" value="${state.pretax_transit}"></label>
                 <label><span data-i18n="view.s6051.label.bonus">Bonus amount ($)</span>
-                    <input type="number" step="1000" name="bonus_amount" value="${state.bonus_amount}"></label>
+                    <input type="number" step="0.01" name="bonus_amount" value="${state.bonus_amount}"></label>
                 <label><span data-i18n="view.s6051.label.fed">Federal withholding ($)</span>
-                    <input type="number" step="100" name="federal_withholding" value="${state.federal_withholding}"></label>
+                    <input type="number" step="0.01" name="federal_withholding" value="${state.federal_withholding}"></label>
                 <label><span data-i18n="view.s6051.label.ss">Social Security withholding ($)</span>
-                    <input type="number" step="100" name="social_security_withholding" value="${state.social_security_withholding}"></label>
+                    <input type="number" step="0.01" name="social_security_withholding" value="${state.social_security_withholding}"></label>
                 <label><span data-i18n="view.s6051.label.medicare">Medicare withholding ($)</span>
-                    <input type="number" step="100" name="medicare_withholding" value="${state.medicare_withholding}"></label>
+                    <input type="number" step="0.01" name="medicare_withholding" value="${state.medicare_withholding}"></label>
                 <label><span data-i18n="view.s6051.label.state">State withholding ($)</span>
-                    <input type="number" step="100" name="state_withholding" value="${state.state_withholding}"></label>
+                    <input type="number" step="0.01" name="state_withholding" value="${state.state_withholding}"></label>
                 <label><span data-i18n="view.s6051.label.box12_code">Box 12 code</span>
                     <select name="box_12_code">
                         <option value="D" ${state.box_12_code === 'D' ? 'selected' : ''}>D — 401(k) elective deferral</option>
@@ -82,15 +82,15 @@ export async function renderSection6051(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6051.label.box12_amount">Box 12 amount ($)</span>
-                    <input type="number" step="100" name="box_12_amount" value="${state.box_12_amount}"></label>
+                    <input type="number" step="0.01" name="box_12_amount" value="${state.box_12_amount}"></label>
                 <label><span data-i18n="view.s6051.label.fica_base">FICA wage base 2025 ($)</span>
-                    <input type="number" step="100" name="fica_wage_base_2025" value="${state.fica_wage_base_2025}"></label>
+                    <input type="number" step="0.01" name="fica_wage_base_2025" value="${state.fica_wage_base_2025}"></label>
                 <label><span data-i18n="view.s6051.label.add_medicare">Additional Medicare 0.9% withholding ($)</span>
-                    <input type="number" step="10" name="additional_medicare_withholding" value="${state.additional_medicare_withholding}"></label>
+                    <input type="number" step="0.01" name="additional_medicare_withholding" value="${state.additional_medicare_withholding}"></label>
                 <label><span data-i18n="view.s6051.label.s_corp">2%+ S-corp owner?</span>
                     <input type="checkbox" name="is_2pct_s_corp_owner" ${state.is_2pct_s_corp_owner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6051.label.s_corp_premium">S-corp health premium added to Box 1 ($)</span>
-                    <input type="number" step="100" name="s_corp_health_premium_box1" value="${state.s_corp_health_premium_box1}"></label>
+                    <input type="number" step="0.01" name="s_corp_health_premium_box1" value="${state.s_corp_health_premium_box1}"></label>
                 <label><span data-i18n="view.s6051.label.sick_pay">Third-party sick pay?</span>
                     <input type="checkbox" name="third_party_sick_pay" ${state.third_party_sick_pay ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6051.label.statutory">Statutory employee?</span>

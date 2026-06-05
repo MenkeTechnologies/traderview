@@ -36,11 +36,11 @@ export async function renderCharitablePlanner(mount, _appState) {
             <h2 data-i18n="view.charity.h2.inputs">Inputs</h2>
             <form id="ch-form" class="inline-form">
                 <label><span data-i18n="view.charity.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.charity.label.intended_gift">Intended gift FMV ($)</span>
-                    <input type="number" step="100" name="intended_gift" value="${state.intended_gift}"></label>
+                    <input type="number" step="0.01" name="intended_gift" value="${state.intended_gift}"></label>
                 <label><span data-i18n="view.charity.label.cost_basis">Your cost basis on the stock</span>
-                    <input type="number" step="100" name="cost_basis" value="${state.cost_basis}"></label>
+                    <input type="number" step="0.01" name="cost_basis" value="${state.cost_basis}"></label>
                 <label><span data-i18n="view.charity.label.holding_period">Held >1 year (long-term)?</span>
                     <input type="checkbox" name="holding_period_long" ${state.holding_period_long ? 'checked' : ''}></label>
                 <label><span data-i18n="view.charity.label.marginal_rate">Marginal rate %</span>

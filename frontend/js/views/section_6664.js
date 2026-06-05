@@ -40,9 +40,9 @@ export async function renderSection6664(mount, _appState) {
             <h2 data-i18n="view.s6664.h2.inputs">Inputs</h2>
             <form id="s6664-form" class="inline-form">
                 <label><span data-i18n="view.s6664.label.under">Underpayment ($)</span>
-                    <input type="number" step="1000" name="underpayment_amount" value="${state.underpayment_amount}"></label>
+                    <input type="number" step="0.01" name="underpayment_amount" value="${state.underpayment_amount}"></label>
                 <label><span data-i18n="view.s6664.label.penalty">Penalty imposed ($)</span>
-                    <input type="number" step="100" name="penalty_imposed" value="${state.penalty_imposed}"></label>
+                    <input type="number" step="0.01" name="penalty_imposed" value="${state.penalty_imposed}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s6664.label.relied_pro">Relied on professional advice?</span>
                     <input type="checkbox" name="relied_on_professional" ${state.relied_on_professional ? 'checked' : ''}></label>

@@ -54,9 +54,9 @@ export async function renderStressTest(mount, _appState) {
                 <label><span data-i18n="view.stress_test.label.time_decay">Time-decay days</span>
                     <input id="st-td" type="number" step="1" min="0" value="${state.timeDecay}" data-tip="view.stress_test.tip.time_decay"></label>
                 <label><span data-i18n="view.stress_test.label.rate">Risk-free rate</span>
-                    <input id="st-rate" type="number" step="any" value="${state.rate}" data-tip="view.stress_test.tip.rate"></label>
+                    <input id="st-rate" type="number" step="0.01" value="${state.rate}" data-tip="view.stress_test.tip.rate"></label>
                 <label><span data-i18n="view.stress_test.label.div">Dividend yield</span>
-                    <input id="st-div" type="number" step="any" min="0" value="${state.div}" data-tip="view.stress_test.tip.div"></label>
+                    <input id="st-div" type="number" step="0.01" min="0" value="${state.div}" data-tip="view.stress_test.tip.div"></label>
                 <button data-i18n="view.stress_test.btn.run_stress_test" id="st-run" class="primary" type="button" data-tip="view.stress_test.tip.run" data-shortcut="stress_test_run">Run stress test</button>
             </div>
             <p data-i18n="view.stress_test.hint.negative_price_shock_downside_negative_iv_shock_vo" class="muted">Negative price-shock = downside; negative IV-shock = vol crush.

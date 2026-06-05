@@ -50,13 +50,13 @@ export async function renderSection401a9(mount, _appState) {
                 <label><span data-i18n="view.s401a9.label.current_year">Current year</span>
                     <input type="number" step="1" name="current_year" value="${state.current_year}"></label>
                 <label><span data-i18n="view.s401a9.label.balance">Prior Dec 31 balance ($)</span>
-                    <input type="number" step="1000" name="account_balance_prior_dec_31" value="${state.account_balance_prior_dec_31}"></label>
+                    <input type="number" step="0.01" name="account_balance_prior_dec_31" value="${state.account_balance_prior_dec_31}"></label>
                 <label><span data-i18n="view.s401a9.label.spouse_younger">Spouse &gt; 10 yrs younger sole beneficiary?</span>
                     <input type="checkbox" name="spouse_younger_more_than_10" ${state.spouse_younger_more_than_10 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s401a9.label.spouse_age">Spouse age</span>
                     <input type="number" step="1" name="spouse_age" value="${state.spouse_age}"></label>
                 <label><span data-i18n="view.s401a9.label.qcd">QCD planned ($)</span>
-                    <input type="number" step="100" name="qcd_amount" value="${state.qcd_amount}"></label>
+                    <input type="number" step="0.01" name="qcd_amount" value="${state.qcd_amount}"></label>
                 <label><span data-i18n="view.s401a9.label.fed_rate">Federal marginal %</span>
                     <input type="number" step="0.01" name="fed_marginal_rate" value="${state.fed_marginal_rate}"></label>
                 <label><span data-i18n="view.s401a9.label.state_rate">State marginal %</span>

@@ -38,13 +38,13 @@ export async function renderSection1296Pfic(mount, _appState) {
             <h2 data-i18n="view.pfic.h2.inputs">Inputs</h2>
             <form id="pfic-form" class="inline-form">
                 <label><span data-i18n="view.pfic.label.value">Holding current value ($)</span>
-                    <input type="number" step="1000" name="holding_value" value="${state.holding_value}"></label>
+                    <input type="number" step="0.01" name="holding_value" value="${state.holding_value}"></label>
                 <label><span data-i18n="view.pfic.label.basis">Cost basis ($)</span>
-                    <input type="number" step="1000" name="cost_basis" value="${state.cost_basis}"></label>
+                    <input type="number" step="0.01" name="cost_basis" value="${state.cost_basis}"></label>
                 <label><span data-i18n="view.pfic.label.years">Years held</span>
                     <input type="number" step="1" name="holding_years" value="${state.holding_years}"></label>
                 <label><span data-i18n="view.pfic.label.distribution">Annual distribution ($)</span>
-                    <input type="number" step="100" name="annual_distribution" value="${state.annual_distribution}"></label>
+                    <input type="number" step="0.01" name="annual_distribution" value="${state.annual_distribution}"></label>
                 <label><span data-i18n="view.pfic.label.election">Election</span>
                     <select name="election">
                         <option value="default_1291" ${state.election === 'default_1291' ? 'selected' : ''}>Default § 1291 (deferred + interest charge)</option>

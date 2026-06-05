@@ -45,17 +45,17 @@ export async function renderSection132(mount, _appState) {
                 <label><span data-i18n="view.s132.label.discount_pct">Employer discount %</span>
                     <input type="number" step="0.01" name="employer_qualified_discount_pct" value="${state.employer_qualified_discount_pct}"></label>
                 <label><span data-i18n="view.s132.label.cost">Employer cost ($)</span>
-                    <input type="number" step="100" name="cost_of_property_or_service_to_employer" value="${state.cost_of_property_or_service_to_employer}"></label>
+                    <input type="number" step="0.01" name="cost_of_property_or_service_to_employer" value="${state.cost_of_property_or_service_to_employer}"></label>
                 <label><span data-i18n="view.s132.label.customer">Customer price ($)</span>
-                    <input type="number" step="100" name="customer_price" value="${state.customer_price}"></label>
+                    <input type="number" step="0.01" name="customer_price" value="${state.customer_price}"></label>
                 <label><span data-i18n="view.s132.label.transit">Transit passes monthly ($)</span>
-                    <input type="number" step="10" name="transit_passes_monthly" value="${state.transit_passes_monthly}"></label>
+                    <input type="number" step="0.01" name="transit_passes_monthly" value="${state.transit_passes_monthly}"></label>
                 <label><span data-i18n="view.s132.label.parking">Parking monthly ($)</span>
-                    <input type="number" step="10" name="parking_monthly" value="${state.parking_monthly}"></label>
+                    <input type="number" step="0.01" name="parking_monthly" value="${state.parking_monthly}"></label>
                 <label><span data-i18n="view.s132.label.bike">Bicycle reimbursement annually ($)</span>
-                    <input type="number" step="10" name="bicycle_reimbursement" value="${state.bicycle_reimbursement}"></label>
+                    <input type="number" step="0.01" name="bicycle_reimbursement" value="${state.bicycle_reimbursement}"></label>
                 <label><span data-i18n="view.s132.label.other">Other fringe value ($)</span>
-                    <input type="number" step="100" name="other_fringe_value" value="${state.other_fringe_value}"></label>
+                    <input type="number" step="0.01" name="other_fringe_value" value="${state.other_fringe_value}"></label>
                 <label><span data-i18n="view.s132.label.hce">Highly compensated employee?</span>
                     <input type="checkbox" name="is_highly_compensated" ${state.is_highly_compensated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s132.label.nondiscrim">Employer passes non-discrim?</span>

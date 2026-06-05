@@ -63,53 +63,53 @@ export async function renderSection731(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s731.label.basis_before">Outside basis before ($)</span>
-                    <input type="number" step="10000" name="partner_outside_basis_before" value="${state.partner_outside_basis_before}"></label>
+                    <input type="number" step="0.01" name="partner_outside_basis_before" value="${state.partner_outside_basis_before}"></label>
                 <label><span data-i18n="view.s731.label.cash">Cash distributed ($)</span>
-                    <input type="number" step="10000" name="cash_distributed" value="${state.cash_distributed}"></label>
+                    <input type="number" step="0.01" name="cash_distributed" value="${state.cash_distributed}"></label>
                 <label><span data-i18n="view.s731.label.securities">Marketable securities FMV ($)</span>
-                    <input type="number" step="10000" name="marketable_securities_fmv" value="${state.marketable_securities_fmv}"></label>
+                    <input type="number" step="0.01" name="marketable_securities_fmv" value="${state.marketable_securities_fmv}"></label>
                 <label><span data-i18n="view.s731.label.other_fmv">Other property FMV ($)</span>
-                    <input type="number" step="10000" name="other_property_fmv" value="${state.other_property_fmv}"></label>
+                    <input type="number" step="0.01" name="other_property_fmv" value="${state.other_property_fmv}"></label>
                 <label><span data-i18n="view.s731.label.other_basis">Other property basis ($)</span>
-                    <input type="number" step="10000" name="other_property_basis" value="${state.other_property_basis}"></label>
+                    <input type="number" step="0.01" name="other_property_basis" value="${state.other_property_basis}"></label>
                 <label><span data-i18n="view.s731.label.liquidating">Liquidating?</span>
                     <input type="checkbox" name="is_liquidating" ${state.is_liquidating ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.receivables">Receivables ($)</span>
-                    <input type="number" step="1000" name="receivables_distributed" value="${state.receivables_distributed}"></label>
+                    <input type="number" step="0.01" name="receivables_distributed" value="${state.receivables_distributed}"></label>
                 <label><span data-i18n="view.s731.label.inventory">Inventory ($)</span>
-                    <input type="number" step="1000" name="inventory_distributed" value="${state.inventory_distributed}"></label>
+                    <input type="number" step="0.01" name="inventory_distributed" value="${state.inventory_distributed}"></label>
                 <label><span data-i18n="view.s731.label.cap_prop">Other capital property ($)</span>
-                    <input type="number" step="1000" name="other_capital_property" value="${state.other_capital_property}"></label>
+                    <input type="number" step="0.01" name="other_capital_property" value="${state.other_capital_property}"></label>
                 <label><span data-i18n="view.s731.label.inside">Inside basis property ($)</span>
-                    <input type="number" step="1000" name="inside_basis_property" value="${state.inside_basis_property}"></label>
+                    <input type="number" step="0.01" name="inside_basis_property" value="${state.inside_basis_property}"></label>
                 <label><span data-i18n="view.s731.label.gain">Gain recognized ($)</span>
-                    <input type="number" step="1000" name="gain_recognized" value="${state.gain_recognized}"></label>
+                    <input type="number" step="0.01" name="gain_recognized" value="${state.gain_recognized}"></label>
                 <label><span data-i18n="view.s731.label.loss">Loss recognized ($)</span>
-                    <input type="number" step="1000" name="loss_recognized" value="${state.loss_recognized}"></label>
+                    <input type="number" step="0.01" name="loss_recognized" value="${state.loss_recognized}"></label>
                 <label><span data-i18n="view.s731.label.s732">§ 732 basis distributed ($)</span>
-                    <input type="number" step="1000" name="s732_basis_distribution" value="${state.s732_basis_distribution}"></label>
+                    <input type="number" step="0.01" name="s732_basis_distribution" value="${state.s732_basis_distribution}"></label>
                 <label><span data-i18n="view.s731.label.s731c">§ 731(c) securities = money?</span>
                     <input type="checkbox" name="s731_c_securities_money" ${state.s731_c_securities_money ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.sec_gain">Securities gain ($)</span>
-                    <input type="number" step="1000" name="securities_gain_recognized" value="${state.securities_gain_recognized}"></label>
+                    <input type="number" step="0.01" name="securities_gain_recognized" value="${state.securities_gain_recognized}"></label>
                 <label><span data-i18n="view.s731.label.s754">§ 754 election?</span>
                     <input type="checkbox" name="s754_election" ${state.s754_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.s734">§ 734(b) adj ($)</span>
-                    <input type="number" step="1000" name="s734_b_adjustment" value="${state.s734_b_adjustment}"></label>
+                    <input type="number" step="0.01" name="s734_b_adjustment" value="${state.s734_b_adjustment}"></label>
                 <label><span data-i18n="view.s731.label.liab">§ 752(b) liability relief ($)</span>
-                    <input type="number" step="1000" name="s752_b_liability_relief" value="${state.s752_b_liability_relief}"></label>
+                    <input type="number" step="0.01" name="s752_b_liability_relief" value="${state.s752_b_liability_relief}"></label>
                 <label><span data-i18n="view.s731.label.s751b">§ 751(b) disproportionate?</span>
                     <input type="checkbox" name="s751_b_disproportionate" ${state.s751_b_disproportionate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.s751b_amt">§ 751(b) exchange amount ($)</span>
-                    <input type="number" step="1000" name="s751_b_exchange_amount" value="${state.s751_b_exchange_amount}"></label>
+                    <input type="number" step="0.01" name="s751_b_exchange_amount" value="${state.s751_b_exchange_amount}"></label>
                 <label><span data-i18n="view.s731.label.s737">§ 737 7-yr lookback?</span>
                     <input type="checkbox" name="s737_seven_year_lookback" ${state.s737_seven_year_lookback ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.precontrib">Precontribution gain ($)</span>
-                    <input type="number" step="1000" name="s737_precontribution_gain" value="${state.s737_precontribution_gain}"></label>
+                    <input type="number" step="0.01" name="s737_precontribution_gain" value="${state.s737_precontribution_gain}"></label>
                 <label><span data-i18n="view.s731.label.s704c">§ 704(c) property?</span>
                     <input type="checkbox" name="s704_c_property" ${state.s704_c_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.bug">§ 704(c) built-in gain ($)</span>
-                    <input type="number" step="1000" name="s704_c_built_in_gain" value="${state.s704_c_built_in_gain}"></label>
+                    <input type="number" step="0.01" name="s704_c_built_in_gain" value="${state.s704_c_built_in_gain}"></label>
                 <label><span data-i18n="view.s731.label.s731a2">§ 731(a)(2) liquidating loss?</span>
                     <input type="checkbox" name="s731_a_2_liquidation_loss" ${state.s731_a_2_liquidation_loss ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s731.label.partial">Partial liquidation?</span>

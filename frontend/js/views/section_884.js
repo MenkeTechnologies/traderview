@@ -42,13 +42,13 @@ export async function renderSection884(mount, _appState) {
             <h2 data-i18n="view.s884.h2.inputs">Inputs</h2>
             <form id="s884-form" class="inline-form">
                 <label><span data-i18n="view.s884.label.eci_income">ECI taxable income ($)</span>
-                    <input type="number" step="10000" name="eci_taxable_income" value="${state.eci_taxable_income}"></label>
+                    <input type="number" step="0.01" name="eci_taxable_income" value="${state.eci_taxable_income}"></label>
                 <label><span data-i18n="view.s884.label.eci_tax">ECI tax paid (§ 882) ($)</span>
-                    <input type="number" step="1000" name="eci_tax_paid" value="${state.eci_tax_paid}"></label>
+                    <input type="number" step="0.01" name="eci_tax_paid" value="${state.eci_tax_paid}"></label>
                 <label><span data-i18n="view.s884.label.ep_increase">US E&P increase (reinvested) ($)</span>
-                    <input type="number" step="10000" name="us_connected_ep_increase" value="${state.us_connected_ep_increase}"></label>
+                    <input type="number" step="0.01" name="us_connected_ep_increase" value="${state.us_connected_ep_increase}"></label>
                 <label><span data-i18n="view.s884.label.ep_decrease">US E&P decrease (repatriated) ($)</span>
-                    <input type="number" step="10000" name="us_connected_ep_decrease" value="${state.us_connected_ep_decrease}"></label>
+                    <input type="number" step="0.01" name="us_connected_ep_decrease" value="${state.us_connected_ep_decrease}"></label>
                 <label><span data-i18n="view.s884.label.country">Treaty country</span>
                     <input type="text" name="treaty_country" value="${esc(state.treaty_country)}"></label>
                 <label><span data-i18n="view.s884.label.rate">Treaty BPT rate %</span>
@@ -56,17 +56,17 @@ export async function renderSection884(mount, _appState) {
                 <label><span data-i18n="view.s884.label.qualified">Qualified resident (LOB)?</span>
                     <input type="checkbox" name="qualified_resident" ${state.qualified_resident ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s884.label.interest_paid">Interest paid to foreign ($)</span>
-                    <input type="number" step="1000" name="interest_paid_to_foreign" value="${state.interest_paid_to_foreign}"></label>
+                    <input type="number" step="0.01" name="interest_paid_to_foreign" value="${state.interest_paid_to_foreign}"></label>
                 <label><span data-i18n="view.s884.label.excess">Excess interest paid ($)</span>
-                    <input type="number" step="1000" name="branch_interest_excess_paid" value="${state.branch_interest_excess_paid}"></label>
+                    <input type="number" step="0.01" name="branch_interest_excess_paid" value="${state.branch_interest_excess_paid}"></label>
                 <label><span data-i18n="view.s884.label.terminate">Election to terminate?</span>
                     <input type="checkbox" name="election_to_terminate" ${state.election_to_terminate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s884.label.consolidated">Consolidated returns?</span>
                     <input type="checkbox" name="consolidated_returns" ${state.consolidated_returns ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s884.label.us_assets">Cumulative US assets ($)</span>
-                    <input type="number" step="100000" name="cumulative_us_assets" value="${state.cumulative_us_assets}"></label>
+                    <input type="number" step="0.01" name="cumulative_us_assets" value="${state.cumulative_us_assets}"></label>
                 <label><span data-i18n="view.s884.label.us_liab">Cumulative US liabilities ($)</span>
-                    <input type="number" step="100000" name="cumulative_us_liabilities" value="${state.cumulative_us_liabilities}"></label>
+                    <input type="number" step="0.01" name="cumulative_us_liabilities" value="${state.cumulative_us_liabilities}"></label>
                 <label><span data-i18n="view.s884.label.lob">Treaty LOB passed?</span>
                     <input type="checkbox" name="treaty_lob_passed" ${state.treaty_lob_passed ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s884.btn.compute">Compute</button>

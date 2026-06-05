@@ -59,9 +59,9 @@ export async function renderSection6033(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6033.label.receipts">Gross receipts ($)</span>
-                    <input type="number" step="1000" name="gross_receipts" value="${state.gross_receipts}"></label>
+                    <input type="number" step="0.01" name="gross_receipts" value="${state.gross_receipts}"></label>
                 <label><span data-i18n="view.s6033.label.assets">Total assets ($)</span>
-                    <input type="number" step="1000" name="total_assets" value="${state.total_assets}"></label>
+                    <input type="number" step="0.01" name="total_assets" value="${state.total_assets}"></label>
                 <label><span data-i18n="view.s6033.label.fiscal">Fiscal year end month</span>
                     <input type="number" step="1" name="fiscal_year_end_month" value="${state.fiscal_year_end_month}"></label>
                 <label><span data-i18n="view.s6033.label.pf">Private foundation?</span>
@@ -88,7 +88,7 @@ export async function renderSection6033(mount, _appState) {
                 <label><span data-i18n="view.s6033.label.ubi">Has UBI (Unrelated Business Income)?</span>
                     <input type="checkbox" name="has_unrelated_business_income" ${state.has_unrelated_business_income ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6033.label.ubit">UBIT amount ($)</span>
-                    <input type="number" step="100" name="ubit_amount" value="${state.ubit_amount}"></label>
+                    <input type="number" step="0.01" name="ubit_amount" value="${state.ubit_amount}"></label>
                 <label><span data-i18n="view.s6033.label.5471">Foreign filings (Form 5471)?</span>
                     <input type="checkbox" name="foreign_filings_5471" ${state.foreign_filings_5471 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6033.label.grant">Federal grant recipient?</span>

@@ -40,11 +40,11 @@ export async function renderSection1033(mount, _appState) {
             <h2 data-i18n="view.s1033.h2.inputs">Inputs</h2>
             <form id="s1033-form" class="inline-form">
                 <label><span data-i18n="view.s1033.label.proceeds">Conversion proceeds ($)</span>
-                    <input type="number" step="10000" name="conversion_proceeds" value="${state.conversion_proceeds}"></label>
+                    <input type="number" step="0.01" name="conversion_proceeds" value="${state.conversion_proceeds}"></label>
                 <label><span data-i18n="view.s1033.label.basis">Property basis ($)</span>
-                    <input type="number" step="10000" name="property_basis" value="${state.property_basis}"></label>
+                    <input type="number" step="0.01" name="property_basis" value="${state.property_basis}"></label>
                 <label><span data-i18n="view.s1033.label.replacement">Replacement cost ($)</span>
-                    <input type="number" step="10000" name="replacement_cost" value="${state.replacement_cost}"></label>
+                    <input type="number" step="0.01" name="replacement_cost" value="${state.replacement_cost}"></label>
                 <label><span data-i18n="view.s1033.label.type">Conversion type</span>
                     <select name="conversion_type">
                         <option value="casualty" ${state.conversion_type === 'casualty' ? 'selected' : ''}>Casualty (fire, storm)</option>
@@ -69,7 +69,7 @@ export async function renderSection1033(mount, _appState) {
                 <label><span data-i18n="view.s1033.label.business">Business property?</span>
                     <input type="checkbox" name="is_business_property" ${state.is_business_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1033.label.fmv">FMV at conversion (unrestricted) ($)</span>
-                    <input type="number" step="10000" name="fmv_unrestricted" value="${state.fmv_unrestricted}"></label>
+                    <input type="number" step="0.01" name="fmv_unrestricted" value="${state.fmv_unrestricted}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1033.btn.compute">Compute</button>
             </form>
         </div>

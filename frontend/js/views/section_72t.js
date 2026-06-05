@@ -40,7 +40,7 @@ export async function renderSection72t(mount, _appState) {
             <h2 data-i18n="view.s72t.h2.inputs">Inputs</h2>
             <form id="s72t-form" class="inline-form">
                 <label><span data-i18n="view.s72t.label.balance">Account balance ($)</span>
-                    <input type="number" step="1000" name="account_balance" value="${state.account_balance}"></label>
+                    <input type="number" step="0.01" name="account_balance" value="${state.account_balance}"></label>
                 <label><span data-i18n="view.s72t.label.age">Your age</span>
                     <input type="number" step="1" name="age" value="${state.age}"></label>
                 <label><span data-i18n="view.s72t.label.spouse_age">Spouse age</span>

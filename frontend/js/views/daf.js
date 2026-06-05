@@ -56,9 +56,9 @@ export async function renderDaf(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.daf.label.fmv">Fair market value ($)</span>
-                    <input type="number" step="100" name="fmv" required></label>
+                    <input type="number" step="0.01" name="fmv" required></label>
                 <label><span data-i18n="view.daf.label.basis">Your cost basis ($)</span>
-                    <input type="number" step="100" name="basis"></label>
+                    <input type="number" step="0.01" name="basis"></label>
                 <button class="primary" type="submit" data-i18n="view.daf.btn.add_contribution">Add contribution</button>
             </form>
         </div>
@@ -70,16 +70,16 @@ export async function renderDaf(mount, _appState) {
                 <label><span data-i18n="view.daf.label.charity">Charity</span>
                     <input type="text" name="charity" placeholder="Doctors Without Borders" required></label>
                 <label><span data-i18n="view.daf.label.amount">Amount ($)</span>
-                    <input type="number" step="100" name="amount" required></label>
+                    <input type="number" step="0.01" name="amount" required></label>
                 <button class="primary" type="submit" data-i18n="view.daf.btn.add_grant">Add grant</button>
             </form>
         </div>
         <div class="chart-panel">
             <div class="inline-form">
                 <label><span data-i18n="view.daf.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" id="daf-agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" id="daf-agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.daf.label.std_ded">Standard deduction ($)</span>
-                    <input type="number" step="100" id="daf-std" value="${state.standard_deduction}"></label>
+                    <input type="number" step="0.01" id="daf-std" value="${state.standard_deduction}"></label>
                 <label><span data-i18n="view.daf.label.marginal">Marginal rate %</span>
                     <input type="number" step="0.01" id="daf-marginal" value="${state.marginal_rate}"></label>
                 <label><span data-i18n="view.daf.label.ltcg">LTCG rate %</span>

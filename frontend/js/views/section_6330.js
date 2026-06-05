@@ -158,7 +158,7 @@ export async function renderSection6330(mount, _appState) {
                 <label><span data-i18n="view.s6330.label.settled_oic">Settled OIC?</span>
                     <input type="checkbox" name="settled_offer_compromise" ${state.settled_offer_compromise ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6330.label.settled_ia">Settled IA amt ($)</span>
-                    <input type="number" step="100" name="settled_installment_amount" value="${state.settled_installment_amount}"></label>
+                    <input type="number" step="0.01" name="settled_installment_amount" value="${state.settled_installment_amount}"></label>
                 <label><span data-i18n="view.s6330.label.audit_recon">Audit recon pending?</span>
                     <input type="checkbox" name="audit_reconsideration_pending" ${state.audit_reconsideration_pending ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s6330.btn.compute">Compute</button>

@@ -27,7 +27,7 @@ export async function renderFootprint(mount, _appState) {
             <textarea id="fp-ticks" rows="8" placeholder="0 100.00 50 buy&#10;0 100.00 50 sell&#10;..." data-tip="view.footprint.tip.ticks"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.footprint.label.tick_size">Tick size (price quantization)</span>
-                    <input id="fp-ts" type="number" step="any" min="0" value="${state.tickSize}" data-tip="view.footprint.tip.tick_size"></label>
+                    <input id="fp-ts" type="number" step="0.01" min="0" value="${state.tickSize}" data-tip="view.footprint.tip.tick_size"></label>
                 <button data-i18n="view.footprint.btn.load_demo_4_bars_4_patterns" id="fp-demo" class="secondary" type="button" data-tip="view.footprint.tip.demo" data-shortcut="footprint_demo">Load demo (4 bars, 4 patterns)</button>
                 <button data-i18n="view.footprint.btn.clear" id="fp-clear" class="secondary" type="button" data-tip="view.footprint.tip.clear">Clear</button>
                 <button data-i18n="view.footprint.btn.build_footprint" id="fp-run" class="primary" type="button" data-tip="view.footprint.tip.run" data-shortcut="footprint_run">Build footprint</button>

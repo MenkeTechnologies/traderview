@@ -38,15 +38,15 @@ export async function renderSection163j(mount, _appState) {
             <h2 data-i18n="view.s163j.h2.inputs">Inputs</h2>
             <form id="s163j-form" class="inline-form">
                 <label><span data-i18n="view.s163j.label.bie">Business interest expense ($)</span>
-                    <input type="number" step="1000" name="business_interest_expense" value="${state.business_interest_expense}"></label>
+                    <input type="number" step="0.01" name="business_interest_expense" value="${state.business_interest_expense}"></label>
                 <label><span data-i18n="view.s163j.label.bii">Business interest income ($)</span>
-                    <input type="number" step="100" name="business_interest_income" value="${state.business_interest_income}"></label>
+                    <input type="number" step="0.01" name="business_interest_income" value="${state.business_interest_income}"></label>
                 <label><span data-i18n="view.s163j.label.ati">Adjusted Taxable Income ($)</span>
-                    <input type="number" step="1000" name="adjusted_taxable_income" value="${state.adjusted_taxable_income}"></label>
+                    <input type="number" step="0.01" name="adjusted_taxable_income" value="${state.adjusted_taxable_income}"></label>
                 <label><span data-i18n="view.s163j.label.floor">Floor-plan financing interest ($)</span>
-                    <input type="number" step="100" name="floor_plan_interest" value="${state.floor_plan_interest}"></label>
+                    <input type="number" step="0.01" name="floor_plan_interest" value="${state.floor_plan_interest}"></label>
                 <label><span data-i18n="view.s163j.label.gross">Avg gross receipts 3-yr ($)</span>
-                    <input type="number" step="100000" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
                 <label><span data-i18n="view.s163j.label.real">Real property trade elected out?</span>
                     <input type="checkbox" name="real_property_election" ${state.real_property_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s163j.label.farming">Farming trade elected out?</span>
@@ -56,7 +56,7 @@ export async function renderSection163j(mount, _appState) {
                 <label><span data-i18n="view.s163j.label.ebitda">Pre-2022 EBITDA basis?</span>
                     <input type="checkbox" name="pre_2022_ebitda" ${state.pre_2022_ebitda ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s163j.label.carry_prior">Prior-year carryforward ($)</span>
-                    <input type="number" step="100" name="carryforward_prior" value="${state.carryforward_prior}"></label>
+                    <input type="number" step="0.01" name="carryforward_prior" value="${state.carryforward_prior}"></label>
                 <button class="primary" type="submit" data-i18n="view.s163j.btn.compute">Compute</button>
             </form>
         </div>

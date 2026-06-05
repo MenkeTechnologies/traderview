@@ -54,19 +54,19 @@ export async function renderSection121(mount, _appState) {
                 <label><span data-i18n="view.s121.label.sale_year">Sale year</span>
                     <input type="number" step="1" name="sale_year" value="${state.sale_year}"></label>
                 <label><span data-i18n="view.s121.label.purchase_price">Purchase price ($)</span>
-                    <input type="number" step="100" name="purchase_price" value="${state.purchase_price}"></label>
+                    <input type="number" step="0.01" name="purchase_price" value="${state.purchase_price}"></label>
                 <label><span data-i18n="view.s121.label.improvements">Capital improvements ($)</span>
-                    <input type="number" step="100" name="improvements" value="${state.improvements}"></label>
+                    <input type="number" step="0.01" name="improvements" value="${state.improvements}"></label>
                 <label><span data-i18n="view.s121.label.sale_price">Sale price ($)</span>
-                    <input type="number" step="100" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s121.label.sale_costs">Selling costs (commission, etc.) ($)</span>
-                    <input type="number" step="100" name="sale_costs" value="${state.sale_costs}"></label>
+                    <input type="number" step="0.01" name="sale_costs" value="${state.sale_costs}"></label>
                 <label><span data-i18n="view.s121.label.years_residence">Years used as residence</span>
                     <input type="number" step="0.1" name="years_used_as_residence" value="${state.years_used_as_residence}"></label>
                 <label><span data-i18n="view.s121.label.years_rental">Years rented out (post-2008)</span>
                     <input type="number" step="0.1" name="years_used_as_rental" value="${state.years_used_as_rental}"></label>
                 <label><span data-i18n="view.s121.label.depreciation">Depreciation taken ($)</span>
-                    <input type="number" step="100" name="depreciation_taken" value="${state.depreciation_taken}"></label>
+                    <input type="number" step="0.01" name="depreciation_taken" value="${state.depreciation_taken}"></label>
                 <label><span data-i18n="view.s121.label.partial">Partial qualifying (job/health/UC)?</span>
                     <input type="checkbox" name="partial_qualifying_reason" ${state.partial_qualifying_reason ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s121.label.months_qualifying">Months actually used / owned (if partial)</span>

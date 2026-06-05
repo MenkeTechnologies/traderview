@@ -54,7 +54,7 @@ export async function renderInheritedIraRmd(mount, _appState) {
                 <label><span data-i18n="view.iir.label.was_taking_rmds">Decedent was taking RMDs?</span>
                     <input type="checkbox" name="decedent_was_taking_rmds" ${state.decedent_was_taking_rmds ? 'checked' : ''}></label>
                 <label><span data-i18n="view.iir.label.balance">Inherited balance ($)</span>
-                    <input type="number" step="1000" name="inherited_balance" value="${state.inherited_balance}"></label>
+                    <input type="number" step="0.01" name="inherited_balance" value="${state.inherited_balance}"></label>
                 <label><span data-i18n="view.iir.label.inheritance_year">Year of inheritance</span>
                     <input type="number" step="1" name="inheritance_year" value="${state.inheritance_year}"></label>
                 <label><span data-i18n="view.iir.label.growth">Expected annual growth %</span>

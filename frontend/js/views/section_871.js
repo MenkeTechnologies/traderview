@@ -87,21 +87,21 @@ export async function renderSection871(mount, _appState) {
                 <label><span data-i18n="view.s871.label.treaty_country">Treaty country</span>
                     <input type="text" name="treaty_country" value="${esc(state.treaty_country)}"></label>
                 <label><span data-i18n="view.s871.label.div">US dividends ($)</span>
-                    <input type="number" step="1000" name="us_dividends_received" value="${state.us_dividends_received}"></label>
+                    <input type="number" step="0.01" name="us_dividends_received" value="${state.us_dividends_received}"></label>
                 <label><span data-i18n="view.s871.label.int">US interest ($)</span>
-                    <input type="number" step="1000" name="us_interest_received" value="${state.us_interest_received}"></label>
+                    <input type="number" step="0.01" name="us_interest_received" value="${state.us_interest_received}"></label>
                 <label><span data-i18n="view.s871.label.roy">US royalties ($)</span>
-                    <input type="number" step="1000" name="us_royalties_received" value="${state.us_royalties_received}"></label>
+                    <input type="number" step="0.01" name="us_royalties_received" value="${state.us_royalties_received}"></label>
                 <label><span data-i18n="view.s871.label.cap_gain">US capital gain ($)</span>
-                    <input type="number" step="1000" name="us_capital_gain" value="${state.us_capital_gain}"></label>
+                    <input type="number" step="0.01" name="us_capital_gain" value="${state.us_capital_gain}"></label>
                 <label><span data-i18n="view.s871.label.real_estate">US real estate gain ($)</span>
-                    <input type="number" step="1000" name="us_real_estate_gain" value="${state.us_real_estate_gain}"></label>
+                    <input type="number" step="0.01" name="us_real_estate_gain" value="${state.us_real_estate_gain}"></label>
                 <label><span data-i18n="view.s871.label.firpta">§ 897 FIRPTA?</span>
                     <input type="checkbox" name="s897_firpta" ${state.s897_firpta ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s871.label.comp">US compensation ($)</span>
-                    <input type="number" step="1000" name="us_compensation" value="${state.us_compensation}"></label>
+                    <input type="number" step="0.01" name="us_compensation" value="${state.us_compensation}"></label>
                 <label><span data-i18n="view.s871.label.eci">ECI ($)</span>
-                    <input type="number" step="1000" name="eci_amount" value="${state.eci_amount}"></label>
+                    <input type="number" step="0.01" name="eci_amount" value="${state.eci_amount}"></label>
                 <label><span data-i18n="view.s871.label.services">Personal services?</span>
                     <input type="checkbox" name="is_personal_services" ${state.is_personal_services ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s871.label.dep_services">Days for dep services</span>
@@ -111,15 +111,15 @@ export async function renderSection871(mount, _appState) {
                 <label><span data-i18n="view.s871.label.branch">US branch?</span>
                     <input type="checkbox" name="has_us_branch" ${state.has_us_branch ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s871.label.portfolio">Portfolio interest exempt ($)</span>
-                    <input type="number" step="1000" name="portfolio_interest_exemption" value="${state.portfolio_interest_exemption}"></label>
+                    <input type="number" step="0.01" name="portfolio_interest_exemption" value="${state.portfolio_interest_exemption}"></label>
                 <label><span data-i18n="view.s871.label.bank">Bank deposit interest ($)</span>
-                    <input type="number" step="1000" name="bank_deposit_interest" value="${state.bank_deposit_interest}"></label>
+                    <input type="number" step="0.01" name="bank_deposit_interest" value="${state.bank_deposit_interest}"></label>
                 <label><span data-i18n="view.s871.label.871m">§ 871(m) div equiv ($)</span>
-                    <input type="number" step="1000" name="s871m_dividend_equivalent" value="${state.s871m_dividend_equivalent}"></label>
+                    <input type="number" step="0.01" name="s871m_dividend_equivalent" value="${state.s871m_dividend_equivalent}"></label>
                 <label><span data-i18n="view.s871.label.delta">§ 871(m) delta ≥ 0.8?</span>
                     <input type="checkbox" name="s871m_delta_threshold" ${state.s871m_delta_threshold ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s871.label.st_cap">S/T capital gain ($)</span>
-                    <input type="number" step="1000" name="short_term_capital_gain" value="${state.short_term_capital_gain}"></label>
+                    <input type="number" step="0.01" name="short_term_capital_gain" value="${state.short_term_capital_gain}"></label>
                 <label><span data-i18n="view.s871.label.tb">US trade/business?</span>
                     <input type="checkbox" name="us_trade_business" ${state.us_trade_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s871.label.s7701b">§ 7701(b) first-yr election?</span>

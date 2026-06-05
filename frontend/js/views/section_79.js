@@ -51,7 +51,7 @@ export async function renderSection79(mount, _appState) {
             <h2 data-i18n="view.s79.h2.inputs">Inputs</h2>
             <form id="s79-form" class="inline-form">
                 <label><span data-i18n="view.s79.label.coverage">Total coverage ($)</span>
-                    <input type="number" step="1000" name="total_coverage" value="${state.total_coverage}"></label>
+                    <input type="number" step="0.01" name="total_coverage" value="${state.total_coverage}"></label>
                 <label><span data-i18n="view.s79.label.age">Employee age</span>
                     <input type="number" step="1" name="employee_age" value="${state.employee_age}"></label>
                 <label><span data-i18n="view.s79.label.months">Months covered (yr)</span>
@@ -67,11 +67,11 @@ export async function renderSection79(mount, _appState) {
                 <label><span data-i18n="view.s79.label.discrim">Discriminatory plan?</span>
                     <input type="checkbox" name="plan_discriminatory" ${state.plan_discriminatory ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s79.label.permanent">Permanent benefits (non-term) ($)</span>
-                    <input type="number" step="1000" name="permanent_benefits" value="${state.permanent_benefits}"></label>
+                    <input type="number" step="0.01" name="permanent_benefits" value="${state.permanent_benefits}"></label>
                 <label><span data-i18n="view.s79.label.spouse">Spousal coverage ($)</span>
-                    <input type="number" step="500" name="spousal_coverage" value="${state.spousal_coverage}"></label>
+                    <input type="number" step="0.01" name="spousal_coverage" value="${state.spousal_coverage}"></label>
                 <label><span data-i18n="view.s79.label.dependent">Dependent coverage ($)</span>
-                    <input type="number" step="500" name="dependent_coverage" value="${state.dependent_coverage}"></label>
+                    <input type="number" step="0.01" name="dependent_coverage" value="${state.dependent_coverage}"></label>
                 <button class="primary" type="submit" data-i18n="view.s79.btn.compute">Compute</button>
             </form>
         </div>

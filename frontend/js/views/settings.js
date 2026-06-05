@@ -126,12 +126,12 @@ export async function renderSettings(mount, state) {
                     </select>
                 </label>
                 <label><span data-i18n="view.settings.label.starting_cash">Starting cash</span>
-                    <input type="number" step="any" name="starting_cash" value="${s.starting_cash}"></label>
+                    <input type="number" step="0.01" name="starting_cash" value="${s.starting_cash}"></label>
                 <label><span data-i18n="view.settings.label.commission_per_share">Commission / share</span>
-                    <input type="number" step="any" name="commission_per_share" value="${s.commission_per_share}">
+                    <input type="number" step="0.01" name="commission_per_share" value="${s.commission_per_share}">
                 </label>
                 <label><span data-i18n="view.settings.label.commission_per_contract">Commission / contract</span>
-                    <input type="number" step="any" name="commission_per_contract" value="${s.commission_per_contract}">
+                    <input type="number" step="0.01" name="commission_per_contract" value="${s.commission_per_contract}">
                 </label>
                 <label><span data-i18n="view.settings.label.auto_flatten">Auto-flatten (new trade after going flat)</span>
                     <input type="checkbox" name="auto_flatten" ${s.auto_flatten ? 'checked' : ''}>

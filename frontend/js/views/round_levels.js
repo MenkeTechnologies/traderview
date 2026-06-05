@@ -26,13 +26,13 @@ export async function renderRoundLevels(mount, _appState) {
             <h2 data-i18n="view.round_levels.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.round_levels.label.price">Current price ($)</span>
-                    <input id="rl-price" type="number" step="any" min="0" value="${state.current_price}" data-tip="view.round_levels.tip.price"></label>
+                    <input id="rl-price" type="number" step="0.01" min="0" value="${state.current_price}" data-tip="view.round_levels.tip.price"></label>
                 <label><span data-i18n="view.round_levels.label.atr">ATR ($, optional)</span>
-                    <input id="rl-atr" type="number" step="any" min="0"
+                    <input id="rl-atr" type="number" step="0.01" min="0"
                            placeholder="leave blank to skip ATR-distance" data-i18n-placeholder="view.round_levels.placeholder.atr_blank"
                            value="${state.atr == null ? '' : state.atr}" data-tip="view.round_levels.tip.atr"></label>
                 <label><span data-i18n="view.round_levels.label.window">Window ($ either side)</span>
-                    <input id="rl-window" type="number" step="any" min="0" value="${state.config.window}" data-tip="view.round_levels.tip.window"></label>
+                    <input id="rl-window" type="number" step="0.01" min="0" value="${state.config.window}" data-tip="view.round_levels.tip.window"></label>
                 <label><span data-i18n="view.round_levels.label.min_weight">Min weight</span>
                     <select id="rl-min-weight" data-tip="view.round_levels.tip.min_weight">
                         ${WEIGHTS.map(w => `<option value="${w}" ${w === state.config.min_weight ? 'selected' : ''}

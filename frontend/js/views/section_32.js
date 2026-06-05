@@ -71,11 +71,11 @@ export async function renderSection32(mount, _appState) {
                 <label><span data-i18n="view.s32.label.kids">Qualifying children count</span>
                     <input type="number" step="1" name="qualifying_children_count" value="${state.qualifying_children_count}"></label>
                 <label><span data-i18n="view.s32.label.earned">Earned income ($)</span>
-                    <input type="number" step="100" name="earned_income" value="${state.earned_income}"></label>
+                    <input type="number" step="0.01" name="earned_income" value="${state.earned_income}"></label>
                 <label><span data-i18n="view.s32.label.agi">AGI ($)</span>
-                    <input type="number" step="100" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.s32.label.invest">Investment income ($)</span>
-                    <input type="number" step="100" name="investment_income" value="${state.investment_income}"></label>
+                    <input type="number" step="0.01" name="investment_income" value="${state.investment_income}"></label>
                 <label><span data-i18n="view.s32.label.year">Year</span>
                     <input type="number" step="1" name="tax_year" value="${state.tax_year}"></label>
                 <label><span data-i18n="view.s32.label.eligible_age">Eligible age?</span>
@@ -105,11 +105,11 @@ export async function renderSection32(mount, _appState) {
                 <label><span data-i18n="view.s32.label.combat_elect">Combat pay election?</span>
                     <input type="checkbox" name="combat_pay_election" ${state.combat_pay_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s32.label.s32_d">§ 32(d) disqualified inc ($)</span>
-                    <input type="number" step="100" name="s32_d_disqualified_income" value="${state.s32_d_disqualified_income}"></label>
+                    <input type="number" step="0.01" name="s32_d_disqualified_income" value="${state.s32_d_disqualified_income}"></label>
                 <label><span data-i18n="view.s32.label.threshold">§ 32(d) threshold ($)</span>
-                    <input type="number" step="100" name="s32_d_disqualified_threshold" value="${state.s32_d_disqualified_threshold}"></label>
+                    <input type="number" step="0.01" name="s32_d_disqualified_threshold" value="${state.s32_d_disqualified_threshold}"></label>
                 <label><span data-i18n="view.s32.label.se">SE tax paid ($)</span>
-                    <input type="number" step="100" name="self_employed_se_tax_paid" value="${state.self_employed_se_tax_paid}"></label>
+                    <input type="number" step="0.01" name="self_employed_se_tax_paid" value="${state.self_employed_se_tax_paid}"></label>
                 <label><span data-i18n="view.s32.label.separated">Separated?</span>
                     <input type="checkbox" name="is_separated" ${state.is_separated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s32.label.s32_c3a">§ 32(c)(3)(A) full-yr US?</span>
@@ -117,11 +117,11 @@ export async function renderSection32(mount, _appState) {
                 <label><span data-i18n="view.s32.label.s32_m">§ 32(m) TIN by due date?</span>
                     <input type="checkbox" name="s32_m_taxpayer_id" ${state.s32_m_taxpayer_id ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s32.label.advance">Advance EITC received ($)</span>
-                    <input type="number" step="100" name="received_advance_eitc" value="${state.received_advance_eitc}"></label>
+                    <input type="number" step="0.01" name="received_advance_eitc" value="${state.received_advance_eitc}"></label>
                 <label><span data-i18n="view.s32.label.expected">Expected credit ($)</span>
-                    <input type="number" step="100" name="expected_credit" value="${state.expected_credit}"></label>
+                    <input type="number" step="0.01" name="expected_credit" value="${state.expected_credit}"></label>
                 <label><span data-i18n="view.s32.label.actc">ACTC overlap ($)</span>
-                    <input type="number" step="100" name="actc_overlap" value="${state.actc_overlap}"></label>
+                    <input type="number" step="0.01" name="actc_overlap" value="${state.actc_overlap}"></label>
                 <label><span data-i18n="view.s32.label.s24d">§ 24(d) ACTC overlap?</span>
                     <input type="checkbox" name="s24_d_actc_overlap" ${state.s24_d_actc_overlap ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s32.label.eligible">EITC eligible?</span>

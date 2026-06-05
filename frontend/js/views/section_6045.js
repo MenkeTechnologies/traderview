@@ -63,9 +63,9 @@ export async function renderSection6045(mount, _appState) {
                 <label><span data-i18n="view.s6045.label.sale_year">Sale year</span>
                     <input type="number" step="1" name="sale_year" value="${state.sale_year}"></label>
                 <label><span data-i18n="view.s6045.label.purchase">Purchase price ($)</span>
-                    <input type="number" step="100" name="purchase_price" value="${state.purchase_price}"></label>
+                    <input type="number" step="0.01" name="purchase_price" value="${state.purchase_price}"></label>
                 <label><span data-i18n="view.s6045.label.sale">Sale proceeds ($)</span>
-                    <input type="number" step="100" name="sale_proceeds" value="${state.sale_proceeds}"></label>
+                    <input type="number" step="0.01" name="sale_proceeds" value="${state.sale_proceeds}"></label>
                 <label><span data-i18n="view.s6045.label.method">Basis method</span>
                     <select name="basis_method">
                         <option value="fifo" ${state.basis_method === 'fifo' ? 'selected' : ''}>FIFO (default)</option>
@@ -76,13 +76,13 @@ export async function renderSection6045(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6045.label.wash">Wash sale adjustment ($)</span>
-                    <input type="number" step="100" name="wash_sale_adjustment" value="${state.wash_sale_adjustment}"></label>
+                    <input type="number" step="0.01" name="wash_sale_adjustment" value="${state.wash_sale_adjustment}"></label>
                 <label><span data-i18n="view.s6045.label.corp_action">Corp action adjustment ($)</span>
-                    <input type="number" step="100" name="corporate_action_adjustment" value="${state.corporate_action_adjustment}"></label>
+                    <input type="number" step="0.01" name="corporate_action_adjustment" value="${state.corporate_action_adjustment}"></label>
                 <label><span data-i18n="view.s6045.label.ordinary">Ordinary loss adjustment ($)</span>
-                    <input type="number" step="100" name="ordinary_loss_adjustment" value="${state.ordinary_loss_adjustment}"></label>
+                    <input type="number" step="0.01" name="ordinary_loss_adjustment" value="${state.ordinary_loss_adjustment}"></label>
                 <label><span data-i18n="view.s6045.label.amd">Accrued market discount ($)</span>
-                    <input type="number" step="100" name="accrued_market_discount" value="${state.accrued_market_discount}"></label>
+                    <input type="number" step="0.01" name="accrued_market_discount" value="${state.accrued_market_discount}"></label>
                 <label><span data-i18n="view.s6045.label.short">Short-term holding (≤ 1 yr)?</span>
                     <input type="checkbox" name="is_short_term" ${state.is_short_term ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6045.label.md_election">§ 1278(b) market discount accrual election?</span>

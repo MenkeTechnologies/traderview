@@ -44,13 +44,13 @@ export async function renderSection460(mount, _appState) {
             <h2 data-i18n="view.s460.h2.inputs">Inputs</h2>
             <form id="s460-form" class="inline-form">
                 <label><span data-i18n="view.s460.label.price">Contract price ($)</span>
-                    <input type="number" step="10000" name="contract_price" value="${state.contract_price}"></label>
+                    <input type="number" step="0.01" name="contract_price" value="${state.contract_price}"></label>
                 <label><span data-i18n="view.s460.label.est">Estimated total costs ($)</span>
-                    <input type="number" step="10000" name="estimated_total_costs" value="${state.estimated_total_costs}"></label>
+                    <input type="number" step="0.01" name="estimated_total_costs" value="${state.estimated_total_costs}"></label>
                 <label><span data-i18n="view.s460.label.incurred">Costs incurred to date ($)</span>
-                    <input type="number" step="10000" name="costs_incurred_to_date" value="${state.costs_incurred_to_date}"></label>
+                    <input type="number" step="0.01" name="costs_incurred_to_date" value="${state.costs_incurred_to_date}"></label>
                 <label><span data-i18n="view.s460.label.prior_rev">Revenue recognized prior years ($)</span>
-                    <input type="number" step="10000" name="revenue_recognized_prior" value="${state.revenue_recognized_prior}"></label>
+                    <input type="number" step="0.01" name="revenue_recognized_prior" value="${state.revenue_recognized_prior}"></label>
                 <label><span data-i18n="view.s460.label.start">Contract start year</span>
                     <input type="number" step="1" name="contract_started_year" value="${state.contract_started_year}"></label>
                 <label><span data-i18n="view.s460.label.complete">Estimated completion year</span>
@@ -58,7 +58,7 @@ export async function renderSection460(mount, _appState) {
                 <label><span data-i18n="view.s460.label.home">Home construction contract?</span>
                     <input type="checkbox" name="is_home_construction" ${state.is_home_construction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s460.label.gross">Avg gross receipts 3-yr ($)</span>
-                    <input type="number" step="1000000" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts_3yr" value="${state.avg_gross_receipts_3yr}"></label>
                 <label><span data-i18n="view.s460.label.residential">Residential ≥ 4 units?</span>
                     <input type="checkbox" name="is_residential_construction" ${state.is_residential_construction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s460.label.method">PCM method</span>
@@ -78,7 +78,7 @@ export async function renderSection460(mount, _appState) {
                 <label><span data-i18n="view.s460.label.lookback">Look-back year (for actual)</span>
                     <input type="number" step="1" name="look_back_year" value="${state.look_back_year}"></label>
                 <label><span data-i18n="view.s460.label.actual">Actual final costs ($)</span>
-                    <input type="number" step="10000" name="actual_costs_final" value="${state.actual_costs_final}"></label>
+                    <input type="number" step="0.01" name="actual_costs_final" value="${state.actual_costs_final}"></label>
                 <button class="primary" type="submit" data-i18n="view.s460.btn.compute">Compute</button>
             </form>
         </div>

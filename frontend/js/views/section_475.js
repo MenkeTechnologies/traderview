@@ -104,11 +104,11 @@ export async function renderSection475(mount, _appState) {
                 <label><span data-i18n="view.s475.label.separate">Separate business?</span>
                     <input type="checkbox" name="s475_f_election_separate_business" ${state.s475_f_election_separate_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s475.label.fmv">FMV year-end ($)</span>
-                    <input type="number" step="100" name="fmv_year_end" value="${state.fmv_year_end}"></label>
+                    <input type="number" step="0.01" name="fmv_year_end" value="${state.fmv_year_end}"></label>
                 <label><span data-i18n="view.s475.label.basis">Adj basis year-end ($)</span>
-                    <input type="number" step="100" name="adjusted_basis_year_end" value="${state.adjusted_basis_year_end}"></label>
+                    <input type="number" step="0.01" name="adjusted_basis_year_end" value="${state.adjusted_basis_year_end}"></label>
                 <label><span data-i18n="view.s475.label.mtm">MTM gain/loss ($)</span>
-                    <input type="number" step="100" name="mtm_gain_loss_recognized" value="${state.mtm_gain_loss_recognized}"></label>
+                    <input type="number" step="0.01" name="mtm_gain_loss_recognized" value="${state.mtm_gain_loss_recognized}"></label>
                 <label><span data-i18n="view.s475.label.ordinary">Ordinary?</span>
                     <input type="checkbox" name="is_ordinary_character" ${state.is_ordinary_character ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s475.label.dealer_excp">§ 475(b) dealer exception?</span>
@@ -138,7 +138,7 @@ export async function renderSection475(mount, _appState) {
                 <label><span data-i18n="view.s475.label.s481a">§ 481(a) required?</span>
                     <input type="checkbox" name="s481_a_change_method_required" ${state.s481_a_change_method_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s475.label.spread">4-yr spread ($)</span>
-                    <input type="number" step="10000" name="s481_a_4_yr_spread" value="${state.s481_a_4_yr_spread}"></label>
+                    <input type="number" step="0.01" name="s481_a_4_yr_spread" value="${state.s481_a_4_yr_spread}"></label>
                 <label><span data-i18n="view.s475.label.f3115">Form 3115 filed?</span>
                     <input type="checkbox" name="f3115_filed" ${state.f3115_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s475.label.revoke">Revocation?</span>
@@ -150,7 +150,7 @@ export async function renderSection475(mount, _appState) {
                 <label><span data-i18n="view.s475.label.rp2017">Rev Proc 2017-30?</span>
                     <input type="checkbox" name="rev_proc_2017_30_revocation" ${state.rev_proc_2017_30_revocation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s475.label.s212">§ 212 expenses ($)</span>
-                    <input type="number" step="100" name="s212_investor_expenses_2pct" value="${state.s212_investor_expenses_2pct}"></label>
+                    <input type="number" step="0.01" name="s212_investor_expenses_2pct" value="${state.s212_investor_expenses_2pct}"></label>
                 <label><span data-i18n="view.s475.label.above">Above-line trader?</span>
                     <input type="checkbox" name="deduction_above_line_trader" ${state.deduction_above_line_trader ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s475.label.s165g2">§ 165(g)(2) worthless?</span>

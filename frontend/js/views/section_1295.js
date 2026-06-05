@@ -36,13 +36,13 @@ export async function renderSection1295(mount, _appState) {
             <h2 data-i18n="view.s1295.h2.inputs">Inputs</h2>
             <form id="s1295-form" class="inline-form">
                 <label><span data-i18n="view.s1295.label.ord">QEF ordinary earnings inclusion ($)</span>
-                    <input type="number" step="1000" name="qef_ordinary_earnings" value="${state.qef_ordinary_earnings}"></label>
+                    <input type="number" step="0.01" name="qef_ordinary_earnings" value="${state.qef_ordinary_earnings}"></label>
                 <label><span data-i18n="view.s1295.label.ncg">QEF net capital gain inclusion ($)</span>
-                    <input type="number" step="1000" name="qef_net_capital_gain" value="${state.qef_net_capital_gain}"></label>
+                    <input type="number" step="0.01" name="qef_net_capital_gain" value="${state.qef_net_capital_gain}"></label>
                 <label><span data-i18n="view.s1295.label.actual">Actual distribution received ($)</span>
-                    <input type="number" step="1000" name="actual_distribution" value="${state.actual_distribution}"></label>
+                    <input type="number" step="0.01" name="actual_distribution" value="${state.actual_distribution}"></label>
                 <label><span data-i18n="view.s1295.label.prior">Prior years cumulative QEF inclusions ($)</span>
-                    <input type="number" step="1000" name="prior_qef_inclusions" value="${state.prior_qef_inclusions}"></label>
+                    <input type="number" step="0.01" name="prior_qef_inclusions" value="${state.prior_qef_inclusions}"></label>
                 <label><span data-i18n="view.s1295.label.ais">Has PFIC AIS?</span>
                     <input type="checkbox" name="has_ais" ${state.has_ais ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1295.label.first">First-year election?</span>

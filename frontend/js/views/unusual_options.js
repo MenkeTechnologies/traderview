@@ -26,7 +26,7 @@ export async function renderUnusualOptions(mount, _appState, symbol = '') {
                 <label><span data-i18n="view.uoa.label.vol_oi">Vol/OI threshold</span>
                     <input type="number" step="0.1" name="ratio" value="${state.minVolOiRatio}" min="1"></label>
                 <label><span data-i18n="view.uoa.label.min_vol">Min volume</span>
-                    <input type="number" step="100" name="min_vol" value="${state.minVolume}" min="1"></label>
+                    <input type="number" step="0.01" name="min_vol" value="${state.minVolume}" min="1"></label>
                 <button class="primary" type="submit" data-i18n="view.uoa.btn.scan">Scan</button>
             </form>
             <div id="uoa-result" style="margin-top:10px"></div>

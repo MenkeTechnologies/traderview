@@ -45,7 +45,7 @@ export async function renderSection2055(mount, _appState) {
             <h2 data-i18n="view.s2055.h2.inputs">Inputs</h2>
             <form id="s2055-form" class="inline-form">
                 <label><span data-i18n="view.s2055.label.amount">Bequest amount ($)</span>
-                    <input type="number" step="10000" name="bequest_amount" value="${state.bequest_amount}"></label>
+                    <input type="number" step="0.01" name="bequest_amount" value="${state.bequest_amount}"></label>
                 <label><span data-i18n="view.s2055.label.type">Type of bequest</span>
                     <select name="type_of_bequest">
                         <option value="outright" ${state.type_of_bequest === 'outright' ? 'selected' : ''}>Outright bequest</option>
@@ -72,11 +72,11 @@ export async function renderSection2055(mount, _appState) {
                 <label><span data-i18n="view.s2055.label.qualified">Is qualified charity?</span>
                     <input type="checkbox" name="is_qualified_charity" ${state.is_qualified_charity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2055.label.remainder">CRT charitable remainder ($)</span>
-                    <input type="number" step="10000" name="split_interest_charitable_remainder" value="${state.split_interest_charitable_remainder}"></label>
+                    <input type="number" step="0.01" name="split_interest_charitable_remainder" value="${state.split_interest_charitable_remainder}"></label>
                 <label><span data-i18n="view.s2055.label.lead">CLT charitable lead ($)</span>
-                    <input type="number" step="10000" name="split_interest_charitable_lead" value="${state.split_interest_charitable_lead}"></label>
+                    <input type="number" step="0.01" name="split_interest_charitable_lead" value="${state.split_interest_charitable_lead}"></label>
                 <label><span data-i18n="view.s2055.label.actuarial">Actuarial remainder value ($)</span>
-                    <input type="number" step="10000" name="actuarial_remainder_value" value="${state.actuarial_remainder_value}"></label>
+                    <input type="number" step="0.01" name="actuarial_remainder_value" value="${state.actuarial_remainder_value}"></label>
                 <label><span data-i18n="view.s2055.label.crat">Is CRAT?</span>
                     <input type="checkbox" name="is_crat" ${state.is_crat ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2055.label.crut">Is CRUT?</span>
@@ -94,9 +94,9 @@ export async function renderSection2055(mount, _appState) {
                 <label><span data-i18n="view.s2055.label.30pct">Private foundation 30% AGI cap?</span>
                     <input type="checkbox" name="private_foundation_30pct" ${state.private_foundation_30pct ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2055.label.carryover">5-yr carryover available ($)</span>
-                    <input type="number" step="10000" name="grant_5yr_carryover" value="${state.grant_5yr_carryover}"></label>
+                    <input type="number" step="0.01" name="grant_5yr_carryover" value="${state.grant_5yr_carryover}"></label>
                 <label><span data-i18n="view.s2055.label.estate">Estate total value ($)</span>
-                    <input type="number" step="100000" name="estate_total_value" value="${state.estate_total_value}"></label>
+                    <input type="number" step="0.01" name="estate_total_value" value="${state.estate_total_value}"></label>
                 <button class="primary" type="submit" data-i18n="view.s2055.btn.compute">Compute</button>
             </form>
         </div>

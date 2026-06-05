@@ -40,11 +40,11 @@ export async function renderSection311(mount, _appState) {
             <h2 data-i18n="view.s311.h2.inputs">Inputs</h2>
             <form id="s311-form" class="inline-form">
                 <label><span data-i18n="view.s311.label.fmv">Property FMV ($)</span>
-                    <input type="number" step="10000" name="property_fmv" value="${state.property_fmv}"></label>
+                    <input type="number" step="0.01" name="property_fmv" value="${state.property_fmv}"></label>
                 <label><span data-i18n="view.s311.label.basis">Property corp basis ($)</span>
-                    <input type="number" step="10000" name="property_basis" value="${state.property_basis}"></label>
+                    <input type="number" step="0.01" name="property_basis" value="${state.property_basis}"></label>
                 <label><span data-i18n="view.s311.label.liab">Liabilities assumed by shareholder ($)</span>
-                    <input type="number" step="10000" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
+                    <input type="number" step="0.01" name="liabilities_assumed" value="${state.liabilities_assumed}"></label>
                 <label><span data-i18n="view.s311.label.is_dist">Non-liquidating distribution?</span>
                     <input type="checkbox" name="is_distribution_to_shareholder" ${state.is_distribution_to_shareholder ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s311.label.qualified">Qualified dividend for shareholder?</span>
@@ -52,9 +52,9 @@ export async function renderSection311(mount, _appState) {
                 <label><span data-i18n="view.s311.label.redemption">Redemption (§ 302)?</span>
                     <input type="checkbox" name="is_redemption" ${state.is_redemption ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s311.label.ep">E&P available ($)</span>
-                    <input type="number" step="10000" name="e_and_p_available" value="${state.e_and_p_available}"></label>
+                    <input type="number" step="0.01" name="e_and_p_available" value="${state.e_and_p_available}"></label>
                 <label><span data-i18n="view.s311.label.basis_stock">Shareholder basis in stock ($)</span>
-                    <input type="number" step="10000" name="shareholder_basis_in_stock" value="${state.shareholder_basis_in_stock}"></label>
+                    <input type="number" step="0.01" name="shareholder_basis_in_stock" value="${state.shareholder_basis_in_stock}"></label>
                 <label><span data-i18n="view.s311.label.corp_share">C-corp shareholder (DRD applies)?</span>
                     <input type="checkbox" name="is_c_corp_shareholder" ${state.is_c_corp_shareholder ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s311.label.drd">DRD % (50/65/100)</span>

@@ -43,9 +43,9 @@ export async function renderSection2503(mount, _appState) {
             <h2 data-i18n="view.s2503.h2.inputs">Inputs</h2>
             <form id="s2503-form" class="inline-form">
                 <label><span data-i18n="view.s2503.label.amount">Total gift amount ($)</span>
-                    <input type="number" step="1000" name="total_gift_amount" value="${state.total_gift_amount}"></label>
+                    <input type="number" step="0.01" name="total_gift_amount" value="${state.total_gift_amount}"></label>
                 <label><span data-i18n="view.s2503.label.exclusion">Annual exclusion / donee ($)</span>
-                    <input type="number" step="500" name="annual_exclusion_per_donee" value="${state.annual_exclusion_per_donee}"></label>
+                    <input type="number" step="0.01" name="annual_exclusion_per_donee" value="${state.annual_exclusion_per_donee}"></label>
                 <label><span data-i18n="view.s2503.label.donees">Number of donees</span>
                     <input type="number" step="1" name="number_of_donees" value="${state.number_of_donees}"></label>
                 <label><span data-i18n="view.s2503.label.spouse">Spouse donor?</span>
@@ -61,13 +61,13 @@ export async function renderSection2503(mount, _appState) {
                 <label><span data-i18n="view.s2503.label.crummey_days">Crummey withdrawal period (days)</span>
                     <input type="number" step="1" name="crummey_withdrawal_period_days" value="${state.crummey_withdrawal_period_days}"></label>
                 <label><span data-i18n="view.s2503.label.educational">Educational direct payment ($)</span>
-                    <input type="number" step="100" name="educational_direct_payment" value="${state.educational_direct_payment}"></label>
+                    <input type="number" step="0.01" name="educational_direct_payment" value="${state.educational_direct_payment}"></label>
                 <label><span data-i18n="view.s2503.label.medical">Medical direct payment ($)</span>
-                    <input type="number" step="100" name="medical_direct_payment" value="${state.medical_direct_payment}"></label>
+                    <input type="number" step="0.01" name="medical_direct_payment" value="${state.medical_direct_payment}"></label>
                 <label><span data-i18n="view.s2503.label.lifetime_used">Lifetime exemption used ($)</span>
-                    <input type="number" step="10000" name="lifetime_exemption_used" value="${state.lifetime_exemption_used}"></label>
+                    <input type="number" step="0.01" name="lifetime_exemption_used" value="${state.lifetime_exemption_used}"></label>
                 <label><span data-i18n="view.s2503.label.lifetime_2025">Lifetime exemption 2025 ($)</span>
-                    <input type="number" step="10000" name="lifetime_exemption_2025" value="${state.lifetime_exemption_2025}"></label>
+                    <input type="number" step="0.01" name="lifetime_exemption_2025" value="${state.lifetime_exemption_2025}"></label>
                 <label><span data-i18n="view.s2503.label.s529">§ 529 5-year election?</span>
                     <input type="checkbox" name="s529_5_year_election" ${state.s529_5_year_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2503.label.qtip">QTIP qualifying trust?</span>

@@ -64,7 +64,7 @@ export async function renderSection481a(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s481.label.adjustment">§ 481(a) adjustment amount ($)</span>
-                    <input type="number" step="1000" name="section_481_adjustment" value="${state.section_481_adjustment}"></label>
+                    <input type="number" step="0.01" name="section_481_adjustment" value="${state.section_481_adjustment}"></label>
                 <label><span data-i18n="view.s481.label.positive">Positive adjustment (increases income)?</span>
                     <input type="checkbox" name="is_positive_adjustment" ${state.is_positive_adjustment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.year">Year of change</span>

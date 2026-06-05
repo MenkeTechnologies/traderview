@@ -36,9 +36,9 @@ export async function renderSection1259(mount, _appState) {
                 <label><span data-i18n="view.s1259.label.symbol">Symbol</span>
                     <input type="text" name="symbol" required></label>
                 <label><span data-i18n="view.s1259.label.basis">Long basis ($)</span>
-                    <input type="number" step="100" name="long_basis" required></label>
+                    <input type="number" step="0.01" name="long_basis" required></label>
                 <label><span data-i18n="view.s1259.label.fmv">FMV at hedge date ($)</span>
-                    <input type="number" step="100" name="fmv_at_hedge" required></label>
+                    <input type="number" step="0.01" name="fmv_at_hedge" required></label>
                 <label><span data-i18n="view.s1259.label.hedge_type">Hedge type</span>
                     <select name="hedge_type">
                         <option value="short_against_box">Short-against-the-box</option>

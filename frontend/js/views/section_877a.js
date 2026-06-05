@@ -42,23 +42,23 @@ export async function renderSection877A(mount, _appState) {
             <h2 data-i18n="view.s877A.h2.inputs">Inputs</h2>
             <form id="s877A-form" class="inline-form">
                 <label><span data-i18n="view.s877A.label.net_worth">Net worth ($)</span>
-                    <input type="number" step="100000" name="net_worth" value="${state.net_worth}"></label>
+                    <input type="number" step="0.01" name="net_worth" value="${state.net_worth}"></label>
                 <label><span data-i18n="view.s877A.label.avg_tax">5-yr avg income tax ($)</span>
-                    <input type="number" step="1000" name="avg_5yr_income_tax" value="${state.avg_5yr_income_tax}"></label>
+                    <input type="number" step="0.01" name="avg_5yr_income_tax" value="${state.avg_5yr_income_tax}"></label>
                 <label><span data-i18n="view.s877A.label.compliance">5-yr compliance certified?</span>
                     <input type="checkbox" name="five_year_compliance" ${state.five_year_compliance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s877A.label.date">Expatriation date</span>
                     <input type="date" name="expatriation_date" value="${state.expatriation_date}"></label>
                 <label><span data-i18n="view.s877A.label.gain">Total unrealized gain (mark-to-market) ($)</span>
-                    <input type="number" step="10000" name="total_unrealized_gain" value="${state.total_unrealized_gain}"></label>
+                    <input type="number" step="0.01" name="total_unrealized_gain" value="${state.total_unrealized_gain}"></label>
                 <label><span data-i18n="view.s877A.label.deferred">Deferred comp ($)</span>
-                    <input type="number" step="1000" name="deferred_comp" value="${state.deferred_comp}"></label>
+                    <input type="number" step="0.01" name="deferred_comp" value="${state.deferred_comp}"></label>
                 <label><span data-i18n="view.s877A.label.ira">IRA balance ($)</span>
-                    <input type="number" step="1000" name="ira_balance" value="${state.ira_balance}"></label>
+                    <input type="number" step="0.01" name="ira_balance" value="${state.ira_balance}"></label>
                 <label><span data-i18n="view.s877A.label.trust">Grantor trust value ($)</span>
-                    <input type="number" step="1000" name="grantor_trust_value" value="${state.grantor_trust_value}"></label>
+                    <input type="number" step="0.01" name="grantor_trust_value" value="${state.grantor_trust_value}"></label>
                 <label><span data-i18n="view.s877A.label.specified">Specified tax-deferred account ($)</span>
-                    <input type="number" step="1000" name="interest_in_specified_tax_deferred_account" value="${state.interest_in_specified_tax_deferred_account}"></label>
+                    <input type="number" step="0.01" name="interest_in_specified_tax_deferred_account" value="${state.interest_in_specified_tax_deferred_account}"></label>
                 <label><span data-i18n="view.s877A.label.lpr">Long-term resident (LPR 8 of 15)?</span>
                     <input type="checkbox" name="long_term_resident" ${state.long_term_resident ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s877A.label.defer">Elect § 877A(b) deferral?</span>

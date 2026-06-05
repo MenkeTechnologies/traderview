@@ -44,9 +44,9 @@ export async function renderSimpleIra(mount, _appState) {
                 <label><span data-i18n="view.simple.label.employees">Total eligible employees</span>
                     <input type="number" step="1" name="employee_count" value="${state.employee_count}"></label>
                 <label><span data-i18n="view.simple.label.comp">Your compensation ($)</span>
-                    <input type="number" step="1000" name="annual_compensation" value="${state.annual_compensation}"></label>
+                    <input type="number" step="0.01" name="annual_compensation" value="${state.annual_compensation}"></label>
                 <label><span data-i18n="view.simple.label.deferral">Your deferral ($)</span>
-                    <input type="number" step="100" name="employee_deferral" value="${state.employee_deferral}"></label>
+                    <input type="number" step="0.01" name="employee_deferral" value="${state.employee_deferral}"></label>
                 <label><span data-i18n="view.simple.label.choice">Employer formula</span>
                     <select name="employer_choice">
                         <option value="match" ${state.employer_choice === 'match' ? 'selected' : ''}>3% match</option>

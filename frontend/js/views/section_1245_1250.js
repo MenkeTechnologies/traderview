@@ -36,13 +36,13 @@ export async function renderSection12451250(mount, _appState) {
                 <label><span data-i18n="view.s1245.label.personal">Personal property (§ 1245)?</span>
                     <input type="checkbox" name="is_personal_property" ${state.is_personal_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.sale">Sale price ($)</span>
-                    <input type="number" step="100" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s1245.label.cost">Original cost ($)</span>
-                    <input type="number" step="100" name="original_cost" value="${state.original_cost}"></label>
+                    <input type="number" step="0.01" name="original_cost" value="${state.original_cost}"></label>
                 <label><span data-i18n="view.s1245.label.accum">Accumulated depreciation ($)</span>
-                    <input type="number" step="100" name="accumulated_depreciation" value="${state.accumulated_depreciation}"></label>
+                    <input type="number" step="0.01" name="accumulated_depreciation" value="${state.accumulated_depreciation}"></label>
                 <label><span data-i18n="view.s1245.label.sl">SL would-have-been (real property) ($)</span>
-                    <input type="number" step="100" name="straight_line_would_have" value="${state.straight_line_would_have}"></label>
+                    <input type="number" step="0.01" name="straight_line_would_have" value="${state.straight_line_would_have}"></label>
                 <label><span data-i18n="view.s1245.label.corp">C-corp seller (§ 291)?</span>
                     <input type="checkbox" name="is_corp" ${state.is_corp ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.marginal">Ordinary marginal %</span>

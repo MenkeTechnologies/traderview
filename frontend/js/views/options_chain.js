@@ -12,7 +12,7 @@ export async function renderOptions(mount, _state, rest) {
         <form id="of" class="inline-form">
             <input name="sym" value="${esc(sym)}" style="text-transform:uppercase">
             <select name="exp" id="expsel"><option data-i18n="view.options_chain.opt.loading">loading…</option></select>
-            <label>r <input name="r" value="0.045" type="number" step="any" style="width:80px"></label>
+            <label>r <input name="r" value="0.045" type="number" step="0.01" style="width:80px"></label>
             <button data-i18n="view.options_chain.btn.load" class="primary" type="submit">Load</button>
         </form>
         <div id="oc-mount"><span data-i18n="common.loading">loading…</span></div>
@@ -21,19 +21,19 @@ export async function renderOptions(mount, _state, rest) {
             <form id="gf" class="inline-form">
                 <select name="kind"><option data-i18n="view.options_chain.opt.call" value="call">call</option><option data-i18n="view.options_chain.opt.put" value="put">put</option></select>
                 <label><span data-i18n="view.options_chain.label.s">S</span>
-                    <input name="s" type="number" step="any" value="100"></label>
+                    <input name="s" type="number" step="0.01" value="100"></label>
                 <label><span data-i18n="view.options_chain.label.k">K</span>
-                    <input name="k" type="number" step="any" value="100"></label>
+                    <input name="k" type="number" step="0.01" value="100"></label>
                 <label><span data-i18n="view.options_chain.label.t">T (yrs)</span>
-                    <input name="t" type="number" step="any" value="0.25"></label>
+                    <input name="t" type="number" step="0.01" value="0.25"></label>
                 <label><span data-i18n="view.options_chain.label.sigma">σ (vol)</span>
-                    <input name="sigma" type="number" step="any" value="0.30"></label>
+                    <input name="sigma" type="number" step="0.01" value="0.30"></label>
                 <label><span data-i18n="view.options_chain.label.r">r</span>
-                    <input name="r" type="number" step="any" value="0.045"></label>
+                    <input name="r" type="number" step="0.01" value="0.045"></label>
                 <label><span data-i18n="view.options_chain.label.q">q</span>
-                    <input name="q" type="number" step="any" value="0.0"></label>
+                    <input name="q" type="number" step="0.01" value="0.0"></label>
                 <label><span data-i18n="view.options_chain.label.mkt">mkt (opt'l)</span>
-                    <input name="market_price" type="number" step="any" placeholder="for IV"
+                    <input name="market_price" type="number" step="0.01" placeholder="for IV"
                            data-i18n-placeholder="view.options_chain.placeholder.for_iv"></label>
                 <button data-i18n="view.options_chain.btn.compute" class="primary" type="submit">Compute</button>
             </form>

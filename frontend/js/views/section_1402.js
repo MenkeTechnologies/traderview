@@ -39,15 +39,15 @@ export async function renderSection1402(mount, _appState) {
             <h2 data-i18n="view.s1402.h2.inputs">Inputs</h2>
             <form id="s1402-form" class="inline-form">
                 <label><span data-i18n="view.s1402.label.sched_c">Schedule C net profit ($)</span>
-                    <input type="number" step="1000" name="schedule_c_net" value="${state.schedule_c_net}"></label>
+                    <input type="number" step="0.01" name="schedule_c_net" value="${state.schedule_c_net}"></label>
                 <label><span data-i18n="view.s1402.label.k1">Schedule K-1 SE earnings ($)</span>
-                    <input type="number" step="1000" name="schedule_k1_se" value="${state.schedule_k1_se}"></label>
+                    <input type="number" step="0.01" name="schedule_k1_se" value="${state.schedule_k1_se}"></label>
                 <label><span data-i18n="view.s1402.label.w2">W-2 wages already paid (SS-capped portion) ($)</span>
-                    <input type="number" step="1000" name="w2_wages_already_paid" value="${state.w2_wages_already_paid}"></label>
+                    <input type="number" step="0.01" name="w2_wages_already_paid" value="${state.w2_wages_already_paid}"></label>
                 <label><span data-i18n="view.s1402.label.mfj">MFJ?</span>
                     <input type="checkbox" name="is_mfj" ${state.is_mfj ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1402.label.spouse">Spouse SE earnings ($)</span>
-                    <input type="number" step="1000" name="spouse_se_earnings" value="${state.spouse_se_earnings}"></label>
+                    <input type="number" step="0.01" name="spouse_se_earnings" value="${state.spouse_se_earnings}"></label>
                 <label><span data-i18n="view.s1402.label.marginal">Income marginal %</span>
                     <input type="number" step="0.01" name="income_marginal" value="${state.income_marginal}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1402.btn.compute">Compute</button>

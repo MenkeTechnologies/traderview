@@ -43,7 +43,7 @@ export async function renderSection4944(mount, _appState) {
             <h2 data-i18n="view.s4944.h2.inputs">Inputs</h2>
             <form id="s4944-form" class="inline-form">
                 <label><span data-i18n="view.s4944.label.amount">Investment amount ($)</span>
-                    <input type="number" step="10000" name="investment_amount" value="${state.investment_amount}"></label>
+                    <input type="number" step="0.01" name="investment_amount" value="${state.investment_amount}"></label>
                 <label><span data-i18n="view.s4944.label.type">Investment type</span>
                     <select name="investment_type">
                         <option value="speculation" ${state.investment_type === 'speculation' ? 'selected' : ''}>Speculation / high-risk option</option>

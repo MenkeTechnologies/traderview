@@ -103,13 +103,13 @@ export async function renderKalmanBeta(mount, _appState) {
             <h2 data-i18n="view.kalman_beta.h2.kalman_hyperparameters">Kalman hyperparameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.kalman_beta.label.q">Q (process noise)</span>
-                    <input id="kb-q"    type="number" step="any" min="0" value="${state.params.process_noise_q}" data-tip="view.kalman_beta.tip.q"></label>
+                    <input id="kb-q"    type="number" step="0.01" min="0" value="${state.params.process_noise_q}" data-tip="view.kalman_beta.tip.q"></label>
                 <label><span data-i18n="view.kalman_beta.label.r">R (observation noise)</span>
-                    <input id="kb-r"    type="number" step="any" min="1e-12" value="${state.params.obs_noise_r}" data-tip="view.kalman_beta.tip.r"></label>
+                    <input id="kb-r"    type="number" step="0.01" min="1e-12" value="${state.params.obs_noise_r}" data-tip="view.kalman_beta.tip.r"></label>
                 <label><span data-i18n="view.kalman_beta.label.beta0">β₀ (prior mean)</span>
-                    <input id="kb-b0"   type="number" step="any" value="${state.params.beta0}" data-tip="view.kalman_beta.tip.beta0"></label>
+                    <input id="kb-b0"   type="number" step="0.01" value="${state.params.beta0}" data-tip="view.kalman_beta.tip.beta0"></label>
                 <label><span data-i18n="view.kalman_beta.label.p0">P₀ (prior variance)</span>
-                    <input id="kb-p0"   type="number" step="any" min="1e-12" value="${state.params.p0}" data-tip="view.kalman_beta.tip.p0"></label>
+                    <input id="kb-p0"   type="number" step="0.01" min="1e-12" value="${state.params.p0}" data-tip="view.kalman_beta.tip.p0"></label>
                 <button data-i18n="view.kalman_beta.btn.run" data-tip="view.kalman_beta.tip.run" data-shortcut="kalman_beta_run" id="kb-run" class="primary" type="button">Run</button>
             </div>
             <p data-i18n="view.kalman_beta.hint.lower_q_smoother_assumes_slow_drift_higher_q_adapt" class="muted">

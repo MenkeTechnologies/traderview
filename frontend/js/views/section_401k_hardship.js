@@ -53,7 +53,7 @@ export async function renderSection401kHardship(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s401h.label.amount">Withdrawal amount ($)</span>
-                    <input type="number" step="100" name="withdrawal_amount" value="${state.withdrawal_amount}"></label>
+                    <input type="number" step="0.01" name="withdrawal_amount" value="${state.withdrawal_amount}"></label>
                 <label><span data-i18n="view.s401h.label.age">Your age</span>
                     <input type="number" step="1" name="your_age" value="${state.your_age}"></label>
                 <label><span data-i18n="view.s401h.label.roth">Roth source?</span>

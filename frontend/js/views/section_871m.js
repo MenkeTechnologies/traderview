@@ -56,7 +56,7 @@ export async function renderSection871m(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s871m.label.notional">Notional value ($)</span>
-                    <input type="number" step="10000" name="notional_value" value="${state.notional_value}"></label>
+                    <input type="number" step="0.01" name="notional_value" value="${state.notional_value}"></label>
                 <label><span data-i18n="view.s871m.label.delta">Delta</span>
                     <input type="number" step="0.01" min="0" max="1" name="delta" value="${state.delta}"></label>
                 <label><span data-i18n="view.s871m.label.dividend">Expected dividend yield annual</span>

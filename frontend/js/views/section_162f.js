@@ -41,7 +41,7 @@ export async function renderSection162F(mount, _appState) {
             <h2 data-i18n="view.s162f.h2.inputs">Inputs</h2>
             <form id="s162f-form" class="inline-form">
                 <label><span data-i18n="view.s162f.label.payment">Total payment ($)</span>
-                    <input type="number" step="10000" name="total_payment" value="${state.total_payment}"></label>
+                    <input type="number" step="0.01" name="total_payment" value="${state.total_payment}"></label>
                 <label><span data-i18n="view.s162f.label.type">Payment type</span>
                     <select name="payment_type">
                         <option value="fine" ${state.payment_type === 'fine' ? 'selected' : ''}>Fine (penalty)</option>
@@ -60,9 +60,9 @@ export async function renderSection162F(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s162f.label.restitution">Identified restitution ($)</span>
-                    <input type="number" step="1000" name="identified_restitution" value="${state.identified_restitution}"></label>
+                    <input type="number" step="0.01" name="identified_restitution" value="${state.identified_restitution}"></label>
                 <label><span data-i18n="view.s162f.label.compliance">Identified compliance ($)</span>
-                    <input type="number" step="1000" name="identified_compliance" value="${state.identified_compliance}"></label>
+                    <input type="number" step="0.01" name="identified_compliance" value="${state.identified_compliance}"></label>
                 <label><span data-i18n="view.s162f.label.admit">Settlement w/ admission?</span>
                     <input type="checkbox" name="settlement_with_admission" ${state.settlement_with_admission ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s162f.label.no_admit">Settlement w/o admission?</span>
@@ -82,7 +82,7 @@ export async function renderSection162F(mount, _appState) {
                 <label><span data-i18n="view.s162f.label.witness">Cooperating witness?</span>
                     <input type="checkbox" name="cooperating_witness" ${state.cooperating_witness ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s162f.label.treble">Treble damages antitrust ($)</span>
-                    <input type="number" step="10000" name="treble_damages_antitrust" value="${state.treble_damages_antitrust}"></label>
+                    <input type="number" step="0.01" name="treble_damages_antitrust" value="${state.treble_damages_antitrust}"></label>
                 <button class="primary" type="submit" data-i18n="view.s162f.btn.compute">Compute</button>
             </form>
         </div>

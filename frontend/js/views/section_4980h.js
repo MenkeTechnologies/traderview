@@ -54,9 +54,9 @@ export async function renderSection4980h(mount, _appState) {
                 <label><span data-i18n="view.s4980h.label.ptc_count">Employees getting PTC</span>
                     <input type="number" step="1" name="employees_getting_ptc" value="${state.employees_getting_ptc}"></label>
                 <label><span data-i18n="view.s4980h.label.lowest_monthly">Lowest cost plan monthly ($)</span>
-                    <input type="number" step="10" name="lowest_cost_plan_monthly" value="${state.lowest_cost_plan_monthly}"></label>
+                    <input type="number" step="0.01" name="lowest_cost_plan_monthly" value="${state.lowest_cost_plan_monthly}"></label>
                 <label><span data-i18n="view.s4980h.label.income_monthly">Avg employee monthly income ($)</span>
-                    <input type="number" step="100" name="avg_employee_household_income_monthly" value="${state.avg_employee_household_income_monthly}"></label>
+                    <input type="number" step="0.01" name="avg_employee_household_income_monthly" value="${state.avg_employee_household_income_monthly}"></label>
                 <button class="primary" type="submit" data-i18n="view.s4980h.btn.compute">Compute</button>
             </form>
         </div>

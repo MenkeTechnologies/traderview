@@ -42,17 +42,17 @@ export async function renderSection25D(mount, _appState) {
             <h2 data-i18n="view.s25D.h2.inputs">Inputs</h2>
             <form id="s25D-form" class="inline-form">
                 <label><span data-i18n="view.s25D.label.solar_pv">Solar PV cost ($)</span>
-                    <input type="number" step="500" name="solar_pv_cost" value="${state.solar_pv_cost}"></label>
+                    <input type="number" step="0.01" name="solar_pv_cost" value="${state.solar_pv_cost}"></label>
                 <label><span data-i18n="view.s25D.label.solar_thermal">Solar thermal water cost ($)</span>
-                    <input type="number" step="500" name="solar_thermal_cost" value="${state.solar_thermal_cost}"></label>
+                    <input type="number" step="0.01" name="solar_thermal_cost" value="${state.solar_thermal_cost}"></label>
                 <label><span data-i18n="view.s25D.label.geothermal">Geothermal heat pump cost ($)</span>
-                    <input type="number" step="500" name="geothermal_cost" value="${state.geothermal_cost}"></label>
+                    <input type="number" step="0.01" name="geothermal_cost" value="${state.geothermal_cost}"></label>
                 <label><span data-i18n="view.s25D.label.fuel_cell">Fuel cell cost ($)</span>
-                    <input type="number" step="500" name="fuel_cell_cost" value="${state.fuel_cell_cost}"></label>
+                    <input type="number" step="0.01" name="fuel_cell_cost" value="${state.fuel_cell_cost}"></label>
                 <label><span data-i18n="view.s25D.label.wind">Small wind cost ($)</span>
-                    <input type="number" step="500" name="small_wind_cost" value="${state.small_wind_cost}"></label>
+                    <input type="number" step="0.01" name="small_wind_cost" value="${state.small_wind_cost}"></label>
                 <label><span data-i18n="view.s25D.label.battery">Battery storage cost ($)</span>
-                    <input type="number" step="500" name="battery_storage_cost" value="${state.battery_storage_cost}"></label>
+                    <input type="number" step="0.01" name="battery_storage_cost" value="${state.battery_storage_cost}"></label>
                 <label><span data-i18n="view.s25D.label.kwh">Battery kWh capacity</span>
                     <input type="number" step="0.1" name="battery_kwh" value="${state.battery_kwh}"></label>
                 <label><span data-i18n="view.s25D.label.year">Placed in service year</span>
@@ -66,9 +66,9 @@ export async function renderSection25D(mount, _appState) {
                 <label><span data-i18n="view.s25D.label.new_construction">New construction (allowed)?</span>
                     <input type="checkbox" name="is_new_construction" ${state.is_new_construction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s25D.label.liability">Current year tax liability ($)</span>
-                    <input type="number" step="100" name="tax_liability" value="${state.tax_liability}"></label>
+                    <input type="number" step="0.01" name="tax_liability" value="${state.tax_liability}"></label>
                 <label><span data-i18n="view.s25D.label.carry">Prior carryforward ($)</span>
-                    <input type="number" step="100" name="carryforward_prior" value="${state.carryforward_prior}"></label>
+                    <input type="number" step="0.01" name="carryforward_prior" value="${state.carryforward_prior}"></label>
                 <button class="primary" type="submit" data-i18n="view.s25D.btn.compute">Compute</button>
             </form>
         </div>

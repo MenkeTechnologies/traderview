@@ -25,11 +25,11 @@ export async function renderCarryScore(mount, _appState) {
             <h2 data-i18n="view.carry_score.h2.pair">Pair definition</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.carry_score.label.long_rate">Long rate (decimal — 0.05 = 5%)</span>
-                    <input id="cs-long" type="number" step="any" value="${state.long_rate}" data-tip="view.carry_score.tip.long_rate"></label>
+                    <input id="cs-long" type="number" step="0.01" value="${state.long_rate}" data-tip="view.carry_score.tip.long_rate"></label>
                 <label><span data-i18n="view.carry_score.label.funding_rate">Funding rate (decimal)</span>
-                    <input id="cs-fund" type="number" step="any" value="${state.funding_rate}" data-tip="view.carry_score.tip.funding_rate"></label>
+                    <input id="cs-fund" type="number" step="0.01" value="${state.funding_rate}" data-tip="view.carry_score.tip.funding_rate"></label>
                 <label><span data-i18n="view.carry_score.label.vol">Annualized vol (decimal)</span>
-                    <input id="cs-vol" type="number" step="any" min="0" value="${state.annualized_vol}" data-tip="view.carry_score.tip.vol"></label>
+                    <input id="cs-vol" type="number" step="0.01" min="0" value="${state.annualized_vol}" data-tip="view.carry_score.tip.vol"></label>
                 <button data-i18n="view.carry_score.btn.score" id="cs-run" class="primary"
                         data-tip="view.carry_score.tip.score" data-shortcut="carry_score_run" type="button">Score</button>
             </div>

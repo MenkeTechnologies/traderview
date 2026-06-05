@@ -39,13 +39,13 @@ export async function renderSection174(mount, _appState) {
                 <label><span data-i18n="view.s174.label.year">Tax year</span>
                     <input type="number" step="1" name="tax_year" value="${state.tax_year}"></label>
                 <label><span data-i18n="view.s174.label.us_qre">Current year US QREs ($)</span>
-                    <input type="number" step="1000" name="us_qre" value="${state.us_qre}"></label>
+                    <input type="number" step="0.01" name="us_qre" value="${state.us_qre}"></label>
                 <label><span data-i18n="view.s174.label.foreign_qre">Current year foreign QREs ($)</span>
-                    <input type="number" step="1000" name="foreign_qre" value="${state.foreign_qre}"></label>
+                    <input type="number" step="0.01" name="foreign_qre" value="${state.foreign_qre}"></label>
                 <label><span data-i18n="view.s174.label.prior_us">Prior year US QREs ($)</span>
-                    <input type="number" step="1000" name="prior_year_us_qre" value="${state.prior_year_us_qre}"></label>
+                    <input type="number" step="0.01" name="prior_year_us_qre" value="${state.prior_year_us_qre}"></label>
                 <label><span data-i18n="view.s174.label.prior_foreign">Prior year foreign QREs ($)</span>
-                    <input type="number" step="1000" name="prior_year_foreign_qre" value="${state.prior_year_foreign_qre}"></label>
+                    <input type="number" step="0.01" name="prior_year_foreign_qre" value="${state.prior_year_foreign_qre}"></label>
                 <label><span data-i18n="view.s174.label.marginal">Marginal rate</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <label><span data-i18n="view.s174.label.npv">NPV discount rate</span>

@@ -44,9 +44,9 @@ export async function renderSection6331(mount, _appState) {
             <h2 data-i18n="view.s6331.h2.inputs">Inputs</h2>
             <form id="s6331-form" class="inline-form">
                 <label><span data-i18n="view.s6331.label.levy_amount">Levy amount ($)</span>
-                    <input type="number" step="1000" name="levy_amount" value="${state.levy_amount}"></label>
+                    <input type="number" step="0.01" name="levy_amount" value="${state.levy_amount}"></label>
                 <label><span data-i18n="view.s6331.label.wages">Gross wages monthly ($)</span>
-                    <input type="number" step="100" name="gross_wages_monthly" value="${state.gross_wages_monthly}"></label>
+                    <input type="number" step="0.01" name="gross_wages_monthly" value="${state.gross_wages_monthly}"></label>
                 <label><span data-i18n="view.s6331.label.filing">Filing status</span>
                     <select name="filing_status">
                         <option value="single" ${state.filing_status === 'single' ? 'selected' : ''}>Single / HoH</option>
@@ -65,11 +65,11 @@ export async function renderSection6331(mount, _appState) {
                 <label><span data-i18n="view.s6331.label.days_since">Days since Final Notice</span>
                     <input type="number" step="1" name="days_since_final_notice" value="${state.days_since_final_notice}"></label>
                 <label><span data-i18n="view.s6331.label.homestead">Homestead value ($)</span>
-                    <input type="number" step="10000" name="homestead_value" value="${state.homestead_value}"></label>
+                    <input type="number" step="0.01" name="homestead_value" value="${state.homestead_value}"></label>
                 <label><span data-i18n="view.s6331.label.bank">Bank balance ($)</span>
-                    <input type="number" step="100" name="bank_account_balance" value="${state.bank_account_balance}"></label>
+                    <input type="number" step="0.01" name="bank_account_balance" value="${state.bank_account_balance}"></label>
                 <label><span data-i18n="view.s6331.label.tools">Tools of trade value ($)</span>
-                    <input type="number" step="100" name="tools_of_trade_value" value="${state.tools_of_trade_value}"></label>
+                    <input type="number" step="0.01" name="tools_of_trade_value" value="${state.tools_of_trade_value}"></label>
                 <label><span data-i18n="view.s6331.label.ss">Receives Social Security?</span>
                     <input type="checkbox" name="receives_social_security" ${state.receives_social_security ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s6331.btn.compute">Compute</button>

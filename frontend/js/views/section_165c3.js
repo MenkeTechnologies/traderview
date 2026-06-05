@@ -40,13 +40,13 @@ export async function renderSection165c3(mount, _appState) {
             <h2 data-i18n="view.s165c3.h2.inputs">Inputs</h2>
             <form id="s165c3-form" class="inline-form">
                 <label><span data-i18n="view.s165c3.label.basis">Property basis ($)</span>
-                    <input type="number" step="1000" name="basis_in_property" value="${state.basis_in_property}"></label>
+                    <input type="number" step="0.01" name="basis_in_property" value="${state.basis_in_property}"></label>
                 <label><span data-i18n="view.s165c3.label.fmv_before">FMV before casualty ($)</span>
-                    <input type="number" step="1000" name="fmv_before" value="${state.fmv_before}"></label>
+                    <input type="number" step="0.01" name="fmv_before" value="${state.fmv_before}"></label>
                 <label><span data-i18n="view.s165c3.label.fmv_after">FMV after casualty ($)</span>
-                    <input type="number" step="1000" name="fmv_after" value="${state.fmv_after}"></label>
+                    <input type="number" step="0.01" name="fmv_after" value="${state.fmv_after}"></label>
                 <label><span data-i18n="view.s165c3.label.insurance">Insurance reimbursement ($)</span>
-                    <input type="number" step="1000" name="insurance_reimbursement" value="${state.insurance_reimbursement}"></label>
+                    <input type="number" step="0.01" name="insurance_reimbursement" value="${state.insurance_reimbursement}"></label>
                 <label><span data-i18n="view.s165c3.label.disaster">Federally-declared disaster?</span>
                     <input type="checkbox" name="is_federally_declared_disaster" ${state.is_federally_declared_disaster ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165c3.label.business">Business use property?</span>
@@ -54,7 +54,7 @@ export async function renderSection165c3(mount, _appState) {
                 <label><span data-i18n="view.s165c3.label.business_pct">Business use %</span>
                     <input type="number" step="1" name="business_use_pct" value="${state.business_use_pct}"></label>
                 <label><span data-i18n="view.s165c3.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.s165c3.label.prior_year">Elect § 165(i) prior year?</span>
                     <input type="checkbox" name="elect_prior_year" ${state.elect_prior_year ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s165c3.label.qualified">Qualified disaster (special rules)?</span>

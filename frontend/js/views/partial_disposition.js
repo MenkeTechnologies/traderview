@@ -54,13 +54,13 @@ export async function renderPartialDisposition(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.pd.label.original_basis">Original component basis ($)</span>
-                    <input type="number" step="100" name="original_basis" required></label>
+                    <input type="number" step="0.01" name="original_basis" required></label>
                 <label><span data-i18n="view.pd.label.accumulated_dep">Accumulated depreciation taken ($)</span>
-                    <input type="number" step="100" name="accumulated_dep" required></label>
+                    <input type="number" step="0.01" name="accumulated_dep" required></label>
                 <label><span data-i18n="view.pd.label.removal_cost">Removal / demolition cost ($)</span>
-                    <input type="number" step="100" name="removal_cost" value="0"></label>
+                    <input type="number" step="0.01" name="removal_cost" value="0"></label>
                 <label><span data-i18n="view.pd.label.salvage">Salvage proceeds ($)</span>
-                    <input type="number" step="100" name="salvage" value="0"></label>
+                    <input type="number" step="0.01" name="salvage" value="0"></label>
                 <button class="primary" type="submit" data-i18n="view.pd.btn.add">Add</button>
             </form>
         </div>

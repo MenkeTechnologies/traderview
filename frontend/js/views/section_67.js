@@ -74,9 +74,9 @@ export async function renderSection67(mount, _appState) {
                 <label><span data-i18n="view.s67.label.year">Year</span>
                     <input type="number" step="1" name="tax_year" value="${state.tax_year}"></label>
                 <label><span data-i18n="view.s67.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.s67.label.misc_2pct">Misc 2% total ($)</span>
-                    <input type="number" step="100" name="misc_itemized_2pct_total" value="${state.misc_itemized_2pct_total}"></label>
+                    <input type="number" step="0.01" name="misc_itemized_2pct_total" value="${state.misc_itemized_2pct_total}"></label>
                 <label><span data-i18n="view.s67.label.tcja_suspended">TCJA suspended?</span>
                     <input type="checkbox" name="is_tcja_suspended_year" ${state.is_tcja_suspended_year ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s67.label.s67g">§ 67(g) active?</span>
@@ -88,53 +88,53 @@ export async function renderSection67(mount, _appState) {
                 <label><span data-i18n="view.s67.label.obbba">OBBBA ext?</span>
                     <input type="checkbox" name="obbba_extension" ${state.obbba_extension ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s67.label.unreim_emp">Unreim emp biz ($)</span>
-                    <input type="number" step="100" name="misc_2pct_unreimbursed_employee_business" value="${state.misc_2pct_unreimbursed_employee_business}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_unreimbursed_employee_business" value="${state.misc_2pct_unreimbursed_employee_business}"></label>
                 <label><span data-i18n="view.s67.label.safe">Safe deposit ($)</span>
-                    <input type="number" step="100" name="misc_2pct_safe_deposit_box" value="${state.misc_2pct_safe_deposit_box}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_safe_deposit_box" value="${state.misc_2pct_safe_deposit_box}"></label>
                 <label><span data-i18n="view.s67.label.tax_prep">Tax prep fees ($)</span>
-                    <input type="number" step="100" name="misc_2pct_tax_preparation_fees" value="${state.misc_2pct_tax_preparation_fees}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_tax_preparation_fees" value="${state.misc_2pct_tax_preparation_fees}"></label>
                 <label><span data-i18n="view.s67.label.invest_exp">Investment exp ($)</span>
-                    <input type="number" step="100" name="misc_2pct_investment_expenses" value="${state.misc_2pct_investment_expenses}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_investment_expenses" value="${state.misc_2pct_investment_expenses}"></label>
                 <label><span data-i18n="view.s67.label.legal">Legal fees taxable ($)</span>
-                    <input type="number" step="100" name="misc_2pct_legal_fees_taxable" value="${state.misc_2pct_legal_fees_taxable}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_legal_fees_taxable" value="${state.misc_2pct_legal_fees_taxable}"></label>
                 <label><span data-i18n="view.s67.label.estate_iif">Estate tax IRD ($)</span>
-                    <input type="number" step="100" name="misc_2pct_estate_tax_iif" value="${state.misc_2pct_estate_tax_iif}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_estate_tax_iif" value="${state.misc_2pct_estate_tax_iif}"></label>
                 <label><span data-i18n="view.s67.label.dues">Prof dues ($)</span>
-                    <input type="number" step="100" name="misc_2pct_dues_professional" value="${state.misc_2pct_dues_professional}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_dues_professional" value="${state.misc_2pct_dues_professional}"></label>
                 <label><span data-i18n="view.s67.label.edu">Work edu ($)</span>
-                    <input type="number" step="100" name="misc_2pct_education_work_related" value="${state.misc_2pct_education_work_related}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_education_work_related" value="${state.misc_2pct_education_work_related}"></label>
                 <label><span data-i18n="view.s67.label.other">Other 2% ($)</span>
-                    <input type="number" step="100" name="misc_2pct_other" value="${state.misc_2pct_other}"></label>
+                    <input type="number" step="0.01" name="misc_2pct_other" value="${state.misc_2pct_other}"></label>
                 <label><span data-i18n="view.s67.label.above_2pct">§ 67(b) above-floor ($)</span>
-                    <input type="number" step="100" name="s67_b_above_2pct_floor" value="${state.s67_b_above_2pct_floor}"></label>
+                    <input type="number" step="0.01" name="s67_b_above_2pct_floor" value="${state.s67_b_above_2pct_floor}"></label>
                 <label><span data-i18n="view.s67.label.s67_b1">§ 67(b)(1) estate admin ($)</span>
-                    <input type="number" step="100" name="s67_b_1_estate_admin" value="${state.s67_b_1_estate_admin}"></label>
+                    <input type="number" step="0.01" name="s67_b_1_estate_admin" value="${state.s67_b_1_estate_admin}"></label>
                 <label><span data-i18n="view.s67.label.s67_b2">§ 67(b)(2) gambling ($)</span>
-                    <input type="number" step="100" name="s67_b_2_gambling_loss" value="${state.s67_b_2_gambling_loss}"></label>
+                    <input type="number" step="0.01" name="s67_b_2_gambling_loss" value="${state.s67_b_2_gambling_loss}"></label>
                 <label><span data-i18n="view.s67.label.s67_b3">§ 67(b)(3) impair emp ($)</span>
-                    <input type="number" step="100" name="s67_b_3_impairment_employee" value="${state.s67_b_3_impairment_employee}"></label>
+                    <input type="number" step="0.01" name="s67_b_3_impairment_employee" value="${state.s67_b_3_impairment_employee}"></label>
                 <label><span data-i18n="view.s67.label.s67_b4">§ 67(b)(4) IRD partial ($)</span>
-                    <input type="number" step="100" name="s67_b_4_estate_tax_iif_partial" value="${state.s67_b_4_estate_tax_iif_partial}"></label>
+                    <input type="number" step="0.01" name="s67_b_4_estate_tax_iif_partial" value="${state.s67_b_4_estate_tax_iif_partial}"></label>
                 <label><span data-i18n="view.s67.label.s67_b5">§ 67(b)(5) casualty FDDA ($)</span>
-                    <input type="number" step="100" name="s67_b_5_personal_property_loss_casualty" value="${state.s67_b_5_personal_property_loss_casualty}"></label>
+                    <input type="number" step="0.01" name="s67_b_5_personal_property_loss_casualty" value="${state.s67_b_5_personal_property_loss_casualty}"></label>
                 <label><span data-i18n="view.s67.label.s67_b6">§ 67(b)(6) terminated ($)</span>
-                    <input type="number" step="100" name="s67_b_6_terminated_unit" value="${state.s67_b_6_terminated_unit}"></label>
+                    <input type="number" step="0.01" name="s67_b_6_terminated_unit" value="${state.s67_b_6_terminated_unit}"></label>
                 <label><span data-i18n="view.s67.label.s67_b7">§ 67(b)(7) short sale ($)</span>
-                    <input type="number" step="100" name="s67_b_7_short_sale_securities" value="${state.s67_b_7_short_sale_securities}"></label>
+                    <input type="number" step="0.01" name="s67_b_7_short_sale_securities" value="${state.s67_b_7_short_sale_securities}"></label>
                 <label><span data-i18n="view.s67.label.s67_b8">§ 67(b)(8) bond prem ($)</span>
-                    <input type="number" step="100" name="s67_b_8_amortizable_bond_premium" value="${state.s67_b_8_amortizable_bond_premium}"></label>
+                    <input type="number" step="0.01" name="s67_b_8_amortizable_bond_premium" value="${state.s67_b_8_amortizable_bond_premium}"></label>
                 <label><span data-i18n="view.s67.label.s67_b9">§ 67(b)(9) repayment ($)</span>
-                    <input type="number" step="100" name="s67_b_9_repayments_under_claim_right" value="${state.s67_b_9_repayments_under_claim_right}"></label>
+                    <input type="number" step="0.01" name="s67_b_9_repayments_under_claim_right" value="${state.s67_b_9_repayments_under_claim_right}"></label>
                 <label><span data-i18n="view.s67.label.s67_b10">§ 67(b)(10) unrec pen ($)</span>
-                    <input type="number" step="100" name="s67_b_10_unrecovered_pension_basis" value="${state.s67_b_10_unrecovered_pension_basis}"></label>
+                    <input type="number" step="0.01" name="s67_b_10_unrecovered_pension_basis" value="${state.s67_b_10_unrecovered_pension_basis}"></label>
                 <label><span data-i18n="view.s67.label.s67_b11">§ 67(b)(11) impair dis ($)</span>
-                    <input type="number" step="100" name="s67_b_11_impairment_disabled" value="${state.s67_b_11_impairment_disabled}"></label>
+                    <input type="number" step="0.01" name="s67_b_11_impairment_disabled" value="${state.s67_b_11_impairment_disabled}"></label>
                 <label><span data-i18n="view.s67.label.s67_b12">§ 67(b)(12) other ($)</span>
-                    <input type="number" step="100" name="s67_b_12_other_specifically_listed" value="${state.s67_b_12_other_specifically_listed}"></label>
+                    <input type="number" step="0.01" name="s67_b_12_other_specifically_listed" value="${state.s67_b_12_other_specifically_listed}"></label>
                 <label><span data-i18n="view.s67.label.s67_e_trust">§ 67(e) estate/trust ($)</span>
-                    <input type="number" step="100" name="s67_e_estate_trust_fiduciary" value="${state.s67_e_estate_trust_fiduciary}"></label>
+                    <input type="number" step="0.01" name="s67_e_estate_trust_fiduciary" value="${state.s67_e_estate_trust_fiduciary}"></label>
                 <label><span data-i18n="view.s67.label.trustee">Trustee fees ($)</span>
-                    <input type="number" step="100" name="s67_e_trustee_fees" value="${state.s67_e_trustee_fees}"></label>
+                    <input type="number" step="0.01" name="s67_e_trustee_fees" value="${state.s67_e_trustee_fees}"></label>
                 <label><span data-i18n="view.s67.label.separate">Separately stated?</span>
                     <input type="checkbox" name="s67_e_separately_stated" ${state.s67_e_separately_stated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s67.label.estate_trust">Estate or trust?</span>
@@ -150,13 +150,13 @@ export async function renderSection67(mount, _appState) {
                 <label><span data-i18n="view.s67.label.govt">Govt official?</span>
                     <input type="checkbox" name="is_state_local_govt_official" ${state.is_state_local_govt_official ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s67.label.s62a2">§ 62(a)(2) above ($)</span>
-                    <input type="number" step="100" name="s62_a_2_above_line_special" value="${state.s62_a_2_above_line_special}"></label>
+                    <input type="number" step="0.01" name="s62_a_2_above_line_special" value="${state.s62_a_2_above_line_special}"></label>
                 <label><span data-i18n="view.s67.label.s212">§ 212 inv exp ($)</span>
-                    <input type="number" step="100" name="s212_investment_expenses" value="${state.s212_investment_expenses}"></label>
+                    <input type="number" step="0.01" name="s212_investment_expenses" value="${state.s212_investment_expenses}"></label>
                 <label><span data-i18n="view.s67.label.s475">§ 475 trader?</span>
                     <input type="checkbox" name="is_trader_in_securities_s475" ${state.is_trader_in_securities_s475 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s67.label.s475_above">§ 475 above ($)</span>
-                    <input type="number" step="100" name="s475_f_trader_above_line" value="${state.s475_f_trader_above_line}"></label>
+                    <input type="number" step="0.01" name="s475_f_trader_above_line" value="${state.s475_f_trader_above_line}"></label>
                 <button class="primary" type="submit" data-i18n="view.s67.btn.compute">Compute</button>
             </form>
         </div>

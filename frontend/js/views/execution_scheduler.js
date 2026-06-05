@@ -58,7 +58,7 @@ export async function renderExecutionScheduler(mount, _appState) {
             <h2 data-i18n="view.execution_scheduler.h2.inputs">Inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.execution_scheduler.label.total_order">Total order size</span>
-                    <input id="es-total" type="number" step="any" min="1" value="${state.totalOrder}" data-tip="view.execution_scheduler.tip.total"></label>
+                    <input id="es-total" type="number" step="0.01" min="1" value="${state.totalOrder}" data-tip="view.execution_scheduler.tip.total"></label>
                 <label><span data-i18n="view.execution_scheduler.label.pov_rate">POV participation rate</span>
                     <input id="es-rate" type="number" step="0.01" min="0.01" max="1" value="${state.participationRate}" data-tip="view.execution_scheduler.tip.rate"></label>
                 <button data-i18n="view.execution_scheduler.btn.schedule" data-tip="view.execution_scheduler.tip.schedule" data-shortcut="execution_scheduler_run" id="es-run" class="primary" type="button">Schedule</button>

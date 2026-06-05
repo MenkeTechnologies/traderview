@@ -34,7 +34,7 @@ export async function renderRiskParitySolver(mount, _appState) {
                 <label><span data-i18n="view.rp_solver.label.max_iter">Max iterations</span>
                     <input id="rps-max" type="number" step="1" min="1" value="${state.max_iter}" data-tip="view.rp_solver.tip.max_iter"></label>
                 <label><span data-i18n="view.rp_solver.label.tolerance">Tolerance</span>
-                    <input id="rps-tol" type="number" step="any" min="0" value="${state.tolerance}" data-tip="view.rp_solver.tip.tolerance"></label>
+                    <input id="rps-tol" type="number" step="0.01" min="0" value="${state.tolerance}" data-tip="view.rp_solver.tip.tolerance"></label>
                 <button data-i18n="view.rp_solver.btn.solve" id="rps-run" class="primary"
                         data-tip="view.rp_solver.tip.solve" data-shortcut="risk_parity_solver_run" type="button">Solve</button>
             </div>

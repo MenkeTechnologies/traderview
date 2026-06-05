@@ -52,9 +52,9 @@ export async function renderSection414v(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s414v.label.wages">Prior year wages (for Roth mandate) ($)</span>
-                    <input type="number" step="1000" name="prior_year_wages" value="${state.prior_year_wages}"></label>
+                    <input type="number" step="0.01" name="prior_year_wages" value="${state.prior_year_wages}"></label>
                 <label><span data-i18n="view.s414v.label.catch_up">Desired catch-up ($)</span>
-                    <input type="number" step="500" name="desired_catch_up" value="${state.desired_catch_up}"></label>
+                    <input type="number" step="0.01" name="desired_catch_up" value="${state.desired_catch_up}"></label>
                 <label><span data-i18n="view.s414v.label.roth_option">Employer plan has Roth option?</span>
                     <input type="checkbox" name="has_employer_roth_option" ${state.has_employer_roth_option ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s414v.label.marginal">Marginal %</span>

@@ -51,7 +51,7 @@ export async function renderRebalance(mount, state) {
                     </select>
                 </label>
                 <label><span data-i18n="view.rebalance.label.cash">Cash on hand</span>
-                    <input name="cash" type="number" min="0" step="any" value="0" style="width:120px;" data-tip="view.rebalance.tip.cash">
+                    <input name="cash" type="number" min="0" step="0.01" value="0" style="width:120px;" data-tip="view.rebalance.tip.cash">
                 </label>
                 <label><span data-i18n="view.rebalance.label.max_trades">Max trades</span>
                     <input name="max_trades" type="number" min="1" max="200" value="20" style="width:80px;" data-tip="view.rebalance.tip.max_trades">

@@ -32,7 +32,7 @@ export async function renderIvBacktest(mount, _appState) {
             <h2 data-i18n="view.iv_backtest.h2.event_setup">Event setup</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.iv_backtest.label.implied">Implied move (%) — what the ATM straddle is pricing for the event</span>
-                    <input id="ib-imp" type="number" step="any" min="0" max="100" value="${state.implied}" data-tip="view.iv_backtest.tip.implied"></label>
+                    <input id="ib-imp" type="number" step="0.01" min="0" max="100" value="${state.implied}" data-tip="view.iv_backtest.tip.implied"></label>
                 <button data-i18n="view.iv_backtest.btn.backtest" data-tip="view.iv_backtest.tip.backtest" data-shortcut="iv_backtest_run" id="ib-run" class="primary" type="button">Backtest</button>
             </div>
             <p data-i18n="view.iv_backtest.hint.implied_move_atm_straddle_debit_spot_100_if_you_re" class="muted">Implied move ≈ ATM straddle debit / spot × 100.

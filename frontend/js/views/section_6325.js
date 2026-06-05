@@ -43,9 +43,9 @@ export async function renderSection6325(mount, _appState) {
             <h2 data-i18n="view.s6325.h2.inputs">Inputs</h2>
             <form id="s6325-form" class="inline-form">
                 <label><span data-i18n="view.s6325.label.liability">Tax liability total ($)</span>
-                    <input type="number" step="1000" name="tax_liability_total" value="${state.tax_liability_total}"></label>
+                    <input type="number" step="0.01" name="tax_liability_total" value="${state.tax_liability_total}"></label>
                 <label><span data-i18n="view.s6325.label.payment">Payment made ($)</span>
-                    <input type="number" step="1000" name="payment_made" value="${state.payment_made}"></label>
+                    <input type="number" step="0.01" name="payment_made" value="${state.payment_made}"></label>
                 <label><span data-i18n="view.s6325.label.type">Type of request</span>
                     <select name="type_request">
                         <option value="release_full" ${state.type_request === 'release_full' ? 'selected' : ''}>Full release (paid)</option>
@@ -58,15 +58,15 @@ export async function renderSection6325(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6325.label.value">Property value ($)</span>
-                    <input type="number" step="10000" name="property_value" value="${state.property_value}"></label>
+                    <input type="number" step="0.01" name="property_value" value="${state.property_value}"></label>
                 <label><span data-i18n="view.s6325.label.interest">IRS interest in property ($)</span>
-                    <input type="number" step="10000" name="interest_in_property" value="${state.interest_in_property}"></label>
+                    <input type="number" step="0.01" name="interest_in_property" value="${state.interest_in_property}"></label>
                 <label><span data-i18n="view.s6325.label.assets">Other assets securing lien ($)</span>
-                    <input type="number" step="10000" name="other_assets_secure" value="${state.other_assets_secure}"></label>
+                    <input type="number" step="0.01" name="other_assets_secure" value="${state.other_assets_secure}"></label>
                 <label><span data-i18n="view.s6325.label.other_liens">Other liens outstanding ($)</span>
-                    <input type="number" step="10000" name="other_liens_outstanding" value="${state.other_liens_outstanding}"></label>
+                    <input type="number" step="0.01" name="other_liens_outstanding" value="${state.other_liens_outstanding}"></label>
                 <label><span data-i18n="view.s6325.label.bond">Bond posted ($)</span>
-                    <input type="number" step="10000" name="bond_posted" value="${state.bond_posted}"></label>
+                    <input type="number" step="0.01" name="bond_posted" value="${state.bond_posted}"></label>
                 <label><span data-i18n="view.s6325.label.days">Days since request</span>
                     <input type="number" step="1" name="days_since_request" value="${state.days_since_request}"></label>
                 <label><span data-i18n="view.s6325.label.cdp">CDP hearing requested?</span>

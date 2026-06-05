@@ -41,7 +41,7 @@ export async function renderWalkForward(mount) {
                 <label><span data-i18n="view.walk_forward.label.capital">Capital</span>
                     <input name="capital" type="number" value="10000" style="width:110px"></label>
                 <label><span data-i18n="view.walk_forward.label.fee_trade">Fee/trade</span>
-                    <input name="fee" type="number" step="any" value="1" style="width:80px"></label>
+                    <input name="fee" type="number" step="0.01" value="1" style="width:80px"></label>
                 <select name="metric">
                     <option data-i18n="view.walk_forward.opt.maximize_return" value="return" selected>Maximize return</option>
                     <option data-i18n="view.walk_forward.opt.maximize_sharpe" value="sharpe">Maximize Sharpe</option>

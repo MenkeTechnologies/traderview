@@ -53,17 +53,17 @@ export async function renderAmtCalc(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.amt.label.regular_taxable_income">Regular taxable income ($)</span>
-                    <input type="number" step="1000" name="regular_taxable_income" value="${state.regular_taxable_income}"></label>
+                    <input type="number" step="0.01" name="regular_taxable_income" value="${state.regular_taxable_income}"></label>
                 <label><span data-i18n="view.amt.label.regular_tax">Regular tax ($)</span>
-                    <input type="number" step="100" name="regular_tax" value="${state.regular_tax}"></label>
+                    <input type="number" step="0.01" name="regular_tax" value="${state.regular_tax}"></label>
                 <label><span data-i18n="view.amt.label.iso_bargain">ISO bargain element ($)</span>
-                    <input type="number" step="1000" name="iso_bargain_element" value="${state.iso_bargain_element}"></label>
+                    <input type="number" step="0.01" name="iso_bargain_element" value="${state.iso_bargain_element}"></label>
                 <label><span data-i18n="view.amt.label.salt_addback">SALT addback ($)</span>
-                    <input type="number" step="500" name="state_local_tax_addback" value="${state.state_local_tax_addback}"></label>
+                    <input type="number" step="0.01" name="state_local_tax_addback" value="${state.state_local_tax_addback}"></label>
                 <label><span data-i18n="view.amt.label.private_bond">Private-activity bond interest ($)</span>
-                    <input type="number" step="100" name="private_activity_bond_interest" value="${state.private_activity_bond_interest}"></label>
+                    <input type="number" step="0.01" name="private_activity_bond_interest" value="${state.private_activity_bond_interest}"></label>
                 <label><span data-i18n="view.amt.label.other_preferences">Other AMT preferences ($)</span>
-                    <input type="number" step="100" name="other_preferences" value="${state.other_preferences}"></label>
+                    <input type="number" step="0.01" name="other_preferences" value="${state.other_preferences}"></label>
                 <button class="primary" type="submit" data-i18n="view.amt.btn.compute">Compute</button>
             </form>
         </div>

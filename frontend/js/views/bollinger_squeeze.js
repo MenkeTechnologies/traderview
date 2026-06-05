@@ -34,13 +34,13 @@ export async function renderBollingerSqueeze(mount, _appState) {
                     <input id="bs-period" type="number" step="1" min="2" value="${state.bb_period}"
                            data-tip="view.bbsq.tip.period"></label>
                 <label><span data-i18n="view.bbsq.label.stdev">σ multiplier</span>
-                    <input id="bs-stdev" type="number" step="any" min="0.1" value="${state.n_stdev}"
+                    <input id="bs-stdev" type="number" step="0.01" min="0.1" value="${state.n_stdev}"
                            data-tip="view.bbsq.tip.stdev"></label>
                 <label><span data-i18n="view.bbsq.label.lookback">Lookback</span>
                     <input id="bs-lookback" type="number" step="1" min="2" value="${state.lookback}"
                            data-tip="view.bbsq.tip.lookback"></label>
                 <label><span data-i18n="view.bbsq.label.slack">Slack</span>
-                    <input id="bs-slack" type="number" step="any" min="0" value="${state.slack}"
+                    <input id="bs-slack" type="number" step="0.01" min="0" value="${state.slack}"
                            data-tip="view.bbsq.tip.slack"></label>
                 <button data-i18n="view.bbsq.btn.compute" id="bs-run" class="primary"
                         data-tip="view.bbsq.tip.compute" data-shortcut="bollinger_squeeze_run" type="button">Detect squeeze</button>

@@ -82,11 +82,11 @@ function renderInputsForm() {
     if (state.mode === 'decompose') {
         wrap.innerHTML = `
             <label><span data-i18n="view.rr_butterfly.label.sigma_25c">σ_25C (call wing)</span>
-                <input id="rr-sc"  type="number" step="any" min="0" value="${state.params.sigma_25_call}" data-tip="view.rr_butterfly.tip.sigma_25c"></label>
+                <input id="rr-sc"  type="number" step="0.01" min="0" value="${state.params.sigma_25_call}" data-tip="view.rr_butterfly.tip.sigma_25c"></label>
             <label><span data-i18n="view.rr_butterfly.label.sigma_25p">σ_25P (put wing)</span>
-                <input id="rr-sp"  type="number" step="any" min="0" value="${state.params.sigma_25_put}" data-tip="view.rr_butterfly.tip.sigma_25p"></label>
+                <input id="rr-sp"  type="number" step="0.01" min="0" value="${state.params.sigma_25_put}" data-tip="view.rr_butterfly.tip.sigma_25p"></label>
             <label><span data-i18n="view.rr_butterfly.label.sigma_atm">σ_ATM</span>
-                <input id="rr-atm" type="number" step="any" min="0" value="${state.params.sigma_atm}" data-tip="view.rr_butterfly.tip.sigma_atm"></label>
+                <input id="rr-atm" type="number" step="0.01" min="0" value="${state.params.sigma_atm}" data-tip="view.rr_butterfly.tip.sigma_atm"></label>
         `;
         wrap.querySelector('#rr-sc').addEventListener('change',  e => state.params.sigma_25_call = Number(e.target.value));
         wrap.querySelector('#rr-sp').addEventListener('change',  e => state.params.sigma_25_put  = Number(e.target.value));
@@ -94,11 +94,11 @@ function renderInputsForm() {
     } else {
         wrap.innerHTML = `
             <label><span data-i18n="view.rr_butterfly.label.atm_iv">ATM IV</span>
-                <input id="rr-atm-in" type="number" step="any" min="0" value="${state.params.atm}" data-tip="view.rr_butterfly.tip.atm"></label>
+                <input id="rr-atm-in" type="number" step="0.01" min="0" value="${state.params.atm}" data-tip="view.rr_butterfly.tip.atm"></label>
             <label><span data-i18n="view.rr_butterfly.label.rr">Risk reversal (RR)</span>
-                <input id="rr-rr"     type="number" step="any" value="${state.params.rr}" data-tip="view.rr_butterfly.tip.rr"></label>
+                <input id="rr-rr"     type="number" step="0.01" value="${state.params.rr}" data-tip="view.rr_butterfly.tip.rr"></label>
             <label><span data-i18n="view.rr_butterfly.label.bf">Butterfly (BF)</span>
-                <input id="rr-bf"     type="number" step="any" value="${state.params.bf}" data-tip="view.rr_butterfly.tip.bf"></label>
+                <input id="rr-bf"     type="number" step="0.01" value="${state.params.bf}" data-tip="view.rr_butterfly.tip.bf"></label>
         `;
         wrap.querySelector('#rr-atm-in').addEventListener('change', e => state.params.atm = Number(e.target.value));
         wrap.querySelector('#rr-rr').addEventListener('change',     e => state.params.rr  = Number(e.target.value));

@@ -54,25 +54,25 @@ export async function renderSection4973(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s4973.label.made">Contribution made ($)</span>
-                    <input type="number" step="100" name="contribution_made" value="${state.contribution_made}"></label>
+                    <input type="number" step="0.01" name="contribution_made" value="${state.contribution_made}"></label>
                 <label><span data-i18n="view.s4973.label.limit">Contribution limit ($)</span>
-                    <input type="number" step="100" name="contribution_limit" value="${state.contribution_limit}"></label>
+                    <input type="number" step="0.01" name="contribution_limit" value="${state.contribution_limit}"></label>
                 <label><span data-i18n="view.s4973.label.age_50">Age 50+?</span>
                     <input type="checkbox" name="age_50_plus" ${state.age_50_plus ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4973.label.catch">Catch-up amount ($)</span>
-                    <input type="number" step="100" name="catch_up_amount" value="${state.catch_up_amount}"></label>
+                    <input type="number" step="0.01" name="catch_up_amount" value="${state.catch_up_amount}"></label>
                 <label><span data-i18n="view.s4973.label.earnings">Earnings on excess ($)</span>
-                    <input type="number" step="100" name="earnings_on_excess" value="${state.earnings_on_excess}"></label>
+                    <input type="number" step="0.01" name="earnings_on_excess" value="${state.earnings_on_excess}"></label>
                 <label><span data-i18n="view.s4973.label.timely">Timely correction made?</span>
                     <input type="checkbox" name="timely_correction_made" ${state.timely_correction_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4973.label.timely_amt">Timely correction amount ($)</span>
-                    <input type="number" step="100" name="timely_correction_amount" value="${state.timely_correction_amount}"></label>
+                    <input type="number" step="0.01" name="timely_correction_amount" value="${state.timely_correction_amount}"></label>
                 <label><span data-i18n="view.s4973.label.cumulative">Cumulative years excess</span>
                     <input type="number" step="1" name="cumulative_years_excess" value="${state.cumulative_years_excess}"></label>
                 <label><span data-i18n="view.s4973.label.current">Current year amount ($)</span>
-                    <input type="number" step="100" name="current_year_amount" value="${state.current_year_amount}"></label>
+                    <input type="number" step="0.01" name="current_year_amount" value="${state.current_year_amount}"></label>
                 <label><span data-i18n="view.s4973.label.prior">Prior year uncorrected ($)</span>
-                    <input type="number" step="100" name="prior_year_uncorrected" value="${state.prior_year_uncorrected}"></label>
+                    <input type="number" step="0.01" name="prior_year_uncorrected" value="${state.prior_year_uncorrected}"></label>
                 <label><span data-i18n="view.s4973.label.roth">Roth IRA contributor?</span>
                     <input type="checkbox" name="is_roth" ${state.is_roth ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4973.label.inherited">Inherited IRA?</span>

@@ -33,13 +33,13 @@ export async function renderSection4940(mount, _appState) {
             <h2 data-i18n="view.s4940.h2.inputs">Inputs</h2>
             <form id="s4940-form" class="inline-form">
                 <label><span data-i18n="view.s4940.label.gross">Gross investment income ($)</span>
-                    <input type="number" step="1000" name="gross_investment_income" value="${state.gross_investment_income}"></label>
+                    <input type="number" step="0.01" name="gross_investment_income" value="${state.gross_investment_income}"></label>
                 <label><span data-i18n="view.s4940.label.cap_gains">Net capital gains ($)</span>
-                    <input type="number" step="1000" name="capital_gains_net" value="${state.capital_gains_net}"></label>
+                    <input type="number" step="0.01" name="capital_gains_net" value="${state.capital_gains_net}"></label>
                 <label><span data-i18n="view.s4940.label.expenses">Investment expenses ($)</span>
-                    <input type="number" step="1000" name="investment_expenses" value="${state.investment_expenses}"></label>
+                    <input type="number" step="0.01" name="investment_expenses" value="${state.investment_expenses}"></label>
                 <label><span data-i18n="view.s4940.label.payments">Excise payments made YTD ($)</span>
-                    <input type="number" step="100" name="excise_payments_made" value="${state.excise_payments_made}"></label>
+                    <input type="number" step="0.01" name="excise_payments_made" value="${state.excise_payments_made}"></label>
                 <button class="primary" type="submit" data-i18n="view.s4940.btn.compute">Compute</button>
             </form>
         </div>

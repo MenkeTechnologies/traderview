@@ -97,6 +97,19 @@ async function load(tok) {
         `;
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
+        // Plan-restricted endpoint → HTTP 403 from the backend's
+        // `map_fh_err`. Render a clean premium-required affordance
+        // instead of the generic error toast.
+        if (e && e.status === 403) {
+            if (el) {
+                el.innerHTML = `
+                    <p class="muted neg">${esc(t('view.cong_trading.error.premium_required'))}</p>
+                    <p class="muted small">${esc(t('view.cong_trading.error.premium_hint'))}</p>
+                    <p><a href="https://finnhub.io/pricing" target="_blank" rel="noopener" class="btn btn-secondary btn-compact">${esc(t('view.cong_trading.error.premium_link'))}</a></p>
+                `;
+            }
+            return;
+        }
         if (el) el.innerHTML = `<p class="muted neg">${esc(t('view.cong_trading.error.load', { msg: e.message || e }))}</p>`;
         showToast(t('view.cong_trading.toast.failed'), { level: 'error' });
     }

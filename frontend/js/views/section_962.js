@@ -50,9 +50,9 @@ export async function renderSection962(mount, _appState) {
             <h2 data-i18n="view.s962.h2.inputs">Inputs</h2>
             <form id="s962-form" class="inline-form">
                 <label><span data-i18n="view.s962.label.subpart_f">Subpart F income ($)</span>
-                    <input type="number" step="10000" name="subpart_f_income" value="${state.subpart_f_income}"></label>
+                    <input type="number" step="0.01" name="subpart_f_income" value="${state.subpart_f_income}"></label>
                 <label><span data-i18n="view.s962.label.gilti">GILTI inclusion ($)</span>
-                    <input type="number" step="10000" name="gilti_inclusion" value="${state.gilti_inclusion}"></label>
+                    <input type="number" step="0.01" name="gilti_inclusion" value="${state.gilti_inclusion}"></label>
                 <label><span data-i18n="view.s962.label.basket">FTC basket</span>
                     <select name="ftc_basket">
                         <option value="general" ${state.ftc_basket === 'general' ? 'selected' : ''}>General</option>
@@ -62,9 +62,9 @@ export async function renderSection962(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s962.label.ftc">Foreign tax paid ($)</span>
-                    <input type="number" step="10000" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
                 <label><span data-i18n="view.s962.label.ftc_basis">FTC basis ($)</span>
-                    <input type="number" step="10000" name="foreign_tax_paid_basis" value="${state.foreign_tax_paid_basis}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid_basis" value="${state.foreign_tax_paid_basis}"></label>
                 <label><span data-i18n="view.s962.label.country">CFC country</span>
                     <input type="text" name="cfc_country" value="${esc(state.cfc_country)}"></label>
                 <label><span data-i18n="view.s962.label.year">Election year</span>
@@ -74,21 +74,21 @@ export async function renderSection962(mount, _appState) {
                 <label><span data-i18n="view.s962.label.filed">Election filed?</span>
                     <input type="checkbox" name="is_election_filed" ${state.is_election_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s962.label.s250">§ 250 50% deduction ($)</span>
-                    <input type="number" step="10000" name="s250_50pct_deduction" value="${state.s250_50pct_deduction}"></label>
+                    <input type="number" step="0.01" name="s250_50pct_deduction" value="${state.s250_50pct_deduction}"></label>
                 <label><span data-i18n="view.s962.label.s951a">§ 951A GILTI ($)</span>
-                    <input type="number" step="10000" name="s951a_gilti" value="${state.s951a_gilti}"></label>
+                    <input type="number" step="0.01" name="s951a_gilti" value="${state.s951a_gilti}"></label>
                 <label><span data-i18n="view.s962.label.qbai">QBAI ($)</span>
-                    <input type="number" step="10000" name="qbai_amount" value="${state.qbai_amount}"></label>
+                    <input type="number" step="0.01" name="qbai_amount" value="${state.qbai_amount}"></label>
                 <label><span data-i18n="view.s962.label.s960">§ 960 indirect FTC ($)</span>
-                    <input type="number" step="10000" name="s960_indirect_ftc" value="${state.s960_indirect_ftc}"></label>
+                    <input type="number" step="0.01" name="s960_indirect_ftc" value="${state.s960_indirect_ftc}"></label>
                 <label><span data-i18n="view.s962.label.ep">CFC E&P ($)</span>
-                    <input type="number" step="10000" name="cfc_e_p" value="${state.cfc_e_p}"></label>
+                    <input type="number" step="0.01" name="cfc_e_p" value="${state.cfc_e_p}"></label>
                 <label><span data-i18n="view.s962.label.later_div">Later dividend ($)</span>
-                    <input type="number" step="10000" name="later_dividend" value="${state.later_dividend}"></label>
+                    <input type="number" step="0.01" name="later_dividend" value="${state.later_dividend}"></label>
                 <label><span data-i18n="view.s962.label.pti">PTI distribution?</span>
                     <input type="checkbox" name="is_pti_distribution" ${state.is_pti_distribution ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s962.label.s962b_basis">§ 962(b) basis in PTI ($)</span>
-                    <input type="number" step="10000" name="s962b_basis_in_pti" value="${state.s962b_basis_in_pti}"></label>
+                    <input type="number" step="0.01" name="s962b_basis_in_pti" value="${state.s962b_basis_in_pti}"></label>
                 <label><span data-i18n="view.s962.label.multi_cfc">Multiple CFC aggregation?</span>
                     <input type="checkbox" name="multiple_cfc_aggregation" ${state.multiple_cfc_aggregation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s962.label.htex">§ 954(b)(4) high-tax exclusion?</span>

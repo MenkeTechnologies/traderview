@@ -99,9 +99,9 @@ export async function renderSection6112(mount, _appState) {
                 <label><span data-i18n="view.s6112.label.partial_amt">Partial production</span>
                     <input type="number" step="1" name="list_partial_production" value="${state.list_partial_production}"></label>
                 <label><span data-i18n="view.s6112.label.per_day">$ per day</span>
-                    <input type="number" step="100" name="s6708_penalty_per_day" value="${state.s6708_penalty_per_day}"></label>
+                    <input type="number" step="0.01" name="s6708_penalty_per_day" value="${state.s6708_penalty_per_day}"></label>
                 <label><span data-i18n="view.s6112.label.total">Total penalty ($)</span>
-                    <input type="number" step="1000" name="s6708_penalty_total" value="${state.s6708_penalty_total}"></label>
+                    <input type="number" step="0.01" name="s6708_penalty_total" value="${state.s6708_penalty_total}"></label>
                 <label><span data-i18n="view.s6112.label.intentional">Intentional disregard?</span>
                     <input type="checkbox" name="intentional_disregard" ${state.intentional_disregard ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6112.label.coop">Cooperative?</span>
@@ -124,11 +124,11 @@ export async function renderSection6112(mount, _appState) {
                 <label><span data-i18n="view.s6112.label.s7408">§ 7408 injunction?</span>
                     <input type="checkbox" name="s7408_promoter_injunction" ${state.s7408_promoter_injunction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6112.label.s6700">§ 6700 promoter ($)</span>
-                    <input type="number" step="1000" name="s6700_promoter_penalty" value="${state.s6700_promoter_penalty}"></label>
+                    <input type="number" step="0.01" name="s6700_promoter_penalty" value="${state.s6700_promoter_penalty}"></label>
                 <label><span data-i18n="view.s6112.label.advisees">Advisee count</span>
                     <input type="number" step="1" name="cumulative_advisee_count" value="${state.cumulative_advisee_count}"></label>
                 <label><span data-i18n="view.s6112.label.benefit">Advisee benefit ($)</span>
-                    <input type="number" step="10000" name="advisee_tax_benefit_total" value="${state.advisee_tax_benefit_total}"></label>
+                    <input type="number" step="0.01" name="advisee_tax_benefit_total" value="${state.advisee_tax_benefit_total}"></label>
                 <label><span data-i18n="view.s6112.label.s7402">§ 7402 summons issued?</span>
                     <input type="checkbox" name="s7402_summons_issued" ${state.s7402_summons_issued ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6112.label.s7609">§ 7609 intervention?</span>

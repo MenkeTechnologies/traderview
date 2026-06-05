@@ -46,7 +46,7 @@ export async function renderSection4975(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s4975.label.amount">Amount involved ($)</span>
-                    <input type="number" step="1000" name="amount_involved" value="${state.amount_involved}"></label>
+                    <input type="number" step="0.01" name="amount_involved" value="${state.amount_involved}"></label>
                 <label><span data-i18n="view.s4975.label.years">Years uncorrected</span>
                     <input type="number" step="1" name="years_uncorrected" value="${state.years_uncorrected}"></label>
                 <label><span data-i18n="view.s4975.label.is_ira">IRA (vs qualified plan)?</span>
@@ -54,7 +54,7 @@ export async function renderSection4975(mount, _appState) {
                 <label><span data-i18n="view.s4975.label.deemed">Deemed distribution triggered?</span>
                     <input type="checkbox" name="deemed_distribution" ${state.deemed_distribution ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4975.label.dist_amount">Total IRA balance at PT date ($)</span>
-                    <input type="number" step="1000" name="distribution_amount" value="${state.distribution_amount}"></label>
+                    <input type="number" step="0.01" name="distribution_amount" value="${state.distribution_amount}"></label>
                 <label><span data-i18n="view.s4975.label.marginal">Marginal rate</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s4975.btn.compute">Compute</button>

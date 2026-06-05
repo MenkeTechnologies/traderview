@@ -42,9 +42,9 @@ export async function renderStopLossBacktest(mount, _appState) {
                         ${METHODS.map(m => `<option value="${m}" ${state.params.method === m ? 'selected' : ''} data-i18n="${methodLabelKey(m)}">${m}</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.stop_loss_backtest.label.value">Value</span>
-                    <input id="slb-value" type="number" step="any" value="${state.params.value}" data-tip="view.stop_loss_backtest.tip.value"></label>
+                    <input id="slb-value" type="number" step="0.01" value="${state.params.value}" data-tip="view.stop_loss_backtest.tip.value"></label>
                 <label><span data-i18n="view.stop_loss_backtest.label.atr">ATR (only for atr_multiple)</span>
-                    <input id="slb-atr" type="number" step="any" min="0" value="${state.params.atr}" data-tip="view.stop_loss_backtest.tip.atr"></label>
+                    <input id="slb-atr" type="number" step="0.01" min="0" value="${state.params.atr}" data-tip="view.stop_loss_backtest.tip.atr"></label>
                 <label><span data-i18n="view.stop_loss_backtest.label.side">Side</span>
                     <select id="slb-side" data-tip="view.stop_loss_backtest.tip.side">
                         <option value="long"  ${state.side_long ? 'selected' : ''} data-i18n="view.stop_loss_backtest.side.long">long</option>

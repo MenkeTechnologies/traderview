@@ -41,13 +41,13 @@ export async function renderStrLoophole(mount, _appState) {
                 <label><span data-i18n="view.str.label.average_stay_days">Average guest stay (days)</span>
                     <input type="number" step="0.1" name="average_stay_days" value="${state.average_stay_days}"></label>
                 <label><span data-i18n="view.str.label.nightly_rate">Nightly rate ($)</span>
-                    <input type="number" step="10" name="nightly_rate" value="${state.nightly_rate}"></label>
+                    <input type="number" step="0.01" name="nightly_rate" value="${state.nightly_rate}"></label>
                 <label><span data-i18n="view.str.label.annual_revenue">Annual revenue ($)</span>
-                    <input type="number" step="1000" name="annual_revenue" value="${state.annual_revenue}"></label>
+                    <input type="number" step="0.01" name="annual_revenue" value="${state.annual_revenue}"></label>
                 <label><span data-i18n="view.str.label.operating_expenses">Operating expenses ($)</span>
-                    <input type="number" step="500" name="operating_expenses" value="${state.operating_expenses}"></label>
+                    <input type="number" step="0.01" name="operating_expenses" value="${state.operating_expenses}"></label>
                 <label><span data-i18n="view.str.label.depreciation">Depreciation incl. cost-seg ($)</span>
-                    <input type="number" step="1000" name="depreciation" value="${state.depreciation}"></label>
+                    <input type="number" step="0.01" name="depreciation" value="${state.depreciation}"></label>
                 <label><span data-i18n="view.str.label.your_hours">Your hours on the property</span>
                     <input type="number" step="1" name="your_hours" value="${state.your_hours}"></label>
                 <label><span data-i18n="view.str.label.other_largest_hours">Largest non-owner contributor hours</span>

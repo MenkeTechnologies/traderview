@@ -25,11 +25,11 @@ export async function renderMarginRunway(mount, _appState) {
             <h2 data-i18n="view.margin_runway.h2.account">Account</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.margin_runway.label.equity">Account equity ($)</span>
-                    <input id="mr-eq" type="number" step="any" min="0" value="${state.account_equity}" data-tip="view.margin_runway.tip.equity"></label>
+                    <input id="mr-eq" type="number" step="0.01" min="0" value="${state.account_equity}" data-tip="view.margin_runway.tip.equity"></label>
                 <label><span data-i18n="view.margin_runway.label.position">Position value ($)</span>
-                    <input id="mr-pos" type="number" step="any" min="0" value="${state.position_value}" data-tip="view.margin_runway.tip.position"></label>
+                    <input id="mr-pos" type="number" step="0.01" min="0" value="${state.position_value}" data-tip="view.margin_runway.tip.position"></label>
                 <label><span data-i18n="view.margin_runway.label.maint">Maintenance req %  (decimal — 0.25 = 25%)</span>
-                    <input id="mr-mp" type="number" step="any" min="0" max="0.99" value="${state.maintenance_req_pct}" data-tip="view.margin_runway.tip.maint"></label>
+                    <input id="mr-mp" type="number" step="0.01" min="0" max="0.99" value="${state.maintenance_req_pct}" data-tip="view.margin_runway.tip.maint"></label>
                 <button data-i18n="view.margin_runway.btn.compute" id="mr-run" class="primary" type="button" data-tip="view.margin_runway.tip.run" data-shortcut="margin_runway_run">Compute</button>
             </div>
             <div class="inline-form">

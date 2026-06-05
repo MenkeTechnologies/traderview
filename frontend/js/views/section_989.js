@@ -125,9 +125,9 @@ export async function renderSection989(mount, _appState) {
                 <label><span data-i18n="view.s989.label.s989d">§ 989(d) special?</span>
                     <input type="checkbox" name="s989_d_special_provisions" ${state.s989_d_special_provisions ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s989.label.s987_gain">§ 987 gain ($)</span>
-                    <input type="number" step="10000" name="s987_qbu_remittance_gain" value="${state.s987_qbu_remittance_gain}"></label>
+                    <input type="number" step="0.01" name="s987_qbu_remittance_gain" value="${state.s987_qbu_remittance_gain}"></label>
                 <label><span data-i18n="view.s989.label.s987_loss">§ 987 loss ($)</span>
-                    <input type="number" step="10000" name="s987_qbu_remittance_loss" value="${state.s987_qbu_remittance_loss}"></label>
+                    <input type="number" step="0.01" name="s987_qbu_remittance_loss" value="${state.s987_qbu_remittance_loss}"></label>
                 <label><span data-i18n="view.s989.label.s987_elect">§ 987 election?</span>
                     <input type="checkbox" name="s987_election_made" ${state.s987_election_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s989.label.s987_2024">§ 987 2024 regs?</span>
@@ -147,7 +147,7 @@ export async function renderSection989(mount, _appState) {
                 <label><span data-i18n="view.s989.label.outside">Outside QBU</span>
                     <input type="number" step="1" name="s988_transactions_outside_qbu" value="${state.s988_transactions_outside_qbu}"></label>
                 <label><span data-i18n="view.s989.label.s988_gain">§ 988 gain/loss ($)</span>
-                    <input type="number" step="100" name="s988_currency_gain_loss_recognized" value="${state.s988_currency_gain_loss_recognized}"></label>
+                    <input type="number" step="0.01" name="s988_currency_gain_loss_recognized" value="${state.s988_currency_gain_loss_recognized}"></label>
                 <label><span data-i18n="view.s989.label.treaty">Treaty?</span>
                     <input type="checkbox" name="foreign_corp_treaty" ${state.foreign_corp_treaty ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s989.label.treaty_res">Treaty residence?</span>
@@ -161,11 +161,11 @@ export async function renderSection989(mount, _appState) {
                 <label><span data-i18n="view.s989.label.s884">§ 884 branch tax?</span>
                     <input type="checkbox" name="branch_profits_tax_s884" ${state.branch_profits_tax_s884 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s989.label.s884_30">§ 884 30% ($)</span>
-                    <input type="number" step="10000" name="s884_30pct_branch_tax" value="${state.s884_30pct_branch_tax}"></label>
+                    <input type="number" step="0.01" name="s884_30pct_branch_tax" value="${state.s884_30pct_branch_tax}"></label>
                 <label><span data-i18n="view.s989.label.dbp">§ 987 dollar basis pool ($)</span>
-                    <input type="number" step="10000" name="s987_dollar_basis_pool" value="${state.s987_dollar_basis_pool}"></label>
+                    <input type="number" step="0.01" name="s987_dollar_basis_pool" value="${state.s987_dollar_basis_pool}"></label>
                 <label><span data-i18n="view.s989.label.unrec">Net unrec FX g/l ($)</span>
-                    <input type="number" step="10000" name="s987_net_unrecognized_FX_gain_loss" value="${state.s987_net_unrecognized_FX_gain_loss}"></label>
+                    <input type="number" step="0.01" name="s987_net_unrecognized_FX_gain_loss" value="${state.s987_net_unrecognized_FX_gain_loss}"></label>
                 <label><span data-i18n="view.s989.label.blocked">§ 989(d)(2) blocked?</span>
                     <input type="checkbox" name="s989_d_2_blocked_currency" ${state.s989_d_2_blocked_currency ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s989.label.inflation">High inflation?</span>

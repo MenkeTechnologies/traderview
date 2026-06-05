@@ -78,9 +78,9 @@ export async function renderSection707(mount, _appState) {
                 <label><span data-i18n="view.s707.label.s707a2b">§ 707(a)(2)(B) disguised?</span>
                     <input type="checkbox" name="s707_a_2_disguised_sale" ${state.s707_a_2_disguised_sale ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.contribution">Contribution ($)</span>
-                    <input type="number" step="10000" name="contribution_amount" value="${state.contribution_amount}"></label>
+                    <input type="number" step="0.01" name="contribution_amount" value="${state.contribution_amount}"></label>
                 <label><span data-i18n="view.s707.label.distribution">Distribution ($)</span>
-                    <input type="number" step="10000" name="distribution_amount" value="${state.distribution_amount}"></label>
+                    <input type="number" step="0.01" name="distribution_amount" value="${state.distribution_amount}"></label>
                 <label><span data-i18n="view.s707.label.contrib_date">Contribution date</span>
                     <input type="date" name="contribution_date" value="${state.contribution_date}"></label>
                 <label><span data-i18n="view.s707.label.dist_date">Distribution date</span>
@@ -94,9 +94,9 @@ export async function renderSection707(mount, _appState) {
                 <label><span data-i18n="view.s707.label.related">Related party?</span>
                     <input type="checkbox" name="s707_b_related_party" ${state.s707_b_related_party ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.loss_disallow">§ 707(b)(1) loss ($)</span>
-                    <input type="number" step="1000" name="s707_b_loss_disallowance" value="${state.s707_b_loss_disallowance}"></label>
+                    <input type="number" step="0.01" name="s707_b_loss_disallowance" value="${state.s707_b_loss_disallowance}"></label>
                 <label><span data-i18n="view.s707.label.gain_ord">§ 707(b)(2) gain ($)</span>
-                    <input type="number" step="1000" name="s707_b_gain_ordinary" value="${state.s707_b_gain_ordinary}"></label>
+                    <input type="number" step="0.01" name="s707_b_gain_ordinary" value="${state.s707_b_gain_ordinary}"></label>
                 <label><span data-i18n="view.s707.label.50pct">50%+ partner?</span>
                     <input type="checkbox" name="is_50pct_or_more_partner" ${state.is_50pct_or_more_partner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.pct">Partner ownership %</span>
@@ -104,7 +104,7 @@ export async function renderSection707(mount, _appState) {
                 <label><span data-i18n="view.s707.label.constructive">Constructive ownership?</span>
                     <input type="checkbox" name="has_constructive_ownership" ${state.has_constructive_ownership ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.guaranteed">§ 707(c) guaranteed pmt ($)</span>
-                    <input type="number" step="10000" name="s707_c_guaranteed_payment" value="${state.s707_c_guaranteed_payment}"></label>
+                    <input type="number" step="0.01" name="s707_c_guaranteed_payment" value="${state.s707_c_guaranteed_payment}"></label>
                 <label><span data-i18n="view.s707.label.for_services">For services?</span>
                     <input type="checkbox" name="is_for_services" ${state.is_for_services ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.for_capital">For capital?</span>
@@ -124,7 +124,7 @@ export async function renderSection707(mount, _appState) {
                 <label><span data-i18n="view.s707.label.reimburse">Reimbursement safe?</span>
                     <input type="checkbox" name="reimbursement_safe_harbor" ${state.reimbursement_safe_harbor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.preferred">Preferred return ($)</span>
-                    <input type="number" step="10000" name="preferred_return_amount" value="${state.preferred_return_amount}"></label>
+                    <input type="number" step="0.01" name="preferred_return_amount" value="${state.preferred_return_amount}"></label>
                 <label><span data-i18n="view.s707.label.se_tax">§ 707(c) SE tax applies?</span>
                     <input type="checkbox" name="s707_c_se_tax" ${state.s707_c_se_tax ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s707.label.deferred">Deferred comp?</span>

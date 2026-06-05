@@ -30,7 +30,7 @@ export async function renderDollarBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.dollar_bar.label.dollars">Dollars per bar</span>
-                    <input id="db-target" type="number" step="any" min="0" value="${state.dollars_per_bar}"></label>
+                    <input id="db-target" type="number" step="0.01" min="0" value="${state.dollars_per_bar}"></label>
                 <button data-i18n="view.dollar_bar.btn.compute" id="db-run" class="primary"
                         data-tip="view.dollar_bar.tip.compute" type="button">Build bars</button>
             </div>

@@ -40,17 +40,17 @@ export async function renderInstallmentSale(mount, _appState) {
             <h2 data-i18n="view.s453.h2.inputs">Inputs</h2>
             <form id="is-form" class="inline-form">
                 <label><span data-i18n="view.s453.label.sale_price">Sale price ($)</span>
-                    <input type="number" step="1000" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s453.label.basis">Cost basis ($)</span>
-                    <input type="number" step="1000" name="basis" value="${state.basis}"></label>
+                    <input type="number" step="0.01" name="basis" value="${state.basis}"></label>
                 <label><span data-i18n="view.s453.label.selling_expenses">Selling expenses ($)</span>
-                    <input type="number" step="100" name="selling_expenses" value="${state.selling_expenses}"></label>
+                    <input type="number" step="0.01" name="selling_expenses" value="${state.selling_expenses}"></label>
                 <label><span data-i18n="view.s453.label.down_payment">Down payment ($)</span>
-                    <input type="number" step="1000" name="down_payment" value="${state.down_payment}"></label>
+                    <input type="number" step="0.01" name="down_payment" value="${state.down_payment}"></label>
                 <label><span data-i18n="view.s453.label.term_years">Term (years)</span>
                     <input type="number" step="1" name="payment_term_years" value="${state.payment_term_years}" min="1" max="30"></label>
                 <label><span data-i18n="view.s453.label.annual_payment">Annual payment ($)</span>
-                    <input type="number" step="1000" name="annual_payment" value="${state.annual_payment}"></label>
+                    <input type="number" step="0.01" name="annual_payment" value="${state.annual_payment}"></label>
                 <label><span data-i18n="view.s453.label.sale_year">Sale year</span>
                     <input type="number" step="1" name="sale_year" value="${state.sale_year}"></label>
                 <label><span data-i18n="view.s453.label.lt_cap_gains_rate">LT cap-gains rate %</span>

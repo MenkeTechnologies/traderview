@@ -41,11 +41,11 @@ export async function renderSection4943(mount, _appState) {
             <h2 data-i18n="view.s4943.h2.inputs">Inputs</h2>
             <form id="s4943-form" class="inline-form">
                 <label><span data-i18n="view.s4943.label.business">Business total voting stock value ($)</span>
-                    <input type="number" step="100000" name="business_total_voting_stock_value" value="${state.business_total_voting_stock_value}"></label>
+                    <input type="number" step="0.01" name="business_total_voting_stock_value" value="${state.business_total_voting_stock_value}"></label>
                 <label><span data-i18n="view.s4943.label.pf">PF's holdings value ($)</span>
-                    <input type="number" step="10000" name="pf_holdings_value" value="${state.pf_holdings_value}"></label>
+                    <input type="number" step="0.01" name="pf_holdings_value" value="${state.pf_holdings_value}"></label>
                 <label><span data-i18n="view.s4943.label.dq">Disqualified persons' holdings ($)</span>
-                    <input type="number" step="10000" name="disqualified_persons_holdings_value" value="${state.disqualified_persons_holdings_value}"></label>
+                    <input type="number" step="0.01" name="disqualified_persons_holdings_value" value="${state.disqualified_persons_holdings_value}"></label>
                 <label><span data-i18n="view.s4943.label.third_party">3rd-party effective control?</span>
                     <input type="checkbox" name="third_party_effective_control" ${state.third_party_effective_control ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4943.label.pri">Program-Related Investment (PRI)?</span>

@@ -40,7 +40,7 @@ export async function renderSection48(mount, _appState) {
             <h2 data-i18n="view.s48.h2.inputs">Inputs</h2>
             <form id="s48-form" class="inline-form">
                 <label><span data-i18n="view.s48.label.basis">Project basis ($)</span>
-                    <input type="number" step="10000" name="project_basis" value="${state.project_basis}"></label>
+                    <input type="number" step="0.01" name="project_basis" value="${state.project_basis}"></label>
                 <label><span data-i18n="view.s48.label.type">Project type</span>
                     <select name="project_type">
                         <option value="solar" ${state.project_type === 'solar' ? 'selected' : ''}>Solar PV</option>

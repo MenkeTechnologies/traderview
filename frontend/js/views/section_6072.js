@@ -84,9 +84,9 @@ export async function renderSection6072(mount, _appState) {
                 <label><span data-i18n="view.s6072.label.decedent">Decedent date</span>
                     <input type="date" name="decedent_date" value="${state.decedent_date}"></label>
                 <label><span data-i18n="view.s6072.label.tax_due">Estimated tax due ($)</span>
-                    <input type="number" step="1000" name="estimated_tax_due" value="${state.estimated_tax_due}"></label>
+                    <input type="number" step="0.01" name="estimated_tax_due" value="${state.estimated_tax_due}"></label>
                 <label><span data-i18n="view.s6072.label.paid_amount">Payment made ($)</span>
-                    <input type="number" step="1000" name="payment_made" value="${state.payment_made}"></label>
+                    <input type="number" step="0.01" name="payment_made" value="${state.payment_made}"></label>
                 <label><span data-i18n="view.s6072.label.safe_harbor">Estimated tax safe harbor met?</span>
                     <input type="checkbox" name="has_estimated_safe_harbor" ${state.has_estimated_safe_harbor ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s6072.btn.compute">Compute</button>

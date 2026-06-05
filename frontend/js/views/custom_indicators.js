@@ -69,7 +69,7 @@ export async function renderCustomIndicators(mount) {
         const params = mount.querySelector('#ci-params');
         if (params) params.innerHTML = Object.entries(k.params).map(
             ([key, val]) => `<label>${esc(key)}
-                <input name="param_${key}" type="number" step="any" value="${val}" style="width:70px;">
+                <input name="param_${key}" type="number" step="0.01" value="${val}" style="width:70px;">
             </label>`).join('');
     };
     kindSel.addEventListener('change', renderParams);

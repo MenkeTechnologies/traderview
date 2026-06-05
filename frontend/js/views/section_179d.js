@@ -39,7 +39,7 @@ export async function renderSection179d(mount, _appState) {
             <h2 data-i18n="view.s179d.h2.inputs">Inputs</h2>
             <form id="s179d-form" class="inline-form">
                 <label><span data-i18n="view.s179d.label.sqft">Building square footage</span>
-                    <input type="number" step="1000" name="building_sqft" value="${state.building_sqft}"></label>
+                    <input type="number" step="0.01" name="building_sqft" value="${state.building_sqft}"></label>
                 <label><span data-i18n="view.s179d.label.efficiency_lift">Energy savings % (over ASHRAE 90.1)</span>
                     <input type="number" step="1" min="25" max="100" name="energy_efficiency_pct_lift" value="${state.energy_efficiency_pct_lift}"></label>
                 <label><span data-i18n="view.s179d.label.pw">Prevailing wage + apprenticeship?</span>
@@ -49,7 +49,7 @@ export async function renderSection179d(mount, _appState) {
                 <label><span data-i18n="view.s179d.label.designer">Designer claiming allocation?</span>
                     <input type="checkbox" name="is_designer" ${state.is_designer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s179d.label.cost">Total qualified property cost ($)</span>
-                    <input type="number" step="1000" name="cost_of_property" value="${state.cost_of_property}"></label>
+                    <input type="number" step="0.01" name="cost_of_property" value="${state.cost_of_property}"></label>
                 <label><span data-i18n="view.s179d.label.marginal">Building owner marginal rate</span>
                     <input type="number" step="0.01" name="building_marginal_rate" value="${state.building_marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s179d.btn.compute">Compute</button>

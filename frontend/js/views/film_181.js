@@ -61,7 +61,7 @@ export async function renderFilm181(mount, _appState) {
                 <label><span data-i18n="view.f181.label.placed_year">Year placed in service</span>
                     <input type="number" step="1" name="placed_year" value="${new Date().getFullYear()}" required></label>
                 <label><span data-i18n="view.f181.label.cost">Total production cost ($)</span>
-                    <input type="number" step="1000" name="cost" required></label>
+                    <input type="number" step="0.01" name="cost" required></label>
                 <label><span data-i18n="view.f181.label.us_comp_pct">% US compensation</span>
                     <input type="number" step="0.01" name="us_comp_pct" value="0.85"></label>
                 <label><span data-i18n="view.f181.label.your_share">Your ownership %</span>

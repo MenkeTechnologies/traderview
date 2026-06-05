@@ -26,9 +26,9 @@ export async function renderAtrCone(mount, _appState) {
             <h2 data-i18n="view.atr_cone.h2.inputs">Projection inputs</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.atr_cone.label.entry">Entry price ($)</span>
-                    <input id="ac-entry" type="number" step="any" min="0" value="${state.entry}" data-tip="view.atr_cone.tip.entry"></label>
+                    <input id="ac-entry" type="number" step="0.01" min="0" value="${state.entry}" data-tip="view.atr_cone.tip.entry"></label>
                 <label><span data-i18n="view.atr_cone.label.atr">Daily ATR ($)</span>
-                    <input id="ac-atr" type="number" step="any" min="0" value="${state.daily_atr}" data-tip="view.atr_cone.tip.atr"></label>
+                    <input id="ac-atr" type="number" step="0.01" min="0" value="${state.daily_atr}" data-tip="view.atr_cone.tip.atr"></label>
                 <label><span data-i18n="view.atr_cone.label.horizon">Horizon (days)</span>
                     <input id="ac-h" type="number" step="1" min="0" max="${MAX_HORIZON_DAYS}" value="${state.horizon_days}" data-tip="view.atr_cone.tip.horizon"></label>
                 <button data-i18n="view.atr_cone.btn.project" id="ac-run" class="primary"

@@ -78,7 +78,7 @@ export async function renderSection6695(mount, _appState) {
                 <label><span data-i18n="view.s6695.label.efile">E-file provider?</span>
                     <input type="checkbox" name="e_file_provider" ${state.e_file_provider ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6695.label.max">Current max per return ($)</span>
-                    <input type="number" step="10" name="cur_max_per_return" value="${state.cur_max_per_return}"></label>
+                    <input type="number" step="0.01" name="cur_max_per_return" value="${state.cur_max_per_return}"></label>
                 <label><span data-i18n="view.s6695.label.intentional">Intentional disregard?</span>
                     <input type="checkbox" name="intentional_disregard" ${state.intentional_disregard ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6695.label.years">Years in practice</span>

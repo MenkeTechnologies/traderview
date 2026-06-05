@@ -41,13 +41,13 @@ export async function renderSection41(mount, _appState) {
             <h2 data-i18n="view.s41.h2.inputs">Inputs</h2>
             <form id="s41-form" class="inline-form">
                 <label><span data-i18n="view.s41.label.current_qre">Current year QRE ($)</span>
-                    <input type="number" step="10000" name="current_year_qre" value="${state.current_year_qre}"></label>
+                    <input type="number" step="0.01" name="current_year_qre" value="${state.current_year_qre}"></label>
                 <label><span data-i18n="view.s41.label.avg_receipts">Avg gross receipts (4-yr) ($)</span>
-                    <input type="number" step="100000" name="avg_gross_receipts_4yr" value="${state.avg_gross_receipts_4yr}"></label>
+                    <input type="number" step="0.01" name="avg_gross_receipts_4yr" value="${state.avg_gross_receipts_4yr}"></label>
                 <label><span data-i18n="view.s41.label.fixed_base">Fixed base %</span>
                     <input type="number" step="0.001" name="fixed_base_percentage" value="${state.fixed_base_percentage}"></label>
                 <label><span data-i18n="view.s41.label.avg_qre">Avg prior 3-yr QRE ($)</span>
-                    <input type="number" step="10000" name="avg_qre_prior_3yr" value="${state.avg_qre_prior_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_qre_prior_3yr" value="${state.avg_qre_prior_3yr}"></label>
                 <label><span data-i18n="view.s41.label.method">Credit method</span>
                     <select name="credit_method">
                         <option value="asc" ${state.credit_method === 'asc' ? 'selected' : ''}>ASC § 41(c)(5) — 14%</option>
@@ -55,13 +55,13 @@ export async function renderSection41(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s41.label.wages">Wages for qualified research ($)</span>
-                    <input type="number" step="10000" name="wages_for_qualified" value="${state.wages_for_qualified}"></label>
+                    <input type="number" step="0.01" name="wages_for_qualified" value="${state.wages_for_qualified}"></label>
                 <label><span data-i18n="view.s41.label.supplies">Supplies for qualified research ($)</span>
-                    <input type="number" step="10000" name="supplies_for_qualified" value="${state.supplies_for_qualified}"></label>
+                    <input type="number" step="0.01" name="supplies_for_qualified" value="${state.supplies_for_qualified}"></label>
                 <label><span data-i18n="view.s41.label.contract">Contract research × 65% ($)</span>
-                    <input type="number" step="10000" name="contract_research" value="${state.contract_research}"></label>
+                    <input type="number" step="0.01" name="contract_research" value="${state.contract_research}"></label>
                 <label><span data-i18n="view.s41.label.computer">Computer time-share ($)</span>
-                    <input type="number" step="10000" name="computer_time_share" value="${state.computer_time_share}"></label>
+                    <input type="number" step="0.01" name="computer_time_share" value="${state.computer_time_share}"></label>
                 <label><span data-i18n="view.s41.label.qsb">Qualified small biz ≤ $5M + ≤ 5 yrs?</span>
                     <input type="checkbox" name="is_qualified_small_business" ${state.is_qualified_small_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s41.label.payroll">Payroll tax election ($500K)?</span>
@@ -69,7 +69,7 @@ export async function renderSection41(mount, _appState) {
                 <label><span data-i18n="view.s41.label.startup">Startup pre-revenue?</span>
                     <input type="checkbox" name="is_startup_pre_revenue" ${state.is_startup_pre_revenue ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s41.label.s174">§ 174 amortization (current yr) ($)</span>
-                    <input type="number" step="10000" name="s174_amortization" value="${state.s174_amortization}"></label>
+                    <input type="number" step="0.01" name="s174_amortization" value="${state.s174_amortization}"></label>
                 <button class="primary" type="submit" data-i18n="view.s41.btn.compute">Compute</button>
             </form>
         </div>

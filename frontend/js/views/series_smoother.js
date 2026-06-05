@@ -78,8 +78,8 @@ export async function renderSeriesSmoother(mount, _appState) {
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="kalman_rts" ${state.enabled.kalman_rts ? 'checked' : ''}>
                         <span class="ss-swatch kalman_rts">▮</span> Kalman (RTS)</label>
-                    <label>${esc(t('view.series_smoother.param.process_q'))} <input type="number" step="any" min="0" value="${state.opts.kalman_q}" data-opt="kalman_q"></label>
-                    <label>${esc(t('view.series_smoother.param.obs_r'))} <input type="number" step="any" min="1e-9" value="${state.opts.kalman_r}" data-opt="kalman_r"></label>
+                    <label>${esc(t('view.series_smoother.param.process_q'))} <input type="number" step="0.01" min="0" value="${state.opts.kalman_q}" data-opt="kalman_q"></label>
+                    <label>${esc(t('view.series_smoother.param.obs_r'))} <input type="number" step="0.01" min="1e-9" value="${state.opts.kalman_r}" data-opt="kalman_r"></label>
                 </div>
                 <div class="ss-smoother">
                     <label><input type="checkbox" data-toggle="theil_sen" ${state.enabled.theil_sen ? 'checked' : ''}>

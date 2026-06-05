@@ -49,13 +49,13 @@ export async function renderSection355(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s355.label.dist_basis">Distributing inside basis ($)</span>
-                    <input type="number" step="100000" name="distributing_basis" value="${state.distributing_basis}"></label>
+                    <input type="number" step="0.01" name="distributing_basis" value="${state.distributing_basis}"></label>
                 <label><span data-i18n="view.s355.label.ctrl_basis">Controlled inside basis ($)</span>
-                    <input type="number" step="100000" name="controlled_basis" value="${state.controlled_basis}"></label>
+                    <input type="number" step="0.01" name="controlled_basis" value="${state.controlled_basis}"></label>
                 <label><span data-i18n="view.s355.label.ctrl_fmv">Controlled FMV ($)</span>
-                    <input type="number" step="100000" name="controlled_fmv" value="${state.controlled_fmv}"></label>
+                    <input type="number" step="0.01" name="controlled_fmv" value="${state.controlled_fmv}"></label>
                 <label><span data-i18n="view.s355.label.dist_fmv">Distributing FMV ($)</span>
-                    <input type="number" step="100000" name="distributing_fmv" value="${state.distributing_fmv}"></label>
+                    <input type="number" step="0.01" name="distributing_fmv" value="${state.distributing_fmv}"></label>
                 <label><span data-i18n="view.s355.label.active">5-yr active business each side?</span>
                     <input type="checkbox" name="five_year_active" ${state.five_year_active ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s355.label.purpose">Business purpose?</span>
@@ -71,9 +71,9 @@ export async function renderSection355(mount, _appState) {
                 <label><span data-i18n="view.s355.label.s355e">§ 355(e) Morris Trust (50% acq of either)?</span>
                     <input type="checkbox" name="s355e_morris_trust" ${state.s355e_morris_trust ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s355.label.boot">Boot received ($)</span>
-                    <input type="number" step="10000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s355.label.debt">Debt assumed by Controlled ($)</span>
-                    <input type="number" step="10000" name="debt_assumed" value="${state.debt_assumed}"></label>
+                    <input type="number" step="0.01" name="debt_assumed" value="${state.debt_assumed}"></label>
                 <button class="primary" type="submit" data-i18n="view.s355.btn.compute">Compute</button>
             </form>
         </div>

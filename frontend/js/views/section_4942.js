@@ -37,17 +37,17 @@ export async function renderSection4942(mount, _appState) {
             <h2 data-i18n="view.s4942.h2.inputs">Inputs</h2>
             <form id="s4942-form" class="inline-form">
                 <label><span data-i18n="view.s4942.label.assets">Average non-charitable-use assets ($)</span>
-                    <input type="number" step="100000" name="average_assets" value="${state.average_assets}"></label>
+                    <input type="number" step="0.01" name="average_assets" value="${state.average_assets}"></label>
                 <label><span data-i18n="view.s4942.label.cash">Cash for charitable use ($)</span>
-                    <input type="number" step="10000" name="cash_equivalents_for_charitable_use" value="${state.cash_equivalents_for_charitable_use}"></label>
+                    <input type="number" step="0.01" name="cash_equivalents_for_charitable_use" value="${state.cash_equivalents_for_charitable_use}"></label>
                 <label><span data-i18n="view.s4942.label.qualifying">Qualifying distributions YTD ($)</span>
-                    <input type="number" step="10000" name="qualifying_distributions" value="${state.qualifying_distributions}"></label>
+                    <input type="number" step="0.01" name="qualifying_distributions" value="${state.qualifying_distributions}"></label>
                 <label><span data-i18n="view.s4942.label.carryover">Prior year carryover ($)</span>
-                    <input type="number" step="10000" name="prior_year_carryover" value="${state.prior_year_carryover}"></label>
+                    <input type="number" step="0.01" name="prior_year_carryover" value="${state.prior_year_carryover}"></label>
                 <label><span data-i18n="view.s4942.label.set_aside">Set-aside for future projects ($)</span>
-                    <input type="number" step="10000" name="next_year_set_aside" value="${state.next_year_set_aside}"></label>
+                    <input type="number" step="0.01" name="next_year_set_aside" value="${state.next_year_set_aside}"></label>
                 <label><span data-i18n="view.s4942.label.tax">Investment income tax (§ 4940) paid ($)</span>
-                    <input type="number" step="100" name="investment_income_tax_paid" value="${state.investment_income_tax_paid}"></label>
+                    <input type="number" step="0.01" name="investment_income_tax_paid" value="${state.investment_income_tax_paid}"></label>
                 <label><span data-i18n="view.s4942.label.operating">Operating foundation?</span>
                     <input type="checkbox" name="is_operating_foundation" ${state.is_operating_foundation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4942.label.years_uncorr">Years uncorrected</span>

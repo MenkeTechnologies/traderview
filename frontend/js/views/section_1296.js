@@ -94,37 +94,37 @@ export async function renderSection1296(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1296.label.fmv">FMV year-end ($)</span>
-                    <input type="number" step="100" name="fmv_year_end" value="${state.fmv_year_end}"></label>
+                    <input type="number" step="0.01" name="fmv_year_end" value="${state.fmv_year_end}"></label>
                 <label><span data-i18n="view.s1296.label.basis">Adj basis year-end ($)</span>
-                    <input type="number" step="100" name="adjusted_basis_year_end" value="${state.adjusted_basis_year_end}"></label>
+                    <input type="number" step="0.01" name="adjusted_basis_year_end" value="${state.adjusted_basis_year_end}"></label>
                 <label><span data-i18n="view.s1296.label.elected">§ 1296 MTM election made?</span>
                     <input type="checkbox" name="s1296_mtm_election_made" ${state.s1296_mtm_election_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1296.label.year">Election year</span>
                     <input type="number" step="1" name="s1296_election_year" value="${state.s1296_election_year}"></label>
                 <label><span data-i18n="view.s1296.label.gain">MTM gain ordinary ($)</span>
-                    <input type="number" step="100" name="mtm_gain_ordinary" value="${state.mtm_gain_ordinary}"></label>
+                    <input type="number" step="0.01" name="mtm_gain_ordinary" value="${state.mtm_gain_ordinary}"></label>
                 <label><span data-i18n="view.s1296.label.loss">MTM loss offset ($)</span>
-                    <input type="number" step="100" name="mtm_loss_offset" value="${state.mtm_loss_offset}"></label>
+                    <input type="number" step="0.01" name="mtm_loss_offset" value="${state.mtm_loss_offset}"></label>
                 <label><span data-i18n="view.s1296.label.s1296d">§ 1296(d) inclusion ($)</span>
-                    <input type="number" step="100" name="s1296_d_inclusion" value="${state.s1296_d_inclusion}"></label>
+                    <input type="number" step="0.01" name="s1296_d_inclusion" value="${state.s1296_d_inclusion}"></label>
                 <label><span data-i18n="view.s1296.label.s1296b">§ 1296(b) loss ($)</span>
-                    <input type="number" step="100" name="s1296_b_loss_amount" value="${state.s1296_b_loss_amount}"></label>
+                    <input type="number" step="0.01" name="s1296_b_loss_amount" value="${state.s1296_b_loss_amount}"></label>
                 <label><span data-i18n="view.s1296.label.unreversed">Unreversed inclusions ($)</span>
-                    <input type="number" step="100" name="has_unreversed_inclusions" value="${state.has_unreversed_inclusions}"></label>
+                    <input type="number" step="0.01" name="has_unreversed_inclusions" value="${state.has_unreversed_inclusions}"></label>
                 <label><span data-i18n="view.s1296.label.ordinary">§ 1296(c) ordinary?</span>
                     <input type="checkbox" name="s1296_c_ordinary_character" ${state.s1296_c_ordinary_character ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1296.label.cumulative">Cumulative unreversed ($)</span>
-                    <input type="number" step="100" name="s1296_a_2_unreversed" value="${state.s1296_a_2_unreversed}"></label>
+                    <input type="number" step="0.01" name="s1296_a_2_unreversed" value="${state.s1296_a_2_unreversed}"></label>
                 <label><span data-i18n="view.s1296.label.prior_s1291">Prior § 1291 ($)</span>
-                    <input type="number" step="100" name="prior_s1291_inclusion" value="${state.prior_s1291_inclusion}"></label>
+                    <input type="number" step="0.01" name="prior_s1291_inclusion" value="${state.prior_s1291_inclusion}"></label>
                 <label><span data-i18n="view.s1296.label.s1291_remain">§ 1291 remaining ($)</span>
-                    <input type="number" step="100" name="s1291_inclusion_remaining" value="${state.s1291_inclusion_remaining}"></label>
+                    <input type="number" step="0.01" name="s1291_inclusion_remaining" value="${state.s1291_inclusion_remaining}"></label>
                 <label><span data-i18n="view.s1296.label.qef">§ 1295 QEF election?</span>
                     <input type="checkbox" name="is_s1295_qef_election" ${state.is_s1295_qef_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1296.label.s1295_pass">QEF passive ($)</span>
-                    <input type="number" step="100" name="s1295_ordinary_passive" value="${state.s1295_ordinary_passive}"></label>
+                    <input type="number" step="0.01" name="s1295_ordinary_passive" value="${state.s1295_ordinary_passive}"></label>
                 <label><span data-i18n="view.s1296.label.s1295_cap">QEF capital ($)</span>
-                    <input type="number" step="100" name="s1295_capital_gain" value="${state.s1295_capital_gain}"></label>
+                    <input type="number" step="0.01" name="s1295_capital_gain" value="${state.s1295_capital_gain}"></label>
                 <label><span data-i18n="view.s1296.label.country">Foreign country</span>
                     <input type="text" name="foreign_country" value="${esc(state.foreign_country)}"></label>
                 <label><span data-i18n="view.s1296.label.cusip">CUSIP</span>
@@ -146,7 +146,7 @@ export async function renderSection1296(mount, _appState) {
                 <label><span data-i18n="view.s1296.label.pedigreed">Pedigreed PFIC (§ 1291)?</span>
                     <input type="checkbox" name="s1291_pedigreed_pfic" ${state.s1291_pedigreed_pfic ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1296.label.purging">Purging distribution ($)</span>
-                    <input type="number" step="1000" name="purging_distribution" value="${state.purging_distribution}"></label>
+                    <input type="number" step="0.01" name="purging_distribution" value="${state.purging_distribution}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1296.btn.compute">Compute</button>
             </form>
         </div>

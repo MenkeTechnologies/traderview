@@ -75,15 +75,15 @@ export async function renderSection6662(mount, _appState) {
             <h2 data-i18n="view.s6662.h2.inputs">Inputs</h2>
             <form id="s6662-form" class="inline-form">
                 <label><span data-i18n="view.s6662.label.under">Underpayment ($)</span>
-                    <input type="number" step="1000" name="underpayment_amount" value="${state.underpayment_amount}"></label>
+                    <input type="number" step="0.01" name="underpayment_amount" value="${state.underpayment_amount}"></label>
                 <label><span data-i18n="view.s6662.label.base">Penalty base ($)</span>
-                    <input type="number" step="1000" name="penalty_base" value="${state.penalty_base}"></label>
+                    <input type="number" step="0.01" name="penalty_base" value="${state.penalty_base}"></label>
                 <label><span data-i18n="view.s6662.label.rate">Rate %</span>
                     <input type="number" step="1" name="penalty_rate" value="${state.penalty_rate}"></label>
                 <label><span data-i18n="view.s6662.label.substantial">Substantial understatement?</span>
                     <input type="checkbox" name="is_substantial_understatement" ${state.is_substantial_understatement ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.threshold">$ threshold</span>
-                    <input type="number" step="100" name="substantial_understatement_threshold" value="${state.substantial_understatement_threshold}"></label>
+                    <input type="number" step="0.01" name="substantial_understatement_threshold" value="${state.substantial_understatement_threshold}"></label>
                 <label><span data-i18n="view.s6662.label.indiv_pct">Indiv % threshold</span>
                     <input type="number" step="1" name="individual_pct_threshold" value="${state.individual_pct_threshold}"></label>
                 <label><span data-i18n="view.s6662.label.corp_pct">Corp % threshold</span>
@@ -107,11 +107,11 @@ export async function renderSection6662(mount, _appState) {
                 <label><span data-i18n="view.s6662.label.s6662j">§ 6662(j) foreign?</span>
                     <input type="checkbox" name="s6662_j_undisclosed_foreign" ${state.s6662_j_undisclosed_foreign ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.s6662j_amt">§ 6662(j) 40% amt ($)</span>
-                    <input type="number" step="1000" name="s6662_j_40pct_amount" value="${state.s6662_j_40pct_amount}"></label>
+                    <input type="number" step="0.01" name="s6662_j_40pct_amount" value="${state.s6662_j_40pct_amount}"></label>
                 <label><span data-i18n="view.s6662.label.s6662h">§ 6662(h) TP?</span>
                     <input type="checkbox" name="s6662_h_transfer_pricing" ${state.s6662_h_transfer_pricing ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.tp_amt">TP misstmt ($)</span>
-                    <input type="number" step="1000" name="transfer_pricing_misstatement" value="${state.transfer_pricing_misstatement}"></label>
+                    <input type="number" step="0.01" name="transfer_pricing_misstatement" value="${state.transfer_pricing_misstatement}"></label>
                 <label><span data-i18n="view.s6662.label.s6662a">§ 6662A listed?</span>
                     <input type="checkbox" name="s6662a_listed_transaction" ${state.s6662a_listed_transaction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.s6662a_30">§ 6662A 30%?</span>
@@ -137,17 +137,17 @@ export async function renderSection6662(mount, _appState) {
                 <label><span data-i18n="view.s6662.label.s6662d2c">§ 6662(d)(2)(C) RT?</span>
                     <input type="checkbox" name="s6662_d_2_c_reportable_transaction" ${state.s6662_d_2_c_reportable_transaction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.s6662e">§ 6662(e) under ($)</span>
-                    <input type="number" step="1000" name="s6662_e_substantial_under_amount" value="${state.s6662_e_substantial_under_amount}"></label>
+                    <input type="number" step="0.01" name="s6662_e_substantial_under_amount" value="${state.s6662_e_substantial_under_amount}"></label>
                 <label><span data-i18n="view.s6662.label.s6662ib">§ 6662(i)(b) corp?</span>
                     <input type="checkbox" name="s6662_i_b_higher_rate_corporate" ${state.s6662_i_b_higher_rate_corporate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.min">§ 6662(a) min ($)</span>
-                    <input type="number" step="100" name="s6662_a_minimum_amount" value="${state.s6662_a_minimum_amount}"></label>
+                    <input type="number" step="0.01" name="s6662_a_minimum_amount" value="${state.s6662_a_minimum_amount}"></label>
                 <label><span data-i18n="view.s6662.label.listed_rt">Listed/RT?</span>
                     <input type="checkbox" name="is_listed_or_RT" ${state.is_listed_or_RT ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.s6664d">§ 6664(d) RT limit?</span>
                     <input type="checkbox" name="s6664_d_RT_reasonable_cause_limited" ${state.s6664_d_RT_reasonable_cause_limited ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.s6707a">§ 6707A sep ($)</span>
-                    <input type="number" step="1000" name="s6707a_penalty_separate" value="${state.s6707a_penalty_separate}"></label>
+                    <input type="number" step="0.01" name="s6707a_penalty_separate" value="${state.s6707a_penalty_separate}"></label>
                 <label><span data-i18n="view.s6662.label.s6662h_2m">§ 6662(h) &gt; $2M?</span>
                     <input type="checkbox" name="s6662_h_excess_2_million" ${state.s6662_h_excess_2_million ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6662.label.s6404">§ 6404 relief?</span>

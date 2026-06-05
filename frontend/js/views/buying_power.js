@@ -29,9 +29,9 @@ export async function renderBuyingPower(mount, _appState) {
                         ${ACCOUNT_TYPES.map(at => `<option value="${at}" ${state.account_type === at ? 'selected' : ''} data-i18n="view.buying_power.account.${at}">${at}</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.buying_power.label.equity">Equity ($)</span>
-                    <input id="bp-eq" type="number" step="any" min="0" value="${state.equity}" data-tip="view.buying_power.tip.equity"></label>
+                    <input id="bp-eq" type="number" step="0.01" min="0" value="${state.equity}" data-tip="view.buying_power.tip.equity"></label>
                 <label><span data-i18n="view.buying_power.label.share_price">Share price ($)</span>
-                    <input id="bp-px" type="number" step="any" min="0" value="${state.share_price}" data-tip="view.buying_power.tip.share_price"></label>
+                    <input id="bp-px" type="number" step="0.01" min="0" value="${state.share_price}" data-tip="view.buying_power.tip.share_price"></label>
                 <label><span data-i18n="view.buying_power.label.pdt">PDT flag?</span>
                     <input id="bp-pdt" type="checkbox" ${state.is_pdt ? 'checked' : ''} data-tip="view.buying_power.tip.pdt"></label>
                 <label><span data-i18n="view.buying_power.label.day_trade">Day-trade?</span>

@@ -41,13 +41,13 @@ export async function renderSection1042(mount, _appState) {
             <h2 data-i18n="view.s1042.h2.inputs">Inputs</h2>
             <form id="s1042-form" class="inline-form">
                 <label><span data-i18n="view.s1042.label.sale">Sale price to ESOP ($)</span>
-                    <input type="number" step="10000" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s1042.label.basis">Your cost basis ($)</span>
-                    <input type="number" step="1000" name="cost_basis" value="${state.cost_basis}"></label>
+                    <input type="number" step="0.01" name="cost_basis" value="${state.cost_basis}"></label>
                 <label><span data-i18n="view.s1042.label.esop_pct">ESOP post-sale ownership %</span>
                     <input type="number" step="0.01" name="esop_post_ownership_pct" value="${state.esop_post_ownership_pct}"></label>
                 <label><span data-i18n="view.s1042.label.qrp">QRP purchased ($)</span>
-                    <input type="number" step="10000" name="qrp_purchased" value="${state.qrp_purchased}"></label>
+                    <input type="number" step="0.01" name="qrp_purchased" value="${state.qrp_purchased}"></label>
                 <label><span data-i18n="view.s1042.label.months">Months to QRP purchase</span>
                     <input type="number" step="1" name="months_to_qrp_purchase" value="${state.months_to_qrp_purchase}"></label>
                 <label><span data-i18n="view.s1042.label.growth">QRP expected growth %</span>

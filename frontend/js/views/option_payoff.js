@@ -61,15 +61,15 @@ export async function renderOptionPayoff(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.option_payoff.label.spot">Spot</span>
-                    <input id="op-spot" type="number" step="any" value="${state.spot}" data-tip="view.option_payoff.tip.spot"></label>
+                    <input id="op-spot" type="number" step="0.01" value="${state.spot}" data-tip="view.option_payoff.tip.spot"></label>
                 <label><span data-i18n="view.option_payoff.label.t">T (years)</span>
-                    <input id="op-t" type="number" step="any" value="${state.t_to_expiry}" data-tip="view.option_payoff.tip.t"></label>
+                    <input id="op-t" type="number" step="0.01" value="${state.t_to_expiry}" data-tip="view.option_payoff.tip.t"></label>
                 <label><span data-i18n="view.option_payoff.label.rate">Rate</span>
-                    <input id="op-rate" type="number" step="any" value="${state.rate}" data-tip="view.option_payoff.tip.rate"></label>
+                    <input id="op-rate" type="number" step="0.01" value="${state.rate}" data-tip="view.option_payoff.tip.rate"></label>
                 <label><span data-i18n="view.option_payoff.label.div_yield">Div yield</span>
-                    <input id="op-q" type="number" step="any" value="${state.div_yield}" data-tip="view.option_payoff.tip.div_yield"></label>
+                    <input id="op-q" type="number" step="0.01" value="${state.div_yield}" data-tip="view.option_payoff.tip.div_yield"></label>
                 <label><span data-i18n="view.option_payoff.label.iv">IV</span>
-                    <input id="op-sigma" type="number" step="any" value="${state.sigma}" data-tip="view.option_payoff.tip.iv"></label>
+                    <input id="op-sigma" type="number" step="0.01" value="${state.sigma}" data-tip="view.option_payoff.tip.iv"></label>
                 <button data-i18n="view.option_payoff.btn.recalculate" data-tip="view.option_payoff.tip.recalc" data-shortcut="option_payoff_recalc" id="op-recalc" class="primary" type="button">Recalculate</button>
             </div>
         </div>
@@ -121,9 +121,9 @@ function renderLegsTable() {
                     <option data-i18n="view.option_payoff.opt.stock" value="underlying" ${l.kind === 'underlying' ? 'selected' : ''}>Stock</option>
                 </select>
             </td>
-            <td><input type="number" step="any" value="${l.strike}"  data-leg="${i}" data-field="strike"></td>
-            <td><input type="number" step="any" value="${l.premium}" data-leg="${i}" data-field="premium"></td>
-            <td><input type="number" step="any" value="${l.qty}"     data-leg="${i}" data-field="qty"></td>
+            <td><input type="number" step="0.01" value="${l.strike}"  data-leg="${i}" data-field="strike"></td>
+            <td><input type="number" step="0.01" value="${l.premium}" data-leg="${i}" data-field="premium"></td>
+            <td><input type="number" step="0.01" value="${l.qty}"     data-leg="${i}" data-field="qty"></td>
             <td><button type="button" class="secondary" data-leg-delete="${i}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button></td>
         </tr>
     `).join('');

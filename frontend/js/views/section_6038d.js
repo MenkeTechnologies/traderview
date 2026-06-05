@@ -64,29 +64,29 @@ export async function renderSection6038D(mount, _appState) {
                 <label><span data-i18n="view.s6038d.label.abroad">Living abroad?</span>
                     <input type="checkbox" name="is_living_abroad" ${state.is_living_abroad ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6038d.label.end_year">Total SFFA end-year ($)</span>
-                    <input type="number" step="10000" name="total_foreign_assets_end_year" value="${state.total_foreign_assets_end_year}"></label>
+                    <input type="number" step="0.01" name="total_foreign_assets_end_year" value="${state.total_foreign_assets_end_year}"></label>
                 <label><span data-i18n="view.s6038d.label.anytime">Total SFFA anytime ($)</span>
-                    <input type="number" step="10000" name="total_foreign_assets_anytime" value="${state.total_foreign_assets_anytime}"></label>
+                    <input type="number" step="0.01" name="total_foreign_assets_anytime" value="${state.total_foreign_assets_anytime}"></label>
                 <label><span data-i18n="view.s6038d.label.bank">Foreign bank accounts ($)</span>
-                    <input type="number" step="10000" name="foreign_bank_accounts" value="${state.foreign_bank_accounts}"></label>
+                    <input type="number" step="0.01" name="foreign_bank_accounts" value="${state.foreign_bank_accounts}"></label>
                 <label><span data-i18n="view.s6038d.label.brokerage">Foreign brokerage ($)</span>
-                    <input type="number" step="10000" name="foreign_brokerage_accounts" value="${state.foreign_brokerage_accounts}"></label>
+                    <input type="number" step="0.01" name="foreign_brokerage_accounts" value="${state.foreign_brokerage_accounts}"></label>
                 <label><span data-i18n="view.s6038d.label.pension">Foreign pension ($)</span>
-                    <input type="number" step="10000" name="foreign_pension_accounts" value="${state.foreign_pension_accounts}"></label>
+                    <input type="number" step="0.01" name="foreign_pension_accounts" value="${state.foreign_pension_accounts}"></label>
                 <label><span data-i18n="view.s6038d.label.stock_direct">Foreign stock direct ($)</span>
-                    <input type="number" step="10000" name="foreign_stock_directly" value="${state.foreign_stock_directly}"></label>
+                    <input type="number" step="0.01" name="foreign_stock_directly" value="${state.foreign_stock_directly}"></label>
                 <label><span data-i18n="view.s6038d.label.partnership">Foreign partnership ($)</span>
-                    <input type="number" step="10000" name="foreign_partnership_interests" value="${state.foreign_partnership_interests}"></label>
+                    <input type="number" step="0.01" name="foreign_partnership_interests" value="${state.foreign_partnership_interests}"></label>
                 <label><span data-i18n="view.s6038d.label.corp">Foreign corp stock ($)</span>
-                    <input type="number" step="10000" name="foreign_corp_stock" value="${state.foreign_corp_stock}"></label>
+                    <input type="number" step="0.01" name="foreign_corp_stock" value="${state.foreign_corp_stock}"></label>
                 <label><span data-i18n="view.s6038d.label.trust">Foreign trust beneficial ($)</span>
-                    <input type="number" step="10000" name="foreign_trust_beneficial" value="${state.foreign_trust_beneficial}"></label>
+                    <input type="number" step="0.01" name="foreign_trust_beneficial" value="${state.foreign_trust_beneficial}"></label>
                 <label><span data-i18n="view.s6038d.label.real_estate">Foreign real estate ($)</span>
-                    <input type="number" step="10000" name="foreign_real_estate" value="${state.foreign_real_estate}"></label>
+                    <input type="number" step="0.01" name="foreign_real_estate" value="${state.foreign_real_estate}"></label>
                 <label><span data-i18n="view.s6038d.label.insurance">Foreign insurance ($)</span>
-                    <input type="number" step="10000" name="foreign_insurance_value" value="${state.foreign_insurance_value}"></label>
+                    <input type="number" step="0.01" name="foreign_insurance_value" value="${state.foreign_insurance_value}"></label>
                 <label><span data-i18n="view.s6038d.label.safe_dep">Safe deposit box ($)</span>
-                    <input type="number" step="10000" name="safe_deposit_box" value="${state.safe_deposit_box}"></label>
+                    <input type="number" step="0.01" name="safe_deposit_box" value="${state.safe_deposit_box}"></label>
                 <label><span data-i18n="view.s6038d.label.fbar">FBAR filed?</span>
                     <input type="checkbox" name="has_filed_fbar" ${state.has_filed_fbar ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6038d.label.fbar_thresh">FBAR threshold met ($10K)?</span>
@@ -102,7 +102,7 @@ export async function renderSection6038D(mount, _appState) {
                 <label><span data-i18n="view.s6038d.label.reasonable">Reasonable cause?</span>
                     <input type="checkbox" name="reasonable_cause" ${state.reasonable_cause ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6038d.label.understatement">Understatement ($)</span>
-                    <input type="number" step="10000" name="underpayment_understatement" value="${state.underpayment_understatement}"></label>
+                    <input type="number" step="0.01" name="underpayment_understatement" value="${state.underpayment_understatement}"></label>
                 <label><span data-i18n="view.s6038d.label.s6038d_30">§ 6038D 30% accuracy penalty?</span>
                     <input type="checkbox" name="s6038d_30pct_penalty" ${state.s6038d_30pct_penalty ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6038d.label.fatca_sol">FATCA 3-yr SOL extension?</span>

@@ -50,23 +50,23 @@ export async function renderSection415(mount, _appState) {
                 <label><span data-i18n="view.s415.label.employers">Employer count</span>
                     <input type="number" step="1" name="employer_count" value="${state.employer_count}"></label>
                 <label><span data-i18n="view.s415.label.deferral_a">Employer A: Employee deferral ($)</span>
-                    <input type="number" step="1000" name="employee_deferral_a" value="${state.employee_deferral_a}"></label>
+                    <input type="number" step="0.01" name="employee_deferral_a" value="${state.employee_deferral_a}"></label>
                 <label><span data-i18n="view.s415.label.deferral_b">Employer B: Employee deferral ($)</span>
-                    <input type="number" step="1000" name="employee_deferral_b" value="${state.employee_deferral_b}"></label>
+                    <input type="number" step="0.01" name="employee_deferral_b" value="${state.employee_deferral_b}"></label>
                 <label><span data-i18n="view.s415.label.employer_a">Employer A: Employer match / profit-share ($)</span>
-                    <input type="number" step="1000" name="employer_contribution_a" value="${state.employer_contribution_a}"></label>
+                    <input type="number" step="0.01" name="employer_contribution_a" value="${state.employer_contribution_a}"></label>
                 <label><span data-i18n="view.s415.label.employer_b">Employer B: Employer contribution ($)</span>
-                    <input type="number" step="1000" name="employer_contribution_b" value="${state.employer_contribution_b}"></label>
+                    <input type="number" step="0.01" name="employer_contribution_b" value="${state.employer_contribution_b}"></label>
                 <label><span data-i18n="view.s415.label.after_tax_a">Employer A: After-tax ($)</span>
-                    <input type="number" step="1000" name="after_tax_contribution_a" value="${state.after_tax_contribution_a}"></label>
+                    <input type="number" step="0.01" name="after_tax_contribution_a" value="${state.after_tax_contribution_a}"></label>
                 <label><span data-i18n="view.s415.label.after_tax_b">Employer B: After-tax ($)</span>
-                    <input type="number" step="1000" name="after_tax_contribution_b" value="${state.after_tax_contribution_b}"></label>
+                    <input type="number" step="0.01" name="after_tax_contribution_b" value="${state.after_tax_contribution_b}"></label>
                 <label><span data-i18n="view.s415.label.457b">Has 457(b) plan?</span>
                     <input type="checkbox" name="has_457b" ${state.has_457b ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s415.label.deferral_457b">457(b) deferral ($)</span>
-                    <input type="number" step="1000" name="deferral_457b" value="${state.deferral_457b}"></label>
+                    <input type="number" step="0.01" name="deferral_457b" value="${state.deferral_457b}"></label>
                 <label><span data-i18n="view.s415.label.comp">Total compensation ($)</span>
-                    <input type="number" step="1000" name="total_compensation" value="${state.total_compensation}"></label>
+                    <input type="number" step="0.01" name="total_compensation" value="${state.total_compensation}"></label>
                 <label><span data-i18n="view.s415.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s415.btn.compute">Compute</button>

@@ -40,7 +40,7 @@ export async function renderSection47(mount, _appState) {
             <h2 data-i18n="view.s47.h2.inputs">Inputs</h2>
             <form id="s47-form" class="inline-form">
                 <label><span data-i18n="view.s47.label.qre">QRE total ($)</span>
-                    <input type="number" step="10000" name="qualified_rehab_expenditures" value="${state.qualified_rehab_expenditures}"></label>
+                    <input type="number" step="0.01" name="qualified_rehab_expenditures" value="${state.qualified_rehab_expenditures}"></label>
                 <label><span data-i18n="view.s47.label.certified">Certified Historic Structure?</span>
                     <input type="checkbox" name="is_certified_historic" ${state.is_certified_historic ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s47.label.register">On National Register?</span>
@@ -52,7 +52,7 @@ export async function renderSection47(mount, _appState) {
                 <label><span data-i18n="view.s47.label.nps">NPS approved parts (1, 2, 3 / 'all')</span>
                     <input type="text" name="npsApprovedParts" value="${esc(state.npsApprovedParts)}"></label>
                 <label><span data-i18n="view.s47.label.basis_pre">Building basis before rehab ($)</span>
-                    <input type="number" step="10000" name="bldg_basis_before_rehab" value="${state.bldg_basis_before_rehab}"></label>
+                    <input type="number" step="0.01" name="bldg_basis_before_rehab" value="${state.bldg_basis_before_rehab}"></label>
                 <label><span data-i18n="view.s47.label.substantial">Substantial rehabilitation test met?</span>
                     <input type="checkbox" name="substantially_rehabilitated" ${state.substantially_rehabilitated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s47.label.exempt_lease">Leased to tax-exempt &gt; 50%?</span>

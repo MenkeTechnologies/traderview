@@ -37,17 +37,17 @@ export async function renderSection4501(mount, _appState) {
             <h2 data-i18n="view.s4501.h2.inputs">Inputs</h2>
             <form id="s4501-form" class="inline-form">
                 <label><span data-i18n="view.s4501.label.fmv">FMV repurchased ($)</span>
-                    <input type="number" step="1000000" name="fmv_repurchased" value="${state.fmv_repurchased}"></label>
+                    <input type="number" step="0.01" name="fmv_repurchased" value="${state.fmv_repurchased}"></label>
                 <label><span data-i18n="view.s4501.label.comp">Stock issued — compensation ($)</span>
-                    <input type="number" step="100000" name="stock_issued_compensation" value="${state.stock_issued_compensation}"></label>
+                    <input type="number" step="0.01" name="stock_issued_compensation" value="${state.stock_issued_compensation}"></label>
                 <label><span data-i18n="view.s4501.label.acquisition">Stock issued — acquisition ($)</span>
-                    <input type="number" step="100000" name="stock_issued_acquisition" value="${state.stock_issued_acquisition}"></label>
+                    <input type="number" step="0.01" name="stock_issued_acquisition" value="${state.stock_issued_acquisition}"></label>
                 <label><span data-i18n="view.s4501.label.treasury">Treasury → employee benefit ($)</span>
-                    <input type="number" step="100000" name="treasury_to_employee" value="${state.treasury_to_employee}"></label>
+                    <input type="number" step="0.01" name="treasury_to_employee" value="${state.treasury_to_employee}"></label>
                 <label><span data-i18n="view.s4501.label.dividend">Treated as dividend by recipient ($)</span>
-                    <input type="number" step="100000" name="fair_market_dividend_treatment" value="${state.fair_market_dividend_treatment}"></label>
+                    <input type="number" step="0.01" name="fair_market_dividend_treatment" value="${state.fair_market_dividend_treatment}"></label>
                 <label><span data-i18n="view.s4501.label.esop">ESOP contributions ($)</span>
-                    <input type="number" step="100000" name="esop_contributions" value="${state.esop_contributions}"></label>
+                    <input type="number" step="0.01" name="esop_contributions" value="${state.esop_contributions}"></label>
                 <label><span data-i18n="view.s4501.label.public">Publicly traded?</span>
                     <input type="checkbox" name="is_public" ${state.is_public ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s4501.label.ric">RIC / REIT?</span>

@@ -48,15 +48,15 @@ export async function renderSection36b(mount, _appState) {
                 <label><span data-i18n="view.s36b.label.household">Household size</span>
                     <input type="number" step="1" min="1" name="household_size" value="${state.household_size}"></label>
                 <label><span data-i18n="view.s36b.label.magi">MAGI for PTC ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s36b.label.benchmark">Benchmark silver plan annual cost ($)</span>
-                    <input type="number" step="100" name="benchmark_silver_annual" value="${state.benchmark_silver_annual}"></label>
+                    <input type="number" step="0.01" name="benchmark_silver_annual" value="${state.benchmark_silver_annual}"></label>
                 <label><span data-i18n="view.s36b.label.actual">Actual plan annual cost ($)</span>
-                    <input type="number" step="100" name="actual_plan_annual" value="${state.actual_plan_annual}"></label>
+                    <input type="number" step="0.01" name="actual_plan_annual" value="${state.actual_plan_annual}"></label>
                 <label><span data-i18n="view.s36b.label.months">Months enrolled</span>
                     <input type="number" step="1" min="1" max="12" name="months_enrolled" value="${state.months_enrolled}"></label>
                 <label><span data-i18n="view.s36b.label.advance">Advance PTC received ($)</span>
-                    <input type="number" step="100" name="advance_credits_received" value="${state.advance_credits_received}"></label>
+                    <input type="number" step="0.01" name="advance_credits_received" value="${state.advance_credits_received}"></label>
                 <button class="primary" type="submit" data-i18n="view.s36b.btn.compute">Compute</button>
             </form>
         </div>

@@ -46,11 +46,11 @@ export async function renderQozTracker(mount, _appState) {
                 <label><span data-i18n="view.qoz.label.qof_invested_date">QOF invested date</span>
                     <input type="date" name="qof_invested_date" required></label>
                 <label><span data-i18n="view.qoz.label.deferred_gain">Deferred cap gain ($)</span>
-                    <input type="number" step="1000" name="deferred_gain" required></label>
+                    <input type="number" step="0.01" name="deferred_gain" required></label>
                 <label><span data-i18n="view.qoz.label.qof_name">QOF name</span>
                     <input type="text" name="qof_name" required></label>
                 <label><span data-i18n="view.qoz.label.current_value">Current QOF value ($)</span>
-                    <input type="number" step="1000" name="current_value"></label>
+                    <input type="number" step="0.01" name="current_value"></label>
                 <button class="primary" type="submit" data-i18n="view.qoz.btn.add">Add</button>
             </form>
         </div>

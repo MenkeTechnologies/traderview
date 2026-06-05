@@ -56,47 +56,47 @@ export async function renderSection170(mount, _appState) {
             <h2 data-i18n="view.s170.h2.inputs">Inputs</h2>
             <form id="s170-form" class="inline-form">
                 <label><span data-i18n="view.s170.label.agi">Donor AGI ($)</span>
-                    <input type="number" step="10000" name="donor_agi" value="${state.donor_agi}"></label>
+                    <input type="number" step="0.01" name="donor_agi" value="${state.donor_agi}"></label>
                 <label><span data-i18n="view.s170.label.cash_public">Cash to public charity ($)</span>
-                    <input type="number" step="1000" name="cash_to_public_charity" value="${state.cash_to_public_charity}"></label>
+                    <input type="number" step="0.01" name="cash_to_public_charity" value="${state.cash_to_public_charity}"></label>
                 <label><span data-i18n="view.s170.label.cash_pf">Cash to private foundation ($)</span>
-                    <input type="number" step="1000" name="cash_to_private_foundation" value="${state.cash_to_private_foundation}"></label>
+                    <input type="number" step="0.01" name="cash_to_private_foundation" value="${state.cash_to_private_foundation}"></label>
                 <label><span data-i18n="view.s170.label.ltcg_pub">LTCG property to public ($)</span>
-                    <input type="number" step="1000" name="ltcg_property_to_public" value="${state.ltcg_property_to_public}"></label>
+                    <input type="number" step="0.01" name="ltcg_property_to_public" value="${state.ltcg_property_to_public}"></label>
                 <label><span data-i18n="view.s170.label.ltcg_pf">LTCG property to PF ($)</span>
-                    <input type="number" step="1000" name="ltcg_property_to_pf" value="${state.ltcg_property_to_pf}"></label>
+                    <input type="number" step="0.01" name="ltcg_property_to_pf" value="${state.ltcg_property_to_pf}"></label>
                 <label><span data-i18n="view.s170.label.ordinary">Ordinary income property ($)</span>
-                    <input type="number" step="1000" name="ordinary_income_property" value="${state.ordinary_income_property}"></label>
+                    <input type="number" step="0.01" name="ordinary_income_property" value="${state.ordinary_income_property}"></label>
                 <label><span data-i18n="view.s170.label.ltcg_fmv">LTCG FMV ($)</span>
-                    <input type="number" step="1000" name="ltcg_property_fmv" value="${state.ltcg_property_fmv}"></label>
+                    <input type="number" step="0.01" name="ltcg_property_fmv" value="${state.ltcg_property_fmv}"></label>
                 <label><span data-i18n="view.s170.label.ltcg_basis">LTCG basis ($)</span>
-                    <input type="number" step="1000" name="ltcg_property_basis" value="${state.ltcg_property_basis}"></label>
+                    <input type="number" step="0.01" name="ltcg_property_basis" value="${state.ltcg_property_basis}"></label>
                 <label><span data-i18n="view.s170.label.qas">Qualified appreciated stock ($)</span>
-                    <input type="number" step="1000" name="qualified_appreciated_stock" value="${state.qualified_appreciated_stock}"></label>
+                    <input type="number" step="0.01" name="qualified_appreciated_stock" value="${state.qualified_appreciated_stock}"></label>
                 <label><span data-i18n="view.s170.label.daf">DAF donation?</span>
                     <input type="checkbox" name="is_dafs_donation" ${state.is_dafs_donation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s170.label.daf_amt">DAF amount ($)</span>
-                    <input type="number" step="1000" name="daf_amount" value="${state.daf_amount}"></label>
+                    <input type="number" step="0.01" name="daf_amount" value="${state.daf_amount}"></label>
                 <label><span data-i18n="view.s170.label.qcd">QCD?</span>
                     <input type="checkbox" name="is_qcd" ${state.is_qcd ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s170.label.qcd_amt">QCD amount ($)</span>
-                    <input type="number" step="1000" name="qcd_amount" value="${state.qcd_amount}"></label>
+                    <input type="number" step="0.01" name="qcd_amount" value="${state.qcd_amount}"></label>
                 <label><span data-i18n="view.s170.label.basis_election">§ 170(b)(1)(C)(iii) basis election?</span>
                     <input type="checkbox" name="s170b_election_basis_only" ${state.s170b_election_basis_only ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s170.label.partial">Partial interest?</span>
                     <input type="checkbox" name="is_partial_interest" ${state.is_partial_interest ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s170.label.crat">CRAT amount ($)</span>
-                    <input type="number" step="10000" name="crat_amount" value="${state.crat_amount}"></label>
+                    <input type="number" step="0.01" name="crat_amount" value="${state.crat_amount}"></label>
                 <label><span data-i18n="view.s170.label.clat">CLAT amount ($)</span>
-                    <input type="number" step="10000" name="clat_amount" value="${state.clat_amount}"></label>
+                    <input type="number" step="0.01" name="clat_amount" value="${state.clat_amount}"></label>
                 <label><span data-i18n="view.s170.label.bargain">Bargain sale amount ($)</span>
-                    <input type="number" step="10000" name="bargain_sale_amount" value="${state.bargain_sale_amount}"></label>
+                    <input type="number" step="0.01" name="bargain_sale_amount" value="${state.bargain_sale_amount}"></label>
                 <label><span data-i18n="view.s170.label.bargain_fmv">Bargain sale FMV ($)</span>
-                    <input type="number" step="10000" name="bargain_sale_fmv" value="${state.bargain_sale_fmv}"></label>
+                    <input type="number" step="0.01" name="bargain_sale_fmv" value="${state.bargain_sale_fmv}"></label>
                 <label><span data-i18n="view.s170.label.qpq">Quid pro quo?</span>
                     <input type="checkbox" name="quid_pro_quo" ${state.quid_pro_quo ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s170.label.benefit">Benefit value ($)</span>
-                    <input type="number" step="100" name="benefit_value" value="${state.benefit_value}"></label>
+                    <input type="number" step="0.01" name="benefit_value" value="${state.benefit_value}"></label>
                 <label><span data-i18n="view.s170.label.subst">Substantiated?</span>
                     <input type="checkbox" name="is_substantiation_compliant" ${state.is_substantiation_compliant ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s170.label.appraisal">Appraisal required?</span>
@@ -108,7 +108,7 @@ export async function renderSection170(mount, _appState) {
                 <label><span data-i18n="view.s170.label.carry_pct">Carryover %</span>
                     <input type="number" step="1" name="carryover_to_next_year_pct" value="${state.carryover_to_next_year_pct}"></label>
                 <label><span data-i18n="view.s170.label.prior_carry">Prior year carryover ($)</span>
-                    <input type="number" step="1000" name="prior_year_carryover" value="${state.prior_year_carryover}"></label>
+                    <input type="number" step="0.01" name="prior_year_carryover" value="${state.prior_year_carryover}"></label>
                 <label><span data-i18n="view.s170.label.year">Year</span>
                     <input type="number" step="1" name="year" value="${state.year}"></label>
                 <button class="primary" type="submit" data-i18n="view.s170.btn.compute">Compute</button>

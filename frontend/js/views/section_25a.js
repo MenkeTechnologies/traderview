@@ -44,7 +44,7 @@ export async function renderSection25a(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s25a.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <button class="primary" type="submit" data-i18n="view.s25a.btn.compute">Compute</button>
             </form>
         </div>
@@ -54,7 +54,7 @@ export async function renderSection25a(mount, _appState) {
                 <label><span data-i18n="view.s25a.label.name">Student name</span>
                     <input type="text" name="name" required></label>
                 <label><span data-i18n="view.s25a.label.expenses">Qualified expenses ($)</span>
-                    <input type="number" step="100" name="expenses" required></label>
+                    <input type="number" step="0.01" name="expenses" required></label>
                 <label><span data-i18n="view.s25a.label.year">Undergrad year (1-4)</span>
                     <input type="number" step="1" min="1" max="6" name="undergrad_year" value="1"></label>
                 <label><span data-i18n="view.s25a.label.half_time">≥ Half-time?</span>

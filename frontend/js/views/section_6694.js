@@ -41,7 +41,7 @@ export async function renderSection6694(mount, _appState) {
             <h2 data-i18n="view.s6694.h2.inputs">Inputs</h2>
             <form id="s6694-form" class="inline-form">
                 <label><span data-i18n="view.s6694.label.fee">Preparer's fee for return ($)</span>
-                    <input type="number" step="100" name="preparer_fee" value="${state.preparer_fee}"></label>
+                    <input type="number" step="0.01" name="preparer_fee" value="${state.preparer_fee}"></label>
                 <label><span data-i18n="view.s6694.label.position">Position kind</span>
                     <select name="position_kind">
                         <option value="more_likely_than_not" ${state.position_kind === 'more_likely_than_not' ? 'selected' : ''}>More-likely-than-not (&gt; 50%)</option>

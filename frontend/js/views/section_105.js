@@ -40,11 +40,11 @@ export async function renderSection105(mount, _appState) {
             <h2 data-i18n="view.s105.h2.inputs">Inputs</h2>
             <form id="s105-form" class="inline-form">
                 <label><span data-i18n="view.s105.label.payments">Employer plan payments to employee ($)</span>
-                    <input type="number" step="100" name="employer_plan_payments" value="${state.employer_plan_payments}"></label>
+                    <input type="number" step="0.01" name="employer_plan_payments" value="${state.employer_plan_payments}"></label>
                 <label><span data-i18n="view.s105.label.medical">Medical reimbursement ($)</span>
-                    <input type="number" step="100" name="medical_reimbursement" value="${state.medical_reimbursement}"></label>
+                    <input type="number" step="0.01" name="medical_reimbursement" value="${state.medical_reimbursement}"></label>
                 <label><span data-i18n="view.s105.label.actual">Actual medical expenses incurred ($)</span>
-                    <input type="number" step="100" name="actual_medical_expenses" value="${state.actual_medical_expenses}"></label>
+                    <input type="number" step="0.01" name="actual_medical_expenses" value="${state.actual_medical_expenses}"></label>
                 <label><span data-i18n="view.s105.label.self">Self-insured plan?</span>
                     <input type="checkbox" name="is_self_insured" ${state.is_self_insured ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s105.label.hce">Highly compensated employee (HCE)?</span>
@@ -54,19 +54,19 @@ export async function renderSection105(mount, _appState) {
                 <label><span data-i18n="view.s105.label.discrim">Discriminatory plan?</span>
                     <input type="checkbox" name="is_discriminatory" ${state.is_discriminatory ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s105.label.ssi">SSI / disability income ($)</span>
-                    <input type="number" step="100" name="ssi_disability_pay" value="${state.ssi_disability_pay}"></label>
+                    <input type="number" step="0.01" name="ssi_disability_pay" value="${state.ssi_disability_pay}"></label>
                 <label><span data-i18n="view.s105.label.ltd">Long-term disability ($)</span>
-                    <input type="number" step="100" name="long_term_disability" value="${state.long_term_disability}"></label>
+                    <input type="number" step="0.01" name="long_term_disability" value="${state.long_term_disability}"></label>
                 <label><span data-i18n="view.s105.label.function">Loss of function payments ($)</span>
-                    <input type="number" step="100" name="payments_for_loss_function" value="${state.payments_for_loss_function}"></label>
+                    <input type="number" step="0.01" name="payments_for_loss_function" value="${state.payments_for_loss_function}"></label>
                 <label><span data-i18n="view.s105.label.se_premium">SE health premiums ($)</span>
-                    <input type="number" step="100" name="se_health_premiums" value="${state.se_health_premiums}"></label>
+                    <input type="number" step="0.01" name="se_health_premiums" value="${state.se_health_premiums}"></label>
                 <label><span data-i18n="view.s105.label.se_tax">SE tax owed ($)</span>
-                    <input type="number" step="100" name="se_se_tax_owed" value="${state.se_se_tax_owed}"></label>
+                    <input type="number" step="0.01" name="se_se_tax_owed" value="${state.se_se_tax_owed}"></label>
                 <label><span data-i18n="view.s105.label.s_corp">2%+ S-corp owner?</span>
                     <input type="checkbox" name="s_corp_2_pct_owner" ${state.s_corp_2_pct_owner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s105.label.s_corp_premium">S-corp W-2 premium ($)</span>
-                    <input type="number" step="100" name="s_corp_w2_premium" value="${state.s_corp_w2_premium}"></label>
+                    <input type="number" step="0.01" name="s_corp_w2_premium" value="${state.s_corp_w2_premium}"></label>
                 <button class="primary" type="submit" data-i18n="view.s105.btn.compute">Compute</button>
             </form>
         </div>

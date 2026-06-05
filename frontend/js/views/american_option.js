@@ -54,17 +54,17 @@ export async function renderAmericanOption(mount, _appState) {
                         <option data-i18n="view.american_option.opt.put" value="put" ${state.params.kind === 'put' ? 'selected' : ''}>Put</option>
                     </select></label>
                 <label><span data-i18n="view.american_option.label.spot">Spot</span>
-                    <input id="ao-spot" type="number" step="any" min="0" value="${state.params.spot}" data-tip="view.american_option.tip.spot"></label>
+                    <input id="ao-spot" type="number" step="0.01" min="0" value="${state.params.spot}" data-tip="view.american_option.tip.spot"></label>
                 <label><span data-i18n="view.american_option.label.strike">Strike</span>
-                    <input id="ao-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.american_option.tip.strike"></label>
+                    <input id="ao-strike" type="number" step="0.01" min="0" value="${state.params.strike}" data-tip="view.american_option.tip.strike"></label>
                 <label><span data-i18n="view.american_option.label.t_years">T (years)</span>
-                    <input id="ao-t" type="number" step="any" min="0" value="${state.params.t_years}" data-tip="view.american_option.tip.t"></label>
+                    <input id="ao-t" type="number" step="0.01" min="0" value="${state.params.t_years}" data-tip="view.american_option.tip.t"></label>
                 <label><span data-i18n="view.american_option.label.rate">Rate r</span>
-                    <input id="ao-rate" type="number" step="any" value="${state.params.rate}" data-tip="view.american_option.tip.rate"></label>
+                    <input id="ao-rate" type="number" step="0.01" value="${state.params.rate}" data-tip="view.american_option.tip.rate"></label>
                 <label><span data-i18n="view.american_option.label.dividend">Dividend q</span>
-                    <input id="ao-div" type="number" step="any" min="0" value="${state.params.dividend}" data-tip="view.american_option.tip.div"></label>
+                    <input id="ao-div" type="number" step="0.01" min="0" value="${state.params.dividend}" data-tip="view.american_option.tip.div"></label>
                 <label><span data-i18n="view.american_option.label.sigma">σ</span>
-                    <input id="ao-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.american_option.tip.sigma"></label>
+                    <input id="ao-sigma" type="number" step="0.01" min="0" value="${state.params.sigma}" data-tip="view.american_option.tip.sigma"></label>
             </div>
         </div>
 
@@ -74,7 +74,7 @@ export async function renderAmericanOption(mount, _appState) {
                 <label><span data-i18n="view.american_option.label.steps">Steps</span>
                     <input id="ao-steps" type="number" step="1" min="2" value="${state.params.steps}" data-tip="view.american_option.tip.steps"></label>
                 <label><span data-i18n="view.american_option.label.paths">Paths</span>
-                    <input id="ao-paths" type="number" step="100" min="10" value="${state.params.paths}" data-tip="view.american_option.tip.paths"></label>
+                    <input id="ao-paths" type="number" step="0.01" min="10" value="${state.params.paths}" data-tip="view.american_option.tip.paths"></label>
                 <label><span data-i18n="view.american_option.label.seed">Seed (0 = auto)</span>
                     <input id="ao-seed" type="number" step="1" min="0" value="${state.params.seed}" data-tip="view.american_option.tip.seed"></label>
                 <button data-i18n="view.american_option.btn.price" data-tip="view.american_option.tip.price" data-shortcut="american_option_price" id="ao-run" class="primary" type="button">Price</button>

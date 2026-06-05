@@ -42,9 +42,9 @@ export async function renderSection280g(mount, _appState) {
                 <label><span data-i18n="view.s280g.label.disqualified">Disqualified individual?</span>
                     <input type="checkbox" name="is_disqualified_individual" ${state.is_disqualified_individual ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280g.label.base">5-yr W-2 base amount ($)</span>
-                    <input type="number" step="1000" name="base_amount_5yr_avg_w2" value="${state.base_amount_5yr_avg_w2}"></label>
+                    <input type="number" step="0.01" name="base_amount_5yr_avg_w2" value="${state.base_amount_5yr_avg_w2}"></label>
                 <label><span data-i18n="view.s280g.label.parachute">Parachute payment total ($)</span>
-                    <input type="number" step="1000" name="parachute_payment_total" value="${state.parachute_payment_total}"></label>
+                    <input type="number" step="0.01" name="parachute_payment_total" value="${state.parachute_payment_total}"></label>
                 <label><span data-i18n="view.s280g.label.public">Public company?</span>
                     <input type="checkbox" name="public_company" ${state.public_company ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280g.label.cleansed">Shareholder vote ≥75% cleansing?</span>

@@ -32,11 +32,11 @@ export async function renderHawkesIntensity(mount, _appState) {
             <h2 data-i18n="view.hawkes.h2.params">Parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.hawkes.label.mu">μ (baseline)</span>
-                    <input id="hk-mu" type="number" step="any" min="0" value="${state.params.baseline_mu}" data-tip="view.hawkes.tip.mu"></label>
+                    <input id="hk-mu" type="number" step="0.01" min="0" value="${state.params.baseline_mu}" data-tip="view.hawkes.tip.mu"></label>
                 <label><span data-i18n="view.hawkes.label.alpha">α (excitation)</span>
-                    <input id="hk-alpha" type="number" step="any" min="0" value="${state.params.excitation_alpha}" data-tip="view.hawkes.tip.alpha"></label>
+                    <input id="hk-alpha" type="number" step="0.01" min="0" value="${state.params.excitation_alpha}" data-tip="view.hawkes.tip.alpha"></label>
                 <label><span data-i18n="view.hawkes.label.beta">β (decay)</span>
-                    <input id="hk-beta" type="number" step="any" min="0.001" value="${state.params.decay_beta}" data-tip="view.hawkes.tip.beta"></label>
+                    <input id="hk-beta" type="number" step="0.01" min="0.001" value="${state.params.decay_beta}" data-tip="view.hawkes.tip.beta"></label>
                 <label class="inline-check">
                     <input id="hk-auto" type="checkbox" ${autoGrid ? 'checked' : ''} data-tip="view.hawkes.tip.auto_grid">
                     <span data-i18n="view.hawkes.label.auto_grid">Auto query grid</span>

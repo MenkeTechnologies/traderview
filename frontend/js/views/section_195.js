@@ -54,9 +54,9 @@ export async function renderSection195(mount, _appState) {
             <h2 data-i18n="view.s195.h2.inputs">Inputs</h2>
             <form id="s195-form" class="inline-form">
                 <label><span data-i18n="view.s195.label.startup_costs">Total start-up costs ($)</span>
-                    <input type="number" step="100" name="total_startup_costs" value="${state.total_startup_costs}"></label>
+                    <input type="number" step="0.01" name="total_startup_costs" value="${state.total_startup_costs}"></label>
                 <label><span data-i18n="view.s195.label.org_costs">Total § 248 organizational costs ($)</span>
-                    <input type="number" step="100" name="total_org_costs" value="${state.total_org_costs}"></label>
+                    <input type="number" step="0.01" name="total_org_costs" value="${state.total_org_costs}"></label>
                 <label><span data-i18n="view.s195.label.opening_year">Business opening year</span>
                     <input type="number" step="1" name="opening_year" value="${state.opening_year}"></label>
                 <label><span data-i18n="view.s195.label.opening_month">Opening month (1-12)</span>

@@ -73,14 +73,14 @@ export async function renderPaper(mount) {
                         <option data-i18n="view.paper.opt.short" value="short">SHORT</option>
                         <option data-i18n="view.paper.opt.cover" value="cover">COVER</option>
                     </select>
-                    <input name="qty" type="number" step="any" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" data-tip="view.paper.tip.qty" required>
+                    <input name="qty" type="number" step="0.01" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" data-tip="view.paper.tip.qty" required>
                     <select name="order_type" data-tip="view.paper.tip.order_type">
                         <option data-i18n="view.paper.opt.market" value="market">market</option>
                         <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
                         <option data-i18n="view.paper.opt.stop" value="stop">stop</option>
                     </select>
-                    <input name="limit_price" type="number" step="any" placeholder="limit" data-i18n-placeholder="common.placeholder.limit" data-tip="view.paper.tip.limit">
-                    <input name="stop_price"  type="number" step="any" placeholder="stop" data-i18n-placeholder="common.placeholder.stop" data-tip="view.paper.tip.stop">
+                    <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit" data-tip="view.paper.tip.limit">
+                    <input name="stop_price"  type="number" step="0.01" placeholder="stop" data-i18n-placeholder="common.placeholder.stop" data-tip="view.paper.tip.stop">
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
                 <button data-i18n="view.paper.btn.reset_account_200k" data-tip="view.paper.tip.reset" class="link" id="reset">Reset account ($200k)</button>

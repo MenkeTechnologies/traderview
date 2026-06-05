@@ -49,11 +49,11 @@ export async function renderDcfsa(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.dcfsa.label.agi">AGI ($)</span>
-                    <input type="number" step="1000" name="agi" value="${state.agi}"></label>
+                    <input type="number" step="0.01" name="agi" value="${state.agi}"></label>
                 <label><span data-i18n="view.dcfsa.label.num_qualifying">Qualifying dependents</span>
                     <input type="number" step="1" name="num_qualifying" value="${state.num_qualifying}" min="0"></label>
                 <label><span data-i18n="view.dcfsa.label.annual_care_cost">Annual care cost ($)</span>
-                    <input type="number" step="100" name="annual_care_cost" value="${state.annual_care_cost}"></label>
+                    <input type="number" step="0.01" name="annual_care_cost" value="${state.annual_care_cost}"></label>
                 <label><span data-i18n="view.dcfsa.label.marginal_federal">Marginal federal %</span>
                     <input type="number" step="0.5" name="marginal_federal" value="${(state.marginal_federal * 100).toFixed(1)}"></label>
                 <label><span data-i18n="view.dcfsa.label.state_rate">State rate %</span>

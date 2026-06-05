@@ -47,7 +47,7 @@ export async function renderSection168(mount, _appState) {
                 <label><span data-i18n="view.s168.label.description">Description</span>
                     <input type="text" name="description" required></label>
                 <label><span data-i18n="view.s168.label.cost">Cost basis ($)</span>
-                    <input type="number" step="100" name="cost" required></label>
+                    <input type="number" step="0.01" name="cost" required></label>
                 <label><span data-i18n="view.s168.label.placed_year">Placed in service year</span>
                     <input type="number" step="1" name="placed_year" value="${new Date().getFullYear()}" required></label>
                 <label><span data-i18n="view.s168.label.placed_month">Placed in service month</span>

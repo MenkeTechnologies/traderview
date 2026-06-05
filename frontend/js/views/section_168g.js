@@ -61,7 +61,7 @@ export async function renderSection168g(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s168g.label.cost">Cost basis ($)</span>
-                    <input type="number" step="1000" name="cost_basis" value="${state.cost_basis}"></label>
+                    <input type="number" step="0.01" name="cost_basis" value="${state.cost_basis}"></label>
                 <label><span data-i18n="view.s168g.label.placed_year">Placed in service year</span>
                     <input type="number" step="1" name="placed_in_service_year" value="${state.placed_in_service_year}"></label>
                 <label><span data-i18n="view.s168g.label.business_use">Business use %</span>

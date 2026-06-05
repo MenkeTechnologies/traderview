@@ -43,9 +43,9 @@ export async function renderAlmgrenChriss(mount, _appState) {
             <h2 data-i18n="view.almgren_chriss.h2.parent_order">Parent order</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.almgren_chriss.label.total_shares">Total shares (signed; − for sell)</span>
-                    <input id="ac-X" type="number" step="any" value="${state.params.total_shares}" data-tip="view.almgren_chriss.tip.x"></label>
+                    <input id="ac-X" type="number" step="0.01" value="${state.params.total_shares}" data-tip="view.almgren_chriss.tip.x"></label>
                 <label><span data-i18n="view.almgren_chriss.label.horizon_seconds">Horizon (seconds)</span>
-                    <input id="ac-T" type="number" step="any" min="0" value="${state.params.horizon_seconds}" data-tip="view.almgren_chriss.tip.t"></label>
+                    <input id="ac-T" type="number" step="0.01" min="0" value="${state.params.horizon_seconds}" data-tip="view.almgren_chriss.tip.t"></label>
                 <label><span data-i18n="view.almgren_chriss.label.slices">Slices</span>
                     <input id="ac-n" type="number" step="1" min="1" max="2000" value="${state.params.n_intervals}" data-tip="view.almgren_chriss.tip.n"></label>
             </div>
@@ -55,13 +55,13 @@ export async function renderAlmgrenChriss(mount, _appState) {
             <h2 data-i18n="view.almgren_chriss.h2.impact_and_risk_parameters">Impact &amp; risk parameters</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.almgren_chriss.label.eta">η (temp impact)</span>
-                    <input id="ac-eta" type="number" step="any" min="0" value="${state.params.eta}" data-tip="view.almgren_chriss.tip.eta"></label>
+                    <input id="ac-eta" type="number" step="0.01" min="0" value="${state.params.eta}" data-tip="view.almgren_chriss.tip.eta"></label>
                 <label><span data-i18n="view.almgren_chriss.label.gamma">γ (perm impact)</span>
-                    <input id="ac-gamma" type="number" step="any" min="0" value="${state.params.gamma}" data-tip="view.almgren_chriss.tip.gamma"></label>
+                    <input id="ac-gamma" type="number" step="0.01" min="0" value="${state.params.gamma}" data-tip="view.almgren_chriss.tip.gamma"></label>
                 <label><span data-i18n="view.almgren_chriss.label.lambda">λ (risk aversion)</span>
-                    <input id="ac-lambda" type="number" step="any" min="0" value="${state.params.lambda}" data-tip="view.almgren_chriss.tip.lambda"></label>
+                    <input id="ac-lambda" type="number" step="0.01" min="0" value="${state.params.lambda}" data-tip="view.almgren_chriss.tip.lambda"></label>
                 <label><span data-i18n="view.almgren_chriss.label.sigma">σ (per-√s vol)</span>
-                    <input id="ac-sigma" type="number" step="any" min="0" value="${state.params.sigma}" data-tip="view.almgren_chriss.tip.sigma"></label>
+                    <input id="ac-sigma" type="number" step="0.01" min="0" value="${state.params.sigma}" data-tip="view.almgren_chriss.tip.sigma"></label>
                 <button data-i18n="view.almgren_chriss.btn.solve" id="ac-run" class="primary" type="button" data-tip="view.almgren_chriss.tip.run" data-shortcut="almgren_chriss_run">Solve</button>
                 <button data-i18n="view.almgren_chriss.btn.plot_frontier_sweep" id="ac-frontier" class="secondary" type="button" data-tip="view.almgren_chriss.tip.frontier" data-shortcut="almgren_chriss_frontier">+ Plot frontier (λ sweep)</button>
             </div>

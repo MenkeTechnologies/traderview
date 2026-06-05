@@ -41,7 +41,7 @@ export async function renderSection4945(mount, _appState) {
             <h2 data-i18n="view.s4945.h2.inputs">Inputs</h2>
             <form id="s4945-form" class="inline-form">
                 <label><span data-i18n="view.s4945.label.amount">Expenditure amount ($)</span>
-                    <input type="number" step="1000" name="expenditure_amount" value="${state.expenditure_amount}"></label>
+                    <input type="number" step="0.01" name="expenditure_amount" value="${state.expenditure_amount}"></label>
                 <label><span data-i18n="view.s4945.label.kind">Expenditure kind</span>
                     <select name="expenditure_kind">
                         <option value="individual_grant">Grant to individual</option>

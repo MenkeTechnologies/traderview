@@ -39,13 +39,13 @@ export async function renderSection1446F(mount, _appState) {
             <h2 data-i18n="view.s1446F.h2.inputs">Inputs</h2>
             <form id="s1446F-form" class="inline-form">
                 <label><span data-i18n="view.s1446F.label.amount">Amount realized ($)</span>
-                    <input type="number" step="10000" name="amount_realized" value="${state.amount_realized}"></label>
+                    <input type="number" step="0.01" name="amount_realized" value="${state.amount_realized}"></label>
                 <label><span data-i18n="view.s1446F.label.foreign">Transferor is foreign person?</span>
                     <input type="checkbox" name="transferor_is_foreign" ${state.transferor_is_foreign ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1446F.label.us_biz">Partnership conducts US business?</span>
                     <input type="checkbox" name="partnership_is_us_business" ${state.partnership_is_us_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1446F.label.eci">ECI portion amount ($)</span>
-                    <input type="number" step="10000" name="eci_portion_amount" value="${state.eci_portion_amount}"></label>
+                    <input type="number" step="0.01" name="eci_portion_amount" value="${state.eci_portion_amount}"></label>
                 <label><span data-i18n="view.s1446F.label.cert_us">Seller certified US person (W-9)?</span>
                     <input type="checkbox" name="seller_certification_us_person" ${state.seller_certification_us_person ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1446F.label.cert_no_eci">Seller certified no ECI portion?</span>
@@ -57,7 +57,7 @@ export async function renderSection1446F(mount, _appState) {
                 <label><span data-i18n="view.s1446F.label.cert_wh">Withholding certificate (8288-B equivalent)?</span>
                     <input type="checkbox" name="withholding_certificate_filed" ${state.withholding_certificate_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1446F.label.actual">Actual tax liability ($)</span>
-                    <input type="number" step="1000" name="actual_tax_liability" value="${state.actual_tax_liability}"></label>
+                    <input type="number" step="0.01" name="actual_tax_liability" value="${state.actual_tax_liability}"></label>
                 <label><span data-i18n="view.s1446F.label.days">Days since closing</span>
                     <input type="number" step="1" name="days_since_closing" value="${state.days_since_closing}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1446F.btn.compute">Compute</button>

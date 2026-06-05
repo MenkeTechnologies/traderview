@@ -45,13 +45,13 @@ export async function renderSection86(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s86.label.ss">SS benefits received ($)</span>
-                    <input type="number" step="100" name="ss_benefits" value="${state.ss_benefits}"></label>
+                    <input type="number" step="0.01" name="ss_benefits" value="${state.ss_benefits}"></label>
                 <label><span data-i18n="view.s86.label.other">Other income (pre-SS taxability) ($)</span>
-                    <input type="number" step="100" name="other_income_pre_ss" value="${state.other_income_pre_ss}"></label>
+                    <input type="number" step="0.01" name="other_income_pre_ss" value="${state.other_income_pre_ss}"></label>
                 <label><span data-i18n="view.s86.label.muni">Tax-exempt interest (muni bonds) ($)</span>
-                    <input type="number" step="100" name="tax_exempt_interest" value="${state.tax_exempt_interest}"></label>
+                    <input type="number" step="0.01" name="tax_exempt_interest" value="${state.tax_exempt_interest}"></label>
                 <label><span data-i18n="view.s86.label.adjustments">Above-line deductions ($)</span>
-                    <input type="number" step="100" name="above_line_deductions" value="${state.above_line_deductions}"></label>
+                    <input type="number" step="0.01" name="above_line_deductions" value="${state.above_line_deductions}"></label>
                 <label><span data-i18n="view.s86.label.marginal">Marginal rate</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s86.btn.compute">Compute</button>

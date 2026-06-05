@@ -50,9 +50,9 @@ export async function renderCrat(mount, _appState) {
             <h2 data-i18n="view.crat.h2.inputs">Inputs</h2>
             <form id="crat-form" class="inline-form">
                 <label><span data-i18n="view.crat.label.fmv">Asset FMV ($)</span>
-                    <input type="number" step="10000" name="asset_fmv" value="${state.asset_fmv}"></label>
+                    <input type="number" step="0.01" name="asset_fmv" value="${state.asset_fmv}"></label>
                 <label><span data-i18n="view.crat.label.basis">Asset basis ($)</span>
-                    <input type="number" step="1000" name="asset_basis" value="${state.asset_basis}"></label>
+                    <input type="number" step="0.01" name="asset_basis" value="${state.asset_basis}"></label>
                 <label><span data-i18n="view.crat.label.payout_pct">Annuity % of initial FMV</span>
                     <input type="number" step="0.005" name="annuity_pct_of_fmv" value="${state.annuity_pct_of_fmv}"></label>
                 <label><span data-i18n="view.crat.label.is_lifetime">Lifetime?</span>

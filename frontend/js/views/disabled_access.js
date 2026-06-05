@@ -55,13 +55,13 @@ export async function renderDisabledAccess(mount, _appState) {
             <h2 data-i18n="view.da.h2.inputs">Inputs</h2>
             <form id="da-form" class="inline-form">
                 <label><span data-i18n="view.da.label.gross_receipts">Prior year gross receipts ($)</span>
-                    <input type="number" step="1000" name="gross_receipts" value="${state.gross_receipts}"></label>
+                    <input type="number" step="0.01" name="gross_receipts" value="${state.gross_receipts}"></label>
                 <label><span data-i18n="view.da.label.fte">FTE employees</span>
                     <input type="number" step="1" name="fte_employees" value="${state.fte_employees}"></label>
                 <label><span data-i18n="view.da.label.expenditure">Eligible access expenditure ($)</span>
-                    <input type="number" step="100" name="eligible_expenditure" value="${state.eligible_expenditure}"></label>
+                    <input type="number" step="0.01" name="eligible_expenditure" value="${state.eligible_expenditure}"></label>
                 <label><span data-i18n="view.da.label.barrier">§ 190 barrier removal expenditure ($)</span>
-                    <input type="number" step="100" name="barrier_removal_expenditure" value="${state.barrier_removal_expenditure}"></label>
+                    <input type="number" step="0.01" name="barrier_removal_expenditure" value="${state.barrier_removal_expenditure}"></label>
                 <label><span data-i18n="view.da.label.marginal">Marginal tax %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.da.btn.compute">Compute</button>

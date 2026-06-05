@@ -68,9 +68,9 @@ export async function renderRisk(mount, state) {
             <h2 data-i18n="view.risk.h2.adjust_limits">Adjust limits</h2>
             <form id="risk-form" class="inline-form">
                 <label><span data-i18n="view.risk.label.goal">Daily profit goal</span>
-                    <input name="goal" type="number" step="any" value="${goal}" data-tip="view.risk.tip.goal_input"></label>
+                    <input name="goal" type="number" step="0.01" value="${goal}" data-tip="view.risk.tip.goal_input"></label>
                 <label><span data-i18n="view.risk.label.max_loss">Daily max loss</span>
-                    <input name="max" type="number" step="any" value="${maxLoss}" data-tip="view.risk.tip.max_input"></label>
+                    <input name="max" type="number" step="0.01" value="${maxLoss}" data-tip="view.risk.tip.max_input"></label>
                 <button data-i18n="view.risk.btn.save" data-tip="view.risk.tip.save" data-shortcut="risk_save" class="primary" type="submit">Save</button>
             </form>
         </div>

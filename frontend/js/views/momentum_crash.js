@@ -36,15 +36,15 @@ export async function renderMomentumCrash(mount, _appState) {
                 <label><span data-i18n="view.mcp.label.vol_lookback">Vol lookback (bars)</span>
                     <input id="mcp-vol-lb" type="number" step="1" min="5" value="${state.vol_lookback}" data-tip="view.mcp.tip.vol_lookback"></label>
                 <label><span data-i18n="view.mcp.label.target_vol">Target ann. vol</span>
-                    <input id="mcp-target" type="number" step="any" min="0.001" value="${state.target_annualized_vol}" data-tip="view.mcp.tip.target_vol"></label>
+                    <input id="mcp-target" type="number" step="0.01" min="0.001" value="${state.target_annualized_vol}" data-tip="view.mcp.tip.target_vol"></label>
                 <label><span data-i18n="view.mcp.label.periods">Periods / yr</span>
-                    <input id="mcp-periods" type="number" step="any" min="1" value="${state.periods_per_year}" data-tip="view.mcp.tip.periods"></label>
+                    <input id="mcp-periods" type="number" step="0.01" min="1" value="${state.periods_per_year}" data-tip="view.mcp.tip.periods"></label>
                 <label><span data-i18n="view.mcp.label.max_lev">Max leverage</span>
-                    <input id="mcp-max-lev" type="number" step="any" min="0.1" value="${state.max_leverage}" data-tip="view.mcp.tip.max_lev"></label>
+                    <input id="mcp-max-lev" type="number" step="0.01" min="0.1" value="${state.max_leverage}" data-tip="view.mcp.tip.max_lev"></label>
                 <label><span data-i18n="view.mcp.label.crash_lb">Crash lookback (bars)</span>
                     <input id="mcp-crash-lb" type="number" step="1" min="1" value="${state.crash_filter_lookback}" data-tip="view.mcp.tip.crash_lb"></label>
                 <label><span data-i18n="view.mcp.label.crash_thr">Crash threshold (decimal)</span>
-                    <input id="mcp-crash-thr" type="number" step="any" value="${state.crash_filter_threshold_pct}" data-tip="view.mcp.tip.crash_thr"></label>
+                    <input id="mcp-crash-thr" type="number" step="0.01" value="${state.crash_filter_threshold_pct}" data-tip="view.mcp.tip.crash_thr"></label>
                 <button data-i18n="view.mcp.btn.compute" id="mcp-run" class="primary"
                         data-tip="view.mcp.tip.compute" data-shortcut="momentum_crash_run" type="button">Manage</button>
             </div>

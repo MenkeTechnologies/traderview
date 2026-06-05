@@ -41,17 +41,17 @@ export async function renderSection2056(mount, _appState) {
                 <label><span data-i18n="view.s2056.label.us_citizen">Spouse US citizen?</span>
                     <input type="checkbox" name="spouse_is_us_citizen" ${state.spouse_is_us_citizen ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2056.label.gross_estate">Gross estate ($)</span>
-                    <input type="number" step="100000" name="gross_estate" value="${state.gross_estate}"></label>
+                    <input type="number" step="0.01" name="gross_estate" value="${state.gross_estate}"></label>
                 <label><span data-i18n="view.s2056.label.outright">Bequest to spouse OUTRIGHT ($)</span>
-                    <input type="number" step="100000" name="bequest_to_spouse_outright" value="${state.bequest_to_spouse_outright}"></label>
+                    <input type="number" step="0.01" name="bequest_to_spouse_outright" value="${state.bequest_to_spouse_outright}"></label>
                 <label><span data-i18n="view.s2056.label.qtip">QTIP trust to spouse ($)</span>
-                    <input type="number" step="100000" name="bequest_to_spouse_qtip" value="${state.bequest_to_spouse_qtip}"></label>
+                    <input type="number" step="0.01" name="bequest_to_spouse_qtip" value="${state.bequest_to_spouse_qtip}"></label>
                 <label><span data-i18n="view.s2056.label.qdot">QDOT trust (non-citizen) ($)</span>
-                    <input type="number" step="100000" name="bequest_to_qdot" value="${state.bequest_to_qdot}"></label>
+                    <input type="number" step="0.01" name="bequest_to_qdot" value="${state.bequest_to_qdot}"></label>
                 <label><span data-i18n="view.s2056.label.other">Other bequests (kids / charity) ($)</span>
-                    <input type="number" step="100000" name="other_bequests" value="${state.other_bequests}"></label>
+                    <input type="number" step="0.01" name="other_bequests" value="${state.other_bequests}"></label>
                 <label><span data-i18n="view.s2056.label.lifetime_used">Lifetime exemption used ($)</span>
-                    <input type="number" step="100000" name="deceased_lifetime_used" value="${state.deceased_lifetime_used}"></label>
+                    <input type="number" step="0.01" name="deceased_lifetime_used" value="${state.deceased_lifetime_used}"></label>
                 <label><span data-i18n="view.s2056.label.state_rate">State estate rate</span>
                     <input type="number" step="0.01" name="state_estate_rate" value="${state.state_estate_rate}"></label>
                 <label><span data-i18n="view.s2056.label.growth">Survivor estate growth %</span>

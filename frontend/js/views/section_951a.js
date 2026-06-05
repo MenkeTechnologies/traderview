@@ -35,15 +35,15 @@ export async function renderSection951A(mount, _appState) {
             <h2 data-i18n="view.s951A.h2.inputs">Inputs</h2>
             <form id="s951A-form" class="inline-form">
                 <label><span data-i18n="view.s951A.label.tested_income">CFC tested income ($)</span>
-                    <input type="number" step="1000" name="tested_income" value="${state.tested_income}"></label>
+                    <input type="number" step="0.01" name="tested_income" value="${state.tested_income}"></label>
                 <label><span data-i18n="view.s951A.label.tested_loss">CFC tested loss ($)</span>
-                    <input type="number" step="1000" name="tested_loss" value="${state.tested_loss}"></label>
+                    <input type="number" step="0.01" name="tested_loss" value="${state.tested_loss}"></label>
                 <label><span data-i18n="view.s951A.label.qbai">QBAI (adj basis of depreciable assets) ($)</span>
-                    <input type="number" step="1000" name="qbai" value="${state.qbai}"></label>
+                    <input type="number" step="0.01" name="qbai" value="${state.qbai}"></label>
                 <label><span data-i18n="view.s951A.label.int_exp">Interest expense allocated to QBAI ($)</span>
-                    <input type="number" step="100" name="interest_expense_allocated" value="${state.interest_expense_allocated}"></label>
+                    <input type="number" step="0.01" name="interest_expense_allocated" value="${state.interest_expense_allocated}"></label>
                 <label><span data-i18n="view.s951A.label.foreign_tax">Foreign tax on tested income ($)</span>
-                    <input type="number" step="100" name="foreign_tax_paid_on_tested" value="${state.foreign_tax_paid_on_tested}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid_on_tested" value="${state.foreign_tax_paid_on_tested}"></label>
                 <label><span data-i18n="view.s951A.label.corp">C-corp taxpayer?</span>
                     <input type="checkbox" name="corporate_taxpayer" ${state.corporate_taxpayer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s951A.label.s962">§ 962 election (individual)?</span>

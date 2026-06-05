@@ -33,7 +33,7 @@ export async function renderVolumeAtPrice(mount, _appState) {
                 <label><span data-i18n="view.vap.label.num_bins">Bins</span>
                     <input id="vap-bins" type="number" step="1" min="2" value="${state.num_bins}" data-tip="view.vap.tip.num_bins"></label>
                 <label><span data-i18n="view.vap.label.va_pct">Value-area %</span>
-                    <input id="vap-va" type="number" step="any" min="1" max="99.9" value="${state.value_area_pct}" data-tip="view.vap.tip.va_pct"></label>
+                    <input id="vap-va" type="number" step="0.01" min="1" max="99.9" value="${state.value_area_pct}" data-tip="view.vap.tip.va_pct"></label>
                 <button data-i18n="view.vap.btn.compute" id="vap-run" class="primary"
                         data-tip="view.vap.tip.compute" data-shortcut="volume_at_price_run" type="button">Build profile</button>
             </div>

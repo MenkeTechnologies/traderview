@@ -42,21 +42,21 @@ export async function renderSection332(mount, _appState) {
                 <label><span data-i18n="view.s332.label.ownership">Parent ownership %</span>
                     <input type="number" step="0.01" name="parent_ownership_pct" value="${state.parent_ownership_pct}"></label>
                 <label><span data-i18n="view.s332.label.fmv">Subsidiary FMV ($)</span>
-                    <input type="number" step="100000" name="subsidiary_fmv" value="${state.subsidiary_fmv}"></label>
+                    <input type="number" step="0.01" name="subsidiary_fmv" value="${state.subsidiary_fmv}"></label>
                 <label><span data-i18n="view.s332.label.inside">Subsidiary inside basis ($)</span>
-                    <input type="number" step="100000" name="subsidiary_inside_basis" value="${state.subsidiary_inside_basis}"></label>
+                    <input type="number" step="0.01" name="subsidiary_inside_basis" value="${state.subsidiary_inside_basis}"></label>
                 <label><span data-i18n="view.s332.label.outside">Parent outside basis in sub stock ($)</span>
-                    <input type="number" step="100000" name="parent_outside_basis" value="${state.parent_outside_basis}"></label>
+                    <input type="number" step="0.01" name="parent_outside_basis" value="${state.parent_outside_basis}"></label>
                 <label><span data-i18n="view.s332.label.nol">Sub NOL carryforward ($)</span>
-                    <input type="number" step="10000" name="sub_nol_carryforward" value="${state.sub_nol_carryforward}"></label>
+                    <input type="number" step="0.01" name="sub_nol_carryforward" value="${state.sub_nol_carryforward}"></label>
                 <label><span data-i18n="view.s332.label.ep">Sub E&P accumulated ($)</span>
-                    <input type="number" step="10000" name="sub_ep_accumulated" value="${state.sub_ep_accumulated}"></label>
+                    <input type="number" step="0.01" name="sub_ep_accumulated" value="${state.sub_ep_accumulated}"></label>
                 <label><span data-i18n="view.s332.label.ftc">Sub FTC carryforward ($)</span>
-                    <input type="number" step="10000" name="sub_ftc_carryforward" value="${state.sub_ftc_carryforward}"></label>
+                    <input type="number" step="0.01" name="sub_ftc_carryforward" value="${state.sub_ftc_carryforward}"></label>
                 <label><span data-i18n="view.s332.label.minority">Minority shareholders?</span>
                     <input type="checkbox" name="minority_shareholders" ${state.minority_shareholders ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s332.label.minority_amt">Minority share amount ($)</span>
-                    <input type="number" step="10000" name="minority_amount" value="${state.minority_amount}"></label>
+                    <input type="number" step="0.01" name="minority_amount" value="${state.minority_amount}"></label>
                 <label><span data-i18n="view.s332.label.insolvent">Sub insolvent (assets &lt; liab)?</span>
                     <input type="checkbox" name="insolvent_subsidiary" ${state.insolvent_subsidiary ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s332.label.plan">Plan of liquidation adopted?</span>

@@ -68,7 +68,7 @@ export async function renderResidencyDaycount(mount, _appState) {
                 <label><span data-i18n="view.res.label.domicile">Domicile state</span>
                     <input type="text" name="domicile_state" value="${state.domicile_state}" maxlength="2" required></label>
                 <label><span data-i18n="view.res.label.income">Estimated state-taxable income ($)</span>
-                    <input type="number" step="10000" name="estimated_income" value="${state.estimated_income}"></label>
+                    <input type="number" step="0.01" name="estimated_income" value="${state.estimated_income}"></label>
                 <button class="primary" type="submit" data-i18n="view.res.btn.update">Update</button>
             </form>
         </div>

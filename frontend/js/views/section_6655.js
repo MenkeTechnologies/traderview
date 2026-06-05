@@ -43,21 +43,21 @@ export async function renderSection6655(mount, _appState) {
             <h2 data-i18n="view.s6655.h2.inputs">Inputs</h2>
             <form id="s6655-form" class="inline-form">
                 <label><span data-i18n="view.s6655.label.current">Estimated current year tax ($)</span>
-                    <input type="number" step="1000" name="estimated_current_year_tax" value="${state.estimated_current_year_tax}"></label>
+                    <input type="number" step="0.01" name="estimated_current_year_tax" value="${state.estimated_current_year_tax}"></label>
                 <label><span data-i18n="view.s6655.label.prior">Prior year tax ($)</span>
-                    <input type="number" step="1000" name="prior_year_tax" value="${state.prior_year_tax}"></label>
+                    <input type="number" step="0.01" name="prior_year_tax" value="${state.prior_year_tax}"></label>
                 <label><span data-i18n="view.s6655.label.q1">Q1 installment paid ($)</span>
-                    <input type="number" step="1000" name="installment_paid_q1" value="${state.installment_paid_q1}"></label>
+                    <input type="number" step="0.01" name="installment_paid_q1" value="${state.installment_paid_q1}"></label>
                 <label><span data-i18n="view.s6655.label.q2">Q2 installment paid ($)</span>
-                    <input type="number" step="1000" name="installment_paid_q2" value="${state.installment_paid_q2}"></label>
+                    <input type="number" step="0.01" name="installment_paid_q2" value="${state.installment_paid_q2}"></label>
                 <label><span data-i18n="view.s6655.label.q3">Q3 installment paid ($)</span>
-                    <input type="number" step="1000" name="installment_paid_q3" value="${state.installment_paid_q3}"></label>
+                    <input type="number" step="0.01" name="installment_paid_q3" value="${state.installment_paid_q3}"></label>
                 <label><span data-i18n="view.s6655.label.q4">Q4 installment paid ($)</span>
-                    <input type="number" step="1000" name="installment_paid_q4" value="${state.installment_paid_q4}"></label>
+                    <input type="number" step="0.01" name="installment_paid_q4" value="${state.installment_paid_q4}"></label>
                 <label><span data-i18n="view.s6655.label.large">Large corp (≥ $1M TI)?</span>
                     <input type="checkbox" name="is_large_corp" ${state.is_large_corp ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6655.label.avg_ti">Avg taxable income 3-yr ($)</span>
-                    <input type="number" step="100000" name="avg_taxable_income_3yr" value="${state.avg_taxable_income_3yr}"></label>
+                    <input type="number" step="0.01" name="avg_taxable_income_3yr" value="${state.avg_taxable_income_3yr}"></label>
                 <label><span data-i18n="view.s6655.label.seasonal">Seasonal business?</span>
                     <input type="checkbox" name="seasonal_business" ${state.seasonal_business ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6655.label.annualized">Elect annualized income method?</span>
@@ -71,7 +71,7 @@ export async function renderSection6655(mount, _appState) {
                 <label><span data-i18n="view.s6655.label.new">New corp first year?</span>
                     <input type="checkbox" name="new_corp_first_year" ${state.new_corp_first_year ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6655.label.nol">NOL carryforward used ($)</span>
-                    <input type="number" step="10000" name="nol_carryforward_used" value="${state.nol_carryforward_used}"></label>
+                    <input type="number" step="0.01" name="nol_carryforward_used" value="${state.nol_carryforward_used}"></label>
                 <button class="primary" type="submit" data-i18n="view.s6655.btn.compute">Compute</button>
             </form>
         </div>

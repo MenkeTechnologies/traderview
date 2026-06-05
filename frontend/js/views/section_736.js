@@ -56,33 +56,33 @@ export async function renderSection736(mount, _appState) {
             <h2 data-i18n="view.s736.h2.inputs">Inputs</h2>
             <form id="s736-form" class="inline-form">
                 <label><span data-i18n="view.s736.label.total">Total payment ($)</span>
-                    <input type="number" step="10000" name="total_payment_amount" value="${state.total_payment_amount}"></label>
+                    <input type="number" step="0.01" name="total_payment_amount" value="${state.total_payment_amount}"></label>
                 <label><span data-i18n="view.s736.label.736a">§ 736(a) ordinary ($)</span>
-                    <input type="number" step="10000" name="s736_a_ordinary_portion" value="${state.s736_a_ordinary_portion}"></label>
+                    <input type="number" step="0.01" name="s736_a_ordinary_portion" value="${state.s736_a_ordinary_portion}"></label>
                 <label><span data-i18n="view.s736.label.736b">§ 736(b) capital ($)</span>
-                    <input type="number" step="10000" name="s736_b_capital_portion" value="${state.s736_b_capital_portion}"></label>
+                    <input type="number" step="0.01" name="s736_b_capital_portion" value="${state.s736_b_capital_portion}"></label>
                 <label><span data-i18n="view.s736.label.outside">Outside basis ($)</span>
-                    <input type="number" step="10000" name="partner_outside_basis" value="${state.partner_outside_basis}"></label>
+                    <input type="number" step="0.01" name="partner_outside_basis" value="${state.partner_outside_basis}"></label>
                 <label><span data-i18n="view.s736.label.capital_acct">Capital account ($)</span>
-                    <input type="number" step="10000" name="partner_capital_account" value="${state.partner_capital_account}"></label>
+                    <input type="number" step="0.01" name="partner_capital_account" value="${state.partner_capital_account}"></label>
                 <label><span data-i18n="view.s736.label.inside">Share of inside basis ($)</span>
-                    <input type="number" step="10000" name="partner_share_of_inside_basis" value="${state.partner_share_of_inside_basis}"></label>
+                    <input type="number" step="0.01" name="partner_share_of_inside_basis" value="${state.partner_share_of_inside_basis}"></label>
                 <label><span data-i18n="view.s736.label.retiring">Retiring?</span>
                     <input type="checkbox" name="is_retiring" ${state.is_retiring ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s736.label.deceased">Deceased?</span>
                     <input type="checkbox" name="is_deceased" ${state.is_deceased ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s736.label.property_pay">Property payments ($)</span>
-                    <input type="number" step="10000" name="s736_b_property_payments_partnership" value="${state.s736_b_property_payments_partnership}"></label>
+                    <input type="number" step="0.01" name="s736_b_property_payments_partnership" value="${state.s736_b_property_payments_partnership}"></label>
                 <label><span data-i18n="view.s736.label.unrealized">Unrealized receivables ($)</span>
-                    <input type="number" step="10000" name="s736_b_unrealized_receivables" value="${state.s736_b_unrealized_receivables}"></label>
+                    <input type="number" step="0.01" name="s736_b_unrealized_receivables" value="${state.s736_b_unrealized_receivables}"></label>
                 <label><span data-i18n="view.s736.label.inventory">Substantially appreciated inventory ($)</span>
-                    <input type="number" step="10000" name="s736_b_substantially_appreciated_inventory" value="${state.s736_b_substantially_appreciated_inventory}"></label>
+                    <input type="number" step="0.01" name="s736_b_substantially_appreciated_inventory" value="${state.s736_b_substantially_appreciated_inventory}"></label>
                 <label><span data-i18n="view.s736.label.goodwill_share">§ 736(a) goodwill share ($)</span>
-                    <input type="number" step="10000" name="s736_a_goodwill_share" value="${state.s736_a_goodwill_share}"></label>
+                    <input type="number" step="0.01" name="s736_a_goodwill_share" value="${state.s736_a_goodwill_share}"></label>
                 <label><span data-i18n="view.s736.label.unstated_gw">Unstated goodwill ($)</span>
-                    <input type="number" step="10000" name="s736_a_2_b_unstated_goodwill" value="${state.s736_a_2_b_unstated_goodwill}"></label>
+                    <input type="number" step="0.01" name="s736_a_2_b_unstated_goodwill" value="${state.s736_a_2_b_unstated_goodwill}"></label>
                 <label><span data-i18n="view.s736.label.goodwill_if">Goodwill (if provided in agmt) ($)</span>
-                    <input type="number" step="10000" name="s736_b_goodwill_if_provided" value="${state.s736_b_goodwill_if_provided}"></label>
+                    <input type="number" step="0.01" name="s736_b_goodwill_if_provided" value="${state.s736_b_goodwill_if_provided}"></label>
                 <label><span data-i18n="view.s736.label.gp">General partner?</span>
                     <input type="checkbox" name="is_general_partner" ${state.is_general_partner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s736.label.capital_ps">Capital-intensive PS?</span>
@@ -90,11 +90,11 @@ export async function renderSection736(mount, _appState) {
                 <label><span data-i18n="view.s736.label.service_ps">Service PS?</span>
                     <input type="checkbox" name="is_service_partnership" ${state.is_service_partnership ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s736.label.b2_ur">§ 736(b)(2) UR amount ($)</span>
-                    <input type="number" step="10000" name="s736_b_2_unrealized_receivables_amount" value="${state.s736_b_2_unrealized_receivables_amount}"></label>
+                    <input type="number" step="0.01" name="s736_b_2_unrealized_receivables_amount" value="${state.s736_b_2_unrealized_receivables_amount}"></label>
                 <label><span data-i18n="view.s736.label.b2_inv">§ 736(b)(2) inventory ($)</span>
-                    <input type="number" step="10000" name="s736_b_2_inventory_amount" value="${state.s736_b_2_inventory_amount}"></label>
+                    <input type="number" step="0.01" name="s736_b_2_inventory_amount" value="${state.s736_b_2_inventory_amount}"></label>
                 <label><span data-i18n="view.s736.label.excess">§ 736(c) excess ($)</span>
-                    <input type="number" step="10000" name="s736_c_payments_excess" value="${state.s736_c_payments_excess}"></label>
+                    <input type="number" step="0.01" name="s736_c_payments_excess" value="${state.s736_c_payments_excess}"></label>
                 <label><span data-i18n="view.s736.label.year">Year</span>
                     <input type="number" step="1" name="payments_year" value="${state.payments_year}"></label>
                 <label><span data-i18n="view.s736.label.installments">Installments?</span>

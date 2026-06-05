@@ -41,7 +41,7 @@ export async function renderSection168k(mount, _appState) {
                 <label><span data-i18n="view.s168k.label.placed_year">Placed in service year</span>
                     <input type="number" step="1" name="placed_year" value="${state.placed_year}"></label>
                 <label><span data-i18n="view.s168k.label.cost">Asset cost ($)</span>
-                    <input type="number" step="100" name="asset_cost" value="${state.asset_cost}"></label>
+                    <input type="number" step="0.01" name="asset_cost" value="${state.asset_cost}"></label>
                 <label><span data-i18n="view.s168k.label.class_years">MACRS class (years)</span>
                     <select name="asset_class_years">
                         <option value="3" ${state.asset_class_years === 3 ? 'selected' : ''}>3 (tools, racehorses)</option>
@@ -58,7 +58,7 @@ export async function renderSection168k(mount, _appState) {
                 <label><span data-i18n="view.s168k.label.elect_179">Take § 179 first?</span>
                     <input type="checkbox" name="elect_section_179" ${state.elect_section_179 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s168k.label.179_amount">§ 179 amount ($)</span>
-                    <input type="number" step="100" name="section_179_amount" value="${state.section_179_amount}"></label>
+                    <input type="number" step="0.01" name="section_179_amount" value="${state.section_179_amount}"></label>
                 <label><span data-i18n="view.s168k.label.marginal">Marginal tax %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s168k.btn.compute">Compute</button>

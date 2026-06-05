@@ -46,7 +46,7 @@ export async function renderTaxLossHarvest(mount, _appState) {
                 <label><span data-i18n="view.tax_loss_harvest.label.today">Today</span>
                     <input id="tlh-today" type="date" value="${esc(state.today)}" data-tip="view.tax_loss_harvest.tip.today"></label>
                 <label><span data-i18n="view.tax_loss_harvest.label.ytd">YTD realized loss ($)</span>
-                    <input id="tlh-ytd" type="number" step="any" value="${state.realized_loss_ytd}" data-tip="view.tax_loss_harvest.tip.ytd"></label>
+                    <input id="tlh-ytd" type="number" step="0.01" value="${state.realized_loss_ytd}" data-tip="view.tax_loss_harvest.tip.ytd"></label>
                 <label><span data-i18n="view.tax_loss_harvest.label.mtm">MTM §475(f) elected?</span>
                     <input id="tlh-mtm" type="checkbox" ${state.mtm_elected ? 'checked' : ''} data-tip="view.tax_loss_harvest.tip.mtm"></label>
                 <button data-i18n="view.tax_loss_harvest.btn.suggest" id="tlh-run" class="primary"

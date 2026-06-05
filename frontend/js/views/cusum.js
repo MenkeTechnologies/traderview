@@ -51,13 +51,13 @@ export async function renderCusum(mount, _appState) {
             <h2 data-i18n="view.cusum.h2.config">Config</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.cusum.label.ref_mean">Reference mean</span>
-                    <input id="cu-mean" type="number" step="any" value="${state.config.reference_mean}" data-tip="view.cusum.tip.mean"></label>
+                    <input id="cu-mean" type="number" step="0.01" value="${state.config.reference_mean}" data-tip="view.cusum.tip.mean"></label>
                 <label><span data-i18n="view.cusum.label.ref_stdev">Reference stdev</span>
-                    <input id="cu-sd" type="number" step="any" min="0" value="${state.config.reference_stdev}" data-tip="view.cusum.tip.sd"></label>
+                    <input id="cu-sd" type="number" step="0.01" min="0" value="${state.config.reference_stdev}" data-tip="view.cusum.tip.sd"></label>
                 <label><span data-i18n="view.cusum.label.threshold">Threshold (stdevs)</span>
-                    <input id="cu-thr" type="number" step="any" min="0" value="${state.config.threshold_stdevs}" data-tip="view.cusum.tip.thr"></label>
+                    <input id="cu-thr" type="number" step="0.01" min="0" value="${state.config.threshold_stdevs}" data-tip="view.cusum.tip.thr"></label>
                 <label><span data-i18n="view.cusum.label.slack">Slack</span>
-                    <input id="cu-slk" type="number" step="any" min="0" value="${state.config.slack}" data-tip="view.cusum.tip.slk"></label>
+                    <input id="cu-slk" type="number" step="0.01" min="0" value="${state.config.slack}" data-tip="view.cusum.tip.slk"></label>
                 <button data-i18n="view.cusum.btn.detect" data-tip="view.cusum.tip.detect" data-shortcut="cusum_detect" id="cu-run" class="primary" type="button">Detect</button>
             </div>
             <p data-i18n="view.cusum.hint.threshold_stdevs_reference_stdev_trigger_level_sla" class="muted">

@@ -41,15 +41,15 @@ export async function renderSection1015(mount, _appState) {
             <h2 data-i18n="view.s1015.h2.inputs">Inputs</h2>
             <form id="s1015-form" class="inline-form">
                 <label><span data-i18n="view.s1015.label.donor">Donor's adjusted basis ($)</span>
-                    <input type="number" step="1000" name="donor_basis" value="${state.donor_basis}"></label>
+                    <input type="number" step="0.01" name="donor_basis" value="${state.donor_basis}"></label>
                 <label><span data-i18n="view.s1015.label.fmv">FMV at gift date ($)</span>
-                    <input type="number" step="1000" name="fmv_at_gift" value="${state.fmv_at_gift}"></label>
+                    <input type="number" step="0.01" name="fmv_at_gift" value="${state.fmv_at_gift}"></label>
                 <label><span data-i18n="view.s1015.label.sale">Sale price by donee ($)</span>
-                    <input type="number" step="1000" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s1015.label.gift_tax">Gift tax paid by donor ($)</span>
-                    <input type="number" step="100" name="gift_tax_paid" value="${state.gift_tax_paid}"></label>
+                    <input type="number" step="0.01" name="gift_tax_paid" value="${state.gift_tax_paid}"></label>
                 <label><span data-i18n="view.s1015.label.annual">Annual exclusion used ($)</span>
-                    <input type="number" step="1000" name="annual_exclusion_used" value="${state.annual_exclusion_used}"></label>
+                    <input type="number" step="0.01" name="annual_exclusion_used" value="${state.annual_exclusion_used}"></label>
                 <label><span data-i18n="view.s1015.label.holding">Donor's holding period (days)</span>
                     <input type="number" step="1" name="donor_holding_period_days" value="${state.donor_holding_period_days}"></label>
                 <label><span data-i18n="view.s1015.label.appreciated">Appreciated property?</span>
@@ -61,7 +61,7 @@ export async function renderSection1015(mount, _appState) {
                 <label><span data-i18n="view.s1015.label.acq_year">Donor acquired year</span>
                     <input type="number" step="1" name="donor_acquired_year" value="${state.donor_acquired_year}"></label>
                 <label><span data-i18n="view.s1015.label.exclusion_2025">Annual exclusion 2025 ($)</span>
-                    <input type="number" step="500" name="annual_exclusion_2025" value="${state.annual_exclusion_2025}"></label>
+                    <input type="number" step="0.01" name="annual_exclusion_2025" value="${state.annual_exclusion_2025}"></label>
                 <label><span data-i18n="view.s1015.label.related">Related party donor?</span>
                     <input type="checkbox" name="related_party_donor" ${state.related_party_donor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1015.label.spousal">Spousal gift (§ 1041)?</span>

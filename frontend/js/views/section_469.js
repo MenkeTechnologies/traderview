@@ -46,13 +46,13 @@ export async function renderSection469(mount, _appState) {
             <h2 data-i18n="view.s469.h2.activity_inputs">Activity inputs</h2>
             <form id="s469-form" class="inline-form">
                 <label><span data-i18n="view.s469.label.rental_loss">Current-year rental loss ($)</span>
-                    <input type="number" step="100" name="rental_loss" value="${state.rental_loss}"></label>
+                    <input type="number" step="0.01" name="rental_loss" value="${state.rental_loss}"></label>
                 <label><span data-i18n="view.s469.label.rental_income">Current-year rental income ($)</span>
-                    <input type="number" step="100" name="rental_income" value="${state.rental_income}"></label>
+                    <input type="number" step="0.01" name="rental_income" value="${state.rental_income}"></label>
                 <label><span data-i18n="view.s469.label.other_passive_income">Other passive income (K-1 LP, etc.) ($)</span>
-                    <input type="number" step="100" name="other_passive_income" value="${state.other_passive_income}"></label>
+                    <input type="number" step="0.01" name="other_passive_income" value="${state.other_passive_income}"></label>
                 <label><span data-i18n="view.s469.label.suspended">Suspended PAL carryover ($)</span>
-                    <input type="number" step="100" name="suspended_pal_carryover" value="${state.suspended_pal_carryover}"></label>
+                    <input type="number" step="0.01" name="suspended_pal_carryover" value="${state.suspended_pal_carryover}"></label>
                 <hr style="grid-column:1/-1">
                 <label><span data-i18n="view.s469.label.hours_rentals">Your hours in real estate this year</span>
                     <input type="number" step="1" name="hours_in_rentals" value="${state.hours_in_rentals}"></label>

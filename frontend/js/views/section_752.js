@@ -53,55 +53,55 @@ export async function renderSection752(mount, _appState) {
             <h2 data-i18n="view.s752.h2.inputs">Inputs</h2>
             <form id="s752-form" class="inline-form">
                 <label><span data-i18n="view.s752.label.start_basis">Outside basis start ($)</span>
-                    <input type="number" step="10000" name="partner_outside_basis_start" value="${state.partner_outside_basis_start}"></label>
+                    <input type="number" step="0.01" name="partner_outside_basis_start" value="${state.partner_outside_basis_start}"></label>
                 <label><span data-i18n="view.s752.label.cap_account">§ 704(b) capital account ($)</span>
-                    <input type="number" step="10000" name="partner_capital_account" value="${state.partner_capital_account}"></label>
+                    <input type="number" step="0.01" name="partner_capital_account" value="${state.partner_capital_account}"></label>
                 <label><span data-i18n="view.s752.label.profit_pct">Profit share %</span>
                     <input type="number" step="0.1" name="profit_share_pct" value="${state.profit_share_pct}"></label>
                 <label><span data-i18n="view.s752.label.loss_pct">Loss share %</span>
                     <input type="number" step="0.1" name="loss_share_pct" value="${state.loss_share_pct}"></label>
                 <label><span data-i18n="view.s752.label.total_recourse">Total recourse liabilities ($)</span>
-                    <input type="number" step="10000" name="total_recourse_liabilities" value="${state.total_recourse_liabilities}"></label>
+                    <input type="number" step="0.01" name="total_recourse_liabilities" value="${state.total_recourse_liabilities}"></label>
                 <label><span data-i18n="view.s752.label.share_recourse">Partner share recourse EOY ($)</span>
-                    <input type="number" step="10000" name="partner_share_recourse_eoy" value="${state.partner_share_recourse_eoy}"></label>
+                    <input type="number" step="0.01" name="partner_share_recourse_eoy" value="${state.partner_share_recourse_eoy}"></label>
                 <label><span data-i18n="view.s752.label.total_nr">Total nonrecourse ($)</span>
-                    <input type="number" step="10000" name="total_nonrecourse_liabilities" value="${state.total_nonrecourse_liabilities}"></label>
+                    <input type="number" step="0.01" name="total_nonrecourse_liabilities" value="${state.total_nonrecourse_liabilities}"></label>
                 <label><span data-i18n="view.s752.label.share_nr">Partner share NR EOY ($)</span>
-                    <input type="number" step="10000" name="partner_share_nonrecourse_eoy" value="${state.partner_share_nonrecourse_eoy}"></label>
+                    <input type="number" step="0.01" name="partner_share_nonrecourse_eoy" value="${state.partner_share_nonrecourse_eoy}"></label>
                 <label><span data-i18n="view.s752.label.qnr">Qualified NR financing ($)</span>
-                    <input type="number" step="10000" name="qualified_nonrecourse_financing" value="${state.qualified_nonrecourse_financing}"></label>
+                    <input type="number" step="0.01" name="qualified_nonrecourse_financing" value="${state.qualified_nonrecourse_financing}"></label>
                 <label><span data-i18n="view.s752.label.is_qnr">Real estate QNR?</span>
                     <input type="checkbox" name="is_real_estate_qnr" ${state.is_real_estate_qnr ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s752.label.mg_start">Min gain start ($)</span>
-                    <input type="number" step="10000" name="starts_with_minimum_gain" value="${state.starts_with_minimum_gain}"></label>
+                    <input type="number" step="0.01" name="starts_with_minimum_gain" value="${state.starts_with_minimum_gain}"></label>
                 <label><span data-i18n="view.s752.label.mg_end">Min gain end ($)</span>
-                    <input type="number" step="10000" name="ends_with_minimum_gain" value="${state.ends_with_minimum_gain}"></label>
+                    <input type="number" step="0.01" name="ends_with_minimum_gain" value="${state.ends_with_minimum_gain}"></label>
                 <label><span data-i18n="view.s752.label.s704b">§ 704(b) book capital ($)</span>
-                    <input type="number" step="10000" name="s704_b_book_capital" value="${state.s704_b_book_capital}"></label>
+                    <input type="number" step="0.01" name="s704_b_book_capital" value="${state.s704_b_book_capital}"></label>
                 <label><span data-i18n="view.s752.label.s752a">§ 752(a) increase ($)</span>
-                    <input type="number" step="10000" name="s752_a_increase" value="${state.s752_a_increase}"></label>
+                    <input type="number" step="0.01" name="s752_a_increase" value="${state.s752_a_increase}"></label>
                 <label><span data-i18n="view.s752.label.s752b">§ 752(b) decrease ($)</span>
-                    <input type="number" step="10000" name="s752_b_decrease" value="${state.s752_b_decrease}"></label>
+                    <input type="number" step="0.01" name="s752_b_decrease" value="${state.s752_b_decrease}"></label>
                 <label><span data-i18n="view.s752.label.disregarded">Disregarded entity?</span>
                     <input type="checkbox" name="is_disregarded_entity" ${state.is_disregarded_entity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s752.label.guarantee">Partner guarantee ($)</span>
-                    <input type="number" step="10000" name="partner_guarantee" value="${state.partner_guarantee}"></label>
+                    <input type="number" step="0.01" name="partner_guarantee" value="${state.partner_guarantee}"></label>
                 <label><span data-i18n="view.s752.label.bottom_dollar">Bottom-dollar guarantee?</span>
                     <input type="checkbox" name="bottom_dollar_guarantee" ${state.bottom_dollar_guarantee ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s752.label.at_risk">At-risk partner?</span>
                     <input type="checkbox" name="is_atrisk_partner" ${state.is_atrisk_partner ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s752.label.s465">§ 465 at-risk basis ($)</span>
-                    <input type="number" step="10000" name="s465_at_risk_basis" value="${state.s465_at_risk_basis}"></label>
+                    <input type="number" step="0.01" name="s465_at_risk_basis" value="${state.s465_at_risk_basis}"></label>
                 <label><span data-i18n="view.s752.label.s704d3">§ 704(d)(3) share ($)</span>
-                    <input type="number" step="10000" name="s7041d_3_share" value="${state.s7041d_3_share}"></label>
+                    <input type="number" step="0.01" name="s7041d_3_share" value="${state.s7041d_3_share}"></label>
                 <label><span data-i18n="view.s752.label.recourse_default">Recourse default?</span>
                     <input type="checkbox" name="is_recourse_default" ${state.is_recourse_default ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s752.label.nr_t1">NR tier 1 (min gain) ($)</span>
-                    <input type="number" step="10000" name="nonrecourse_first_tier" value="${state.nonrecourse_first_tier}"></label>
+                    <input type="number" step="0.01" name="nonrecourse_first_tier" value="${state.nonrecourse_first_tier}"></label>
                 <label><span data-i18n="view.s752.label.nr_t2">NR tier 2 (§ 704(c)) ($)</span>
-                    <input type="number" step="10000" name="nonrecourse_second_tier" value="${state.nonrecourse_second_tier}"></label>
+                    <input type="number" step="0.01" name="nonrecourse_second_tier" value="${state.nonrecourse_second_tier}"></label>
                 <label><span data-i18n="view.s752.label.nr_t3">NR tier 3 (excess) ($)</span>
-                    <input type="number" step="10000" name="nonrecourse_third_tier" value="${state.nonrecourse_third_tier}"></label>
+                    <input type="number" step="0.01" name="nonrecourse_third_tier" value="${state.nonrecourse_third_tier}"></label>
                 <button class="primary" type="submit" data-i18n="view.s752.btn.compute">Compute</button>
             </form>
         </div>

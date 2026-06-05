@@ -68,25 +68,25 @@ export async function renderSection1245(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1245.label.cost">Original cost ($)</span>
-                    <input type="number" step="1000" name="original_cost" value="${state.original_cost}"></label>
+                    <input type="number" step="0.01" name="original_cost" value="${state.original_cost}"></label>
                 <label><span data-i18n="view.s1245.label.accumulated">Accumulated depreciation ($)</span>
-                    <input type="number" step="1000" name="accumulated_depreciation" value="${state.accumulated_depreciation}"></label>
+                    <input type="number" step="0.01" name="accumulated_depreciation" value="${state.accumulated_depreciation}"></label>
                 <label><span data-i18n="view.s1245.label.s179">§ 179 expensing ($)</span>
-                    <input type="number" step="1000" name="s179_expensing" value="${state.s179_expensing}"></label>
+                    <input type="number" step="0.01" name="s179_expensing" value="${state.s179_expensing}"></label>
                 <label><span data-i18n="view.s1245.label.bonus">Bonus depreciation ($)</span>
-                    <input type="number" step="1000" name="bonus_depreciation" value="${state.bonus_depreciation}"></label>
+                    <input type="number" step="0.01" name="bonus_depreciation" value="${state.bonus_depreciation}"></label>
                 <label><span data-i18n="view.s1245.label.proceeds">Sale proceeds ($)</span>
-                    <input type="number" step="1000" name="sale_proceeds" value="${state.sale_proceeds}"></label>
+                    <input type="number" step="0.01" name="sale_proceeds" value="${state.sale_proceeds}"></label>
                 <label><span data-i18n="view.s1245.label.basis">Adjusted basis ($)</span>
-                    <input type="number" step="1000" name="adjusted_basis" value="${state.adjusted_basis}"></label>
+                    <input type="number" step="0.01" name="adjusted_basis" value="${state.adjusted_basis}"></label>
                 <label><span data-i18n="view.s1245.label.gain">Realized gain ($)</span>
-                    <input type="number" step="1000" name="realized_gain" value="${state.realized_gain}"></label>
+                    <input type="number" step="0.01" name="realized_gain" value="${state.realized_gain}"></label>
                 <label><span data-i18n="view.s1245.label.potential">Recapture potential ($)</span>
-                    <input type="number" step="1000" name="recapture_potential" value="${state.recapture_potential}"></label>
+                    <input type="number" step="0.01" name="recapture_potential" value="${state.recapture_potential}"></label>
                 <label><span data-i18n="view.s1245.label.ordinary">§ 1245 ordinary ($)</span>
-                    <input type="number" step="1000" name="s1245_gain_ordinary" value="${state.s1245_gain_ordinary}"></label>
+                    <input type="number" step="0.01" name="s1245_gain_ordinary" value="${state.s1245_gain_ordinary}"></label>
                 <label><span data-i18n="view.s1245.label.capital">§ 1231 capital ($)</span>
-                    <input type="number" step="1000" name="s1231_gain_capital" value="${state.s1231_gain_capital}"></label>
+                    <input type="number" step="0.01" name="s1231_gain_capital" value="${state.s1231_gain_capital}"></label>
                 <label><span data-i18n="view.s1245.label.holding">Holding period (months)</span>
                     <input type="number" step="1" name="holding_period_months" value="${state.holding_period_months}"></label>
                 <label><span data-i18n="view.s1245.label.s1245">Is § 1245 property?</span>
@@ -94,11 +94,11 @@ export async function renderSection1245(mount, _appState) {
                 <label><span data-i18n="view.s1245.label.like_kind">Like-kind exchange?</span>
                     <input type="checkbox" name="is_like_kind_exchange" ${state.is_like_kind_exchange ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.boot">Boot received ($)</span>
-                    <input type="number" step="1000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s1245.label.installment">Installment sale?</span>
                     <input type="checkbox" name="installment_sale" ${state.installment_sale ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.payments">Installment payments ($)</span>
-                    <input type="number" step="1000" name="installment_payments" value="${state.installment_payments}"></label>
+                    <input type="number" step="0.01" name="installment_payments" value="${state.installment_payments}"></label>
                 <label><span data-i18n="view.s1245.label.personal">Personal property?</span>
                     <input type="checkbox" name="is_personal_property" ${state.is_personal_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.intangible">Intangible?</span>
@@ -106,7 +106,7 @@ export async function renderSection1245(mount, _appState) {
                 <label><span data-i18n="view.s1245.label.s197">§ 197 amortizable?</span>
                     <input type="checkbox" name="is_amortizable_s197" ${state.is_amortizable_s197 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.s197_amt">§ 197 amortization ($)</span>
-                    <input type="number" step="1000" name="s197_amortization" value="${state.s197_amortization}"></label>
+                    <input type="number" step="0.01" name="s197_amortization" value="${state.s197_amortization}"></label>
                 <label><span data-i18n="view.s1245.label.acrs">ACRS pre-1981?</span>
                     <input type="checkbox" name="is_acrs_pre_1981" ${state.is_acrs_pre_1981 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.qrp">Qualified real property?</span>
@@ -116,7 +116,7 @@ export async function renderSection1245(mount, _appState) {
                 <label><span data-i18n="view.s1245.label.casualty">Casualty / theft?</span>
                     <input type="checkbox" name="casualty_or_theft" ${state.casualty_or_theft ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1245.label.insurance">Insurance ($)</span>
-                    <input type="number" step="1000" name="insurance_proceeds" value="${state.insurance_proceeds}"></label>
+                    <input type="number" step="0.01" name="insurance_proceeds" value="${state.insurance_proceeds}"></label>
                 <label><span data-i18n="view.s1245.label.s1033">§ 1033 replacement?</span>
                     <input type="checkbox" name="s1033_replacement" ${state.s1033_replacement ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s1245.btn.compute">Compute</button>

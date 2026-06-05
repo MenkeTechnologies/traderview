@@ -43,7 +43,7 @@ export async function renderSection483(mount, _appState) {
             <h2 data-i18n="view.s483.h2.inputs">Inputs</h2>
             <form id="s483-form" class="inline-form">
                 <label><span data-i18n="view.s483.label.price">Sale price total ($)</span>
-                    <input type="number" step="10000" name="sale_price_total" value="${state.sale_price_total}"></label>
+                    <input type="number" step="0.01" name="sale_price_total" value="${state.sale_price_total}"></label>
                 <label><span data-i18n="view.s483.label.stated">Stated interest rate %</span>
                     <input type="number" step="0.01" name="stated_interest_rate_pct" value="${state.stated_interest_rate_pct}"></label>
                 <label><span data-i18n="view.s483.label.afr">Test AFR rate %</span>
@@ -51,7 +51,7 @@ export async function renderSection483(mount, _appState) {
                 <label><span data-i18n="view.s483.label.years">Payment term years</span>
                     <input type="number" step="0.5" name="payment_term_years" value="${state.payment_term_years}"></label>
                 <label><span data-i18n="view.s483.label.annual">Annual payment ($)</span>
-                    <input type="number" step="100" name="annual_payment" value="${state.annual_payment}"></label>
+                    <input type="number" step="0.01" name="annual_payment" value="${state.annual_payment}"></label>
                 <label><span data-i18n="view.s483.label.election">§ 453 installment election?</span>
                     <input type="checkbox" name="installment_sale_election" ${state.installment_sale_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s483.label.related">Related party?</span>
@@ -70,9 +70,9 @@ export async function renderSection483(mount, _appState) {
                 <label><span data-i18n="view.s483.label.publicly">Publicly traded debt?</span>
                     <input type="checkbox" name="is_publicly_traded_debt" ${state.is_publicly_traded_debt ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s483.label.fmv">FMV at sale ($)</span>
-                    <input type="number" step="10000" name="fmv_at_sale" value="${state.fmv_at_sale}"></label>
+                    <input type="number" step="0.01" name="fmv_at_sale" value="${state.fmv_at_sale}"></label>
                 <label><span data-i18n="view.s483.label.basis">Seller cost basis ($)</span>
-                    <input type="number" step="10000" name="seller_cost_basis" value="${state.seller_cost_basis}"></label>
+                    <input type="number" step="0.01" name="seller_cost_basis" value="${state.seller_cost_basis}"></label>
                 <label><span data-i18n="view.s483.label.holding">Holding period years</span>
                     <input type="number" step="0.5" name="holding_period_years" value="${state.holding_period_years}"></label>
                 <label><span data-i18n="view.s483.label.date">Sale date</span>

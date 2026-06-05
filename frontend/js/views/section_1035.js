@@ -60,19 +60,19 @@ export async function renderSection1035(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s1035.label.cash_value">Old contract cash value ($)</span>
-                    <input type="number" step="1000" name="old_cash_value" value="${state.old_cash_value}"></label>
+                    <input type="number" step="0.01" name="old_cash_value" value="${state.old_cash_value}"></label>
                 <label><span data-i18n="view.s1035.label.basis">Old contract basis ($)</span>
-                    <input type="number" step="1000" name="old_basis" value="${state.old_basis}"></label>
+                    <input type="number" step="0.01" name="old_basis" value="${state.old_basis}"></label>
                 <label><span data-i18n="view.s1035.label.boot">Boot received ($)</span>
-                    <input type="number" step="100" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s1035.label.loan">Outstanding loan extinguished ($)</span>
-                    <input type="number" step="100" name="loan_extinguished" value="${state.loan_extinguished}"></label>
+                    <input type="number" step="0.01" name="loan_extinguished" value="${state.loan_extinguished}"></label>
                 <label><span data-i18n="view.s1035.label.mec">Old contract is MEC?</span>
                     <input type="checkbox" name="is_mec" ${state.is_mec ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1035.label.partial">Partial exchange?</span>
                     <input type="checkbox" name="has_partial_exchange" ${state.has_partial_exchange ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1035.label.partial_amount">Partial amount ($)</span>
-                    <input type="number" step="1000" name="partial_amount" value="${state.partial_amount}"></label>
+                    <input type="number" step="0.01" name="partial_amount" value="${state.partial_amount}"></label>
                 <label><span data-i18n="view.s1035.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s1035.btn.compute">Compute</button>

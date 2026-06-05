@@ -37,21 +37,21 @@ export async function renderSection6321(mount, _appState) {
             <h2 data-i18n="view.s6321.h2.inputs">Inputs</h2>
             <form id="s6321-form" class="inline-form">
                 <label><span data-i18n="view.s6321.label.tax">Assessed tax ($)</span>
-                    <input type="number" step="1000" name="assessed_tax" value="${state.assessed_tax}"></label>
+                    <input type="number" step="0.01" name="assessed_tax" value="${state.assessed_tax}"></label>
                 <label><span data-i18n="view.s6321.label.penalty">Penalty + interest ($)</span>
-                    <input type="number" step="100" name="penalty_interest" value="${state.penalty_interest}"></label>
+                    <input type="number" step="0.01" name="penalty_interest" value="${state.penalty_interest}"></label>
                 <label><span data-i18n="view.s6321.label.nftl">NFTL filed?</span>
                     <input type="checkbox" name="has_nftl_filed" ${state.has_nftl_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6321.label.months">Months since filing</span>
                     <input type="number" step="1" name="months_since_filing" value="${state.months_since_filing}"></label>
                 <label><span data-i18n="view.s6321.label.prior_secured">Prior secured creditors ($)</span>
-                    <input type="number" step="1000" name="secured_creditors_existed_prior" value="${state.secured_creditors_existed_prior}"></label>
+                    <input type="number" step="0.01" name="secured_creditors_existed_prior" value="${state.secured_creditors_existed_prior}"></label>
                 <label><span data-i18n="view.s6321.label.spouse">Spouse owns 50%+ jointly?</span>
                     <input type="checkbox" name="spouse_owns_50_pct" ${state.spouse_owns_50_pct ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6321.label.homestead">Homestead value ($)</span>
-                    <input type="number" step="10000" name="homestead_value" value="${state.homestead_value}"></label>
+                    <input type="number" step="0.01" name="homestead_value" value="${state.homestead_value}"></label>
                 <label><span data-i18n="view.s6321.label.mortgage">Outstanding mortgage ($)</span>
-                    <input type="number" step="10000" name="homestead_outstanding_mortgage" value="${state.homestead_outstanding_mortgage}"></label>
+                    <input type="number" step="0.01" name="homestead_outstanding_mortgage" value="${state.homestead_outstanding_mortgage}"></label>
                 <label><span data-i18n="view.s6321.label.business">Business property?</span>
                     <input type="checkbox" name="is_business_property" ${state.is_business_property ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s6321.btn.compute">Compute</button>

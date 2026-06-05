@@ -30,7 +30,7 @@ export async function renderVarEstimator(mount, _appState) {
             <textarea id="var-blob" rows="6" placeholder="0.005&#10;-0.012&#10;0.003&#10;-0.5%&#10;..." data-tip="view.var_estimator.tip.blob">${esc(returnsToBlob(state.returns))}</textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.var_estimator.label.position_value">Position value ($)</span>
-                    <input id="var-pv" type="number" step="any" min="0" value="${state.positionValue}" data-tip="view.var_estimator.tip.pv"></label>
+                    <input id="var-pv" type="number" step="0.01" min="0" value="${state.positionValue}" data-tip="view.var_estimator.tip.pv"></label>
                 <label><span data-i18n="view.var_estimator.label.confidence">Confidence</span>
                     <small class="muted" data-i18n="view.var_estimator.hint.confidence">(0.95 / 0.99 / 0.999)</small>
                     <select id="var-conf" data-tip="view.var_estimator.tip.conf">

@@ -44,13 +44,13 @@ export async function renderSection263Tpr(mount, _appState) {
             <h2 data-i18n="view.tpr.h2.inputs">Inputs</h2>
             <form id="tpr-form" class="inline-form">
                 <label><span data-i18n="view.tpr.label.amount">Expenditure amount ($)</span>
-                    <input type="number" step="10" name="expenditure_amount" value="${state.expenditure_amount}"></label>
+                    <input type="number" step="0.01" name="expenditure_amount" value="${state.expenditure_amount}"></label>
                 <label><span data-i18n="view.tpr.label.afs">Applicable Financial Statement (AFS)?</span>
                     <input type="checkbox" name="has_afs" ${state.has_afs ? 'checked' : ''}></label>
                 <label><span data-i18n="view.tpr.label.basis">Unadjusted property basis ($)</span>
-                    <input type="number" step="1000" name="property_unadjusted_basis" value="${state.property_unadjusted_basis}"></label>
+                    <input type="number" step="0.01" name="property_unadjusted_basis" value="${state.property_unadjusted_basis}"></label>
                 <label><span data-i18n="view.tpr.label.gross">Gross receipts (3-yr avg) ($)</span>
-                    <input type="number" step="100000" name="gross_receipts" value="${state.gross_receipts}"></label>
+                    <input type="number" step="0.01" name="gross_receipts" value="${state.gross_receipts}"></label>
                 <label><span data-i18n="view.tpr.label.recurrence">Expected recurrence (years)</span>
                     <input type="number" step="1" name="expected_recurrence_years" value="${state.expected_recurrence_years}"></label>
                 <hr style="grid-column:1/-1">

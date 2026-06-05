@@ -41,15 +41,15 @@ export async function renderSection416(mount, _appState) {
             <h2 data-i18n="view.s416.h2.inputs">Inputs</h2>
             <form id="s416-form" class="inline-form">
                 <label><span data-i18n="view.s416.label.key_balance">Key employee balance ($)</span>
-                    <input type="number" step="10000" name="key_employee_balance" value="${state.key_employee_balance}"></label>
+                    <input type="number" step="0.01" name="key_employee_balance" value="${state.key_employee_balance}"></label>
                 <label><span data-i18n="view.s416.label.non_key_balance">Non-key employee balance ($)</span>
-                    <input type="number" step="10000" name="non_key_employee_balance" value="${state.non_key_employee_balance}"></label>
+                    <input type="number" step="0.01" name="non_key_employee_balance" value="${state.non_key_employee_balance}"></label>
                 <label><span data-i18n="view.s416.label.key_count">Key employees</span>
                     <input type="number" step="1" name="key_employee_count" value="${state.key_employee_count}"></label>
                 <label><span data-i18n="view.s416.label.non_key_count">Non-key employees</span>
                     <input type="number" step="1" name="non_key_employee_count" value="${state.non_key_employee_count}"></label>
                 <label><span data-i18n="view.s416.label.avg_comp">Avg non-key compensation ($)</span>
-                    <input type="number" step="1000" name="avg_non_key_compensation" value="${state.avg_non_key_compensation}"></label>
+                    <input type="number" step="0.01" name="avg_non_key_compensation" value="${state.avg_non_key_compensation}"></label>
                 <label><span data-i18n="view.s416.label.safe_harbor">Safe Harbor 401(k) in place?</span>
                     <input type="checkbox" name="has_safe_harbor" ${state.has_safe_harbor ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s416.label.vesting">Already using minimum vesting?</span>

@@ -29,7 +29,7 @@ export async function renderStopLossBestOf(mount, _appState) {
                         <option data-i18n="view.stop_loss_best_of.opt.short" value="short" ${!state.sideLong ? 'selected' : ''}>Short</option>
                     </select></label>
                 <label><span data-i18n="view.stop_loss_best_of.label.atr">ATR (for ATR-multiple candidates)</span>
-                    <input id="sl-atr" type="number" step="any" min="0" value="${state.atr}"></label>
+                    <input id="sl-atr" type="number" step="0.01" min="0" value="${state.atr}"></label>
                 <button data-i18n="view.stop_loss_best_of.btn.load_demo_20_trades_9_stop_candidates" id="sl-demo" class="secondary" type="button">Load demo (20 trades, 9 stop candidates)</button>
                 <button data-i18n="view.stop_loss_best_of.btn.clear" id="sl-clear" class="secondary" type="button">Clear</button>
                 <button data-i18n="view.stop_loss_best_of.btn.compete" id="sl-run" class="primary" type="button">Compete</button>

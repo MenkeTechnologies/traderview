@@ -38,11 +38,11 @@ export async function renderSection1291(mount, _appState) {
             <h2 data-i18n="view.s1291.h2.inputs">Inputs</h2>
             <form id="s1291-form" class="inline-form">
                 <label><span data-i18n="view.s1291.label.current">Current distribution ($)</span>
-                    <input type="number" step="1000" name="current_distribution" value="${state.current_distribution}"></label>
+                    <input type="number" step="0.01" name="current_distribution" value="${state.current_distribution}"></label>
                 <label><span data-i18n="view.s1291.label.prior">Prior 3-yr avg distribution ($)</span>
-                    <input type="number" step="1000" name="prior_3yr_avg" value="${state.prior_3yr_avg}"></label>
+                    <input type="number" step="0.01" name="prior_3yr_avg" value="${state.prior_3yr_avg}"></label>
                 <label><span data-i18n="view.s1291.label.gain">Gain on sale ($)</span>
-                    <input type="number" step="1000" name="gain_on_sale" value="${state.gain_on_sale}"></label>
+                    <input type="number" step="0.01" name="gain_on_sale" value="${state.gain_on_sale}"></label>
                 <label><span data-i18n="view.s1291.label.holding">Holding period years</span>
                     <input type="number" step="1" name="holding_period_years" value="${state.holding_period_years}"></label>
                 <label><span data-i18n="view.s1291.label.short_term">Fed short-term rate %</span>

@@ -42,13 +42,13 @@ export async function renderSection882(mount, _appState) {
             <h2 data-i18n="view.s882.h2.inputs">Inputs</h2>
             <form id="s882-form" class="inline-form">
                 <label><span data-i18n="view.s882.label.eci">ECI gross income ($)</span>
-                    <input type="number" step="10000" name="eci_gross_income" value="${state.eci_gross_income}"></label>
+                    <input type="number" step="0.01" name="eci_gross_income" value="${state.eci_gross_income}"></label>
                 <label><span data-i18n="view.s882.label.fdap">FDAP gross income ($)</span>
-                    <input type="number" step="10000" name="fdap_gross_income" value="${state.fdap_gross_income}"></label>
+                    <input type="number" step="0.01" name="fdap_gross_income" value="${state.fdap_gross_income}"></label>
                 <label><span data-i18n="view.s882.label.ded">Deductions allowed ($)</span>
-                    <input type="number" step="10000" name="deductions_allowed" value="${state.deductions_allowed}"></label>
+                    <input type="number" step="0.01" name="deductions_allowed" value="${state.deductions_allowed}"></label>
                 <label><span data-i18n="view.s882.label.ftc">Foreign tax paid on ECI ($)</span>
-                    <input type="number" step="1000" name="foreign_tax_paid_on_eci" value="${state.foreign_tax_paid_on_eci}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid_on_eci" value="${state.foreign_tax_paid_on_eci}"></label>
                 <label><span data-i18n="view.s882.label.office">Branch office in US?</span>
                     <input type="checkbox" name="branch_office_us" ${state.branch_office_us ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s882.label.pe">Permanent Establishment?</span>
@@ -68,7 +68,7 @@ export async function renderSection882(mount, _appState) {
                 <label><span data-i18n="view.s882.label.days_late">Days late filing</span>
                     <input type="number" step="1" name="days_late_filing" value="${state.days_late_filing}"></label>
                 <label><span data-i18n="view.s882.label.est_tax">Estimated tax paid ($)</span>
-                    <input type="number" step="1000" name="estimated_tax_paid" value="${state.estimated_tax_paid}"></label>
+                    <input type="number" step="0.01" name="estimated_tax_paid" value="${state.estimated_tax_paid}"></label>
                 <button class="primary" type="submit" data-i18n="view.s882.btn.compute">Compute</button>
             </form>
         </div>

@@ -108,15 +108,15 @@ export async function renderSection102(mount, _appState) {
                 <label><span data-i18n="view.s102.label.s274">§ 274 business gift $25?</span>
                     <input type="checkbox" name="is_business_gift_dedn_25" ${state.is_business_gift_dedn_25 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.basis">Transferor basis ($)</span>
-                    <input type="number" step="100" name="transferor_dedn_basis" value="${state.transferor_dedn_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_dedn_basis" value="${state.transferor_dedn_basis}"></label>
                 <label><span data-i18n="view.s102.label.s1015_carry">§ 1015 carryover ($)</span>
-                    <input type="number" step="100" name="s1015_carryover_basis_gift" value="${state.s1015_carryover_basis_gift}"></label>
+                    <input type="number" step="0.01" name="s1015_carryover_basis_gift" value="${state.s1015_carryover_basis_gift}"></label>
                 <label><span data-i18n="view.s102.label.s1014_step">§ 1014 step-up ($)</span>
-                    <input type="number" step="100" name="s1014_step_up_inheritance" value="${state.s1014_step_up_inheritance}"></label>
+                    <input type="number" step="0.01" name="s1014_step_up_inheritance" value="${state.s1014_step_up_inheritance}"></label>
                 <label><span data-i18n="view.s102.label.fmv">FMV at transfer ($)</span>
-                    <input type="number" step="100" name="fmv_at_transfer" value="${state.fmv_at_transfer}"></label>
+                    <input type="number" step="0.01" name="fmv_at_transfer" value="${state.fmv_at_transfer}"></label>
                 <label><span data-i18n="view.s102.label.donor_basis">Donor adj basis ($)</span>
-                    <input type="number" step="100" name="donor_adjusted_basis" value="${state.donor_adjusted_basis}"></label>
+                    <input type="number" step="0.01" name="donor_adjusted_basis" value="${state.donor_adjusted_basis}"></label>
                 <label><span data-i18n="view.s102.label.tacks">Holding tacks?</span>
                     <input type="checkbox" name="holding_period_donee_tacks" ${state.holding_period_donee_tacks ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.dual">§ 1015(d) dual basis?</span>
@@ -124,29 +124,29 @@ export async function renderSection102(mount, _appState) {
                 <label><span data-i18n="view.s102.label.appreciated">Appreciated property?</span>
                     <input type="checkbox" name="appreciated_property" ${state.appreciated_property ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.gift_tax">Gift tax paid ($)</span>
-                    <input type="number" step="100" name="gift_tax_paid_by_donor" value="${state.gift_tax_paid_by_donor}"></label>
+                    <input type="number" step="0.01" name="gift_tax_paid_by_donor" value="${state.gift_tax_paid_by_donor}"></label>
                 <label><span data-i18n="view.s102.label.gift_tax_adj">§ 1015(d) adj ($)</span>
-                    <input type="number" step="100" name="s1015_d_basis_adjustment" value="${state.s1015_d_basis_adjustment}"></label>
+                    <input type="number" step="0.01" name="s1015_d_basis_adjustment" value="${state.s1015_d_basis_adjustment}"></label>
                 <label><span data-i18n="view.s102.label.bargain">Part sale, part gift?</span>
                     <input type="checkbox" name="is_part_sale_part_gift" ${state.is_part_sale_part_gift ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.bargain_basis">Bargain basis ($)</span>
-                    <input type="number" step="100" name="bargain_sale_basis_allocation" value="${state.bargain_sale_basis_allocation}"></label>
+                    <input type="number" step="0.01" name="bargain_sale_basis_allocation" value="${state.bargain_sale_basis_allocation}"></label>
                 <label><span data-i18n="view.s102.label.political">Political gift?</span>
                     <input type="checkbox" name="is_political_gift" ${state.is_political_gift ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.s102c_award">§ 102(c) emp award ($)</span>
-                    <input type="number" step="100" name="s102_c_employer_award" value="${state.s102_c_employer_award}"></label>
+                    <input type="number" step="0.01" name="s102_c_employer_award" value="${state.s102_c_employer_award}"></label>
                 <label><span data-i18n="view.s102.label.s274j">§ 274(j) achiev award ($)</span>
-                    <input type="number" step="100" name="s274_j_employee_achievement_award" value="${state.s274_j_employee_achievement_award}"></label>
+                    <input type="number" step="0.01" name="s274_j_employee_achievement_award" value="${state.s274_j_employee_achievement_award}"></label>
                 <label><span data-i18n="view.s102.label.qualified_plan">Qual plan award ($)</span>
-                    <input type="number" step="100" name="s274_j_qualified_plan_award" value="${state.s274_j_qualified_plan_award}"></label>
+                    <input type="number" step="0.01" name="s274_j_qualified_plan_award" value="${state.s274_j_qualified_plan_award}"></label>
                 <label><span data-i18n="view.s102.label.non_qualified">Non-qual award ($)</span>
-                    <input type="number" step="100" name="s274_j_non_qualified_award" value="${state.s274_j_non_qualified_award}"></label>
+                    <input type="number" step="0.01" name="s274_j_non_qualified_award" value="${state.s274_j_non_qualified_award}"></label>
                 <label><span data-i18n="view.s102.label.s132_de">§ 132(b) de minimis ($)</span>
-                    <input type="number" step="100" name="s132_b_gift_de_minimis" value="${state.s132_b_gift_de_minimis}"></label>
+                    <input type="number" step="0.01" name="s132_b_gift_de_minimis" value="${state.s132_b_gift_de_minimis}"></label>
                 <label><span data-i18n="view.s102.label.inheritance">Inheritance?</span>
                     <input type="checkbox" name="is_inheritance" ${state.is_inheritance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.inh_amt">Inheritance ($)</span>
-                    <input type="number" step="1000" name="inheritance_amount" value="${state.inheritance_amount}"></label>
+                    <input type="number" step="0.01" name="inheritance_amount" value="${state.inheritance_amount}"></label>
                 <label><span data-i18n="view.s102.label.devise">Devise?</span>
                     <input type="checkbox" name="is_devise" ${state.is_devise ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.via_will">Via will?</span>
@@ -154,25 +154,25 @@ export async function renderSection102(mount, _appState) {
                 <label><span data-i18n="view.s102.label.bequest">Bequest?</span>
                     <input type="checkbox" name="is_bequest" ${state.is_bequest ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.beq_amt">Bequest amt ($)</span>
-                    <input type="number" step="1000" name="bequest_specific_amount" value="${state.bequest_specific_amount}"></label>
+                    <input type="number" step="0.01" name="bequest_specific_amount" value="${state.bequest_specific_amount}"></label>
                 <label><span data-i18n="view.s102.label.s101a">§ 101(a) life ins?</span>
                     <input type="checkbox" name="s101_a_life_insurance" ${state.s101_a_life_insurance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.ins_amt">Life ins excl ($)</span>
-                    <input type="number" step="1000" name="life_insurance_proceeds_excluded" value="${state.life_insurance_proceeds_excluded}"></label>
+                    <input type="number" step="0.01" name="life_insurance_proceeds_excluded" value="${state.life_insurance_proceeds_excluded}"></label>
                 <label><span data-i18n="view.s102.label.step_up">Step-up eligible?</span>
                     <input type="checkbox" name="is_step_up_basis_eligible" ${state.is_step_up_basis_eligible ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.fmv_dod">FMV at DoD ($)</span>
-                    <input type="number" step="1000" name="s1014_FMV_date_of_death" value="${state.s1014_FMV_date_of_death}"></label>
+                    <input type="number" step="0.01" name="s1014_FMV_date_of_death" value="${state.s1014_FMV_date_of_death}"></label>
                 <label><span data-i18n="view.s102.label.s1014e">§ 1014(e) 1-yr?</span>
                     <input type="checkbox" name="s1014_e_inherited_from_decedent_1y_rule" ${state.s1014_e_inherited_from_decedent_1y_rule ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.s691">§ 691 IRD ($)</span>
-                    <input type="number" step="1000" name="s691_a_income_in_respect_of_decedent" value="${state.s691_a_income_in_respect_of_decedent}"></label>
+                    <input type="number" step="0.01" name="s691_a_income_in_respect_of_decedent" value="${state.s691_a_income_in_respect_of_decedent}"></label>
                 <label><span data-i18n="view.s102.label.retirement">Inherited retirement?</span>
                     <input type="checkbox" name="inherited_retirement_acct" ${state.inherited_retirement_acct ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.appreciated_inh">Appreciated sec?</span>
                     <input type="checkbox" name="inherited_appreciated_securities" ${state.inherited_appreciated_securities ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s102.label.estate_tax_iir">Estate tax on IRD ($)</span>
-                    <input type="number" step="1000" name="estate_tax_on_iir" value="${state.estate_tax_on_iir}"></label>
+                    <input type="number" step="0.01" name="estate_tax_on_iir" value="${state.estate_tax_on_iir}"></label>
                 <button class="primary" type="submit" data-i18n="view.s102.btn.compute">Compute</button>
             </form>
         </div>

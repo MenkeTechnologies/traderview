@@ -45,13 +45,13 @@ export async function renderDeflatedSharpe(mount, _appState) {
             <h2 data-i18n="view.deflated_sharpe.h2.backtest_sample">Backtest sample</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.deflated_sharpe.label.observed_sr">Observed SR</span>
-                    <input id="ds-sr" type="number" step="any" value="${state.params.observed_sharpe}" data-tip="view.deflated_sharpe.tip.sr"></label>
+                    <input id="ds-sr" type="number" step="0.01" value="${state.params.observed_sharpe}" data-tip="view.deflated_sharpe.tip.sr"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.n_obs">n observations</span>
                     <input id="ds-n" type="number" step="1" min="4" value="${state.params.n_observations}" data-tip="view.deflated_sharpe.tip.n"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.skewness">Skewness</span>
-                    <input id="ds-skew" type="number" step="any" value="${state.params.skewness}" data-tip="view.deflated_sharpe.tip.skew"></label>
+                    <input id="ds-skew" type="number" step="0.01" value="${state.params.skewness}" data-tip="view.deflated_sharpe.tip.skew"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.kurtosis">Kurtosis (normal = 3)</span>
-                    <input id="ds-kurt" type="number" step="any" value="${state.params.kurtosis}" data-tip="view.deflated_sharpe.tip.kurt"></label>
+                    <input id="ds-kurt" type="number" step="0.01" value="${state.params.kurtosis}" data-tip="view.deflated_sharpe.tip.kurt"></label>
                 <label><span data-i18n="view.deflated_sharpe.label.trials">Trials run</span>
                     <input id="ds-trials" type="number" step="1" min="1" value="${state.params.n_trials}" data-tip="view.deflated_sharpe.tip.trials"></label>
                 <button data-i18n="view.deflated_sharpe.btn.deflate" data-tip="view.deflated_sharpe.tip.deflate" data-shortcut="deflated_sharpe_compute" id="ds-run" class="primary" type="button">Deflate</button>

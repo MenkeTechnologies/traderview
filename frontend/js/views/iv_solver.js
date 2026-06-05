@@ -48,15 +48,15 @@ export async function renderIvSolver(mount, _appState) {
                         <option data-i18n="view.iv_solver.opt.put" value="put"  ${state.params.kind === 'put'  ? 'selected' : ''}>Put</option>
                     </select></label>
                 <label><span data-i18n="view.iv_solver.label.spot">Spot</span>
-                    <input id="iv-spot"   type="number" step="any" min="0" value="${state.params.spot}" data-tip="view.iv_solver.tip.spot"></label>
+                    <input id="iv-spot"   type="number" step="0.01" min="0" value="${state.params.spot}" data-tip="view.iv_solver.tip.spot"></label>
                 <label><span data-i18n="view.iv_solver.label.strike">Strike</span>
-                    <input id="iv-strike" type="number" step="any" min="0" value="${state.params.strike}" data-tip="view.iv_solver.tip.strike"></label>
+                    <input id="iv-strike" type="number" step="0.01" min="0" value="${state.params.strike}" data-tip="view.iv_solver.tip.strike"></label>
                 <label><span data-i18n="view.iv_solver.label.t">T (years)</span>
-                    <input id="iv-t"   type="number" step="any" min="0" value="${state.params.time_to_expiry}" data-tip="view.iv_solver.tip.t"></label>
+                    <input id="iv-t"   type="number" step="0.01" min="0" value="${state.params.time_to_expiry}" data-tip="view.iv_solver.tip.t"></label>
                 <label><span data-i18n="view.iv_solver.label.rate">Rate r</span>
-                    <input id="iv-r"    type="number" step="any" value="${state.params.risk_free}" data-tip="view.iv_solver.tip.r"></label>
+                    <input id="iv-r"    type="number" step="0.01" value="${state.params.risk_free}" data-tip="view.iv_solver.tip.r"></label>
                 <label><span data-i18n="view.iv_solver.label.div">Dividend q</span>
-                    <input id="iv-q" type="number" step="any" min="0" value="${state.params.dividend_yield}" data-tip="view.iv_solver.tip.q"></label>
+                    <input id="iv-q" type="number" step="0.01" min="0" value="${state.params.dividend_yield}" data-tip="view.iv_solver.tip.q"></label>
             </div>
         </div>
 
@@ -64,7 +64,7 @@ export async function renderIvSolver(mount, _appState) {
             <h2 data-i18n="view.iv_solver.h2.market_price">Market price</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.iv_solver.label.market_price">Observed market price</span>
-                    <input id="iv-mkt" type="number" step="any" min="0" value="${state.params.market_price}" data-tip="view.iv_solver.tip.mkt"></label>
+                    <input id="iv-mkt" type="number" step="0.01" min="0" value="${state.params.market_price}" data-tip="view.iv_solver.tip.mkt"></label>
                 <button data-i18n="view.iv_solver.btn.solve_iv" data-tip="view.iv_solver.tip.solve" data-shortcut="iv_solver_solve" id="iv-run" class="primary" type="button">Solve IV</button>
             </div>
             <p data-i18n="view.iv_solver.hint.newton_raphson_on_black_scholes_finds_such_that_bs" class="muted">

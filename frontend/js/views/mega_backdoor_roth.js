@@ -45,11 +45,11 @@ export async function renderMegaBackdoorRoth(mount, _appState) {
                 <label><span data-i18n="view.mbr.label.age">Age</span>
                     <input type="number" step="1" name="age" value="${state.age}" min="18" max="80"></label>
                 <label><span data-i18n="view.mbr.label.salary">Salary ($)</span>
-                    <input type="number" step="1000" name="salary" value="${state.salary}"></label>
+                    <input type="number" step="0.01" name="salary" value="${state.salary}"></label>
                 <label><span data-i18n="view.mbr.label.employee_deferral">Employee deferral ($)</span>
-                    <input type="number" step="500" name="employee_deferral" value="${state.employee_deferral}"></label>
+                    <input type="number" step="0.01" name="employee_deferral" value="${state.employee_deferral}"></label>
                 <label><span data-i18n="view.mbr.label.employer_match">Employer match ($)</span>
-                    <input type="number" step="500" name="employer_match" value="${state.employer_match}"></label>
+                    <input type="number" step="0.01" name="employer_match" value="${state.employer_match}"></label>
                 <label><span data-i18n="view.mbr.label.plan_allows_after_tax">Plan allows after-tax contributions?</span>
                     <input type="checkbox" name="plan_allows_after_tax" ${state.plan_allows_after_tax ? 'checked' : ''}></label>
                 <label><span data-i18n="view.mbr.label.plan_allows_in_service_conv">Plan allows in-service Roth conversion?</span>

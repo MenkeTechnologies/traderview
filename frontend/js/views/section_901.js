@@ -34,13 +34,13 @@ export async function renderSection901(mount, _appState) {
             <h2 data-i18n="view.s901.h2.inputs">Inputs</h2>
             <form id="s901-form" class="inline-form">
                 <label><span data-i18n="view.s901.label.foreign_income">Foreign source income ($)</span>
-                    <input type="number" step="1000" name="foreign_source_income" value="${state.foreign_source_income}"></label>
+                    <input type="number" step="0.01" name="foreign_source_income" value="${state.foreign_source_income}"></label>
                 <label><span data-i18n="view.s901.label.foreign_tax">Foreign tax paid ($)</span>
-                    <input type="number" step="100" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_paid" value="${state.foreign_tax_paid}"></label>
                 <label><span data-i18n="view.s901.label.worldwide">Worldwide taxable income ($)</span>
-                    <input type="number" step="1000" name="worldwide_taxable_income" value="${state.worldwide_taxable_income}"></label>
+                    <input type="number" step="0.01" name="worldwide_taxable_income" value="${state.worldwide_taxable_income}"></label>
                 <label><span data-i18n="view.s901.label.us_tax">US tax pre-FTC ($)</span>
-                    <input type="number" step="100" name="us_tax_before_ftc" value="${state.us_tax_before_ftc}"></label>
+                    <input type="number" step="0.01" name="us_tax_before_ftc" value="${state.us_tax_before_ftc}"></label>
                 <label><span data-i18n="view.s901.label.basket">FTC basket</span>
                     <select name="basket">
                         <option value="general" ${state.basket === 'general' ? 'selected' : ''}>General (active biz)</option>
@@ -53,11 +53,11 @@ export async function renderSection901(mount, _appState) {
                 <label><span data-i18n="view.s901.label.treaty">Treaty resourced?</span>
                     <input type="checkbox" name="treaty_resourced" ${state.treaty_resourced ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s901.label.indirect">Indirect credit § 960 subF ($)</span>
-                    <input type="number" step="100" name="indirect_credit_subF" value="${state.indirect_credit_subF}"></label>
+                    <input type="number" step="0.01" name="indirect_credit_subF" value="${state.indirect_credit_subF}"></label>
                 <label><span data-i18n="view.s901.label.carry_back">Carry back 1-yr available ($)</span>
-                    <input type="number" step="100" name="carry_back" value="${state.carry_back}"></label>
+                    <input type="number" step="0.01" name="carry_back" value="${state.carry_back}"></label>
                 <label><span data-i18n="view.s901.label.carry_forward">Carry forward avail 10-yr ($)</span>
-                    <input type="number" step="100" name="carry_forward" value="${state.carry_forward}"></label>
+                    <input type="number" step="0.01" name="carry_forward" value="${state.carry_forward}"></label>
                 <button class="primary" type="submit" data-i18n="view.s901.btn.compute">Compute</button>
             </form>
         </div>

@@ -46,11 +46,11 @@ export async function renderSection7702(mount, _appState) {
             <h2 data-i18n="view.s7702.h2.inputs">Inputs</h2>
             <form id="s7702-form" class="inline-form">
                 <label><span data-i18n="view.s7702.label.cash">Current cash value ($)</span>
-                    <input type="number" step="1000" name="cash_value" value="${state.cash_value}"></label>
+                    <input type="number" step="0.01" name="cash_value" value="${state.cash_value}"></label>
                 <label><span data-i18n="view.s7702.label.death">Death benefit ($)</span>
-                    <input type="number" step="10000" name="death_benefit" value="${state.death_benefit}"></label>
+                    <input type="number" step="0.01" name="death_benefit" value="${state.death_benefit}"></label>
                 <label><span data-i18n="view.s7702.label.premium">Annual premium ($)</span>
-                    <input type="number" step="100" name="annual_premium" value="${state.annual_premium}"></label>
+                    <input type="number" step="0.01" name="annual_premium" value="${state.annual_premium}"></label>
                 <label><span data-i18n="view.s7702.label.age">Insured age</span>
                     <input type="number" step="1" name="insured_age" value="${state.insured_age}"></label>
                 <label><span data-i18n="view.s7702.label.term">Term insurance?</span>
@@ -69,19 +69,19 @@ export async function renderSection7702(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s7702.label.cvat_actual">CVAT cash value actual ($)</span>
-                    <input type="number" step="1000" name="cash_value_accumulation_actual" value="${state.cash_value_accumulation_actual}"></label>
+                    <input type="number" step="0.01" name="cash_value_accumulation_actual" value="${state.cash_value_accumulation_actual}"></label>
                 <label><span data-i18n="view.s7702.label.cvat_limit">CVAT cash value limit ($)</span>
-                    <input type="number" step="1000" name="cvat_cash_value_limit" value="${state.cvat_cash_value_limit}"></label>
+                    <input type="number" step="0.01" name="cvat_cash_value_limit" value="${state.cvat_cash_value_limit}"></label>
                 <label><span data-i18n="view.s7702.label.gpt">Guideline premium limit ($)</span>
-                    <input type="number" step="100" name="guideline_premium_limit" value="${state.guideline_premium_limit}"></label>
+                    <input type="number" step="0.01" name="guideline_premium_limit" value="${state.guideline_premium_limit}"></label>
                 <label><span data-i18n="view.s7702.label.corridor">Cash value corridor %</span>
                     <input type="number" step="0.01" name="cash_value_corridor_pct" value="${state.cash_value_corridor_pct}"></label>
                 <label><span data-i18n="view.s7702.label.mec">Modified Endowment Contract (MEC)?</span>
                     <input type="checkbox" name="is_mec" ${state.is_mec ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7702.label.7pay">7-pay test cumulative premiums ($)</span>
-                    <input type="number" step="100" name="seven_pay_test_premiums" value="${state.seven_pay_test_premiums}"></label>
+                    <input type="number" step="0.01" name="seven_pay_test_premiums" value="${state.seven_pay_test_premiums}"></label>
                 <label><span data-i18n="view.s7702.label.surrender">Surrender value ($)</span>
-                    <input type="number" step="1000" name="surrender_value" value="${state.surrender_value}"></label>
+                    <input type="number" step="0.01" name="surrender_value" value="${state.surrender_value}"></label>
                 <label><span data-i18n="view.s7702.label.pre_2021">Pre-2021 rules (4% floor)?</span>
                     <input type="checkbox" name="pre_2021_rules" ${state.pre_2021_rules ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7702.label.floor_2">Interest rate floor at 2%?</span>

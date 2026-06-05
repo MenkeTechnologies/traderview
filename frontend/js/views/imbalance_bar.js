@@ -29,7 +29,7 @@ export async function renderImbalanceBar(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.imb_bar.label.threshold">Imbalance threshold</span>
-                    <input id="ib-thresh" type="number" step="any" min="0" value="${state.imbalance_threshold}"></label>
+                    <input id="ib-thresh" type="number" step="0.01" min="0" value="${state.imbalance_threshold}"></label>
                 <button data-i18n="view.imb_bar.btn.compute" id="ib-run" class="primary"
                         data-tip="view.imb_bar.tip.compute" type="button">Build bars</button>
             </div>

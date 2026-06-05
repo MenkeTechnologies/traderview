@@ -54,11 +54,11 @@ export async function renderSection6038b(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s6038b.label.fmv">FMV transferred ($)</span>
-                    <input type="number" step="1000" name="fmv_transferred" value="${state.fmv_transferred}"></label>
+                    <input type="number" step="0.01" name="fmv_transferred" value="${state.fmv_transferred}"></label>
                 <label><span data-i18n="view.s6038b.label.basis">Your basis in property ($)</span>
-                    <input type="number" step="1000" name="basis_in_property" value="${state.basis_in_property}"></label>
+                    <input type="number" step="0.01" name="basis_in_property" value="${state.basis_in_property}"></label>
                 <label><span data-i18n="view.s6038b.label.stock_received">FMV stock received in exchange ($)</span>
-                    <input type="number" step="1000" name="fmv_received_in_stock" value="${state.fmv_received_in_stock}"></label>
+                    <input type="number" step="0.01" name="fmv_received_in_stock" value="${state.fmv_received_in_stock}"></label>
                 <label><span data-i18n="view.s6038b.label.intentional">Intentional non-filing?</span>
                     <input type="checkbox" name="intentional" ${state.intentional ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6038b.label.atb">Active trade or business exception?</span>

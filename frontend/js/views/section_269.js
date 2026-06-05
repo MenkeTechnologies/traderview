@@ -47,11 +47,11 @@ export async function renderSection269(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s269.label.nol">Target NOL acquired ($)</span>
-                    <input type="number" step="10000" name="target_nol_acquired" value="${state.target_nol_acquired}"></label>
+                    <input type="number" step="0.01" name="target_nol_acquired" value="${state.target_nol_acquired}"></label>
                 <label><span data-i18n="view.s269.label.credits">Target credits acquired ($)</span>
-                    <input type="number" step="1000" name="target_credits_acquired" value="${state.target_credits_acquired}"></label>
+                    <input type="number" step="0.01" name="target_credits_acquired" value="${state.target_credits_acquired}"></label>
                 <label><span data-i18n="view.s269.label.cap_loss">Target capital loss ($)</span>
-                    <input type="number" step="10000" name="target_capital_loss" value="${state.target_capital_loss}"></label>
+                    <input type="number" step="0.01" name="target_capital_loss" value="${state.target_capital_loss}"></label>
                 <label><span data-i18n="view.s269.label.purpose">Primary purpose tax avoidance?</span>
                     <input type="checkbox" name="primary_purpose_tax_avoidance" ${state.primary_purpose_tax_avoidance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s269.label.business">Business purpose exists?</span>
@@ -63,9 +63,9 @@ export async function renderSection269(mount, _appState) {
                 <label><span data-i18n="view.s269.label.continuity">Pre-acq business continuity?</span>
                     <input type="checkbox" name="pre_acquisition_business_continuity" ${state.pre_acquisition_business_continuity ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s269.label.profits">Acquirer current-yr profits ($)</span>
-                    <input type="number" step="10000" name="acquirer_has_profits" value="${state.acquirer_has_profits}"></label>
+                    <input type="number" step="0.01" name="acquirer_has_profits" value="${state.acquirer_has_profits}"></label>
                 <label><span data-i18n="view.s269.label.pre_tax">Acquirer pre-acq tax liability ($)</span>
-                    <input type="number" step="10000" name="acquirer_pre_acq_tax_liability" value="${state.acquirer_pre_acq_tax_liability}"></label>
+                    <input type="number" step="0.01" name="acquirer_pre_acq_tax_liability" value="${state.acquirer_pre_acq_tax_liability}"></label>
                 <label><span data-i18n="view.s269.label.judicial">Other judicial doctrines apply?</span>
                     <input type="checkbox" name="judicial_doctrines_apply" ${state.judicial_doctrines_apply ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s269.btn.compute">Compute</button>

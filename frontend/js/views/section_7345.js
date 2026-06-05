@@ -37,9 +37,9 @@ export async function renderSection7345(mount, _appState) {
             <h2 data-i18n="view.s7345.h2.inputs">Inputs</h2>
             <form id="s7345-form" class="inline-form">
                 <label><span data-i18n="view.s7345.label.assessed">Total assessed tax ($)</span>
-                    <input type="number" step="1000" name="total_assessed_tax" value="${state.total_assessed_tax}"></label>
+                    <input type="number" step="0.01" name="total_assessed_tax" value="${state.total_assessed_tax}"></label>
                 <label><span data-i18n="view.s7345.label.interest">Interest + penalties ($)</span>
-                    <input type="number" step="1000" name="interest_and_penalties" value="${state.interest_and_penalties}"></label>
+                    <input type="number" step="0.01" name="interest_and_penalties" value="${state.interest_and_penalties}"></label>
                 <label><span data-i18n="view.s7345.label.ia">Installment agreement in effect?</span>
                     <input type="checkbox" name="in_installment_agreement" ${state.in_installment_agreement ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s7345.label.oic">Offer-in-Compromise pending?</span>

@@ -50,7 +50,7 @@ export async function renderGiftTax(mount, _appState) {
                 <label><span data-i18n="view.gift.label.relationship">Relationship</span>
                     <input type="text" name="relationship" placeholder="Daughter / friend / charity"></label>
                 <label><span data-i18n="view.gift.label.amount">Amount ($)</span>
-                    <input type="number" step="100" name="amount" required></label>
+                    <input type="number" step="0.01" name="amount" required></label>
                 <label><span data-i18n="view.gift.label.gift_type">Type</span>
                     <select name="gift_type">
                         <option value="cash">Cash</option>
@@ -70,7 +70,7 @@ export async function renderGiftTax(mount, _appState) {
                 <label><span data-i18n="view.gift.label.view_year">View year</span>
                     <input type="number" id="gt-year" value="${state.year}"></label>
                 <label><span data-i18n="view.gift.label.lifetime_used">Lifetime exemption already used ($)</span>
-                    <input type="number" id="gt-lifetime" step="1000" value="${state.cumulative_lifetime_used}"></label>
+                    <input type="number" id="gt-lifetime" step="0.01" value="${state.cumulative_lifetime_used}"></label>
             </div>
         </div>
         <div id="gt-summary"></div>

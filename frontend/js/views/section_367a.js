@@ -43,9 +43,9 @@ export async function renderSection367A(mount, _appState) {
             <h2 data-i18n="view.s367a.h2.inputs">Inputs</h2>
             <form id="s367a-form" class="inline-form">
                 <label><span data-i18n="view.s367a.label.fmv">Property FMV ($)</span>
-                    <input type="number" step="100000" name="property_fmv" value="${state.property_fmv}"></label>
+                    <input type="number" step="0.01" name="property_fmv" value="${state.property_fmv}"></label>
                 <label><span data-i18n="view.s367a.label.basis">Transferor's basis ($)</span>
-                    <input type="number" step="100000" name="transferor_basis" value="${state.transferor_basis}"></label>
+                    <input type="number" step="0.01" name="transferor_basis" value="${state.transferor_basis}"></label>
                 <label><span data-i18n="view.s367a.label.type">Property type</span>
                     <select name="type_property">
                         <option value="tangible" ${state.type_property === 'tangible' ? 'selected' : ''}>Tangible (active use)</option>

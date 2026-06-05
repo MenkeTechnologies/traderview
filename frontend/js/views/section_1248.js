@@ -38,13 +38,13 @@ export async function renderSection1248(mount, _appState) {
             <h2 data-i18n="view.s1248.h2.inputs">Inputs</h2>
             <form id="s1248-form" class="inline-form">
                 <label><span data-i18n="view.s1248.label.sale">Sale price ($)</span>
-                    <input type="number" step="100000" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s1248.label.basis">Stock basis ($)</span>
-                    <input type="number" step="100000" name="stock_basis" value="${state.stock_basis}"></label>
+                    <input type="number" step="0.01" name="stock_basis" value="${state.stock_basis}"></label>
                 <label><span data-i18n="view.s1248.label.ep">Allocated foreign E&P ($)</span>
-                    <input type="number" step="10000" name="allocated_ep" value="${state.allocated_ep}"></label>
+                    <input type="number" step="0.01" name="allocated_ep" value="${state.allocated_ep}"></label>
                 <label><span data-i18n="view.s1248.label.ptep">PTEP / PTI account ($)</span>
-                    <input type="number" step="10000" name="ptep_account" value="${state.ptep_account}"></label>
+                    <input type="number" step="0.01" name="ptep_account" value="${state.ptep_account}"></label>
                 <label><span data-i18n="view.s1248.label.holding">Holding period (years 10%+ owner)</span>
                     <input type="number" step="0.5" name="holding_period_pct_yrs" value="${state.holding_period_pct_yrs}"></label>
                 <label><span data-i18n="view.s1248.label.ownership">US ownership %</span>
@@ -58,7 +58,7 @@ export async function renderSection1248(mount, _appState) {
                 <label><span data-i18n="view.s1248.label.indirect">Indirect FTC pct (deemed paid)</span>
                     <input type="number" step="0.1" name="indirect_credit_pct" value="${state.indirect_credit_pct}"></label>
                 <label><span data-i18n="view.s1248.label.ftc">FTC available ($)</span>
-                    <input type="number" step="1000" name="foreign_tax_credit" value="${state.foreign_tax_credit}"></label>
+                    <input type="number" step="0.01" name="foreign_tax_credit" value="${state.foreign_tax_credit}"></label>
                 <label><span data-i18n="view.s1248.label.qualified">Qualified dividend treatment (individual)?</span>
                     <input type="checkbox" name="is_qualified_dividend" ${state.is_qualified_dividend ? 'checked' : ''}></label>
                 <button class="primary" type="submit" data-i18n="view.s1248.btn.compute">Compute</button>

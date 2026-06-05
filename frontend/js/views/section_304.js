@@ -90,25 +90,25 @@ export async function renderSection304(mount, _appState) {
                 <label><span data-i18n="view.s304.label.is_a2">§ 304(a)(2) parent-sub?</span>
                     <input type="checkbox" name="is_s304_a_2_parent_sub" ${state.is_s304_a_2_parent_sub ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s304.label.proceeds">Sale proceeds ($)</span>
-                    <input type="number" step="10000" name="sale_proceeds" value="${state.sale_proceeds}"></label>
+                    <input type="number" step="0.01" name="sale_proceeds" value="${state.sale_proceeds}"></label>
                 <label><span data-i18n="view.s304.label.basis">Seller stock basis ($)</span>
-                    <input type="number" step="10000" name="seller_stock_basis" value="${state.seller_stock_basis}"></label>
+                    <input type="number" step="0.01" name="seller_stock_basis" value="${state.seller_stock_basis}"></label>
                 <label><span data-i18n="view.s304.label.issuing_ep">Issuing E&P ($)</span>
-                    <input type="number" step="10000" name="issuing_corp_e_p" value="${state.issuing_corp_e_p}"></label>
+                    <input type="number" step="0.01" name="issuing_corp_e_p" value="${state.issuing_corp_e_p}"></label>
                 <label><span data-i18n="view.s304.label.acquiring_ep">Acquiring E&P ($)</span>
-                    <input type="number" step="10000" name="acquiring_corp_e_p" value="${state.acquiring_corp_e_p}"></label>
+                    <input type="number" step="0.01" name="acquiring_corp_e_p" value="${state.acquiring_corp_e_p}"></label>
                 <label><span data-i18n="view.s304.label.s301">§ 301 distribution?</span>
                     <input type="checkbox" name="s301_distribution_treatment" ${state.s301_distribution_treatment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s304.label.s301_c1">§ 301(c)(1) dividend ($)</span>
-                    <input type="number" step="10000" name="s301_c_1_dividend" value="${state.s301_c_1_dividend}"></label>
+                    <input type="number" step="0.01" name="s301_c_1_dividend" value="${state.s301_c_1_dividend}"></label>
                 <label><span data-i18n="view.s304.label.s301_c2">§ 301(c)(2) basis ($)</span>
-                    <input type="number" step="10000" name="s301_c_2_basis_recovery" value="${state.s301_c_2_basis_recovery}"></label>
+                    <input type="number" step="0.01" name="s301_c_2_basis_recovery" value="${state.s301_c_2_basis_recovery}"></label>
                 <label><span data-i18n="view.s304.label.s301_c3">§ 301(c)(3) cap gain ($)</span>
-                    <input type="number" step="10000" name="s301_c_3_capital_gain" value="${state.s301_c_3_capital_gain}"></label>
+                    <input type="number" step="0.01" name="s301_c_3_capital_gain" value="${state.s301_c_3_capital_gain}"></label>
                 <label><span data-i18n="view.s304.label.s318">§ 318 attribution?</span>
                     <input type="checkbox" name="s318_attribution_applied" ${state.s318_attribution_applied ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s304.label.constructive">§ 304(b)(1) constructive div ($)</span>
-                    <input type="number" step="10000" name="s304_b_1_constructive_dividend" value="${state.s304_b_1_constructive_dividend}"></label>
+                    <input type="number" step="0.01" name="s304_b_1_constructive_dividend" value="${state.s304_b_1_constructive_dividend}"></label>
                 <label><span data-i18n="view.s304.label.s302q">§ 302 qualifying?</span>
                     <input type="checkbox" name="is_s302_qualifying_redemption" ${state.is_s302_qualifying_redemption ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s304.label.s302b">§ 302(b) satisfied?</span>
@@ -130,7 +130,7 @@ export async function renderSection304(mount, _appState) {
                 <label><span data-i18n="view.s304.label.s959">§ 959 PTI?</span>
                     <input type="checkbox" name="s959_pti_distribution" ${state.s959_pti_distribution ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s304.label.boot">Boot received ($)</span>
-                    <input type="number" step="10000" name="boot_received" value="${state.boot_received}"></label>
+                    <input type="number" step="0.01" name="boot_received" value="${state.boot_received}"></label>
                 <label><span data-i18n="view.s304.label.corp_seller">Corporate seller?</span>
                     <input type="checkbox" name="is_corporate_seller" ${state.is_corporate_seller ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s304.label.drd_pct">§ 243 DRD %</span>

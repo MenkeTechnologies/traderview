@@ -38,11 +38,11 @@ export async function renderTripleScreen(mount, _appState) {
             <h2 data-i18n="view.triple_screen.h2.screen_2_intermediate_wave_daily_oscillator">Screen 2 — Intermediate-wave (daily oscillator)</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.triple_screen.label.oscillator">Oscillator value (RSI / stoch)</span>
-                    <input id="ts-osc" type="number" step="any" value="${state.params.daily_oscillator_value}" data-tip="view.triple_screen.tip.osc"></label>
+                    <input id="ts-osc" type="number" step="0.01" value="${state.params.daily_oscillator_value}" data-tip="view.triple_screen.tip.osc"></label>
                 <label><span data-i18n="view.triple_screen.label.oversold">Oversold threshold</span>
-                    <input id="ts-os"  type="number" step="any" value="${state.params.oversold_threshold}" data-tip="view.triple_screen.tip.os"></label>
+                    <input id="ts-os"  type="number" step="0.01" value="${state.params.oversold_threshold}" data-tip="view.triple_screen.tip.os"></label>
                 <label><span data-i18n="view.triple_screen.label.overbought">Overbought threshold</span>
-                    <input id="ts-ob"  type="number" step="any" value="${state.params.overbought_threshold}" data-tip="view.triple_screen.tip.ob"></label>
+                    <input id="ts-ob"  type="number" step="0.01" value="${state.params.overbought_threshold}" data-tip="view.triple_screen.tip.ob"></label>
             </div>
             <p data-i18n="view.triple_screen.hint.in_an_up_tide_pull_back_below_oversold_entry_zone_" class="muted">In an UP tide, pull-back below oversold = entry zone.
                 In a DOWN tide, rally above overbought = entry zone.</p>

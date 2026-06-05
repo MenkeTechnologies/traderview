@@ -39,9 +39,9 @@ export async function renderSection302(mount, _appState) {
             <h2 data-i18n="view.s302.h2.inputs">Inputs</h2>
             <form id="s302-form" class="inline-form">
                 <label><span data-i18n="view.s302.label.amount">Redemption amount ($)</span>
-                    <input type="number" step="10000" name="redemption_amount" value="${state.redemption_amount}"></label>
+                    <input type="number" step="0.01" name="redemption_amount" value="${state.redemption_amount}"></label>
                 <label><span data-i18n="view.s302.label.basis">Shareholder basis in redeemed stock ($)</span>
-                    <input type="number" step="10000" name="shareholder_basis" value="${state.shareholder_basis}"></label>
+                    <input type="number" step="0.01" name="shareholder_basis" value="${state.shareholder_basis}"></label>
                 <label><span data-i18n="view.s302.label.pre">Pre-redemption ownership %</span>
                     <input type="number" step="0.01" name="pre_redemption_pct" value="${state.pre_redemption_pct}"></label>
                 <label><span data-i18n="view.s302.label.post">Post-redemption ownership %</span>
@@ -55,7 +55,7 @@ export async function renderSection302(mount, _appState) {
                 <label><span data-i18n="view.s302.label.partial">Partial liquidation (b)(4)?</span>
                     <input type="checkbox" name="partial_liquidation" ${state.partial_liquidation ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s302.label.ep">E&P available ($)</span>
-                    <input type="number" step="10000" name="e_and_p_available" value="${state.e_and_p_available}"></label>
+                    <input type="number" step="0.01" name="e_and_p_available" value="${state.e_and_p_available}"></label>
                 <label><span data-i18n="view.s302.label.lt">Long-term holding?</span>
                     <input type="checkbox" name="is_long_term" ${state.is_long_term ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s302.label.constructive">Constructive ownership % (post-§ 318)</span>

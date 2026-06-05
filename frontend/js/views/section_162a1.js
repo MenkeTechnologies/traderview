@@ -44,11 +44,11 @@ export async function renderSection162a1(mount, _appState) {
             <h2 data-i18n="view.s162a1.h2.inputs">Inputs</h2>
             <form id="s162a1-form" class="inline-form">
                 <label><span data-i18n="view.s162a1.label.actual">Actual compensation ($)</span>
-                    <input type="number" step="10000" name="actual_compensation" value="${state.actual_compensation}"></label>
+                    <input type="number" step="0.01" name="actual_compensation" value="${state.actual_compensation}"></label>
                 <label><span data-i18n="view.s162a1.label.median">Industry median comp ($)</span>
-                    <input type="number" step="10000" name="industry_median_comp" value="${state.industry_median_comp}"></label>
+                    <input type="number" step="0.01" name="industry_median_comp" value="${state.industry_median_comp}"></label>
                 <label><span data-i18n="view.s162a1.label.75th">Industry 75th percentile ($)</span>
-                    <input type="number" step="10000" name="industry_75th_pct" value="${state.industry_75th_pct}"></label>
+                    <input type="number" step="0.01" name="industry_75th_pct" value="${state.industry_75th_pct}"></label>
                 <label><span data-i18n="view.s162a1.label.education">Education level</span>
                     <select name="education_level">
                         <option value="high_school" ${state.education_level === 'high_school' ? 'selected' : ''}>High school</option>
@@ -71,9 +71,9 @@ export async function renderSection162a1(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s162a1.label.revenue">Revenue under mgmt ($)</span>
-                    <input type="number" step="1000000" name="revenue_under_management" value="${state.revenue_under_management}"></label>
+                    <input type="number" step="0.01" name="revenue_under_management" value="${state.revenue_under_management}"></label>
                 <label><span data-i18n="view.s162a1.label.profit">Profit under mgmt ($)</span>
-                    <input type="number" step="1000000" name="profit_under_management" value="${state.profit_under_management}"></label>
+                    <input type="number" step="0.01" name="profit_under_management" value="${state.profit_under_management}"></label>
                 <label><span data-i18n="view.s162a1.label.c_corp">C-corp?</span>
                     <input type="checkbox" name="is_c_corp" ${state.is_c_corp ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s162a1.label.s_corp_rev">S-corp REVERSE problem?</span>

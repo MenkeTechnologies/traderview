@@ -86,13 +86,13 @@ export async function renderSection481(mount, _appState) {
                 <label><span data-i18n="view.s481.label.non_auto">Non-automatic?</span>
                     <input type="checkbox" name="is_non_automatic_change" ${state.is_non_automatic_change ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.adjustment">§ 481(a) adjustment ($)</span>
-                    <input type="number" step="10000" name="s481_a_adjustment" value="${state.s481_a_adjustment}"></label>
+                    <input type="number" step="0.01" name="s481_a_adjustment" value="${state.s481_a_adjustment}"></label>
                 <label><span data-i18n="view.s481.label.favorable">Favorable?</span>
                     <input type="checkbox" name="is_favorable_adjustment" ${state.is_favorable_adjustment ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.spread">Spread years</span>
                     <input type="number" step="1" name="spread_period_years" value="${state.spread_period_years}"></label>
                 <label><span data-i18n="view.s481.label.current">Current year ($)</span>
-                    <input type="number" step="10000" name="current_year_adjustment" value="${state.current_year_adjustment}"></label>
+                    <input type="number" step="0.01" name="current_year_adjustment" value="${state.current_year_adjustment}"></label>
                 <label><span data-i18n="view.s481.label.tp_init">Taxpayer initiated?</span>
                     <input type="checkbox" name="taxpayer_initiated" ${state.taxpayer_initiated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.irs_init">IRS initiated?</span>
@@ -110,7 +110,7 @@ export async function renderSection481(mount, _appState) {
                 <label><span data-i18n="view.s481.label.consent">Consent required?</span>
                     <input type="checkbox" name="consent_required" ${state.consent_required ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.cuts_pmt">CUTS payment ($)</span>
-                    <input type="number" step="100" name="cuts_taxpayer_payment_due" value="${state.cuts_taxpayer_payment_due}"></label>
+                    <input type="number" step="0.01" name="cuts_taxpayer_payment_due" value="${state.cuts_taxpayer_payment_due}"></label>
                 <label><span data-i18n="view.s481.label.s481b">§ 481(b) 3-yr avg?</span>
                     <input type="checkbox" name="s481_b_3_year_avg_election" ${state.s481_b_3_year_avg_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.s481b_relief">§ 481(b) relief?</span>
@@ -147,7 +147,7 @@ export async function renderSection481(mount, _appState) {
                 <label><span data-i18n="view.s481.label.dup_omit">Duplication/omission?</span>
                     <input type="checkbox" name="duplication_omission_correction" ${state.duplication_omission_correction ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s481.label.cumulative">Cumulative basis diff ($)</span>
-                    <input type="number" step="10000" name="cumulative_basis_difference" value="${state.cumulative_basis_difference}"></label>
+                    <input type="number" step="0.01" name="cumulative_basis_difference" value="${state.cumulative_basis_difference}"></label>
                 <button class="primary" type="submit" data-i18n="view.s481.btn.compute">Compute</button>
             </form>
         </div>

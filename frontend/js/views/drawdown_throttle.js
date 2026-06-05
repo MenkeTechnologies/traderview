@@ -100,8 +100,8 @@ function renderTiers() {
                 ${state.tiers.map((t, i) => `
                     <tr>
                         <td>${i + 1}</td>
-                        <td><input type="number" step="any" min="0" max="1" data-tier-idx="${i}" data-field="min_dd" value="${t.min_dd}"></td>
-                        <td><input type="number" step="any" min="0" max="5" data-tier-idx="${i}" data-field="multiplier" value="${t.multiplier}"></td>
+                        <td><input type="number" step="0.01" min="0" max="1" data-tier-idx="${i}" data-field="min_dd" value="${t.min_dd}"></td>
+                        <td><input type="number" step="0.01" min="0" max="5" data-tier-idx="${i}" data-field="multiplier" value="${t.multiplier}"></td>
                         <td><button class="db-tile-btn db-tile-remove" data-tier-remove="${i}" data-i18n-aria-label="common.aria.remove" aria-label="Remove">×</button></td>
                     </tr>
                 `).join('')}

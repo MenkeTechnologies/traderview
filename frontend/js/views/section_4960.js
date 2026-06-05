@@ -40,13 +40,13 @@ export async function renderSection4960(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s4960.label.total_comp">Total annual comp ($)</span>
-                    <input type="number" step="10000" name="total_comp" required></label>
+                    <input type="number" step="0.01" name="total_comp" required></label>
                 <label><span data-i18n="view.s4960.label.medical_dental">Medical / dental excluded ($)</span>
-                    <input type="number" step="100" name="medical_dental" value="0"></label>
+                    <input type="number" step="0.01" name="medical_dental" value="0"></label>
                 <label><span data-i18n="view.s4960.label.base_5yr">5-yr W-2 base (for parachute test) ($)</span>
-                    <input type="number" step="10000" name="base_5yr"></label>
+                    <input type="number" step="0.01" name="base_5yr"></label>
                 <label><span data-i18n="view.s4960.label.parachute_total">Parachute payment total ($)</span>
-                    <input type="number" step="10000" name="parachute_total"></label>
+                    <input type="number" step="0.01" name="parachute_total"></label>
                 <button class="primary" type="submit" data-i18n="view.s4960.btn.add">Add</button>
             </form>
         </div>

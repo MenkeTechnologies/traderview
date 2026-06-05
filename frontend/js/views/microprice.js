@@ -36,9 +36,9 @@ export async function renderMicroprice(mount, _appState) {
             <h2 data-i18n="view.microprice.h2.l1_quote">L1 quote</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.microprice.label.bid">Bid</span>
-                    <input id="mp-bid"      type="number" step="any" min="0" value="${state.quote.bid}" data-tip="view.microprice.tip.bid"></label>
+                    <input id="mp-bid"      type="number" step="0.01" min="0" value="${state.quote.bid}" data-tip="view.microprice.tip.bid"></label>
                 <label><span data-i18n="view.microprice.label.ask">Ask</span>
-                    <input id="mp-ask"      type="number" step="any" min="0" value="${state.quote.ask}" data-tip="view.microprice.tip.ask"></label>
+                    <input id="mp-ask"      type="number" step="0.01" min="0" value="${state.quote.ask}" data-tip="view.microprice.tip.ask"></label>
                 <label><span data-i18n="view.microprice.label.bid_size">Bid size</span>
                     <input id="mp-bid-sz" type="number" step="1"   min="0" value="${state.quote.bid_size}" data-tip="view.microprice.tip.bid_sz"></label>
                 <label><span data-i18n="view.microprice.label.ask_size">Ask size</span>

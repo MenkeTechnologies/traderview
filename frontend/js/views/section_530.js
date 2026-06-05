@@ -47,19 +47,19 @@ export async function renderSection530(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s530.label.magi">Contributor MAGI ($)</span>
-                    <input type="number" step="1000" name="contributor_magi" value="${state.contributor_magi}"></label>
+                    <input type="number" step="0.01" name="contributor_magi" value="${state.contributor_magi}"></label>
                 <label><span data-i18n="view.s530.label.contrib">Your desired contribution ($)</span>
-                    <input type="number" step="100" name="desired_contribution" value="${state.desired_contribution}"></label>
+                    <input type="number" step="0.01" name="desired_contribution" value="${state.desired_contribution}"></label>
                 <label><span data-i18n="view.s530.label.other">Other Coverdell contributions YTD ($)</span>
-                    <input type="number" step="100" name="other_coverdell_contributions" value="${state.other_coverdell_contributions}"></label>
+                    <input type="number" step="0.01" name="other_coverdell_contributions" value="${state.other_coverdell_contributions}"></label>
                 <label><span data-i18n="view.s530.label.age">Beneficiary age</span>
                     <input type="number" step="1" name="beneficiary_age" value="${state.beneficiary_age}"></label>
                 <label><span data-i18n="view.s530.label.dist">Total distributions ($)</span>
-                    <input type="number" step="100" name="annual_distributions" value="${state.annual_distributions}"></label>
+                    <input type="number" step="0.01" name="annual_distributions" value="${state.annual_distributions}"></label>
                 <label><span data-i18n="view.s530.label.k12">Qualified K-12 expenses ($)</span>
-                    <input type="number" step="100" name="qualified_k12" value="${state.qualified_k12}"></label>
+                    <input type="number" step="0.01" name="qualified_k12" value="${state.qualified_k12}"></label>
                 <label><span data-i18n="view.s530.label.higher_ed">Qualified higher-ed expenses ($)</span>
-                    <input type="number" step="100" name="qualified_higher_ed" value="${state.qualified_higher_ed}"></label>
+                    <input type="number" step="0.01" name="qualified_higher_ed" value="${state.qualified_higher_ed}"></label>
                 <label><span data-i18n="view.s530.label.fed_rate">Federal marginal %</span>
                     <input type="number" step="0.01" name="fed_marginal_rate" value="${state.fed_marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s530.btn.compute">Compute</button>

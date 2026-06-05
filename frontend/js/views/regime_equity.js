@@ -29,10 +29,10 @@ export async function renderRegimeEquity(mount, _appState) {
             <div class="inline-form">
                 <label><span data-i18n="view.regime_equity.label.trend_slope">Trend slope %</span>
                     <small class="muted" data-i18n="view.regime_equity.hint.trend_slope">(min |slope/mean_eq| to count as trending; default 0.001 = 0.1%)</small>
-                    <input id="re-slope" type="number" step="any" min="0" value="${state.config.trend_slope_pct}" data-tip="view.regime_equity.tip.trend_slope"></label>
+                    <input id="re-slope" type="number" step="0.01" min="0" value="${state.config.trend_slope_pct}" data-tip="view.regime_equity.tip.trend_slope"></label>
                 <label><span data-i18n="view.regime_equity.label.clean_rel_stdev">Clean rel stdev</span>
                     <small class="muted" data-i18n="view.regime_equity.hint.clean_rel_stdev">(max residual/mean_eq for "clean" trend; default 0.02 = 2%)</small>
-                    <input id="re-rsd"   type="number" step="any" min="0" value="${state.config.clean_trend_rel_stdev}" data-tip="view.regime_equity.tip.clean_rel_stdev"></label>
+                    <input id="re-rsd"   type="number" step="0.01" min="0" value="${state.config.clean_trend_rel_stdev}" data-tip="view.regime_equity.tip.clean_rel_stdev"></label>
                 <button data-i18n="view.regime_equity.btn.analyze" id="re-run" class="primary" type="button" data-tip="view.regime_equity.tip.run" data-shortcut="regime_equity_run">Analyze</button>
             </div>
             <div class="inline-form">

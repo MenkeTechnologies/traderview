@@ -72,15 +72,15 @@ export async function renderSection269A(mount, _appState) {
                 <label><span data-i18n="view.s269a.label.purpose">Tax-avoidance purpose?</span>
                     <input type="checkbox" name="principal_purpose_tax_avoidance" ${state.principal_purpose_tax_avoidance ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s269a.label.quantified">Tax savings ($)</span>
-                    <input type="number" step="10000" name="tax_avoidance_purpose_quantified" value="${state.tax_avoidance_purpose_quantified}"></label>
+                    <input type="number" step="0.01" name="tax_avoidance_purpose_quantified" value="${state.tax_avoidance_purpose_quantified}"></label>
                 <label><span data-i18n="view.s269a.label.realloc">Reallocation amount ($)</span>
-                    <input type="number" step="10000" name="reallocation_amount" value="${state.reallocation_amount}"></label>
+                    <input type="number" step="0.01" name="reallocation_amount" value="${state.reallocation_amount}"></label>
                 <label><span data-i18n="view.s269a.label.gross">PSC gross income ($)</span>
-                    <input type="number" step="10000" name="psc_gross_income" value="${state.psc_gross_income}"></label>
+                    <input type="number" step="0.01" name="psc_gross_income" value="${state.psc_gross_income}"></label>
                 <label><span data-i18n="view.s269a.label.dedn">PSC deductions ($)</span>
-                    <input type="number" step="10000" name="psc_deductions" value="${state.psc_deductions}"></label>
+                    <input type="number" step="0.01" name="psc_deductions" value="${state.psc_deductions}"></label>
                 <label><span data-i18n="view.s269a.label.taxable">PSC taxable income ($)</span>
-                    <input type="number" step="10000" name="psc_taxable_income" value="${state.psc_taxable_income}"></label>
+                    <input type="number" step="0.01" name="psc_taxable_income" value="${state.psc_taxable_income}"></label>
                 <label><span data-i18n="view.s269a.label.repealed">35% pre-TCJA flat rate?</span>
                     <input type="checkbox" name="psc_qpsc_flat_rate_repealed" ${state.psc_qpsc_flat_rate_repealed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s269a.label.pre_tcja">Pre-TCJA?</span>

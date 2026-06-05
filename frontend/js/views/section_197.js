@@ -57,7 +57,7 @@ export async function renderSection197(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.s197.label.cost">Cost basis ($)</span>
-                    <input type="number" step="100" name="cost" required></label>
+                    <input type="number" step="0.01" name="cost" required></label>
                 <label><span data-i18n="view.s197.label.acq_year">Acquisition year</span>
                     <input type="number" step="1" name="acq_year" value="${new Date().getFullYear()}" required></label>
                 <label><span data-i18n="view.s197.label.acq_month">Acquisition month (1-12)</span>

@@ -36,7 +36,7 @@ export async function renderMarginalVar(mount, _appState) {
                         ${Z_CONFIDENCE_LEVELS.map(c => `<option value="${c.z}" ${Math.abs(c.z - state.z_alpha) < 1e-9 ? 'selected' : ''}>${esc(c.label)} (z=${c.z})</option>`).join('')}
                     </select></label>
                 <label><span data-i18n="view.mvar.label.z_custom">… or custom z</span>
-                    <input id="mv-z" type="number" step="any" min="0" value="${state.z_alpha}" data-tip="view.mvar.tip.z_custom"></label>
+                    <input id="mv-z" type="number" step="0.01" min="0" value="${state.z_alpha}" data-tip="view.mvar.tip.z_custom"></label>
                 <button data-i18n="view.mvar.btn.compute" id="mv-run" class="primary"
                         data-tip="view.mvar.tip.compute" data-shortcut="marginal_var_run" type="button">Analyze</button>
             </div>

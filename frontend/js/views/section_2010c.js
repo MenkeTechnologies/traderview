@@ -47,13 +47,13 @@ export async function renderSection2010c(mount, _appState) {
                 <label><span data-i18n="view.s2010c.label.months_since">Months since death</span>
                     <input type="number" step="1" name="months_since_death" value="${state.months_since_death}"></label>
                 <label><span data-i18n="view.s2010c.label.dec_used">Deceased lifetime exemption already used ($)</span>
-                    <input type="number" step="100000" name="deceased_lifetime_used" value="${state.deceased_lifetime_used}"></label>
+                    <input type="number" step="0.01" name="deceased_lifetime_used" value="${state.deceased_lifetime_used}"></label>
                 <label><span data-i18n="view.s2010c.label.dec_estate">Deceased spouse's gross estate ($)</span>
-                    <input type="number" step="100000" name="deceased_estate_size" value="${state.deceased_estate_size}"></label>
+                    <input type="number" step="0.01" name="deceased_estate_size" value="${state.deceased_estate_size}"></label>
                 <label><span data-i18n="view.s2010c.label.surv_age">Survivor age</span>
                     <input type="number" step="1" name="surviving_age" value="${state.surviving_age}"></label>
                 <label><span data-i18n="view.s2010c.label.surv_used">Survivor remaining lifetime ($)</span>
-                    <input type="number" step="100000" name="survivor_remaining_lifetime" value="${state.survivor_remaining_lifetime}"></label>
+                    <input type="number" step="0.01" name="survivor_remaining_lifetime" value="${state.survivor_remaining_lifetime}"></label>
                 <label><span data-i18n="view.s2010c.label.growth_yrs">Years to project survivor estate</span>
                     <input type="number" step="1" name="survivor_expected_growth_yrs" value="${state.survivor_expected_growth_yrs}"></label>
                 <label><span data-i18n="view.s2010c.label.growth_rate">Estate growth rate</span>

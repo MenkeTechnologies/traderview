@@ -37,11 +37,11 @@ export async function renderSection1445(mount, _appState) {
             <h2 data-i18n="view.s1445.h2.inputs">Inputs</h2>
             <form id="s1445-form" class="inline-form">
                 <label><span data-i18n="view.s1445.label.amount">Amount realized ($)</span>
-                    <input type="number" step="10000" name="amount_realized" value="${state.amount_realized}"></label>
+                    <input type="number" step="0.01" name="amount_realized" value="${state.amount_realized}"></label>
                 <label><span data-i18n="view.s1445.label.personal">Buyer personal residence?</span>
                     <input type="checkbox" name="buyer_personal_residence" ${state.buyer_personal_residence ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1445.label.actual_tax">Actual tax liability (for 8288-B) ($)</span>
-                    <input type="number" step="1000" name="actual_tax_liability" value="${state.actual_tax_liability}"></label>
+                    <input type="number" step="0.01" name="actual_tax_liability" value="${state.actual_tax_liability}"></label>
                 <label><span data-i18n="view.s1445.label.form_8288b">Form 8288-B filed?</span>
                     <input type="checkbox" name="form_8288b_filed" ${state.form_8288b_filed ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1445.label.foreign">Seller is foreign person?</span>

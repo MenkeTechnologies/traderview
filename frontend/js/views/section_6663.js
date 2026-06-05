@@ -40,9 +40,9 @@ export async function renderSection6663(mount, _appState) {
             <h2 data-i18n="view.s6663.h2.inputs">Inputs</h2>
             <form id="s6663-form" class="inline-form">
                 <label><span data-i18n="view.s6663.label.under">Total underpayment ($)</span>
-                    <input type="number" step="1000" name="total_underpayment" value="${state.total_underpayment}"></label>
+                    <input type="number" step="0.01" name="total_underpayment" value="${state.total_underpayment}"></label>
                 <label><span data-i18n="view.s6663.label.fraud">Portion alleged fraudulent ($)</span>
-                    <input type="number" step="1000" name="fraud_portion" value="${state.fraud_portion}"></label>
+                    <input type="number" step="0.01" name="fraud_portion" value="${state.fraud_portion}"></label>
                 <label><span data-i18n="view.s6663.label.partial">Partial fraud (rest negligence)?</span>
                     <input type="checkbox" name="is_partial_fraud" ${state.is_partial_fraud ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6663.label.rebut">Can rebut presumption?</span>
@@ -52,7 +52,7 @@ export async function renderSection6663(mount, _appState) {
                 <label><span data-i18n="view.s6663.label.understatement">Substantial understatement (&gt; 10% or $5k)?</span>
                     <input type="checkbox" name="is_substantial_understatement" ${state.is_substantial_understatement ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6663.label.correctly">Correct tax that should have been reported ($)</span>
-                    <input type="number" step="1000" name="correctly_reported_tax_liability" value="${state.correctly_reported_tax_liability}"></label>
+                    <input type="number" step="0.01" name="correctly_reported_tax_liability" value="${state.correctly_reported_tax_liability}"></label>
                 <label><span data-i18n="view.s6663.label.oic">In OIC negotiation?</span>
                     <input type="checkbox" name="reduced_to_offer_in_compromise" ${state.reduced_to_offer_in_compromise ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s6663.label.marginal">Marginal %</span>

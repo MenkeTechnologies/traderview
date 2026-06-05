@@ -43,7 +43,7 @@ export async function renderEducationCredits(mount, _appState) {
                     </select>
                 </label>
                 <label><span data-i18n="view.edu.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <button class="primary" type="submit" data-i18n="view.edu.btn.update">Update</button>
             </form>
         </div>
@@ -53,7 +53,7 @@ export async function renderEducationCredits(mount, _appState) {
                 <label><span data-i18n="view.edu.label.name">Student name</span>
                     <input type="text" name="name" required></label>
                 <label><span data-i18n="view.edu.label.qe">Qualified expenses ($)</span>
-                    <input type="number" step="100" name="qualified_expenses" value="0" required></label>
+                    <input type="number" step="0.01" name="qualified_expenses" value="0" required></label>
                 <label><span data-i18n="view.edu.label.undergrad_year">Undergrad year (1-4 or 0)</span>
                     <input type="number" step="1" name="undergrad_year" value="1" min="0" max="4"></label>
                 <label><span data-i18n="view.edu.label.eligible_aoc">Eligible for AOC?</span>

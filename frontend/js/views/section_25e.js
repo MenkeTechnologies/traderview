@@ -41,7 +41,7 @@ export async function renderSection25E(mount, _appState) {
             <h2 data-i18n="view.s25E.h2.inputs">Inputs</h2>
             <form id="s25E-form" class="inline-form">
                 <label><span data-i18n="view.s25E.label.price">Sale price ($)</span>
-                    <input type="number" step="500" name="sale_price" value="${state.sale_price}"></label>
+                    <input type="number" step="0.01" name="sale_price" value="${state.sale_price}"></label>
                 <label><span data-i18n="view.s25E.label.model_year">Vehicle model year</span>
                     <input type="number" step="1" name="model_year" value="${state.model_year}"></label>
                 <label><span data-i18n="view.s25E.label.current">Current year</span>
@@ -51,7 +51,7 @@ export async function renderSection25E(mount, _appState) {
                 <label><span data-i18n="view.s25E.label.dealer">Qualified dealer (IRS-registered)?</span>
                     <input type="checkbox" name="is_qualified_dealer" ${state.is_qualified_dealer ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s25E.label.magi">MAGI ($)</span>
-                    <input type="number" step="1000" name="magi" value="${state.magi}"></label>
+                    <input type="number" step="0.01" name="magi" value="${state.magi}"></label>
                 <label><span data-i18n="view.s25E.label.filing">Filing status</span>
                     <select name="filing_status">
                         <option value="single" ${state.filing_status === 'single' ? 'selected' : ''}>Single / MFS ($75K)</option>

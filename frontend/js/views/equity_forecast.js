@@ -17,7 +17,7 @@ export async function renderEquityForecast(mount, state) {
         <div class="chart-panel">
             <form id="ef-form" class="inline-form">
                 <label><span data-i18n="view.equity_forecast.label.starting_equity">Starting equity</span>
-                    <input name="starting_equity" type="number" min="100" step="any" value="10000" style="width:120px;" data-tip="view.equity_forecast.tip.start">
+                    <input name="starting_equity" type="number" min="100" step="0.01" value="10000" style="width:120px;" data-tip="view.equity_forecast.tip.start">
                 </label>
                 <label><span data-i18n="view.equity_forecast.label.risk_pct">Risk per trade %</span>
                     <input name="risk_pct" type="number" min="0.1" max="100" step="0.1" value="1" style="width:90px;" data-tip="view.equity_forecast.tip.risk">

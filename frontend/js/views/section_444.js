@@ -52,17 +52,17 @@ export async function renderSection444(mount, _appState) {
                 <label><span data-i18n="view.s444.label.deferred">Months deferred from required yr</span>
                     <input type="number" step="1" name="months_deferred" value="${state.months_deferred}"></label>
                 <label><span data-i18n="view.s444.label.income">Deferral period taxable income ($)</span>
-                    <input type="number" step="10000" name="deferral_period_taxable_income" value="${state.deferral_period_taxable_income}"></label>
+                    <input type="number" step="0.01" name="deferral_period_taxable_income" value="${state.deferral_period_taxable_income}"></label>
                 <label><span data-i18n="view.s444.label.rate">Highest rate partner / shareholder %</span>
                     <input type="number" step="0.1" name="highest_rate_partner" value="${state.highest_rate_partner}"></label>
                 <label><span data-i18n="view.s444.label.psc">Is PSC (§ 280H instead of § 7519)?</span>
                     <input type="checkbox" name="is_psc" ${state.is_psc ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s444.label.psc_min">PSC min salary paid in deferral ($)</span>
-                    <input type="number" step="10000" name="psc_min_salary_paid" value="${state.psc_min_salary_paid}"></label>
+                    <input type="number" step="0.01" name="psc_min_salary_paid" value="${state.psc_min_salary_paid}"></label>
                 <label><span data-i18n="view.s444.label.psc_comp">PSC owner comp pct of services %</span>
                     <input type="number" step="0.1" name="psc_owner_compensation_pct" value="${state.psc_owner_compensation_pct}"></label>
                 <label><span data-i18n="view.s444.label.balance">§ 7519 prior required payment balance ($)</span>
-                    <input type="number" step="1000" name="s7519_required_payment_balance" value="${state.s7519_required_payment_balance}"></label>
+                    <input type="number" step="0.01" name="s7519_required_payment_balance" value="${state.s7519_required_payment_balance}"></label>
                 <label><span data-i18n="view.s444.label.short">First year (short period)?</span>
                     <input type="checkbox" name="short_period_first_yr" ${state.short_period_first_yr ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s444.label.year">Election year</span>

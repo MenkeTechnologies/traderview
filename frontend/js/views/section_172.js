@@ -36,19 +36,19 @@ export async function renderSection172(mount, _appState) {
             <h2 data-i18n="view.s172.h2.inputs">Inputs</h2>
             <form id="s172-form" class="inline-form">
                 <label><span data-i18n="view.s172.label.current_loss">Current year operating loss ($)</span>
-                    <input type="number" step="1000" name="current_year_loss" value="${state.current_year_loss}"></label>
+                    <input type="number" step="0.01" name="current_year_loss" value="${state.current_year_loss}"></label>
                 <label><span data-i18n="view.s172.label.pre_2018">Pre-2018 NOL remaining ($)</span>
-                    <input type="number" step="1000" name="pre_2018_nol_remaining" value="${state.pre_2018_nol_remaining}"></label>
+                    <input type="number" step="0.01" name="pre_2018_nol_remaining" value="${state.pre_2018_nol_remaining}"></label>
                 <label><span data-i18n="view.s172.label.post_2017">Post-2017 NOL remaining ($)</span>
-                    <input type="number" step="1000" name="post_2017_nol_remaining" value="${state.post_2017_nol_remaining}"></label>
+                    <input type="number" step="0.01" name="post_2017_nol_remaining" value="${state.post_2017_nol_remaining}"></label>
                 <label><span data-i18n="view.s172.label.current_ti">Current year TI BEFORE NOL ($)</span>
-                    <input type="number" step="1000" name="current_year_taxable_income_before_nol" value="${state.current_year_taxable_income_before_nol}"></label>
+                    <input type="number" step="0.01" name="current_year_taxable_income_before_nol" value="${state.current_year_taxable_income_before_nol}"></label>
                 <label><span data-i18n="view.s172.label.mfj">MFJ?</span>
                     <input type="checkbox" name="is_mfj" ${state.is_mfj ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s172.label.business_loss">Business loss (subject to § 461(l))?</span>
                     <input type="checkbox" name="is_business_loss" ${state.is_business_loss ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s172.label.other_ebl">Other non-business income (for EBL) ($)</span>
-                    <input type="number" step="1000" name="other_income_for_ebl" value="${state.other_income_for_ebl}"></label>
+                    <input type="number" step="0.01" name="other_income_for_ebl" value="${state.other_income_for_ebl}"></label>
                 <label><span data-i18n="view.s172.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <button class="primary" type="submit" data-i18n="view.s172.btn.compute">Compute</button>

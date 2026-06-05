@@ -29,7 +29,7 @@ export async function renderIvRank(mount, _appState) {
             <h2 data-i18n="view.iv_rank.h2.current_implied_vol">Current implied vol</h2>
             <div class="inline-form">
                 <label><span data-i18n="view.iv_rank.label.current_iv">Current IV (decimal; 0.25 = 25%)</span>
-                    <input id="iv-cur" type="number" step="any" min="0" value="${state.currentIv}" data-tip="view.iv_rank.tip.current"></label>
+                    <input id="iv-cur" type="number" step="0.01" min="0" value="${state.currentIv}" data-tip="view.iv_rank.tip.current"></label>
                 <button data-i18n="view.iv_rank.btn.compute" data-tip="view.iv_rank.tip.compute" data-shortcut="iv_rank_compute" id="iv-run" class="primary" type="button">Compute</button>
             </div>
         </div>

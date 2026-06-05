@@ -44,11 +44,11 @@ export async function renderOrderStaleness(mount, _appState) {
                     <input id="os-now" type="text" value="${state.now}" data-tip="view.order_staleness.tip.now"></label>
                 <button data-i18n="view.order_staleness.btn.now_current_time" data-tip="view.order_staleness.tip.now_now" id="os-nownow" class="secondary" type="button">now = current time</button>
                 <label><span data-i18n="view.order_staleness.label.warn_h">Warn (h)</span>
-                    <input id="os-warn" type="number" step="any" min="0" value="${state.thresholds.warn_hours}" data-tip="view.order_staleness.tip.warn"></label>
+                    <input id="os-warn" type="number" step="0.01" min="0" value="${state.thresholds.warn_hours}" data-tip="view.order_staleness.tip.warn"></label>
                 <label><span data-i18n="view.order_staleness.label.stale_h">Stale (h)</span>
-                    <input id="os-stale" type="number" step="any" min="0" value="${state.thresholds.stale_hours}" data-tip="view.order_staleness.tip.stale"></label>
+                    <input id="os-stale" type="number" step="0.01" min="0" value="${state.thresholds.stale_hours}" data-tip="view.order_staleness.tip.stale"></label>
                 <label><span data-i18n="view.order_staleness.label.forgotten_h">Forgotten (h)</span>
-                    <input id="os-forgot" type="number" step="any" min="0" value="${state.thresholds.forgotten_hours}" data-tip="view.order_staleness.tip.forgotten"></label>
+                    <input id="os-forgot" type="number" step="0.01" min="0" value="${state.thresholds.forgotten_hours}" data-tip="view.order_staleness.tip.forgotten"></label>
                 <button data-i18n="view.order_staleness.btn.evaluate" data-tip="view.order_staleness.tip.evaluate" data-shortcut="order_staleness_evaluate" id="os-run" class="primary" type="button">Evaluate</button>
             </div>
             <p data-i18n="view.order_staleness.hint.industry_defaults_24h_warn_72h_stale_168h_forgotte" class="muted">Industry defaults: 24h warn / 72h stale / 168h forgotten.

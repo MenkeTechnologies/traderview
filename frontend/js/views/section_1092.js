@@ -35,19 +35,19 @@ export async function renderSection1092(mount, _appState) {
             <h2 data-i18n="view.s1092.h2.inputs">Inputs</h2>
             <form id="s1092-form" class="inline-form">
                 <label><span data-i18n="view.s1092.label.loss_realized">Loss leg realized ($)</span>
-                    <input type="number" step="100" name="loss_leg_realized" value="${state.loss_leg_realized}"></label>
+                    <input type="number" step="0.01" name="loss_leg_realized" value="${state.loss_leg_realized}"></label>
                 <label><span data-i18n="view.s1092.label.gain_unrealized">Gain leg unrealized ($)</span>
-                    <input type="number" step="100" name="gain_leg_unrealized" value="${state.gain_leg_unrealized}"></label>
+                    <input type="number" step="0.01" name="gain_leg_unrealized" value="${state.gain_leg_unrealized}"></label>
                 <label><span data-i18n="view.s1092.label.mixed_election">Mixed-Straddle Election made?</span>
                     <input type="checkbox" name="has_mixed_straddle_election" ${state.has_mixed_straddle_election ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1092.label.section_1256">One leg § 1256 contract?</span>
                     <input type="checkbox" name="is_qualified_section_1256" ${state.is_qualified_section_1256 ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s1092.label.interest">Interest + carrying charges to capitalize ($)</span>
-                    <input type="number" step="100" name="interest_capitalized" value="${state.interest_capitalized}"></label>
+                    <input type="number" step="0.01" name="interest_capitalized" value="${state.interest_capitalized}"></label>
                 <label><span data-i18n="view.s1092.label.st_loss">ST capital loss in straddle ($)</span>
-                    <input type="number" step="100" name="short_term_capital_loss" value="${state.short_term_capital_loss}"></label>
+                    <input type="number" step="0.01" name="short_term_capital_loss" value="${state.short_term_capital_loss}"></label>
                 <label><span data-i18n="view.s1092.label.lt_loss">LT capital loss in straddle ($)</span>
-                    <input type="number" step="100" name="long_term_capital_loss" value="${state.long_term_capital_loss}"></label>
+                    <input type="number" step="0.01" name="long_term_capital_loss" value="${state.long_term_capital_loss}"></label>
                 <label><span data-i18n="view.s1092.label.marginal">Marginal %</span>
                     <input type="number" step="0.01" name="marginal_rate" value="${state.marginal_rate}"></label>
                 <label><span data-i18n="view.s1092.label.ltcg">LTCG %</span>

@@ -35,19 +35,19 @@ export async function renderSection280e(mount, _appState) {
             <h2 data-i18n="view.s280e.h2.inputs">Inputs</h2>
             <form id="s280e-form" class="inline-form">
                 <label><span data-i18n="view.s280e.label.revenue">Cannabis revenue ($)</span>
-                    <input type="number" step="1000" name="revenue" value="${state.revenue}"></label>
+                    <input type="number" step="0.01" name="revenue" value="${state.revenue}"></label>
                 <label><span data-i18n="view.s280e.label.cogs">Direct COGS ($)</span>
-                    <input type="number" step="1000" name="cogs" value="${state.cogs}"></label>
+                    <input type="number" step="0.01" name="cogs" value="${state.cogs}"></label>
                 <label><span data-i18n="view.s280e.label.operating">Operating expenses (DISALLOWED) ($)</span>
-                    <input type="number" step="1000" name="operating_expenses" value="${state.operating_expenses}"></label>
+                    <input type="number" step="0.01" name="operating_expenses" value="${state.operating_expenses}"></label>
                 <label><span data-i18n="view.s280e.label.indirect">Indirect production costs (allocate to COGS) ($)</span>
-                    <input type="number" step="1000" name="indirect_production" value="${state.indirect_production}"></label>
+                    <input type="number" step="0.01" name="indirect_production" value="${state.indirect_production}"></label>
                 <label><span data-i18n="view.s280e.label.integrated">Vertically integrated?</span>
                     <input type="checkbox" name="is_vertically_integrated" ${state.is_vertically_integrated ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s280e.label.sep_rev">Separate non-cannabis revenue ($)</span>
-                    <input type="number" step="1000" name="separate_non_cannabis_revenue" value="${state.separate_non_cannabis_revenue}"></label>
+                    <input type="number" step="0.01" name="separate_non_cannabis_revenue" value="${state.separate_non_cannabis_revenue}"></label>
                 <label><span data-i18n="view.s280e.label.sep_exp">Separate non-cannabis expenses ($)</span>
-                    <input type="number" step="1000" name="separate_non_cannabis_expenses" value="${state.separate_non_cannabis_expenses}"></label>
+                    <input type="number" step="0.01" name="separate_non_cannabis_expenses" value="${state.separate_non_cannabis_expenses}"></label>
                 <label><span data-i18n="view.s280e.label.entity">Entity type</span>
                     <select name="entity_type">
                         <option value="c_corp" ${state.entity_type === 'c_corp' ? 'selected' : ''}>C-corp</option>

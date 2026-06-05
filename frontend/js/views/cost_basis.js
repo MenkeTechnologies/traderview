@@ -36,9 +36,9 @@ export async function renderCostBasis(mount, _appState) {
 
             <div class="inline-form">
                 <label><span data-i18n="view.cost_basis.label.qty">Qty to close</span>
-                    <input id="cb-qty" type="number" step="any" min="0" value="${state.qty_to_close}" data-tip="view.cost_basis.tip.qty"></label>
+                    <input id="cb-qty" type="number" step="0.01" min="0" value="${state.qty_to_close}" data-tip="view.cost_basis.tip.qty"></label>
                 <label><span data-i18n="view.cost_basis.label.price">Price per share ($)</span>
-                    <input id="cb-px" type="number" step="any" min="0" value="${state.price_per_share}" data-tip="view.cost_basis.tip.price"></label>
+                    <input id="cb-px" type="number" step="0.01" min="0" value="${state.price_per_share}" data-tip="view.cost_basis.tip.price"></label>
                 <label><span data-i18n="view.cost_basis.label.method">Method</span>
                     <select id="cb-method" data-tip="view.cost_basis.tip.method">
                         ${METHODS.map(m => `<option value="${m}" ${state.method === m ? 'selected' : ''} data-i18n="${methodLabelKey(m)}">${m.toUpperCase()}</option>`).join('')}

@@ -44,21 +44,21 @@ export async function renderSection2032(mount, _appState) {
             <h2 data-i18n="view.s2032.h2.inputs">Inputs</h2>
             <form id="s2032-form" class="inline-form">
                 <label><span data-i18n="view.s2032.label.dod">Date-of-death value ($)</span>
-                    <input type="number" step="10000" name="date_of_death_value" value="${state.date_of_death_value}"></label>
+                    <input type="number" step="0.01" name="date_of_death_value" value="${state.date_of_death_value}"></label>
                 <label><span data-i18n="view.s2032.label.avd">AVD value 6 months later ($)</span>
-                    <input type="number" step="10000" name="avd_value_6_months_later" value="${state.avd_value_6_months_later}"></label>
+                    <input type="number" step="0.01" name="avd_value_6_months_later" value="${state.avd_value_6_months_later}"></label>
                 <label><span data-i18n="view.s2032.label.sold">Sold between date / AVD value ($)</span>
-                    <input type="number" step="10000" name="sold_between_date_avd_value" value="${state.sold_between_date_avd_value}"></label>
+                    <input type="number" step="0.01" name="sold_between_date_avd_value" value="${state.sold_between_date_avd_value}"></label>
                 <label><span data-i18n="view.s2032.label.distributed">Distributed value during period ($)</span>
-                    <input type="number" step="10000" name="distributed_between_avd_value" value="${state.distributed_between_avd_value}"></label>
+                    <input type="number" step="0.01" name="distributed_between_avd_value" value="${state.distributed_between_avd_value}"></label>
                 <label><span data-i18n="view.s2032.label.tax_dod">Federal estate tax at DOD ($)</span>
-                    <input type="number" step="10000" name="federal_estate_tax_dod" value="${state.federal_estate_tax_dod}"></label>
+                    <input type="number" step="0.01" name="federal_estate_tax_dod" value="${state.federal_estate_tax_dod}"></label>
                 <label><span data-i18n="view.s2032.label.tax_avd">Federal estate tax at AVD ($)</span>
-                    <input type="number" step="10000" name="federal_estate_tax_avd" value="${state.federal_estate_tax_avd}"></label>
+                    <input type="number" step="0.01" name="federal_estate_tax_avd" value="${state.federal_estate_tax_avd}"></label>
                 <label><span data-i18n="view.s2032.label.gst_dod">GST tax at DOD ($)</span>
-                    <input type="number" step="10000" name="gst_tax_dod" value="${state.gst_tax_dod}"></label>
+                    <input type="number" step="0.01" name="gst_tax_dod" value="${state.gst_tax_dod}"></label>
                 <label><span data-i18n="view.s2032.label.gst_avd">GST tax at AVD ($)</span>
-                    <input type="number" step="10000" name="gst_tax_avd" value="${state.gst_tax_avd}"></label>
+                    <input type="number" step="0.01" name="gst_tax_avd" value="${state.gst_tax_avd}"></label>
                 <label><span data-i18n="view.s2032.label.elected">AVD election made?</span>
                     <input type="checkbox" name="avd_election_made" ${state.avd_election_made ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2032.label.return_due">Estate tax return due date</span>
@@ -66,9 +66,9 @@ export async function renderSection2032(mount, _appState) {
                 <label><span data-i18n="view.s2032.label.six_months">6 months after death date</span>
                     <input type="date" name="six_months_after_death_date" value="${state.six_months_after_death_date}"></label>
                 <label><span data-i18n="view.s2032.label.dec_estate">Decrease in gross estate ($)</span>
-                    <input type="number" step="10000" name="decrease_in_gross_estate" value="${state.decrease_in_gross_estate}"></label>
+                    <input type="number" step="0.01" name="decrease_in_gross_estate" value="${state.decrease_in_gross_estate}"></label>
                 <label><span data-i18n="view.s2032.label.dec_tax">Decrease in total tax ($)</span>
-                    <input type="number" step="10000" name="decrease_in_tax" value="${state.decrease_in_tax}"></label>
+                    <input type="number" step="0.01" name="decrease_in_tax" value="${state.decrease_in_tax}"></label>
                 <label><span data-i18n="view.s2032.label.marital">Marital deduction estate?</span>
                     <input type="checkbox" name="is_marital_deduction_estate" ${state.is_marital_deduction_estate ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s2032.label.charitable">Charitable deduction estate?</span>

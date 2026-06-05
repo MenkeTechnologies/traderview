@@ -27,7 +27,7 @@ export async function renderYieldCurve(mount, _appState) {
             <div class="inline-form">
                 ${TENORS.map(k => `
                     <label><span data-i18n="view.yield_curve.label.${k}">${TENOR_LABELS[k]}</span>
-                        <input id="yc-${k}" type="number" step="any" value="${state[k]}" data-tip="view.yield_curve.tip.${k}"></label>
+                        <input id="yc-${k}" type="number" step="0.01" value="${state[k]}" data-tip="view.yield_curve.tip.${k}"></label>
                 `).join('')}
                 <button data-i18n="view.yield_curve.btn.classify" id="yc-run" class="primary"
                         data-tip="view.yield_curve.tip.classify" data-shortcut="yield_curve_run" type="button">Classify</button>

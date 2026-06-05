@@ -40,11 +40,11 @@ export async function renderSection127(mount, _appState) {
             <h2 data-i18n="view.s127.h2.inputs">Inputs</h2>
             <form id="s127-form" class="inline-form">
                 <label><span data-i18n="view.s127.label.assistance">Educational assistance received ($)</span>
-                    <input type="number" step="100" name="educational_assistance_received" value="${state.educational_assistance_received}"></label>
+                    <input type="number" step="0.01" name="educational_assistance_received" value="${state.educational_assistance_received}"></label>
                 <label><span data-i18n="view.s127.label.loans">Student loan payments by employer ($)</span>
-                    <input type="number" step="100" name="student_loan_payments_received" value="${state.student_loan_payments_received}"></label>
+                    <input type="number" step="0.01" name="student_loan_payments_received" value="${state.student_loan_payments_received}"></label>
                 <label><span data-i18n="view.s127.label.other_received">Other employees received total ($)</span>
-                    <input type="number" step="1000" name="total_other_employees_received" value="${state.total_other_employees_received}"></label>
+                    <input type="number" step="0.01" name="total_other_employees_received" value="${state.total_other_employees_received}"></label>
                 <label><span data-i18n="view.s127.label.owner">Own &gt; 5% of business?</span>
                     <input type="checkbox" name="is_owner_5_pct" ${state.is_owner_5_pct ? 'checked' : ''}></label>
                 <label><span data-i18n="view.s127.label.written">Employer has written plan?</span>

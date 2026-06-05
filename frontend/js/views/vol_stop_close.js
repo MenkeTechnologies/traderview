@@ -37,7 +37,7 @@ export async function renderVolStopClose(mount, _appState) {
                 <label><span data-i18n="view.vol_stop_close.label.lookback">Lookback (bars)</span>
                     <input id="vsc-lb" type="number" step="1" min="1" value="${state.cfg.lookback}" data-tip="view.vol_stop_close.tip.lookback"></label>
                 <label><span data-i18n="view.vol_stop_close.label.atr_multiplier">ATR multiplier</span>
-                    <input id="vsc-mult" type="number" step="any" min="0" value="${state.cfg.atr_multiplier}" data-tip="view.vol_stop_close.tip.atr_mult"></label>
+                    <input id="vsc-mult" type="number" step="0.01" min="0" value="${state.cfg.atr_multiplier}" data-tip="view.vol_stop_close.tip.atr_mult"></label>
                 <label><span data-i18n="view.vol_stop_close.label.atr_period">ATR period</span>
                     <input id="vsc-atr" type="number" step="1" min="1" value="${state.atrPeriod}" data-tip="view.vol_stop_close.tip.atr_period"></label>
                 <button data-i18n="view.vol_stop_close.btn.compute" id="vsc-run" class="primary" type="button" data-tip="view.vol_stop_close.tip.run" data-shortcut="vol_stop_close_run">Compute</button>

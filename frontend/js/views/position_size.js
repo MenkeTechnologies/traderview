@@ -24,14 +24,14 @@ export async function renderPositionSize(mount, state) {
                         <option data-i18n="view.position_size.opt.short" value="short">short</option>
                     </select>
                 </label>
-                <label><span data-i18n="view.position_size.label.entry">Entry</span>  <input name="entry" type="number" step="any" required value="50" style="width:90px;"></label>
-                <label><span data-i18n="view.position_size.label.stop">Stop</span>   <input name="stop"  type="number" step="any" required value="48" style="width:90px;"></label>
-                <label><span data-i18n="view.position_size.label.equity">Equity</span> <input name="equity" type="number" step="any" required value="100000" style="width:120px;"></label>
+                <label><span data-i18n="view.position_size.label.entry">Entry</span>  <input name="entry" type="number" step="0.01" required value="50" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.stop">Stop</span>   <input name="stop"  type="number" step="0.01" required value="48" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.equity">Equity</span> <input name="equity" type="number" step="0.01" required value="100000" style="width:120px;"></label>
                 <label><span data-i18n="view.position_size.label.risk_pct">Risk % per trade</span>
                     <input name="risk_pct" type="number" step="0.01" min="0.01" max="10" value="1" style="width:80px;">
                 </label>
                 <label><span data-i18n="view.position_size.label.r_dollars">R ($)</span>
-                    <input name="r_dollars" type="number" step="any" min="0" value="500" style="width:100px;">
+                    <input name="r_dollars" type="number" step="0.01" min="0" value="500" style="width:100px;">
                 </label>
                 <label><span data-i18n="view.position_size.label.max_position_pct">Max position %</span>
                     <input name="max_pos_pct" type="number" step="1" min="0" max="100" value="25" style="width:80px;">
@@ -43,8 +43,8 @@ export async function renderPositionSize(mount, state) {
             <form id="ps-kelly" class="inline-form" style="margin-top:8px;">
                 <span class="muted small" data-i18n="view.position_size.kelly_inputs">Kelly inputs:</span>
                 <label><span data-i18n="view.position_size.label.win_rate">Win rate</span> <input name="win_rate" type="number" step="0.01" min="0" max="1" value="0.55" style="width:80px;"></label>
-                <label><span data-i18n="view.position_size.label.avg_win">Avg win</span>  <input name="avg_win"  type="number" step="any" min="0" value="1.5" style="width:90px;"></label>
-                <label><span data-i18n="view.position_size.label.avg_loss">Avg loss</span> <input name="avg_loss" type="number" step="any" min="0" value="1.0" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.avg_win">Avg win</span>  <input name="avg_win"  type="number" step="0.01" min="0" value="1.5" style="width:90px;"></label>
+                <label><span data-i18n="view.position_size.label.avg_loss">Avg loss</span> <input name="avg_loss" type="number" step="0.01" min="0" value="1.0" style="width:90px;"></label>
                 <label><span data-i18n="view.position_size.label.fractional">Fractional</span> <input name="frac_k" type="number" step="0.05" min="0" max="1" value="0.5" style="width:80px;"></label>
                 <button data-i18n="view.position_size.btn.pull_from_history" type="button" class="btn" id="ps-fill-history" ${acct ? '' : 'disabled'}
                         title="${esc(t(acct ? 'view.position_size.tip.pull_history' : 'view.position_size.tip.no_account'))}">

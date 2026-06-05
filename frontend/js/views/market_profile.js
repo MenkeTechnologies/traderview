@@ -30,7 +30,7 @@ export async function renderMarketProfile(mount, _appState) {
             <textarea id="mp-brackets" rows="8" placeholder="0 102.5 101.0&#10;1 101.5 100.0&#10;..." data-tip="view.market_profile.tip.brackets"></textarea>
             <div class="inline-form">
                 <label><span data-i18n="view.market_profile.label.tick_size">Tick size</span>
-                    <input id="mp-tick" type="number" step="any" min="0" value="${state.tickSize}" data-tip="view.market_profile.tip.tick"></label>
+                    <input id="mp-tick" type="number" step="0.01" min="0" value="${state.tickSize}" data-tip="view.market_profile.tip.tick"></label>
                 <button data-i18n="view.market_profile.btn.load_demo_13_bracket_normal_day" id="mp-demo" class="secondary" type="button" data-tip="view.market_profile.tip.demo" data-shortcut="market_profile_demo">Load demo (13-bracket normal day)</button>
                 <button data-i18n="view.market_profile.btn.clear" id="mp-clear" class="secondary" type="button" data-tip="view.market_profile.tip.clear">Clear</button>
                 <button data-i18n="view.market_profile.btn.build_tpo" id="mp-run" class="primary" type="button" data-tip="view.market_profile.tip.run" data-shortcut="market_profile_run">Build TPO</button>
