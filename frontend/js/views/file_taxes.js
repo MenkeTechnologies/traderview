@@ -41,7 +41,10 @@ export async function renderTaxWizard(mount) {
         const params = new URLSearchParams(q);
         const y = parseInt(params.get('year'), 10);
         if (!Number.isNaN(y)) STATE.year = y;
-        const sec = params.get('section');
+        // Param name `sec` (NOT `section`) — the literal substring
+        // `&sect` would be HTML-entity-decoded as `§` by Tauri WebKit
+        // on hash reads, producing `§ion=...` and breaking the router.
+        const sec = params.get('sec') || params.get('section');
         if (sec && SECTIONS.some(s => s.id === sec)) STATE.section = sec;
     } catch (_) {}
 
@@ -68,7 +71,7 @@ export async function renderTaxWizard(mount) {
     `;
     mount.querySelector('#tw-year').addEventListener('change', e => {
         STATE.year = parseInt(e.target.value, 10) || STATE.year;
-        location.hash = `#file-taxes?year=${STATE.year}&section=${STATE.section}`;
+        location.hash = `#file-taxes?year=${STATE.year}&sec=${STATE.section}`;
         loadAndRender(mount, tok);
     });
     mount.querySelector('#tw-autopop').addEventListener('click', () => autopop(mount, tok));
@@ -110,7 +113,7 @@ function renderRail(mount) {
     rail.querySelectorAll('button.tw-rail-item').forEach(btn => {
         btn.addEventListener('click', () => {
             STATE.section = btn.dataset.sec;
-            location.hash = `#file-taxes?year=${STATE.year}&section=${STATE.section}`;
+            location.hash = `#file-taxes?year=${STATE.year}&sec=${STATE.section}`;
             // Re-render rail (active class) + pane (new section).
             const m = btn.closest('.tw-shell').parentElement;
             renderRail(m);
@@ -595,7 +598,7 @@ function wireNav(pane, mount, tok) {
     pane.querySelectorAll('button[data-go]').forEach(btn => {
         btn.addEventListener('click', () => {
             STATE.section = btn.dataset.go;
-            location.hash = `#file-taxes?year=${STATE.year}&section=${STATE.section}`;
+            location.hash = `#file-taxes?year=${STATE.year}&sec=${STATE.section}`;
             renderRail(mount);
             renderActiveSection(mount, tok);
         });

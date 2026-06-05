@@ -215,7 +215,7 @@ async fn autopopulate(
         .and_then(|(d,)| d)
         .unwrap_or(Decimal::ZERO);
 
-    // Gross receipts come from positive-amount expense_transactions
+    // Gross receipts come from positive-amount transactions
     // (or a future "self-employment income" feed). For now, leave
     // the user's existing gross_receipts in place if they've already
     // entered it; otherwise zero (the wizard prompts to enter it).
@@ -224,8 +224,8 @@ async fn autopopulate(
         // categories (placeholder — the user can refine in the wizard).
         let income_row: Option<(Option<Decimal>,)> = sqlx::query_as(
             "SELECT COALESCE(SUM(t.amount), 0)
-               FROM expense_transactions t
-               JOIN expense_accounts a ON a.id = t.account_id
+               FROM transactions t
+               JOIN financial_accounts a ON a.id = t.account_id
               WHERE a.user_id = $1
                 AND EXTRACT(YEAR FROM t.posted_at) = $2
                 AND t.amount > 0

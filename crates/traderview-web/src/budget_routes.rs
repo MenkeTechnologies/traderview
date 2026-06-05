@@ -8,7 +8,7 @@
 //!   GET    /api/budget/snapshot?year=&month= — live month snapshot
 //!
 //! The snapshot endpoint is the load-bearing one — it pulls live
-//! transaction totals from `expense_transactions` for the requested
+//! transaction totals from `transactions` for the requested
 //! month, joins each category's budget limit, and emits per-category
 //! progress + the rollup (income / expense / savings rate).
 
@@ -195,13 +195,13 @@ async fn snapshot(
                 c.label,
                 COALESCE(SUM(CASE WHEN t.amount < 0 THEN -t.amount ELSE 0 END), 0) AS spent
            FROM expense_categories c
-           LEFT JOIN expense_transactions t
+           LEFT JOIN transactions t
                   ON t.category_code = c.code
                  AND t.is_transfer = FALSE
                  AND EXTRACT(YEAR FROM t.posted_at) = $2
                  AND EXTRACT(MONTH FROM t.posted_at) = $3
                  AND EXISTS (
-                     SELECT 1 FROM expense_accounts a
+                     SELECT 1 FROM financial_accounts a
                       WHERE a.id = t.account_id AND a.user_id = $1
                  )
        GROUP BY c.code, c.label
@@ -258,11 +258,11 @@ async fn snapshot(
         });
     }
 
-    // Income = positive expense_transactions for the month.
+    // Income = positive transactions for the month.
     let income_row: Option<Decimal> = sqlx::query_scalar(
         "SELECT COALESCE(SUM(t.amount), 0)
-           FROM expense_transactions t
-           JOIN expense_accounts a ON a.id = t.account_id
+           FROM transactions t
+           JOIN financial_accounts a ON a.id = t.account_id
           WHERE a.user_id = $1
             AND t.amount > 0
             AND t.is_transfer = FALSE

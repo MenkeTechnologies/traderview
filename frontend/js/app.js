@@ -2073,6 +2073,19 @@ function bindTabs() {
     window.addEventListener('tv:nav-categorize',  () => { window.location.hash = 'categorize'; });
     window.addEventListener('tv:nav-file-taxes',  () => { window.location.hash = 'file-taxes'; });
     window.addEventListener('tv:nav-budget',      () => { window.location.hash = 'budget'; });
+    // More-menu nav targets that previously had no shortcut.
+    window.addEventListener('tv:nav-accounts',       () => { window.location.hash = 'accounts'; });
+    window.addEventListener('tv:nav-calendar',       () => { window.location.hash = 'calendar'; });
+    window.addEventListener('tv:nav-catalysts',      () => { window.location.hash = 'catalysts'; });
+    window.addEventListener('tv:nav-dashboards',     () => { window.location.hash = 'dashboards'; });
+    window.addEventListener('tv:nav-goals',          () => { window.location.hash = 'goals'; });
+    window.addEventListener('tv:nav-halts',          () => { window.location.hash = 'halts'; });
+    window.addEventListener('tv:nav-note-templates', () => { window.location.hash = 'note-templates'; });
+    window.addEventListener('tv:nav-reviews',        () => { window.location.hash = 'reviews'; });
+    window.addEventListener('tv:nav-risk-gate',      () => { window.location.hash = 'risk-gate'; });
+    window.addEventListener('tv:nav-search',         () => { window.location.hash = 'search'; });
+    window.addEventListener('tv:nav-tags',           () => { window.location.hash = 'tags'; });
+    window.addEventListener('tv:nav-webull',         () => { window.location.hash = 'webull'; });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {
@@ -2235,6 +2248,18 @@ export async function dispatch() {
     bumpViewToken();
     const hash = (window.location.hash || '#launcher').slice(1);
     let [view, ...rest] = hash.split('/');
+    // Strip optional `?...` query string off the LAST segment so a view
+    // like `#file-taxes?year=2025&section=income` routes to `file-taxes`,
+    // not the whole string. Individual views read `location.hash` and
+    // parse their own query params (e.g. file_taxes.js reads ?year=).
+    if (rest.length === 0) {
+        const q = view.indexOf('?');
+        if (q >= 0) view = view.slice(0, q);
+    } else {
+        const last = rest[rest.length - 1];
+        const q = last.indexOf('?');
+        if (q >= 0) rest[rest.length - 1] = last.slice(0, q);
+    }
     // Popout mode — a route like `#popout/<viewId>/<...rest>` renders the
     // target view ALONE on the page (no topbar, no account strip, no
     // launcher chrome) so the user can tear it off into its own

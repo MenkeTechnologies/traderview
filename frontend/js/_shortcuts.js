@@ -298,6 +298,22 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'nav_categorize',  keys: { key: 'g', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_categorize',  actionKey: 'tv:nav-categorize' },
     { id: 'nav_file_taxes',  keys: { key: 'x', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_file_taxes',  actionKey: 'tv:nav-file-taxes' },
     { id: 'nav_budget',      keys: { key: 'b', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_budget',      actionKey: 'tv:nav-budget' },
+    // More-menu nav targets that previously lacked their own shortcut.
+    // Same modifier policy as the rest of the nav block above —
+    // Cmd+Ctrl+Alt+<letter>, picked for mnemonic match without colliding
+    // with any prior binding.
+    { id: 'nav_accounts',       keys: { key: 'a', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_accounts',       actionKey: 'tv:nav-accounts' },
+    { id: 'nav_calendar',       keys: { key: 'k', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_calendar',       actionKey: 'tv:nav-calendar' },
+    { id: 'nav_catalysts',      keys: { key: 'y', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_catalysts',      actionKey: 'tv:nav-catalysts' },
+    { id: 'nav_dashboards',     keys: { key: 'o', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_dashboards',     actionKey: 'tv:nav-dashboards' },
+    { id: 'nav_goals',          keys: { key: 'f', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_goals',          actionKey: 'tv:nav-goals' },
+    { id: 'nav_halts',          keys: { key: 'h', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_halts',          actionKey: 'tv:nav-halts' },
+    { id: 'nav_note_templates', keys: { key: 'n', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_note_templates', actionKey: 'tv:nav-note-templates' },
+    { id: 'nav_reviews',        keys: { key: 'v', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_reviews',        actionKey: 'tv:nav-reviews' },
+    { id: 'nav_risk_gate',      keys: { key: 'z', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_risk_gate',      actionKey: 'tv:nav-risk-gate' },
+    { id: 'nav_search',         keys: { key: 's', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_search',         actionKey: 'tv:nav-search' },
+    { id: 'nav_tags',           keys: { key: 'q', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_tags',           actionKey: 'tv:nav-tags' },
+    { id: 'nav_webull',         keys: { key: 'u', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_webull',         actionKey: 'tv:nav-webull' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.
