@@ -49,6 +49,9 @@ pub struct RawText {
 /// Run OCR. Dispatches to the best backend available — Vision on macOS
 /// when the sidecar is installed, Tesseract otherwise.
 ///
+/// Single-backend path. For the ensemble (run-all-and-merge) entry
+/// point that powers production OCR, see [`run_all`].
+///
 /// `model_dir` is preserved for API compatibility and is consulted only
 /// by the Tesseract path (where it overrides `TESSDATA_PREFIX` when a
 /// user-supplied `eng.traineddata` is dropped in).
@@ -74,7 +77,173 @@ pub fn run(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
         }
     }
     // 2) Tesseract — cross-platform fallback.
-    run_tesseract(bytes, model_dir)
+    run_tesseract(bytes, model_dir, "4")
+}
+
+/// Run EVERY available backend and return all successful results.
+/// The caller (lib.rs `extract`) parses each independently and fuses
+/// the structured `OcrResult`s field-by-field — total accuracy beats
+/// any single engine.
+///
+/// Backends, in order:
+///   1. Apple Vision (`apple_vision`)         — macOS only, when sidecar present.
+///   2. Tesseract LSTM with `--psm 4`         — single column of variable text.
+///   3. Tesseract LSTM with `--psm 6`         — single uniform block. Catches
+///                                              cases where receipt rows are
+///                                              tightly packed.
+///
+/// On a 4-core macOS desktop with the sidecar built, all three run in
+/// parallel via `rayon::join`-style concurrency (currently sequential
+/// — see TODO below). Total latency is bounded by `(Vision || Tesseract×2)`
+/// and stays under the OCR semaphore's per-job budget.
+///
+/// Returns an empty `Vec` when every backend fails (the caller surfaces
+/// `OcrError::Engine` in that case).
+pub fn run_all(bytes: &[u8], model_dir: &Path) -> Vec<RawText> {
+    let mut out: Vec<RawText> = Vec::with_capacity(3);
+
+    // Apple Vision sidecar — gigantic accuracy win on macOS. Free,
+    // on-device, runs on the Neural Engine.
+    if cfg!(target_os = "macos") {
+        if let Some(bin) = find_vision_binary() {
+            match run_vision(&bin, bytes) {
+                Ok(rt) => out.push(rt),
+                Err(e) => tracing::warn!(err = %e, "ensemble: vision backend failed"),
+            }
+        }
+    }
+
+    // Tesseract pass 1 — `--psm 4`, the long-time receipt default.
+    match run_tesseract(bytes, model_dir, "4") {
+        Ok(mut rt) => {
+            rt.engine = "tesseract_psm4".into();
+            out.push(rt);
+        }
+        Err(e) => tracing::warn!(err = %e, "ensemble: tesseract psm4 failed"),
+    }
+
+    // Tesseract pass 2 — `--psm 6`, single uniform block. Different
+    // page-segmentation model surfaces different row breaks than
+    // --psm 4 on dense receipts; the field-level merger picks
+    // whichever produced a parseable total/date/items.
+    match run_tesseract(bytes, model_dir, "6") {
+        Ok(mut rt) => {
+            rt.engine = "tesseract_psm6".into();
+            out.push(rt);
+        }
+        Err(e) => tracing::warn!(err = %e, "ensemble: tesseract psm6 failed"),
+    }
+
+    // PaddleOCR (DBNet + SVTR via tract-onnx). Only built when
+    // compiled with `--features paddle`. Models are downloaded
+    // separately into model_dir; skips gracefully when absent.
+    #[cfg(feature = "paddle")]
+    {
+        match run_paddle(bytes, model_dir) {
+            Ok(rt) => out.push(rt),
+            Err(e) => tracing::warn!(err = %e, "ensemble: paddle backend skipped/failed"),
+        }
+    }
+
+    out
+}
+
+#[cfg(feature = "paddle")]
+/// PaddleOCR (DBNet text detector + SVTR text recognizer + line/doc
+/// orientation classifiers) via `pure-onnx-ocr-sync`. Returns an
+/// error when any of the five model files (`det.onnx`, `rec.onnx`,
+/// `line_ori.onnx`, `doc_ori.onnx`, `dict.txt`) is missing under
+/// `model_dir`, so the ensemble runner skips this backend cleanly on
+/// first install.
+///
+/// PaddleOCR is genuinely worse than Apple Vision and roughly on par
+/// with Tesseract for clean receipts, but it has different failure
+/// modes — particularly strong on rotated and skewed phone-camera
+/// photos because of the orientation classifiers. In the ensemble
+/// it contributes recovery cases the other backends miss.
+fn run_paddle(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
+    use image::ImageReader;
+
+    let det = model_dir.join("det.onnx");
+    let rec = model_dir.join("rec.onnx");
+    let line_ori = model_dir.join("line_ori.onnx");
+    let doc_ori = model_dir.join("doc_ori.onnx");
+    let dict = model_dir.join("dict.txt");
+    for required in [&det, &rec, &line_ori, &doc_ori, &dict] {
+        if !required.exists() {
+            return Err(OcrError::ModelsMissing {
+                expected_dir: model_dir.display().to_string(),
+            });
+        }
+    }
+
+    let cursor = std::io::Cursor::new(bytes);
+    let img = ImageReader::new(cursor)
+        .with_guessed_format()
+        .map_err(|e| OcrError::Decode(e.to_string()))?
+        .decode()
+        .map_err(|e| OcrError::Decode(e.to_string()))?;
+
+    let engine = pure_onnx_ocr_sync::OcrEngineBuilder::new()
+        .det_model_path(&det)
+        .rec_model_path(&rec)
+        .text_line_ori_model_path(&line_ori)
+        .doc_ori_model_path(&doc_ori)
+        .dictionary_path(&dict)
+        .build()
+        .map_err(|e| OcrError::Engine(format!("build paddle engine: {e}")))?;
+
+    let regions = engine
+        .run_from_image(&img)
+        .map_err(|e| OcrError::Engine(format!("run paddle: {e}")))?;
+
+    // Sort by top-Y then left-X to recover natural reading order. The
+    // bounding box is a `geo_types::Polygon<f64>` — take min over
+    // exterior coords.
+    let mut sorted: Vec<_> = regions
+        .into_iter()
+        .map(|r| {
+            let (min_x, min_y) = polygon_top_left(&r.bounding_box);
+            (min_y, min_x, r)
+        })
+        .collect();
+    sorted.sort_by(|a, b| {
+        a.0.partial_cmp(&b.0)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+    });
+
+    let mut conf_sum = 0.0f32;
+    let mut lines = Vec::with_capacity(sorted.len());
+    for (_, _, r) in &sorted {
+        conf_sum += r.confidence;
+        lines.push(r.text.clone());
+    }
+    let confidence = if sorted.is_empty() {
+        0.0
+    } else {
+        conf_sum / sorted.len() as f32
+    };
+    Ok(RawText {
+        text: lines.join("\n"),
+        confidence,
+        engine: "paddle".into(),
+    })
+}
+
+#[cfg(feature = "paddle")]
+fn polygon_top_left(p: &geo_types::Polygon<f64>) -> (f64, f64) {
+    use geo_types::Coord;
+    let exterior = p.exterior().0.iter().collect::<Vec<&Coord<f64>>>();
+    let min_x = exterior
+        .iter()
+        .map(|c| c.x)
+        .fold(f64::INFINITY, f64::min);
+    let min_y = exterior
+        .iter()
+        .map(|c| c.y)
+        .fold(f64::INFINITY, f64::min);
+    (min_x, min_y)
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +377,7 @@ fn run_vision(bin: &Path, bytes: &[u8]) -> Result<RawText, OcrError> {
 // Tesseract fallback path (existing pipeline, unchanged behaviorally)
 // ---------------------------------------------------------------------------
 
-fn run_tesseract(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
+fn run_tesseract(bytes: &[u8], model_dir: &Path, psm: &str) -> Result<RawText, OcrError> {
     let tess_present = Command::new("tesseract")
         .arg("--version")
         .stdout(Stdio::null())
@@ -233,7 +402,7 @@ fn run_tesseract(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
     cmd.arg("-")
         .arg("-")
         .arg("-l").arg("eng")
-        .arg("--psm").arg("4")
+        .arg("--psm").arg(psm)
         .arg("--oem").arg("1")
         .arg("-c").arg("preserve_interword_spaces=1");
     if model_dir.join("eng.traineddata").exists() {

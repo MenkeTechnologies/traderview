@@ -20,17 +20,31 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 
+# PaddleOCR engine — pure-Rust PaddleOCR DBNet + SVTR via tract-onnx.
+# Optional because tract+ndarray adds ~5 min to a cold compile. Enable
+# with `--features paddle` to compile it in; the ensemble runner skips
+# the backend gracefully when the feature is off OR the model files
+# aren't on disk under `$APP_DATA_DIR/traderview/models/paddleocr/`.
+pure-onnx-ocr-sync = { version = "0.1", optional = true }
+
+# Re-exported by pure-onnx-ocr-sync's region polygons — we need the
+# crate as a direct dep to name the type in our reading-order sort.
+geo-types = { version = "0.7", optional = true }
+
 # OCR delegates to the system `tesseract` CLI via stdin/stdout pipes
 # (`engine.rs`). No native Rust binding — `brew install tesseract` (macOS)
 # or `apt install tesseract-ocr tesseract-ocr-eng` (Linux) ships both the
 # binary and the eng.traineddata trained model. We pin tesseract 5.x+ at
 # runtime (the `--oem 1` LSTM-only mode requires 4.0+; we use 5 features).
-# The `engine` feature stays for back-compat — empty now, so `--features
-# ocr-engine` upstream is a no-op.
+# Apple Vision lives behind a separate sidecar binary (`tv-ocr-vision`),
+# not a cargo feature.
 
 [features]
 default = []
-engine = []
+# Back-compat — `engine` was the umbrella OCR feature in the
+# pure-Rust-only era; today it gates the PaddleOCR backend.
+engine = ["paddle"]
+paddle = ["dep:pure-onnx-ocr-sync", "dep:geo-types"]
 
 [lints]
 workspace = true

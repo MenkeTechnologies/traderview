@@ -336,6 +336,37 @@ export const api = {
         const s = qs(params);
         return request(`/expense/receipts/duplicates${s ? '?' + s : ''}`);
     },
+
+    // --- tax filing wizard ----------------------------------------------
+    taxReturn:        (year) => request(`/tax-filing/returns/${year}`),
+    saveTaxReturn:    (year, draft, status, change_label) => request(`/tax-filing/returns/${year}`, {
+        method: 'PUT',
+        body: JSON.stringify({ draft, status, change_label }),
+    }),
+    autopopulateTaxReturn: (year) => request(`/tax-filing/returns/${year}/autopopulate`, { method: 'POST' }),
+    computeTaxReturn:      (year) => request(`/tax-filing/returns/${year}/compute`),
+    taxReturnPdfUrl:       (year) => `${baseUrl}/api/tax-filing/returns/${year}/pdf`,
+    uploadTaxForm: (file, tax_year) => {
+        const fd = new FormData();
+        fd.append('file', file, file.name);
+        if (tax_year != null) fd.append('tax_year', String(tax_year));
+        return request('/tax-filing/forms/upload', { method: 'POST', body: fd });
+    },
+    listTaxForms: (year) => request(`/tax-filing/forms/${year}`),
+
+    // --- budgeting ------------------------------------------------------
+    listBudgets: () => request('/budget/'),
+    upsertBudget: (code, body) => request(`/budget/categories/${encodeURIComponent(code)}`, {
+        method: 'PUT', body: JSON.stringify(body),
+    }),
+    deleteBudget: (code) => request(`/budget/categories/${encodeURIComponent(code)}`, { method: 'DELETE' }),
+    setSavingsGoal: (monthly_target) => request('/budget/savings-goal', {
+        method: 'PUT', body: JSON.stringify({ monthly_target }),
+    }),
+    budgetSnapshot: (params = {}) => {
+        const s = qs(params);
+        return request(`/budget/snapshot${s ? '?' + s : ''}`);
+    },
     uploadReceipt: (file) => {
         const fd = new FormData();
         fd.append('file', file, file.name);

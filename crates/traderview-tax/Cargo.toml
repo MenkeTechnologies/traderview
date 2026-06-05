@@ -1,0 +1,18 @@
+[package]
+name = "traderview-tax"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "US federal tax compute engine for traderview — 2025 brackets, SE tax, QBI, EITC, CTC, std vs itemized."
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+rust_decimal = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

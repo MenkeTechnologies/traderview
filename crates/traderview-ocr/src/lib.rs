@@ -13,6 +13,7 @@
 //! resulting text via regex in `parse.rs`, identical for both paths.
 
 pub mod engine;
+pub mod tax_forms;
 pub mod matcher;
 pub mod parse;
 pub mod pdf;
@@ -135,12 +136,89 @@ pub fn extract(
         let dir = model_dir.ok_or_else(|| OcrError::ModelsMissing {
             expected_dir: "<no model_dir provided>".into(),
         })?;
-        let raw = engine::run(bytes, dir)?;
-        let mut result = parse::structure(&raw.text, raw.confidence);
-        result.engine = raw.engine;
-        return Ok(result);
+        // Run every backend the host can offer (Vision + Tesseract
+        // psm4/psm6) and merge field-by-field. Picks Vision's clean
+        // header for merchant/date and Tesseract's row alignment for
+        // items; either engine's win on a particular field flows into
+        // the final result.
+        let backends = engine::run_all(bytes, dir);
+        if backends.is_empty() {
+            return Err(OcrError::Engine(
+                "every OCR backend failed — check tesseract install \
+                 and tools/tv-ocr-vision/build.sh"
+                    .into(),
+            ));
+        }
+        let parsed: Vec<OcrResult> = backends
+            .into_iter()
+            .map(|rt| {
+                let mut r = parse::structure(&rt.text, rt.confidence);
+                r.engine = rt.engine;
+                r
+            })
+            .collect();
+        return Ok(combine_results(parsed));
     }
     Err(OcrError::UnsupportedMime(mime.into()))
+}
+
+/// Field-level ensemble fusion of multiple `OcrResult`s produced from
+/// running different OCR backends over the same image.
+///
+/// Strategy per field:
+///   * Scalar fields (`merchant`, `date`, `total`, `subtotal`, `tax`,
+///     `address`, `time`): walk results sorted by confidence DESC, use
+///     the first `Some` value. Lets the highest-confidence engine
+///     speak first, but a Tesseract win on a field Vision missed
+///     still lands.
+///   * `items`: union by `(lower(name), line_total)` so duplicates
+///     from different engines collapse but unique finds from either
+///     engine are kept.
+///   * `text`: keep the highest-confidence engine's text (the parser
+///     already ran over every variant, so this is just what surfaces
+///     in the UI's raw-OCR diagnostics panel).
+///   * `confidence`: max over all backends — a single high-quality
+///     extraction shouldn't be diluted by a weaker backend's miss.
+///   * `engine`: `ensemble:eng1+eng2+...` so the UI pill shows which
+///     backends contributed and the bulk-reocr endpoint can filter on
+///     `non_ensemble` to re-process old single-engine extractions.
+fn combine_results(mut rs: Vec<OcrResult>) -> OcrResult {
+    if rs.len() == 1 {
+        return rs.pop().unwrap();
+    }
+    rs.sort_by(|a, b| {
+        b.confidence
+            .partial_cmp(&a.confidence)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let engines: Vec<String> = rs.iter().map(|r| r.engine.clone()).collect();
+    let mut acc = rs.remove(0);
+    // Track max confidence across all backends.
+    let mut max_conf = acc.confidence;
+    for other in rs {
+        acc.merchant = acc.merchant.or(other.merchant);
+        acc.address = acc.address.or(other.address);
+        acc.date = acc.date.or(other.date);
+        acc.time = acc.time.or(other.time);
+        acc.subtotal = acc.subtotal.or(other.subtotal);
+        acc.tax = acc.tax.or(other.tax);
+        acc.total = acc.total.or(other.total);
+        for item in other.items {
+            let dup = acc.items.iter().any(|p| {
+                p.name.to_lowercase() == item.name.to_lowercase()
+                    && p.line_total == item.line_total
+            });
+            if !dup {
+                acc.items.push(item);
+            }
+        }
+        if other.confidence > max_conf {
+            max_conf = other.confidence;
+        }
+    }
+    acc.confidence = max_conf;
+    acc.engine = format!("ensemble:{}", engines.join("+"));
+    acc
 }
 
 #[cfg(test)]
@@ -202,6 +280,107 @@ mod tests {
         // Engine tag is part of the wire contract so the UI can label
         // which backend produced this result.
         assert!(s.contains("apple_vision"));
+    }
+
+    #[test]
+    fn combine_results_picks_highest_confidence_scalars() {
+        // Two backends — one finds merchant + total but no date, the
+        // other finds date + total (different value). Highest
+        // confidence wins on total; missing fields fall through to
+        // the other backend.
+        let a = OcrResult {
+            text: "vision raw".into(),
+            merchant: Some("CHIPOTLE".into()),
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: Some(rust_decimal::Decimal::new(4299, 2)),  // 42.99
+            items: vec![OcrLineItem {
+                name: "Burrito".into(), qty: None, unit_price: None,
+                line_total: rust_decimal::Decimal::new(1099, 2),
+                category: "meals".into(), tax_bucket: "business".into(),
+                rental_property_id: None,
+            }],
+            confidence: 0.95,  // higher
+            engine: "apple_vision".into(),
+        };
+        let b = OcrResult {
+            text: "tesseract raw".into(),
+            merchant: None,
+            address: None,
+            date: chrono::NaiveDate::from_ymd_opt(2026, 5, 27),
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: Some(rust_decimal::Decimal::new(4250, 2)),  // 42.50, lower conf
+            items: vec![OcrLineItem {
+                name: "Chips & Salsa".into(), qty: None, unit_price: None,
+                line_total: rust_decimal::Decimal::new(395, 2),
+                category: "meals".into(), tax_bucket: "business".into(),
+                rental_property_id: None,
+            }],
+            confidence: 0.85,
+            engine: "tesseract_psm4".into(),
+        };
+        let m = super::combine_results(vec![a, b]);
+        // High-conf wins on total.
+        assert_eq!(m.total, Some(rust_decimal::Decimal::new(4299, 2)));
+        // Low-conf provides the date (high-conf had None).
+        assert!(m.date.is_some());
+        // Items unioned — distinct names → both present.
+        assert_eq!(m.items.len(), 2);
+        // Merchant comes from high-conf.
+        assert_eq!(m.merchant.as_deref(), Some("CHIPOTLE"));
+        // Engine tag carries both backend names.
+        assert!(m.engine.starts_with("ensemble:"));
+        assert!(m.engine.contains("apple_vision"));
+        assert!(m.engine.contains("tesseract_psm4"));
+        // Confidence is the max.
+        assert!((m.confidence - 0.95).abs() < 1e-6);
+    }
+
+    #[test]
+    fn combine_results_dedupes_items_by_name_and_total() {
+        // Same item parsed by both engines — must collapse to one row.
+        let item = OcrLineItem {
+            name: "Burrito".into(), qty: None, unit_price: None,
+            line_total: rust_decimal::Decimal::new(1099, 2),
+            category: "meals".into(), tax_bucket: "business".into(),
+            rental_property_id: None,
+        };
+        let a = OcrResult {
+            text: "a".into(), merchant: None, address: None, date: None,
+            time: None, subtotal: None, tax: None, total: None,
+            items: vec![item.clone()],
+            confidence: 0.95, engine: "apple_vision".into(),
+        };
+        let b = OcrResult {
+            text: "b".into(), merchant: None, address: None, date: None,
+            time: None, subtotal: None, tax: None, total: None,
+            // Same total + same name (case-insensitive) → duplicate.
+            items: vec![OcrLineItem { name: "BURRITO".into(), ..item }],
+            confidence: 0.85, engine: "tesseract_psm4".into(),
+        };
+        let m = super::combine_results(vec![a, b]);
+        assert_eq!(m.items.len(), 1, "duplicate item should be deduped");
+    }
+
+    #[test]
+    fn combine_results_single_backend_passes_through() {
+        // Single-backend input — must round-trip unchanged.
+        let r = OcrResult {
+            text: "raw".into(),
+            merchant: Some("M".into()),
+            address: None, date: None, time: None,
+            subtotal: None, tax: None, total: None,
+            items: Vec::new(), confidence: 0.7,
+            engine: "tesseract_psm4".into(),
+        };
+        let m = super::combine_results(vec![r.clone()]);
+        assert_eq!(m.engine, r.engine);  // NOT prefixed with "ensemble:" when single
+        assert_eq!(m.merchant, r.merchant);
     }
 
     #[test]

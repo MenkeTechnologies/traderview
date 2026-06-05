@@ -1606,13 +1606,24 @@ async fn bulk_reocr(
     let where_extra = match body.filter.as_str() {
         "all" => "",
         "non_vision" => {
-            "AND COALESCE(ocr_extracted->>'engine','unknown') <> 'apple_vision'"
+            // Anything that DIDN'T involve Apple Vision — catches both
+            // single-engine tesseract results and old single-vision
+            // results predating the ensemble. Ensemble results contain
+            // `apple_vision` in the engine string so they're (correctly)
+            // skipped.
+            "AND COALESCE(ocr_extracted->>'engine','') NOT LIKE '%apple_vision%'"
+        }
+        "non_ensemble" => {
+            // Anything not produced by the ensemble path — useful for
+            // upgrading old single-engine receipts after the ensemble
+            // rollout. Ensemble results all start with "ensemble:".
+            "AND COALESCE(ocr_extracted->>'engine','') NOT LIKE 'ensemble:%'"
         }
         "low_confidence" => "AND COALESCE(ocr_confidence, 0) < 0.80",
         "failed" => "AND ocr_status = 'failed'::ocr_status_t",
         other => {
             return Err(ApiError::BadRequest(format!(
-                "unknown filter '{other}' — use one of: all | non_vision | low_confidence | failed"
+                "unknown filter '{other}' — use one of: all | non_vision | non_ensemble | low_confidence | failed"
             )));
         }
     };

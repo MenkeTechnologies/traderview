@@ -1998,7 +1998,20 @@ export async function openReceiptMatchModal(meta) {
                 <span><strong>${esc(t('view.expenses.receipt.label.total'))}:</strong>
                     <input type="number" id="rm-total" step="0.01" value="${meta.ocr_total ?? ''}" class="rm-total-input"></span>
                 <span class="muted"><strong>${esc(t('view.expenses.receipt.label.conf'))}:</strong> ${meta.ocr_confidence != null ? (meta.ocr_confidence * 100).toFixed(0) + '%' : '?'}</span>
-                ${ex.engine ? `<span class="ocr-engine-pill ocr-engine-${esc(ex.engine)}"><strong>${esc(t('view.expenses.receipt.label.engine'))}:</strong> ${esc(t('view.expenses.receipt.engine.' + ex.engine))}</span>` : ''}
+                ${(() => {
+                    if (!ex.engine) return '';
+                    // Ensemble results carry a composite engine string like
+                    // "ensemble:apple_vision+tesseract_psm4+tesseract_psm6".
+                    // Render as a generic "Ensemble (N)" pill with the
+                    // backend list as a tooltip so the UI stays compact
+                    // while remaining diagnosable.
+                    if (ex.engine.startsWith('ensemble:')) {
+                        const backends = ex.engine.slice('ensemble:'.length).split('+');
+                        const label = t('view.expenses.receipt.engine.ensemble', { n: backends.length });
+                        return `<span class="ocr-engine-pill ocr-engine-ensemble" title="${esc(backends.join(', '))}"><strong>${esc(t('view.expenses.receipt.label.engine'))}:</strong> ${esc(label)}</span>`;
+                    }
+                    return `<span class="ocr-engine-pill ocr-engine-${esc(ex.engine)}"><strong>${esc(t('view.expenses.receipt.label.engine'))}:</strong> ${esc(t('view.expenses.receipt.engine.' + ex.engine))}</span>`;
+                })()}
             </div>
         </div>
         <h3 data-i18n="view.expenses.h3.items">Items</h3>

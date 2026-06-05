@@ -660,6 +660,8 @@ import { renderExpensesView } from './views/expenses.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
 import { renderCategorize } from './views/categorize.js';
+import { renderTaxWizard } from './views/file_taxes.js';
+import { renderBudget } from './views/budget.js';
 
 export const state = {
     mode: 'web',
@@ -2490,6 +2492,8 @@ export async function dispatch() {
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
             case 'categorize':     await renderCategorize(mount, state); break;
+            case 'file-taxes':     await renderTaxWizard(mount, state); break;
+            case 'budget':         await renderBudget(mount, state); break;
             case 'compare':        await renderCompare(mount, state); break;
             case 'exports':        await renderExports(mount, state); break;
             case 'ai':             await renderAiSettings(mount, state); break;

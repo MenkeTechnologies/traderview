@@ -653,6 +653,71 @@ const WIDGETS = [
         html: (d) => perfByBucketsWidget(d.byDurationCoarse, { preserveOrder: true }) },
     { id: 'open_trades', titleKey: 'view.dashboard.tv.open_trades', spans2: true,
         html: (d) => openTradesWidget(d.openTrades) },
+    // Budget status — this month's income/expense/savings rate + over-budget flag.
+    { id: 'budget_status', titleKey: 'view.dashboard.tv.budget_status',
+        html: () => `<div id="dash-budget-status" class="dash-budget-status"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-budget-status');
+            if (!el) return;
+            try {
+                const s = await api.budgetSnapshot();
+                const netCls = (+s.net || 0) >= 0 ? 'tw-refund' : 'tw-owed';
+                const rateCls = (+s.savings_rate || 0) >= 0 ? 'tw-refund' : 'tw-owed';
+                const overBlock = s.over_budget_categories > 0
+                    ? `<span class="tw-owed">${esc(t('view.dashboard.tv.budget_widget.over', { n: s.over_budget_categories }))}</span>`
+                    : `<span class="tw-refund">${esc(t('view.dashboard.tv.budget_widget.on_track'))}</span>`;
+                el.innerHTML = `
+                    <div class="dash-budget-row">
+                        <span class="muted small">${esc(t('view.dashboard.tv.budget_widget.month', { year: s.year, month: String(s.month).padStart(2, '0') }))}</span>
+                        ${overBlock}
+                    </div>
+                    <div class="dash-budget-grid">
+                        <div><span>${esc(t('view.dashboard.tv.budget_widget.income'))}</span><strong>${esc(fmtMoney(+s.income || 0))}</strong></div>
+                        <div><span>${esc(t('view.dashboard.tv.budget_widget.expense'))}</span><strong>${esc(fmtMoney(+s.expense || 0))}</strong></div>
+                        <div><span>${esc(t('view.dashboard.tv.budget_widget.net'))}</span><strong class="${netCls}">${esc(fmtMoney(+s.net || 0))}</strong></div>
+                        <div><span>${esc(t('view.dashboard.tv.budget_widget.savings_rate'))}</span><strong class="${rateCls}">${(+s.savings_rate || 0).toFixed(1)}%</strong></div>
+                    </div>
+                    <a href="#budget" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.budget_widget.open'))}</a>
+                `;
+            } catch (_) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.budget_widget.start'))}</div>
+                    <a href="#budget" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.budget_widget.open'))}</a>`;
+            }
+        } },
+    // Tax wizard status. Self-fetching — doesn't read from `d`.
+    { id: 'tax_filing_status', titleKey: 'view.dashboard.tv.tax_filing_status',
+        html: () => `<div id="dash-tax-filing" class="dash-tax-filing"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-tax-filing');
+            if (!el) return;
+            const year = new Date().getFullYear() - 1;
+            try {
+                const r = await api.taxReturn(year);
+                const refund = +(r.result.refund_due || 0);
+                const owed   = +(r.result.tax_owed   || 0);
+                const label  = refund > 0
+                    ? `<strong class="tw-refund">${esc(fmtMoney(refund))}</strong>`
+                    : `<strong class="tw-owed">${esc(fmtMoney(owed))}</strong>`;
+                const verdict = refund > 0
+                    ? esc(t('view.dashboard.tv.tax_widget.refund'))
+                    : esc(t('view.dashboard.tv.tax_widget.owed'));
+                el.innerHTML = `
+                    <div class="dash-tax-row">
+                        <span class="muted small">${esc(t('view.dashboard.tv.tax_widget.year', { year }))}</span>
+                        <span class="muted small">${esc(r.status || 'personal')}</span>
+                    </div>
+                    <div class="dash-tax-amount">${verdict}: ${label}</div>
+                    <div class="dash-tax-row">
+                        <span class="muted small">AGI: ${esc(fmtMoney(+r.result.agi || 0))}</span>
+                        <span class="muted small">Tax: ${esc(fmtMoney(+r.result.tax_after_credits || 0))}</span>
+                    </div>
+                    <a href="#file-taxes?year=${year}" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.tax_widget.open'))}</a>
+                `;
+            } catch (_) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.tax_widget.start'))}</div>
+                    <a href="#file-taxes" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.tax_widget.open'))}</a>`;
+            }
+        } },
 ];
 export const WIDGETS_BY_ID = new Map(WIDGETS.map(w => [w.id, w]));
 const DEFAULT_LAYOUT = WIDGETS.map(w => w.id);

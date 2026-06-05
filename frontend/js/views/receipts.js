@@ -96,6 +96,7 @@ export async function renderReceipts(mount, _state) {
             <button type="button" id="ra-delete" class="btn btn-secondary btn-compact danger" disabled>${esc(t('view.receipts.action.delete_selected'))}</button>
             <span class="ra-reocr-wrap">
                 <select id="ra-reocr-filter" class="rs-reocr-select">
+                    <option value="non_ensemble">${esc(t('view.receipts.action.reocr.non_ensemble'))}</option>
                     <option value="non_vision">${esc(t('view.receipts.action.reocr.non_vision'))}</option>
                     <option value="failed">${esc(t('view.receipts.action.reocr.failed'))}</option>
                     <option value="low_confidence">${esc(t('view.receipts.action.reocr.low_confidence'))}</option>

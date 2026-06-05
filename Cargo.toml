@@ -5,6 +5,7 @@ members = [
     "crates/traderview-import",
     "crates/traderview-expense",
     "crates/traderview-ocr",
+    "crates/traderview-tax",
     "crates/traderview-web",
     "src-tauri",
 ]

@@ -20,6 +20,7 @@ traderview-db = { path = "../traderview-db" }
 traderview-import = { path = "../traderview-import" }
 traderview-expense = { path = "../traderview-expense" }
 traderview-ocr = { path = "../traderview-ocr", default-features = false }
+traderview-tax = { path = "../traderview-tax" }
 
 tokio = { workspace = true }
 serde = { workspace = true }
