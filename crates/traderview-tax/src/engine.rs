@@ -230,6 +230,76 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
 }
 
 #[cfg(test)]
+mod itemized_tests {
+    use super::*;
+
+    /// SALT cap exactly at $10k — the cap permits the full amount.
+    #[test]
+    fn salt_at_cap_boundary_uses_full_amount() {
+        let i = Itemized {
+            medical_over_7_5_pct_agi: Decimal::ZERO,
+            state_and_local_taxes_capped_at_10k: Decimal::from(10_000),
+            mortgage_interest: Decimal::ZERO,
+            charitable_gifts: Decimal::ZERO,
+            casualty_losses: Decimal::ZERO,
+        };
+        assert_eq!(i.total(), Decimal::from(10_000));
+    }
+
+    /// $9,999 — under cap, full amount counts.
+    #[test]
+    fn salt_under_cap_uses_full_amount() {
+        let i = Itemized {
+            state_and_local_taxes_capped_at_10k: Decimal::from(9_999),
+            ..Itemized::default()
+        };
+        assert_eq!(i.total(), Decimal::from(9_999));
+    }
+
+    /// $10,001 — cap binds, drops to $10k.
+    #[test]
+    fn salt_over_cap_clamps_to_10k() {
+        let i = Itemized {
+            state_and_local_taxes_capped_at_10k: Decimal::from(10_001),
+            ..Itemized::default()
+        };
+        assert_eq!(i.total(), Decimal::from(10_000),
+            "$10,001 SALT must cap at $10,000 (TCJA § 164(b)(6))");
+    }
+
+    /// Big SALT entry — cap still binds, doesn't pass through.
+    #[test]
+    fn salt_big_value_still_capped() {
+        let i = Itemized {
+            state_and_local_taxes_capped_at_10k: Decimal::from(50_000),
+            ..Itemized::default()
+        };
+        assert_eq!(i.total(), Decimal::from(10_000));
+    }
+
+    /// Other lines pass through uncapped — only SALT has the $10k cap
+    /// in this code path. Mortgage interest can be tens of thousands.
+    #[test]
+    fn non_salt_lines_pass_through_uncapped() {
+        let i = Itemized {
+            medical_over_7_5_pct_agi: Decimal::from(8_000),
+            state_and_local_taxes_capped_at_10k: Decimal::ZERO,
+            mortgage_interest: Decimal::from(35_000),
+            charitable_gifts: Decimal::from(12_000),
+            casualty_losses: Decimal::from(5_000),
+        };
+        // 8k + 0 + 35k + 12k + 5k = 60k.
+        assert_eq!(i.total(), Decimal::from(60_000));
+    }
+
+    /// All-zero default. Itemized::default() must produce total = 0.
+    #[test]
+    fn default_itemized_totals_zero() {
+        assert_eq!(Itemized::default().total(), Decimal::ZERO);
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

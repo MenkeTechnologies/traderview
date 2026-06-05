@@ -273,6 +273,76 @@ fn extract_party_name(text: &str, kind: TaxFormKind) -> Option<String> {
 mod tests {
     use super::*;
 
+    // ── box_labels_for contract ──────────────────────────────────────
+    //
+    // Pin the per-kind label sets so a refactor that drops a label
+    // breaks loudly. Each test verifies the canonical box keys are
+    // present in the table — not the full label text (we want
+    // tolerance for label wording tweaks).
+
+    #[test]
+    fn box_labels_w2_covers_all_major_boxes() {
+        let labels = box_labels_for(TaxFormKind::W2);
+        let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
+        for k in ["box_1", "box_2", "box_3", "box_4", "box_5", "box_6", "box_17"] {
+            assert!(keys.contains(&k), "W-2 must define {k}, have: {:?}", keys);
+        }
+    }
+
+    #[test]
+    fn box_labels_1099_nec_has_box_1_and_4() {
+        let labels = box_labels_for(TaxFormKind::Form1099Nec);
+        let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
+        assert!(keys.contains(&"box_1"), "1099-NEC needs box_1");
+        assert!(keys.contains(&"box_4"), "1099-NEC needs box_4 (fed withhold)");
+    }
+
+    #[test]
+    fn box_labels_1099_int_covers_taxexempt() {
+        let labels = box_labels_for(TaxFormKind::Form1099Int);
+        let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
+        assert!(keys.contains(&"box_1"));
+        assert!(keys.contains(&"box_8"), "1099-INT needs box_8 (tax-exempt)");
+    }
+
+    #[test]
+    fn box_labels_1099_div_has_qualified_distinct_from_ordinary() {
+        let labels = box_labels_for(TaxFormKind::Form1099Div);
+        let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
+        assert!(keys.contains(&"box_1a"), "1099-DIV needs box_1a (ordinary div)");
+        assert!(keys.contains(&"box_1b"), "1099-DIV needs box_1b (qualified div) — separate from 1a");
+        assert!(keys.contains(&"box_2a"), "1099-DIV needs box_2a (cap gain)");
+    }
+
+    #[test]
+    fn box_labels_1099_misc_carries_rents_and_royalties() {
+        let labels = box_labels_for(TaxFormKind::Form1099Misc);
+        let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
+        assert!(keys.contains(&"box_1"), "1099-MISC box 1 = rents");
+        assert!(keys.contains(&"box_2"), "1099-MISC box 2 = royalties");
+        assert!(keys.contains(&"box_3"), "1099-MISC box 3 = other income");
+    }
+
+    #[test]
+    fn box_labels_each_kind_has_at_least_one_label_per_box_key() {
+        // Every (key, patterns) entry must have ≥1 label pattern. An
+        // empty pattern list would silently skip extraction.
+        for kind in [
+            TaxFormKind::W2,
+            TaxFormKind::Form1099Nec,
+            TaxFormKind::Form1099Misc,
+            TaxFormKind::Form1099Int,
+            TaxFormKind::Form1099Div,
+            TaxFormKind::Form1099K,
+        ] {
+            for (key, patterns) in box_labels_for(kind) {
+                assert!(!patterns.is_empty(),
+                    "{:?} box {} has no label patterns — would silently skip extraction",
+                    kind, key);
+            }
+        }
+    }
+
     #[test]
     fn detect_w2_by_title() {
         assert_eq!(detect("Form W-2 Wage and Tax Statement"), Some(TaxFormKind::W2));

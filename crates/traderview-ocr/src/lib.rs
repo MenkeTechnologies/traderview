@@ -240,6 +240,92 @@ mod tests {
     }
 
     #[test]
+    fn extract_application_pdf_with_charset_suffix_routes_to_pdf() {
+        // Some upstream tools emit "application/pdf; charset=..." even
+        // though PDF isn't text. The MIME prefix match must still route.
+        let r = extract(b"", "application/pdf; charset=binary", None);
+        // Empty bytes → either NeedsImage (no text layer) or Pdf decode
+        // error — both are PDF-path outcomes, NOT UnsupportedMime.
+        assert!(
+            !matches!(r, Err(OcrError::UnsupportedMime(_))),
+            "PDF with parameters must route to PDF path, got: {:?}", r,
+        );
+    }
+
+    #[test]
+    fn extract_uppercase_image_mime_routes_to_image_path() {
+        // Browser uploads sometimes uppercase the MIME — must not
+        // misclassify as unsupported.
+        let r = extract(b"\xff\xd8\xff", "IMAGE/JPEG", None);
+        // Without model_dir → ModelsMissing (the image-path failure mode),
+        // NOT UnsupportedMime.
+        assert!(matches!(r, Err(OcrError::ModelsMissing { .. })),
+            "uppercase image/* MIME must reach image path, got: {:?}", r);
+    }
+
+    #[test]
+    fn extract_image_webp_takes_image_path() {
+        // image/* is a prefix match — image/webp, image/heic must all
+        // route through the image path.
+        let r = extract(b"\x00\x00", "image/webp", None);
+        assert!(matches!(r, Err(OcrError::ModelsMissing { .. })));
+        let r = extract(b"\x00\x00", "image/heic", None);
+        assert!(matches!(r, Err(OcrError::ModelsMissing { .. })));
+    }
+
+    #[test]
+    fn extract_unknown_mime_is_unsupported() {
+        let r = extract(b"data", "video/mp4", None);
+        assert!(matches!(r, Err(OcrError::UnsupportedMime(s)) if s == "video/mp4"));
+    }
+
+    #[test]
+    fn vision_sidecar_json_roundtrips_through_inner_struct() {
+        // Pin the shape the engine module's private VisionOut/VisionLine
+        // structs accept — using a clone of the same shape here as a
+        // public contract test. If the Swift sidecar changes its JSON
+        // output, this catches the divergence.
+        #[derive(serde::Deserialize)]
+        struct VL { text: String, #[serde(default)] confidence: f32 }
+        #[derive(serde::Deserialize)]
+        struct VO {
+            #[serde(default)] lines: Vec<VL>,
+            #[serde(default)] confidence_mean: f32,
+        }
+
+        // Full shape — Swift sidecar emits all fields on a normal scan.
+        let full = r#"{
+            "engine": "apple_vision",
+            "lines": [{"text": "TOTAL", "confidence": 0.99, "bbox": [0.1, 0.2, 0.3, 0.4]}],
+            "line_count": 1,
+            "confidence_mean": 0.99,
+            "confidence_min": 0.99
+        }"#;
+        let parsed: VO = serde_json::from_str(full).expect("full json must parse");
+        assert_eq!(parsed.lines.len(), 1);
+        assert_eq!(parsed.lines[0].text, "TOTAL");
+        assert!((parsed.confidence_mean - 0.99).abs() < 1e-3);
+
+        // Minimal shape — Vision returns an empty image with no text.
+        // No `lines` or `confidence_mean` fields. Defaults must apply.
+        let minimal = r#"{"engine": "apple_vision", "line_count": 0}"#;
+        let parsed: VO = serde_json::from_str(minimal).expect("minimal json must parse");
+        assert_eq!(parsed.lines.len(), 0);
+        assert_eq!(parsed.confidence_mean, 0.0);
+
+        // Future extension — a new field the sidecar adds in v2 must
+        // NOT break the Rust parser (forward compat).
+        let with_extras = r#"{
+            "engine": "apple_vision",
+            "lines": [],
+            "future_field": "ignored",
+            "another": {"nested": true}
+        }"#;
+        let parsed: VO = serde_json::from_str(with_extras).expect("forward-compat parse");
+        assert_eq!(parsed.lines.len(), 0);
+    }
+
+    #[test]
     fn empty_pdf_returns_needs_image() {
         // A 0-byte body — pdf::extract_text returns "" or errors. Either way
         // the user-visible signal must be NeedsImage, not Decode (different UX).
@@ -539,5 +625,53 @@ mod tests {
         .to_string();
         assert!(models_missing.contains("/path/to/dir"));
         assert!(models_missing.contains(".onnx"));
+    }
+
+    #[test]
+    fn error_unsupported_mime_includes_offending_mime() {
+        // Frontend surfaces the bad MIME so user knows what they uploaded.
+        let s = OcrError::UnsupportedMime("text/plain".into()).to_string();
+        assert!(s.contains("text/plain"),
+            "UnsupportedMime must echo the bad MIME, got: {s}");
+    }
+
+    #[test]
+    fn error_decode_includes_inner_cause() {
+        let s = OcrError::Decode("corrupt JPEG".into()).to_string();
+        assert!(s.contains("corrupt JPEG"));
+        assert!(s.to_lowercase().contains("decode"));
+    }
+
+    #[test]
+    fn error_pdf_includes_inner_cause() {
+        let s = OcrError::Pdf("malformed object stream".into()).to_string();
+        assert!(s.contains("malformed object stream"));
+        assert!(s.to_lowercase().contains("pdf"));
+    }
+
+    #[test]
+    fn error_engine_includes_inner_cause() {
+        let s = OcrError::Engine("tesseract exit 1".into()).to_string();
+        assert!(s.contains("tesseract exit 1"));
+    }
+
+    #[test]
+    fn error_engine_disabled_mentions_feature_flag() {
+        // User builds without `--features engine`/`paddle` and gets a
+        // useful error pointing at the build flag.
+        let s = OcrError::EngineDisabled.to_string();
+        assert!(s.contains("--features"),
+            "EngineDisabled should hint at the feature flag");
+    }
+
+    #[test]
+    fn error_io_from_std_io_error() {
+        // The `#[from] std::io::Error` derive needs the conversion to
+        // produce a usable Display. Wrap a real io::Error and confirm.
+        let inner = std::io::Error::new(std::io::ErrorKind::NotFound, "missing");
+        let err: OcrError = inner.into();
+        let s = err.to_string();
+        assert!(s.contains("io"));
+        assert!(s.contains("missing"));
     }
 }

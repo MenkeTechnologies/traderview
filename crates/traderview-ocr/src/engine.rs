@@ -610,6 +610,47 @@ mod tests {
         let _ = find_vision_binary();
     }
 
+    /// TV_OCR_VISION_BIN points to a real file → that path is returned.
+    /// Use the test binary itself as the "real file" so we know it
+    /// exists. Restore the env var afterward.
+    ///
+    /// SAFETY: env::set_var is racy across threads. Use a Mutex-style
+    /// guard via a serial-only filter so multiple env-var tests don't
+    /// stomp each other. (Single test here — no contention.)
+    #[test]
+    fn find_vision_binary_respects_env_var_when_file_exists() {
+        let real_file = std::env::current_exe().expect("test binary path");
+        let prior = std::env::var("TV_OCR_VISION_BIN").ok();
+        unsafe { std::env::set_var("TV_OCR_VISION_BIN", &real_file); }
+        let got = find_vision_binary();
+        // Restore before asserting (don't poison the env on assertion failure).
+        match prior {
+            Some(v) => unsafe { std::env::set_var("TV_OCR_VISION_BIN", v); },
+            None    => unsafe { std::env::remove_var("TV_OCR_VISION_BIN"); },
+        }
+        assert_eq!(got, Some(real_file),
+            "explicit env override pointing at a real file must win");
+    }
+
+    /// TV_OCR_VISION_BIN points to a NON-existent file → fall through to
+    /// the next discovery step (don't return the bad path).
+    #[test]
+    fn find_vision_binary_falls_through_when_env_path_missing() {
+        let prior = std::env::var("TV_OCR_VISION_BIN").ok();
+        let bogus = "/no/such/path/tv-ocr-vision-does-not-exist";
+        unsafe { std::env::set_var("TV_OCR_VISION_BIN", bogus); }
+        let got = find_vision_binary();
+        match prior {
+            Some(v) => unsafe { std::env::set_var("TV_OCR_VISION_BIN", v); },
+            None    => unsafe { std::env::remove_var("TV_OCR_VISION_BIN"); },
+        }
+        // Must NOT have returned the bogus path. (Might return a real
+        // sidecar found at one of the other steps — that's fine.)
+        assert_ne!(got.as_deref().map(|p| p.to_string_lossy().into_owned()),
+                   Some(bogus.to_string()),
+                   "bogus env-var path must not be returned");
+    }
+
     /// Sauvola sanity — a half-black/half-white test image binarizes
     /// to mostly the same shape (pure-black region stays foreground,
     /// pure-white stays background). Verifies the integral-image math

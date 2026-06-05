@@ -114,6 +114,66 @@ mod tests {
     }
 
     #[test]
+    fn refundable_portion_zero_when_only_odc() {
+        // ODC has no refundable portion — it's nonrefundable. A user
+        // with only adult dependents (no kids) → refundable = 0.
+        let r = child_tax_credit(CtcInput {
+            qualifying_children_under_17: 0,
+            other_dependents: 3,
+            agi: Decimal::from(80_000),
+            status: FilingStatus::Single,
+        });
+        assert_eq!(r.ctc, Decimal::ZERO);
+        assert_eq!(r.odc, Decimal::from(1_500));
+        assert_eq!(r.refundable_portion, Decimal::ZERO,
+            "ODC has no refundable component");
+    }
+
+    #[test]
+    fn refundable_portion_caps_at_ctc_after_phaseout() {
+        // Single AGI $215k → $15k over threshold → $750 reduction.
+        // 1 kid raw $2,000 → $1,250 after phase-out.
+        // Refundable per-child cap is $1,700, so min($1,700, $1,250) = $1,250.
+        // Refundable_portion should DROP below the per-child max.
+        let r = child_tax_credit(CtcInput {
+            qualifying_children_under_17: 1,
+            other_dependents: 0,
+            agi: Decimal::from(215_000),
+            status: FilingStatus::Single,
+        });
+        assert_eq!(r.total, Decimal::from(1_250));
+        assert_eq!(r.refundable_portion, Decimal::from(1_250),
+            "refundable cannot exceed the CTC remaining after phase-out");
+    }
+
+    #[test]
+    fn refundable_portion_zero_when_ctc_fully_phased_out() {
+        // CTC fully phased out → refundable_portion must be 0
+        // (refundable can't exceed remaining CTC).
+        let r = child_tax_credit(CtcInput {
+            qualifying_children_under_17: 1,
+            other_dependents: 0,
+            agi: Decimal::from(300_000),  // way over → 0 total
+            status: FilingStatus::Single,
+        });
+        assert_eq!(r.total, Decimal::ZERO);
+        assert_eq!(r.refundable_portion, Decimal::ZERO);
+    }
+
+    #[test]
+    fn refundable_portion_max_per_child_1700() {
+        // 3 kids well under phase-out — refundable = 3 × $1,700 = $5,100.
+        // Verifies the per-child refundable cap is correctly $1,700.
+        let r = child_tax_credit(CtcInput {
+            qualifying_children_under_17: 3,
+            other_dependents: 0,
+            agi: Decimal::from(50_000),
+            status: FilingStatus::Mfj,
+        });
+        assert_eq!(r.refundable_portion, Decimal::from(5_100));
+    }
+
+    #[test]
     fn phaseout_above_single_threshold() {
         // Single, AGI $210k → $10k over threshold → 10 × $50 = $500 reduction.
         // 1 kid raw CTC $2,000 → $1,500 after phase-out.

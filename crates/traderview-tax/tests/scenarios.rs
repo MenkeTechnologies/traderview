@@ -299,6 +299,228 @@ fn scenario_boundary_taxable_income_zero() {
     assert_eq!(res.tax_owed, Decimal::ZERO);
 }
 
+// ── Invariants: properties that must hold over every TaxReturn ──
+
+/// Build a small set of representative TaxReturns for invariant checks.
+fn invariant_cases() -> Vec<TaxReturn> {
+    vec![
+        TaxReturn { tax_year: 2025, status: FilingStatus::Single, ..Default::default() },
+        TaxReturn { tax_year: 2025, status: FilingStatus::Mfj, ..Default::default() },
+        TaxReturn {
+            tax_year: 2025, status: FilingStatus::Single,
+            w2s: vec![W2 { box_1_wages: d(60_000), box_2_federal_income_tax_withheld: d(7_000), ..Default::default() }],
+            ..Default::default()
+        },
+        TaxReturn {
+            tax_year: 2025, status: FilingStatus::Hoh,
+            schedule_c: ScheduleC { gross_receipts: d(40_000), total_expenses: d(8_000), net_profit: d(32_000) },
+            qualifying_children_under_17: 1,
+            ..Default::default()
+        },
+        TaxReturn {
+            tax_year: 2025, status: FilingStatus::Mfj,
+            w2s: vec![W2 { box_1_wages: d(180_000), box_2_federal_income_tax_withheld: d(28_000), ..Default::default() }],
+            interest_income: d(2_000), ordinary_dividends: d(3_500),
+            schedule_c: ScheduleC { gross_receipts: d(100_000), total_expenses: d(20_000), net_profit: d(80_000) },
+            estimated_tax_payments: d(8_000),
+            qualifying_children_under_17: 3,
+            ..Default::default()
+        },
+    ]
+}
+
+#[test]
+fn invariant_refund_and_owed_are_mutually_exclusive() {
+    // One of refund_due / tax_owed is always zero. They can't both be
+    // positive at the same time — that would mean money came from
+    // nowhere.
+    for r in invariant_cases() {
+        let res = compute(&r);
+        assert!(
+            res.refund_due == Decimal::ZERO || res.tax_owed == Decimal::ZERO,
+            "refund {} and owed {} can't both be positive",
+            res.refund_due, res.tax_owed,
+        );
+    }
+}
+
+#[test]
+fn invariant_no_negative_taxable_income() {
+    // Taxable income is `max(TI_before_QBI - QBI, 0)` — can't drop
+    // below zero. A negative number would mean the bracket walker
+    // got a negative arg, which we treat as zero tax but should
+    // never see at the input.
+    for r in invariant_cases() {
+        let res = compute(&r);
+        assert!(res.taxable_income >= Decimal::ZERO,
+            "taxable_income must be ≥ 0, got {}", res.taxable_income);
+    }
+}
+
+#[test]
+fn invariant_no_negative_se_tax() {
+    // SE tax has a short-circuit on negative net SE earnings → 0.
+    // Verify across the cases.
+    for r in invariant_cases() {
+        let res = compute(&r);
+        assert!(res.se_tax.total >= Decimal::ZERO);
+        assert!(res.se_tax.ss_tax >= Decimal::ZERO);
+        assert!(res.se_tax.medicare_tax >= Decimal::ZERO);
+        assert!(res.se_tax.additional_medicare_tax >= Decimal::ZERO);
+        assert!(res.se_tax.above_line_deduction >= Decimal::ZERO);
+    }
+}
+
+#[test]
+fn invariant_total_payments_decomposes() {
+    // total_payments must equal sum of:
+    //   W-2 box 2 withholding
+    //   estimated_tax_payments
+    //   CTC refundable portion
+    //   EITC claim
+    for r in invariant_cases() {
+        let res = compute(&r);
+        let w2_wh: Decimal = r.w2s.iter().map(|w| w.box_2_federal_income_tax_withheld).sum();
+        let expected = w2_wh + r.estimated_tax_payments + res.ctc.refundable_portion + r.eitc_claim;
+        assert_eq!(res.total_payments, expected,
+            "total_payments mismatch for return: {:?}", r);
+    }
+}
+
+#[test]
+fn invariant_agi_never_negative() {
+    // AGI is clamped at zero in the engine. If above-the-line
+    // deductions exceed total_income, AGI = 0, not a negative.
+    for r in invariant_cases() {
+        let res = compute(&r);
+        assert!(res.agi >= Decimal::ZERO,
+            "AGI must be ≥ 0, got {}", res.agi);
+    }
+}
+
+#[test]
+fn invariant_deduction_label_matches_amount_used() {
+    use traderview_tax::brackets::standard_deduction;
+    // When deduction_label == "standard", the deduction_used MUST equal
+    // the canonical std deduction for that filing status (so an
+    // off-by-one in the std table doesn't pass silently).
+    for r in invariant_cases() {
+        let res = compute(&r);
+        if res.deduction_label == "standard" {
+            assert_eq!(res.deduction_used, standard_deduction(r.status),
+                "standard label must use canonical std deduction for status {:?}", r.status);
+        }
+    }
+}
+
+/// Boundary: total_payments == tax_after_credits to the penny → both
+/// refund and owed must be zero. A naive `<` comparison would push one
+/// side to a 1-cent positive value, which is the most user-visible
+/// failure mode (someone says "I prepaid exactly what I owe").
+#[test]
+fn boundary_payments_exactly_equal_tax_neither_refund_nor_owed() {
+    // Construct: $30k W-2 wages, exactly the bracket-tax amount
+    // withheld. Hand math:
+    //   AGI = 30,000
+    //   std = 15,000 → TI = 15,000
+    //   tax = 11,925 @ 10% + 3,075 @ 12% = 1,192.50 + 369 = 1,561.50
+    // Set withholding to exactly 1,561.50.
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        w2s: vec![W2 {
+            employer_name: "ACME".into(),
+            box_1_wages: d(30_000),
+            box_2_federal_income_tax_withheld: dc("1561.50"),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let res = compute(&r);
+    assert_eq!(res.ordinary_tax, dc("1561.5"));
+    assert_eq!(res.tax_after_credits, dc("1561.5"));
+    assert_eq!(res.total_payments, dc("1561.5"));
+    assert_eq!(res.refund_due, Decimal::ZERO);
+    assert_eq!(res.tax_owed, Decimal::ZERO);
+}
+
+/// EITC entered manually flows into total_payments as a refundable credit.
+/// The wizard doesn't compute EITC (out of scope until Pub 596 tables
+/// are transcribed); the user enters the amount and it must boost the
+/// refund or reduce the owed amount.
+#[test]
+fn eitc_manual_entry_increases_refund() {
+    // Baseline: low-income single filer, no EITC.
+    let base = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        w2s: vec![W2 {
+            box_1_wages: d(18_000),
+            box_2_federal_income_tax_withheld: d(500),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let res_base = compute(&base);
+    let base_refund = res_base.refund_due;
+
+    // Now claim a $1,200 EITC.
+    let mut with_eitc = base.clone();
+    with_eitc.eitc_claim = d(1_200);
+    let res_eitc = compute(&with_eitc);
+
+    assert_eq!(
+        res_eitc.refund_due - base_refund,
+        d(1_200),
+        "EITC of $1,200 must add exactly $1,200 to the refund",
+    );
+}
+
+/// CTC + ODC with 5 kids at MFJ, high but not phased-out AGI.
+/// 5 × $2,000 = $10,000 raw CTC. At MFJ $250k threshold → no phase-out.
+/// Refundable portion = 5 × $1,700 = $8,500.
+#[test]
+fn ctc_five_kids_mfj_below_phaseout_full_credit() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Mfj,
+        w2s: vec![W2 {
+            box_1_wages: d(240_000), // under $250k MFJ threshold
+            box_2_federal_income_tax_withheld: d(40_000),
+            ..Default::default()
+        }],
+        qualifying_children_under_17: 5,
+        other_dependents: 2,
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // CTC raw = 5 × $2,000 = $10,000
+    // ODC raw = 2 × $500    = $1,000
+    // Total raw = $11,000. AGI $240k under MFJ $250k threshold → no phaseout.
+    assert_eq!(res.ctc.total, d(11_000));
+    // Refundable = min(5 × $1,700, ctc_after) = min($8,500, $10,000) = $8,500.
+    assert_eq!(res.ctc.refundable_portion, d(8_500));
+}
+
+/// CTC: 3 kids MFJ at exactly the phase-out threshold ($250k AGI).
+/// Excess = 0 → no reduction. Full $6,000 credit.
+#[test]
+fn ctc_at_mfj_phaseout_threshold_no_reduction() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Mfj,
+        w2s: vec![W2 {
+            box_1_wages: d(250_000),
+            box_2_federal_income_tax_withheld: d(45_000),
+            ..Default::default()
+        }],
+        qualifying_children_under_17: 3,
+        ..Default::default()
+    };
+    let res = compute(&r);
+    assert_eq!(res.ctc.total, d(6_000));
+}
+
 /// Scenario 9: Head of household freelancer with one kid.
 /// $55k Schedule C, no W-2, 1 qualifying child, HoH status.
 ///

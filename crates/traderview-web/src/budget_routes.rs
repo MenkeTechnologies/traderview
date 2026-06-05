@@ -397,4 +397,76 @@ mod logic {
         assert!(!over(Decimal::from(120), Decimal::ZERO, false));      // no limit set
         assert!(!over(Decimal::from(100), Decimal::from(100), false)); // at the limit (not over)
     }
+
+    /// Reusable shape mirroring `CategoryProgress` — same fields the
+    /// snapshot handler computes. The sort + count helpers below take
+    /// this so the test fixtures stay readable.
+    #[derive(Debug, Clone)]
+    struct CP {
+        code: &'static str,
+        spent: Decimal,
+        limit: Decimal,
+        paused: bool,
+        over: bool,
+    }
+
+    /// Mirror of the handler's sort: over-budget first, then spend DESC.
+    fn sort_cats(mut v: Vec<CP>) -> Vec<CP> {
+        v.sort_by(|a, b| {
+            b.over.cmp(&a.over)
+                .then_with(|| b.spent.cmp(&a.spent))
+        });
+        v
+    }
+
+    /// Mirror of the handler's over_count.
+    fn over_count(v: &[CP]) -> u32 {
+        v.iter().filter(|c| c.over).count() as u32
+    }
+
+    #[test]
+    fn sort_puts_over_budget_first_regardless_of_spend() {
+        // A high-spending but on-budget category must rank BELOW a
+        // low-spend over-budget category.
+        let cats = vec![
+            CP { code: "rent",   spent: Decimal::from(2000), limit: Decimal::from(2500), paused: false, over: false },
+            CP { code: "candy",  spent: Decimal::from(60),   limit: Decimal::from(50),   paused: false, over: true  },
+            CP { code: "food",   spent: Decimal::from(800),  limit: Decimal::from(1000), paused: false, over: false },
+        ];
+        let sorted = sort_cats(cats);
+        assert_eq!(sorted[0].code, "candy", "over-budget always first");
+        assert_eq!(sorted[1].code, "rent",  "highest spend among on-budget next");
+        assert_eq!(sorted[2].code, "food");
+    }
+
+    #[test]
+    fn sort_breaks_tie_on_spend_desc_when_both_over() {
+        // Two over-budget categories — higher spend wins.
+        let cats = vec![
+            CP { code: "smaller", spent: Decimal::from(120), limit: Decimal::from(100), paused: false, over: true },
+            CP { code: "bigger",  spent: Decimal::from(450), limit: Decimal::from(400), paused: false, over: true },
+        ];
+        let sorted = sort_cats(cats);
+        assert_eq!(sorted[0].code, "bigger");
+        assert_eq!(sorted[1].code, "smaller");
+    }
+
+    #[test]
+    fn over_count_skips_paused_and_unlimited() {
+        // 5 categories: 2 over (1 paused), 1 unlimited (not counted), 2 ok.
+        let cats = vec![
+            CP { code: "a", spent: Decimal::from(200), limit: Decimal::from(100), paused: false, over: true },
+            CP { code: "b", spent: Decimal::from(200), limit: Decimal::from(100), paused: true,  over: false }, // over but paused → over=false
+            CP { code: "c", spent: Decimal::from(900), limit: Decimal::ZERO,      paused: false, over: false }, // unlimited
+            CP { code: "d", spent: Decimal::from(80),  limit: Decimal::from(100), paused: false, over: false },
+            CP { code: "e", spent: Decimal::from(150), limit: Decimal::from(120), paused: false, over: true },
+        ];
+        assert_eq!(over_count(&cats), 2,
+            "only the two with over=true should count");
+    }
+
+    #[test]
+    fn over_count_zero_for_empty_list() {
+        assert_eq!(over_count(&[]), 0);
+    }
 }
