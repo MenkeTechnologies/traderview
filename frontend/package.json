@@ -16,7 +16,7 @@
     "i18n:migrate:dry": "node scripts/i18n_migrate.mjs --dry-run && node scripts/i18n_migrate_js.mjs --dry-run"
   },
   "devDependencies": {
-    "vitest": "^2.1.0",
+    "vitest": "^4.1.0",
     "@vitest/coverage-v8": "^2.1.0"
   }
 }
