@@ -14,6 +14,7 @@ pub mod expense_routes;
 pub mod log_mw;
 pub mod rate_limit;
 pub mod realtime;
+pub mod merchant;
 pub mod receipt_routes;
 pub mod rental_routes;
 pub mod tax_routes;

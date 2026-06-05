@@ -4,7 +4,7 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::routing::{get, patch};
 use axum::{Json, Router};
 use chrono::{DateTime, Datelike, NaiveDate, Utc};
@@ -20,6 +20,150 @@ pub fn router() -> Router<AppState> {
         .route("/purchases", get(list_purchases))
         .route("/monthly-totals", get(monthly_totals))
         .route("/yoy", get(yoy_trend))
+        .route("/merchants", get(top_merchants))
+}
+
+// --- Top merchants by spend (Track C1) --------------------------------
+//
+// Aggregates every line item across the user's done receipts for a
+// given year, canonicalizes each receipt's merchant, returns the
+// top-N merchants ranked by total spend. The Tax dashboard renders a
+// horizontal bar + table; click-through drill-down lives in the
+// frontend.
+//
+// Reuses the same canonicalization layer as /receipts/by-merchant so
+// "WAL-MART STORE 4892" and "Wal*mart #482" roll up to the same row.
+
+#[derive(Deserialize)]
+struct TopMerchantsParams {
+    /// Year window. When absent, returns the current calendar year.
+    #[serde(default)]
+    year: Option<i32>,
+    /// Cap. Default 20; max 200.
+    #[serde(default)]
+    limit: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct MerchantRollup {
+    canonical_merchant: String,
+    total: Decimal,
+    receipt_count: u32,
+    item_count: u32,
+    business_total: Decimal,
+    rental_total: Decimal,
+    personal_total: Decimal,
+    /// First seen / last seen, for "how regular is this merchant?".
+    first_date: Option<NaiveDate>,
+    last_date: Option<NaiveDate>,
+}
+
+async fn top_merchants(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(params): Query<TopMerchantsParams>,
+) -> Result<Json<Vec<MerchantRollup>>, ApiError> {
+    let year = params.year.unwrap_or_else(|| Utc::now().year());
+    let limit = params.limit.unwrap_or(20).clamp(1, 200) as usize;
+
+    // Pull the year's done receipts + items. Items live in the JSONB
+    // column; we walk in Rust so canonicalization rules apply.
+    let rows: Vec<(Uuid, Option<String>, Option<NaiveDate>, Option<serde_json::Value>)> =
+        sqlx::query_as(
+            "SELECT id, ocr_merchant, ocr_date, ocr_extracted
+               FROM receipts
+              WHERE user_id = $1
+                AND ocr_status = 'done'::ocr_status_t
+                AND ocr_merchant IS NOT NULL
+                AND ocr_extracted IS NOT NULL
+                AND EXTRACT(YEAR FROM ocr_date) = $2",
+        )
+        .bind(user.id)
+        .bind(year)
+        .fetch_all(&s.pool)
+        .await?;
+
+    let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+        .await
+        .unwrap_or_default();
+
+    use std::collections::HashMap;
+    struct Acc {
+        total: Decimal,
+        business: Decimal,
+        rental: Decimal,
+        personal: Decimal,
+        receipt_ids: std::collections::HashSet<Uuid>,
+        item_count: u32,
+        first_date: Option<NaiveDate>,
+        last_date: Option<NaiveDate>,
+    }
+    let mut by_canon: HashMap<String, Acc> = HashMap::new();
+
+    for (receipt_id, merchant_raw, date, extracted) in rows {
+        let Some(merchant_raw) = merchant_raw else { continue };
+        let Some(extracted) = extracted else { continue };
+        let canonical = crate::merchant::canonicalize(&merchant_raw, &aliases);
+        if canonical.is_empty() {
+            continue;
+        }
+        let items = match extracted.get("items").and_then(|v| v.as_array()) {
+            Some(arr) => arr,
+            None => continue,
+        };
+
+        let entry = by_canon.entry(canonical).or_insert_with(|| Acc {
+            total: Decimal::ZERO,
+            business: Decimal::ZERO,
+            rental: Decimal::ZERO,
+            personal: Decimal::ZERO,
+            receipt_ids: std::collections::HashSet::new(),
+            item_count: 0,
+            first_date: None,
+            last_date: None,
+        });
+
+        entry.receipt_ids.insert(receipt_id);
+        if let Some(d) = date {
+            entry.first_date = Some(entry.first_date.map_or(d, |x| x.min(d)));
+            entry.last_date = Some(entry.last_date.map_or(d, |x| x.max(d)));
+        }
+
+        for item in items {
+            let total_str = item.get("line_total").and_then(|v| v.as_str()).unwrap_or("");
+            let line = total_str.parse::<Decimal>().unwrap_or(Decimal::ZERO);
+            entry.total += line;
+            entry.item_count += 1;
+            let bucket = item.get("tax_bucket").and_then(|v| v.as_str()).unwrap_or("");
+            match bucket {
+                "business" => entry.business += line,
+                "rental"   => entry.rental += line,
+                "personal" => entry.personal += line,
+                _ => { /* unclassified — counted in total only */ }
+            }
+        }
+    }
+
+    let mut out: Vec<MerchantRollup> = by_canon
+        .into_iter()
+        .map(|(canonical, acc)| MerchantRollup {
+            canonical_merchant: canonical,
+            total: acc.total,
+            receipt_count: acc.receipt_ids.len() as u32,
+            item_count: acc.item_count,
+            business_total: acc.business,
+            rental_total: acc.rental,
+            personal_total: acc.personal,
+            first_date: acc.first_date,
+            last_date: acc.last_date,
+        })
+        .collect();
+
+    // Sort by total spend descending, keep top-N.
+    out.sort_by(|a, b| b.total.cmp(&a.total));
+    out.truncate(limit);
+
+    Ok(Json(out))
 }
 
 // --- estimated tax payments --------------------------------------------

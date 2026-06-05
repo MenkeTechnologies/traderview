@@ -237,6 +237,11 @@ function drawShell(mount) {
         <div id="tax-yoy-chart" class="tax-chart-mount"></div>
     </div>
 
+    <div class="tax-chart-card tax-chart-card-wide" id="tax-top-merchants-card">
+        <div class="tax-chart-label">${esc(t('view.expenses.tax.chart.top_merchants'))}</div>
+        <div id="tax-top-merchants" class="tax-top-merchants-mount"></div>
+    </div>
+
     <details class="tax-schedule-detail" id="tax-c-details">
         <summary>${esc(t('view.expenses.tax.schedule_c_breakdown'))}</summary>
         <div id="tax-c-table"></div>
@@ -573,6 +578,7 @@ async function renderTaxDashboard(mount) {
     void renderMonthlyBarChart(mount, dashYear);
     renderCategoryPie(mount, rollup?.business?.categories || []);
     void renderYoyTrendChart(mount);
+    void renderTopMerchants(mount, dashYear);
 
     // Source cards — counts.
     const recC = mount.querySelector('#tax-source-receipts');
@@ -917,6 +923,68 @@ async function renderYoyTrendChart(mount) {
         ],
         legend: { show: true },
     }, [xs, biz, rent, pers], el);
+}
+
+// Top merchants by spend for the year — horizontal table with a bar
+// inside each row. Click a row to drill in via the Purchases view
+// pre-filtered to that merchant (search box on Purchases handles the
+// rest).
+async function renderTopMerchants(mount, year) {
+    const el = mount.querySelector('#tax-top-merchants');
+    if (!el) return;
+    el.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+    let rows = [];
+    try { rows = await api.topMerchants({ year, limit: 20 }); }
+    catch (_) { rows = []; }
+    if (!rows.length) {
+        el.innerHTML = `<p class="muted small">${esc(t('view.expenses.tax.merchants.empty'))}</p>`;
+        return;
+    }
+    const max = rows.reduce((m, r) => Math.max(m, Number(r.total) || 0), 0) || 1;
+    const fmt = (n) => fmtUsd(Number(n) || 0);
+    el.innerHTML = `
+        <table class="tax-merchants-table">
+            <thead>
+                <tr>
+                    <th>${esc(t('view.expenses.tax.merchants.col.merchant'))}</th>
+                    <th class="num">${esc(t('view.expenses.tax.merchants.col.total'))}</th>
+                    <th class="num">${esc(t('view.expenses.tax.merchants.col.receipts'))}</th>
+                    <th class="num">${esc(t('view.expenses.tax.merchants.col.items'))}</th>
+                    <th class="num">${esc(t('view.expenses.tax.merchants.col.business'))}</th>
+                    <th class="num">${esc(t('view.expenses.tax.merchants.col.rental'))}</th>
+                    <th class="num">${esc(t('view.expenses.tax.merchants.col.personal'))}</th>
+                    <th>${esc(t('view.expenses.tax.merchants.col.window'))}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(r => {
+                    const pct = Math.round((Number(r.total) / max) * 100);
+                    return `<tr class="tax-merchants-row" data-merchant="${esc(r.canonical_merchant)}">
+                        <td class="tax-merchant-name">
+                            <div class="tax-merchant-bar" style="width:${pct}%"></div>
+                            <span>${esc(r.canonical_merchant)}</span>
+                        </td>
+                        <td class="num">${esc(fmt(r.total))}</td>
+                        <td class="num">${r.receipt_count}</td>
+                        <td class="num">${r.item_count}</td>
+                        <td class="num">${esc(fmt(r.business_total))}</td>
+                        <td class="num">${esc(fmt(r.rental_total))}</td>
+                        <td class="num">${esc(fmt(r.personal_total))}</td>
+                        <td class="muted small">${esc(r.first_date || '')} → ${esc(r.last_date || '')}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+    el.querySelectorAll('tr.tax-merchants-row').forEach(tr => {
+        tr.addEventListener('click', () => {
+            const m = tr.dataset.merchant || '';
+            if (!m) return;
+            // Hop to Purchases pre-filtered. Purchases reads the
+            // ?search= query string on init.
+            location.hash = `#purchases?search=${encodeURIComponent(m)}`;
+        });
+    });
 }
 
 function hexAlpha(hex, a) {

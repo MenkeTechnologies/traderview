@@ -285,7 +285,12 @@ fn run_tesseract(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
 ///   2. To grayscale (luma8). Drops false texture from camera noise.
 ///   3. Lanczos3 upscale so the SHORTER side hits ~1600 px, capped at
 ///      3×.
-///   4. Re-encode as PNG (lossless).
+///   4. **Sauvola adaptive thresholding.** Computes a local threshold
+///      per pixel from a window's mean + std, then binarizes. Critical
+///      for phone-photo receipts where uneven lighting / shadows /
+///      faded thermal print would tank a global threshold. Sauvola
+///      handles all three.
+///   5. Re-encode as PNG (lossless).
 fn preprocess(bytes: &[u8]) -> Result<Vec<u8>, OcrError> {
     let img = ImageReader::new(Cursor::new(bytes))
         .with_guessed_format()
@@ -304,24 +309,108 @@ fn preprocess(bytes: &[u8]) -> Result<Vec<u8>, OcrError> {
     } else {
         1.0
     };
-    let processed = if scale > 1.0 {
+    let upscaled = if scale > 1.0 {
         let new_w = ((w as f32) * scale) as u32;
         let new_h = ((h as f32) * scale) as u32;
-        let up = image::imageops::resize(
+        image::imageops::resize(
             &gray,
             new_w,
             new_h,
             image::imageops::FilterType::Lanczos3,
-        );
-        DynamicImage::ImageLuma8(up)
+        )
     } else {
-        DynamicImage::ImageLuma8(gray)
+        gray
     };
+
+    // Sauvola binarization. Window size scales with image size — a
+    // 25px window on a 400px receipt covers a row of text; on a 4000px
+    // shot we want ~50 to capture the same character height.
+    let win = (upscaled.width().min(upscaled.height()) / 64).clamp(15, 50) as usize;
+    let binarized = sauvola_threshold(&upscaled, win, 0.34);
+
     let mut out = Vec::with_capacity(bytes.len());
-    processed
+    DynamicImage::ImageLuma8(binarized)
         .write_to(&mut Cursor::new(&mut out), ImageFormat::Png)
         .map_err(|e| OcrError::Decode(format!("re-encode: {e}")))?;
     Ok(out)
+}
+
+/// Sauvola adaptive thresholding using an integral-image fast path.
+///
+/// For each pixel `p`, compute `μ` (mean) and `σ` (std-dev) over the
+/// `(2w+1)×(2w+1)` window centered at `p`. The local threshold is:
+///
+///     T(p) = μ * (1 + k * (σ/R - 1))
+///
+/// with `k = 0.34` and `R = 128` (the standard Sauvola defaults for
+/// 8-bit images). Pixel becomes 0 (foreground/text) when `p < T(p)`,
+/// else 255 (background).
+///
+/// Integral images make the window sums O(1) per pixel regardless of
+/// `w`, so total work is O(W*H) — same cost as the Lanczos upscale.
+fn sauvola_threshold(
+    img: &image::ImageBuffer<image::Luma<u8>, Vec<u8>>,
+    w_half: usize,
+    k: f32,
+) -> image::ImageBuffer<image::Luma<u8>, Vec<u8>> {
+    let width = img.width() as usize;
+    let height = img.height() as usize;
+    let r: f32 = 128.0;
+
+    // Build (W+1) × (H+1) integral images for sum and sum-of-squares.
+    // u64 so we never overflow on 4000×4000 inputs.
+    let stride = width + 1;
+    let mut s_sum = vec![0u64; stride * (height + 1)];
+    let mut s_sq = vec![0u64; stride * (height + 1)];
+    for y in 0..height {
+        let mut row_sum: u64 = 0;
+        let mut row_sq: u64 = 0;
+        for x in 0..width {
+            let p = img.get_pixel(x as u32, y as u32).0[0] as u64;
+            row_sum += p;
+            row_sq += p * p;
+            let idx_below = (y + 1) * stride + (x + 1);
+            let idx_above = y * stride + (x + 1);
+            s_sum[idx_below] = s_sum[idx_above] + row_sum;
+            s_sq[idx_below]  = s_sq[idx_above]  + row_sq;
+        }
+    }
+
+    // Window sums in O(1) via the four corner trick.
+    let sum_in = |x0: usize, y0: usize, x1: usize, y1: usize, table: &[u64]| -> u64 {
+        // x0,y0 inclusive bottom-left; x1,y1 EXCLUSIVE top-right.
+        let a = table[y0 * stride + x0];
+        let b = table[y0 * stride + x1];
+        let c = table[y1 * stride + x0];
+        let d = table[y1 * stride + x1];
+        d + a - b - c
+    };
+
+    let mut out = image::ImageBuffer::new(width as u32, height as u32);
+    for y in 0..height {
+        let y0 = y.saturating_sub(w_half);
+        let y1 = (y + w_half + 1).min(height);
+        for x in 0..width {
+            let x0 = x.saturating_sub(w_half);
+            let x1 = (x + w_half + 1).min(width);
+            let n = ((x1 - x0) * (y1 - y0)) as f32;
+            let s  = sum_in(x0, y0, x1, y1, &s_sum) as f32;
+            let s2 = sum_in(x0, y0, x1, y1, &s_sq) as f32;
+            let mean = s / n;
+            // variance = E[x^2] - E[x]^2; clamp to 0 to dodge fp jitter.
+            let var = (s2 / n - mean * mean).max(0.0);
+            let std = var.sqrt();
+            let t = mean * (1.0 + k * (std / r - 1.0));
+            let p = img.get_pixel(x as u32, y as u32).0[0] as f32;
+            // p ≤ T → foreground (text). Tesseract reads black-on-white.
+            // The `≤` (not `<`) handles the degenerate uniform-black
+            // window case: when mean=0 → T=0; a strictly-less compare
+            // would classify a pure-black region as background.
+            let v = if p <= t { 0u8 } else { 255u8 };
+            out.put_pixel(x as u32, y as u32, image::Luma([v]));
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -350,6 +439,43 @@ mod tests {
     #[test]
     fn find_vision_binary_no_panic() {
         let _ = find_vision_binary();
+    }
+
+    /// Sauvola sanity — a half-black/half-white test image binarizes
+    /// to mostly the same shape (pure-black region stays foreground,
+    /// pure-white stays background). Verifies the integral-image math
+    /// + thresholding doesn't invert or scramble the image.
+    #[test]
+    fn sauvola_preserves_high_contrast_bands() {
+        let mut img = image::ImageBuffer::<image::Luma<u8>, _>::new(40, 40);
+        for y in 0..40 {
+            for x in 0..40 {
+                let v = if x < 20 { 0u8 } else { 255u8 };
+                img.put_pixel(x, y, image::Luma([v]));
+            }
+        }
+        let out = sauvola_threshold(&img, 5, 0.34);
+        // Center of the left band should remain "foreground" (0).
+        assert_eq!(out.get_pixel(10, 20).0[0], 0);
+        // Center of the right band should remain "background" (255).
+        assert_eq!(out.get_pixel(30, 20).0[0], 255);
+    }
+
+    /// Sauvola degenerate case — uniform image must produce a uniform
+    /// output (no spurious noise from numerical instability when σ=0).
+    #[test]
+    fn sauvola_uniform_image_stays_uniform() {
+        let img = image::ImageBuffer::<image::Luma<u8>, _>::from_pixel(20, 20, image::Luma([200]));
+        let out = sauvola_threshold(&img, 4, 0.34);
+        // With p=200, mean=200, std=0 → T = 200 * (1 + 0.34*(0/128 - 1))
+        //   = 200 * (1 - 0.34) = 132. p=200 > 132 → background (255).
+        // Either way, all pixels must have the same value.
+        let first = out.get_pixel(0, 0).0[0];
+        for y in 0..20 {
+            for x in 0..20 {
+                assert_eq!(out.get_pixel(x, y).0[0], first);
+            }
+        }
     }
 
     /// End-to-end smoke — `run()` returns Ok or one of the documented

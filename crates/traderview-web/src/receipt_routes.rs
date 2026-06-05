@@ -17,7 +17,7 @@ use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::body::Body;
-use axum::extract::{DefaultBodyLimit, Multipart, Path, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State};
 use axum::http::{header, StatusCode};
 use axum::response::Response;
 use axum::routing::{get, post};
@@ -54,6 +54,11 @@ pub fn router() -> Router<AppState> {
         .route("/bulk-attach", post(bulk_attach))
         .route("/bulk-delete", post(bulk_delete))
         .route("/bulk-patch-items", post(bulk_patch_items))
+        .route("/bulk-reocr", post(bulk_reocr))
+        .route("/bulk-reocr/progress", get(bulk_reocr_progress))
+        .route("/by-merchant", get(receipts_by_merchant))
+        .route("/search", get(receipts_search))
+        .route("/duplicates", get(receipts_duplicates))
         .route("/tax-rollup.csv", get(tax_rollup_csv))
         .route("/tax-rollup.pdf", get(tax_rollup_pdf))
         .route("/ocr-models/status", get(ocr_models_status))
@@ -480,7 +485,63 @@ async fn run_ocr(
     .await?;
 
     match result {
-        Ok(ocr) => {
+        Ok(mut ocr) => {
+            // Apply the user's learned merchant→category mapping
+            // before persisting. The parse pipeline auto-guesses based
+            // on item-name keywords; the user's past corrections are
+            // strictly more authoritative. Each PATCH-time learning
+            // hook UPSERTs (canonical_merchant, category, use_count) —
+            // we pick the highest-use_count row and replace every
+            // item's auto-guess with it.
+            //
+            // The user's user_id is needed for the learned-categories
+            // query — look it up from the receipts row. If the lookup
+            // fails for any reason (deleted receipt, RLS), just
+            // proceed with the auto-guessed categories.
+            if let Some(merchant_raw) = ocr.merchant.as_deref() {
+                if !merchant_raw.is_empty() {
+                    if let Ok(Some((user_id,))) = sqlx::query_as::<_, (Uuid,)>(
+                        "SELECT user_id FROM receipts WHERE id = $1",
+                    )
+                    .bind(receipt_id)
+                    .fetch_optional(&s.pool)
+                    .await
+                    {
+                        let aliases = crate::merchant::load_aliases(&s.pool, user_id)
+                            .await
+                            .unwrap_or_default();
+                        let canonical = crate::merchant::canonicalize(merchant_raw, &aliases);
+                        if !canonical.is_empty() {
+                            let learned: Option<(String,)> = sqlx::query_as(
+                                "SELECT category_code
+                                   FROM learned_merchant_categories
+                                  WHERE user_id = $1
+                                    AND merchant_canonical = $2
+                                  ORDER BY use_count DESC, last_used DESC
+                                  LIMIT 1",
+                            )
+                            .bind(user_id)
+                            .bind(&canonical)
+                            .fetch_optional(&s.pool)
+                            .await
+                            .unwrap_or(None);
+                            if let Some((learned_cat,)) = learned {
+                                for item in ocr.items.iter_mut() {
+                                    item.category = learned_cat.clone();
+                                }
+                                tracing::debug!(
+                                    receipt = %receipt_id,
+                                    merchant = %canonical,
+                                    category = %learned_cat,
+                                    items = ocr.items.len(),
+                                    "applied learned merchant→category",
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
             // Persist the structured slice (address, time, subtotal, tax,
             // itemized lines + categories) into the JSONB column from
             // migration 0041. Falls back to `{}` on serialize failure so
@@ -1020,13 +1081,13 @@ async fn patch_receipt_item(
         }
     }
 
-    let row: Option<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
-        "SELECT user_id, ocr_extracted FROM receipts WHERE id = $1",
+    let row: Option<(Uuid, Option<serde_json::Value>, Option<String>)> = sqlx::query_as(
+        "SELECT user_id, ocr_extracted, ocr_merchant FROM receipts WHERE id = $1",
     )
     .bind(receipt_id)
     .fetch_optional(&s.pool)
     .await?;
-    let (owner, extracted) = row.ok_or(ApiError::NotFound)?;
+    let (owner, extracted, ocr_merchant) = row.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
     }
@@ -1045,6 +1106,15 @@ async fn patch_receipt_item(
     let item_obj = item
         .as_object_mut()
         .ok_or_else(|| ApiError::Internal(anyhow::anyhow!("item is not an object")))?;
+
+    // Snapshot the existing category BEFORE applying changes so the
+    // learning hook fires only on a real change. Re-saving the same
+    // category should not inflate use_count.
+    let old_category = item_obj
+        .get("category")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
     if let Some(name) = body.name {
         item_obj.insert("name".into(), serde_json::Value::String(name));
     }
@@ -1097,11 +1167,59 @@ async fn patch_receipt_item(
         }
     }
 
+    // Re-read the new category AFTER the writes so we compare against
+    // what's actually being persisted, not the request body (which
+    // might be None when the user only updated qty / unit_price).
+    let new_category = item_obj
+        .get("category")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
     sqlx::query("UPDATE receipts SET ocr_extracted = $2 WHERE id = $1")
         .bind(receipt_id)
         .bind(&extracted)
         .execute(&s.pool)
         .await?;
+
+    // Learning hook: if the user changed the category and we have a
+    // merchant to attribute it to, record (canonical_merchant,
+    // category) → use_count++. Fired here (not in the parse pipeline)
+    // because this is the only signal that the chosen category was
+    // human-confirmed, not auto-guessed.
+    if let (Some(new_cat), Some(merchant_raw)) = (new_category, ocr_merchant) {
+        if old_category.as_deref() != Some(new_cat.as_str()) && !merchant_raw.is_empty() {
+            let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+                .await
+                .unwrap_or_default();
+            let canonical = crate::merchant::canonicalize(&merchant_raw, &aliases);
+            if !canonical.is_empty() {
+                let learn = sqlx::query(
+                    "INSERT INTO learned_merchant_categories
+                        (user_id, merchant_canonical, category_code, use_count, last_used)
+                     VALUES ($1, $2, $3, 1, NOW())
+                     ON CONFLICT (user_id, merchant_canonical, category_code)
+                     DO UPDATE SET
+                        use_count = learned_merchant_categories.use_count + 1,
+                        last_used = NOW()",
+                )
+                .bind(user.id)
+                .bind(&canonical)
+                .bind(&new_cat)
+                .execute(&s.pool)
+                .await;
+                if let Err(e) = learn {
+                    // Logging only — never fail the user's PATCH because
+                    // the learning side-effect choked.
+                    tracing::warn!(
+                        merchant = %canonical,
+                        category = %new_cat,
+                        err = %e,
+                        "learn_merchant_category UPSERT failed",
+                    );
+                }
+            }
+        }
+    }
 
     Ok(Json(extracted))
 }
@@ -1433,6 +1551,579 @@ async fn bulk_delete(
     Ok(Json(BulkResult {
         affected: r.rows_affected() as u32,
     }))
+}
+
+// --- bulk re-OCR --------------------------------------------------------
+//
+// Reset matching receipts to ocr_status='pending' and spawn the
+// existing `run_ocr` pipeline for each. Bounded by the same
+// `state.ocr_sem` semaphore as upload-time OCR so a re-OCR of 10k
+// receipts can't out-compete a fresh upload for CPU.
+//
+// Filters:
+//   * `all`              — every `done`/`failed` receipt owned by user.
+//   * `non_vision`       — anything not currently `apple_vision`.
+//                          Right answer after the Vision sidecar lands.
+//   * `low_confidence`   — confidence < 0.80. Catches Tesseract pages
+//                          where the text came out garbled.
+//   * `failed`           — only receipts the engine choked on.
+
+#[derive(Deserialize)]
+struct BulkReocrBody {
+    /// One of: `all` | `non_vision` | `low_confidence` | `failed`.
+    /// Default `non_vision` — the most common reason to bulk-reocr is
+    /// "I just installed the Vision sidecar, re-process anything that
+    /// ran on Tesseract."
+    #[serde(default = "default_reocr_filter")]
+    filter: String,
+}
+
+fn default_reocr_filter() -> String { "non_vision".into() }
+
+#[derive(Serialize)]
+struct BulkReocrResult {
+    queued: u32,
+    filter: String,
+}
+
+#[derive(Serialize)]
+struct ReocrProgress {
+    pending: u32,
+    done: u32,
+    failed: u32,
+    needs_image: u32,
+}
+
+async fn bulk_reocr(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(body): Json<BulkReocrBody>,
+) -> Result<Json<BulkReocrResult>, ApiError> {
+    // Translate the filter into a SQL WHERE fragment. Keeping it
+    // server-side prevents the client from issuing a re-OCR of all
+    // receipts when it only meant low-confidence — no surprise CPU
+    // spikes.
+    let where_extra = match body.filter.as_str() {
+        "all" => "",
+        "non_vision" => {
+            "AND COALESCE(ocr_extracted->>'engine','unknown') <> 'apple_vision'"
+        }
+        "low_confidence" => "AND COALESCE(ocr_confidence, 0) < 0.80",
+        "failed" => "AND ocr_status = 'failed'::ocr_status_t",
+        other => {
+            return Err(ApiError::BadRequest(format!(
+                "unknown filter '{other}' — use one of: all | non_vision | low_confidence | failed"
+            )));
+        }
+    };
+
+    // Pull the matching ids + storage paths in one shot. We cap at
+    // 10_000 so a runaway button-mash can't pin the OCR semaphore for
+    // hours; the user can re-issue the call to keep draining.
+    let sql = format!(
+        "SELECT id, storage_path, mime
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status IN ('done','failed','needs_image')
+            {where_extra}
+          ORDER BY created_at DESC
+          LIMIT 10000",
+    );
+    let rows: Vec<(Uuid, String, String)> = sqlx::query_as(&sql)
+        .bind(user.id)
+        .fetch_all(&s.pool)
+        .await?;
+
+    let queued = rows.len() as u32;
+
+    // Flip status to 'pending' for the whole batch in one statement so
+    // the UI sees the progress bar move immediately rather than per-row.
+    if !rows.is_empty() {
+        let ids: Vec<Uuid> = rows.iter().map(|(id, _, _)| *id).collect();
+        sqlx::query(
+            "UPDATE receipts
+                SET ocr_status = 'pending'::ocr_status_t,
+                    error_message = NULL
+              WHERE id = ANY($1)",
+        )
+        .bind(&ids)
+        .execute(&s.pool)
+        .await?;
+    }
+
+    // Spawn one task per receipt. Each task acquires a semaphore permit
+    // before invoking `run_ocr`, so the actual concurrency stays
+    // bounded at `min(4, num_cpus)`. The spawn loop itself returns
+    // immediately — the client polls /bulk-reocr/progress.
+    for (id, rel_path, mime) in rows {
+        let bg_state = s.clone();
+        tokio::spawn(async move {
+            let _permit = bg_state.ocr_sem.clone().acquire_owned().await.ok();
+            let abs = bg_state.receipts_dir().join(&rel_path);
+            let bytes = match tokio::fs::read(&abs).await {
+                Ok(b) => b,
+                Err(e) => {
+                    tracing::error!(receipt = %id, error = %e, "bulk reocr: read blob failed");
+                    mark_ocr_failed(&bg_state, id, &format!("read blob: {e}")).await;
+                    return;
+                }
+            };
+            let result = std::panic::AssertUnwindSafe(run_ocr(bg_state.clone(), id, bytes, mime));
+            match futures_util::FutureExt::catch_unwind(result).await {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => {
+                    tracing::error!(receipt = %id, error = %e, "bulk reocr failed");
+                    mark_ocr_failed(&bg_state, id, &e.to_string()).await;
+                }
+                Err(panic) => {
+                    let msg = if let Some(s) = panic.downcast_ref::<&str>() {
+                        (*s).to_string()
+                    } else if let Some(s) = panic.downcast_ref::<String>() {
+                        s.clone()
+                    } else {
+                        "OCR engine panicked".into()
+                    };
+                    tracing::error!(receipt = %id, panic = %msg, "bulk reocr panicked");
+                    mark_ocr_failed(&bg_state, id, &format!("OCR panic: {msg}")).await;
+                }
+            }
+        });
+    }
+
+    Ok(Json(BulkReocrResult {
+        queued,
+        filter: body.filter,
+    }))
+}
+
+async fn bulk_reocr_progress(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<ReocrProgress>, ApiError> {
+    // Single aggregate query — Postgres FILTER is cheaper than four
+    // round-trips. The client polls this every 2-3s during a bulk job.
+    let row: (i64, i64, i64, i64) = sqlx::query_as(
+        "SELECT
+            COUNT(*) FILTER (WHERE ocr_status = 'pending'::ocr_status_t),
+            COUNT(*) FILTER (WHERE ocr_status = 'done'::ocr_status_t),
+            COUNT(*) FILTER (WHERE ocr_status = 'failed'::ocr_status_t),
+            COUNT(*) FILTER (WHERE ocr_status = 'needs_image'::ocr_status_t)
+           FROM receipts
+          WHERE user_id = $1",
+    )
+    .bind(user.id)
+    .fetch_one(&s.pool)
+    .await?;
+    Ok(Json(ReocrProgress {
+        pending: row.0 as u32,
+        done: row.1 as u32,
+        failed: row.2 as u32,
+        needs_image: row.3 as u32,
+    }))
+}
+
+// --- by-merchant grouping (Track B4) ----------------------------------
+//
+// Powers the "Categorize by merchant" view. Walks every item across
+// the user's done receipts, canonicalizes each receipt's merchant,
+// groups items by canonical, returns one row per merchant with its
+// receipt_ids ready to be fed back into /bulk-patch-items.
+//
+// Query params:
+//   * `default_only=1` — restrict to items whose current category is a
+//     parser default (`unclassified`, `office_supplies`). Off by
+//     default — caller can also ask for the full grouping (handy for
+//     duplicate-receipt detection, top-merchants reports).
+//   * `min_items=N` — drop groups below N items. Default 1.
+
+#[derive(Deserialize)]
+struct ByMerchantParams {
+    #[serde(default)]
+    default_only: Option<u8>,
+    #[serde(default)]
+    min_items: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct ByMerchantGroup {
+    canonical_merchant: String,
+    receipt_ids: Vec<Uuid>,
+    item_count: u32,
+    receipt_count: u32,
+    total: Decimal,
+    /// First 6 line-item names so the UI can show a preview without
+    /// fetching every receipt — `["paper towels", "milk", ...]`.
+    sample_items: Vec<String>,
+    /// Top learned category for this merchant, when one exists. Lets
+    /// the UI pre-fill the dropdown.
+    learned_category: Option<String>,
+}
+
+async fn receipts_by_merchant(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(params): Query<ByMerchantParams>,
+) -> Result<Json<Vec<ByMerchantGroup>>, ApiError> {
+    let default_only = params.default_only.unwrap_or(0) != 0;
+    let min_items = params.min_items.unwrap_or(1).max(1);
+
+    // Slurp every (receipt_id, merchant, items[]) for the user. Items
+    // come back as a JSONB array — we walk it in Rust so the
+    // canonicalize step can apply alias rules + match learned cats.
+    let rows: Vec<(Uuid, Option<String>, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT id, ocr_merchant, ocr_extracted
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_merchant IS NOT NULL
+            AND ocr_extracted IS NOT NULL",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+        .await
+        .unwrap_or_default();
+
+    use std::collections::HashMap;
+    struct Acc {
+        receipt_ids: Vec<Uuid>,
+        item_count: u32,
+        total: Decimal,
+        sample_items: Vec<String>,
+    }
+    let mut by_canon: HashMap<String, Acc> = HashMap::new();
+
+    for (receipt_id, merchant_raw, extracted) in rows {
+        let Some(merchant_raw) = merchant_raw else { continue };
+        let Some(extracted) = extracted else { continue };
+        let canonical = crate::merchant::canonicalize(&merchant_raw, &aliases);
+        if canonical.is_empty() {
+            continue;
+        }
+        let items = match extracted.get("items").and_then(|v| v.as_array()) {
+            Some(arr) => arr,
+            None => continue,
+        };
+
+        let entry = by_canon.entry(canonical).or_insert_with(|| Acc {
+            receipt_ids: Vec::new(),
+            item_count: 0,
+            total: Decimal::ZERO,
+            sample_items: Vec::new(),
+        });
+        let mut counted_this_receipt = false;
+
+        for item in items {
+            // default_only: skip items the user has already triaged.
+            if default_only {
+                let cat = item.get("category").and_then(|v| v.as_str()).unwrap_or("");
+                if !matches!(cat, "" | "unclassified" | "office_supplies") {
+                    continue;
+                }
+            }
+            entry.item_count += 1;
+
+            // Line totals come back as JSON strings (Decimal does not
+            // round-trip through f64 cleanly). Best-effort parse —
+            // missing/garbage totals just don't contribute.
+            if let Some(total_str) = item.get("line_total").and_then(|v| v.as_str()) {
+                if let Ok(d) = total_str.parse::<Decimal>() {
+                    entry.total += d;
+                }
+            }
+
+            // Keep up to 6 sample names per group for the preview.
+            if entry.sample_items.len() < 6 {
+                if let Some(name) = item.get("name").and_then(|v| v.as_str()) {
+                    if !name.is_empty() && !entry.sample_items.iter().any(|s| s == name) {
+                        entry.sample_items.push(name.to_string());
+                    }
+                }
+            }
+
+            if !counted_this_receipt {
+                entry.receipt_ids.push(receipt_id);
+                counted_this_receipt = true;
+            }
+        }
+    }
+
+    // Look up learned-category top hit per merchant in one batch query.
+    let merchants: Vec<String> = by_canon.keys().cloned().collect();
+    let mut learned_map: HashMap<String, String> = HashMap::new();
+    if !merchants.is_empty() {
+        let learned: Vec<(String, String, i32)> = sqlx::query_as(
+            "SELECT merchant_canonical, category_code, use_count
+               FROM learned_merchant_categories
+              WHERE user_id = $1
+                AND merchant_canonical = ANY($2)",
+        )
+        .bind(user.id)
+        .bind(&merchants)
+        .fetch_all(&s.pool)
+        .await
+        .unwrap_or_default();
+
+        // Keep only the highest-use_count entry per merchant.
+        let mut best: HashMap<String, (String, i32)> = HashMap::new();
+        for (m, cat, n) in learned {
+            let entry = best.entry(m).or_insert_with(|| (cat.clone(), n));
+            if n > entry.1 {
+                *entry = (cat, n);
+            }
+        }
+        for (m, (cat, _)) in best {
+            learned_map.insert(m, cat);
+        }
+    }
+
+    let mut out: Vec<ByMerchantGroup> = by_canon
+        .into_iter()
+        .filter(|(_, a)| a.item_count >= min_items)
+        .map(|(canonical, acc)| ByMerchantGroup {
+            receipt_count: acc.receipt_ids.len() as u32,
+            learned_category: learned_map.get(&canonical).cloned(),
+            canonical_merchant: canonical,
+            receipt_ids: acc.receipt_ids,
+            item_count: acc.item_count,
+            total: acc.total,
+            sample_items: acc.sample_items,
+        })
+        .collect();
+
+    // Sort by item_count DESC — the most-impactful groups first.
+    out.sort_by(|a, b| b.item_count.cmp(&a.item_count));
+
+    Ok(Json(out))
+}
+
+// --- full-text search (Track C3) --------------------------------------
+//
+// Uses the `ocr_text_tsv` tsvector column added in migration 0044 and
+// its GIN index. Search is `plainto_tsquery` so the user can type
+// anything — no need to escape `&`, `|`, `(`, etc. ts_headline gives
+// us a highlighted snippet for the UI.
+
+#[derive(Deserialize)]
+struct SearchParams {
+    q: String,
+    #[serde(default)]
+    limit: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct SearchHit {
+    id: Uuid,
+    merchant: Option<String>,
+    total: Option<Decimal>,
+    date: Option<NaiveDate>,
+    rank: f32,
+    snippet: String,
+    transaction_id: Option<Uuid>,
+}
+
+async fn receipts_search(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(params): Query<SearchParams>,
+) -> Result<Json<Vec<SearchHit>>, ApiError> {
+    let q = params.q.trim().to_string();
+    if q.is_empty() {
+        return Ok(Json(Vec::new()));
+    }
+    let limit = params.limit.unwrap_or(50).clamp(1, 200) as i64;
+
+    // ts_headline operates on the raw text; we feed the same tsquery
+    // it's matching against so highlights stay aligned. StartSel /
+    // StopSel use literal tokens the UI escapes itself — never inject
+    // raw HTML from Postgres into innerHTML.
+    let rows: Vec<(
+        Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>,
+        f32, String, Option<Uuid>,
+    )> = sqlx::query_as(
+        "SELECT id, ocr_merchant, ocr_total, ocr_date,
+                ts_rank(ocr_text_tsv, plainto_tsquery('english', $2)) AS rank,
+                ts_headline(
+                    'english',
+                    COALESCE(ocr_text, ''),
+                    plainto_tsquery('english', $2),
+                    'MaxFragments=2, MaxWords=12, MinWords=5, StartSel=«, StopSel=»'
+                ) AS snippet,
+                transaction_id
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_text_tsv @@ plainto_tsquery('english', $2)
+          ORDER BY rank DESC
+          LIMIT $3",
+    )
+    .bind(user.id)
+    .bind(&q)
+    .bind(limit)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let hits = rows
+        .into_iter()
+        .map(|(id, merchant, total, date, rank, snippet, transaction_id)| SearchHit {
+            id, merchant, total, date, rank, snippet, transaction_id,
+        })
+        .collect();
+    Ok(Json(hits))
+}
+
+// --- duplicate receipt detector (Track C2) ----------------------------
+//
+// "I uploaded the same receipt twice" is a real problem at scale —
+// folder scans, retry uploads, re-photographing a previously archived
+// pile. We can't dedupe by SHA (a slightly different photo of the
+// same receipt has a different SHA), but we CAN dedupe by
+// (canonical_merchant, total ±$0.50, date ±N days).
+//
+// Returns groups of ≥2 receipts that look like duplicates of each
+// other. UI shows side-by-side, "Keep one, delete the rest".
+
+#[derive(Deserialize)]
+struct DuplicatesParams {
+    #[serde(default)]
+    within_days: Option<u32>,
+    /// $ tolerance on total. Defaults to 0.50 — handles rare tax /
+    /// rounding drift between an itemized photo and a Square tab.
+    #[serde(default)]
+    total_tolerance: Option<f32>,
+}
+
+#[derive(Serialize)]
+struct DuplicateGroup {
+    canonical_merchant: String,
+    total: Decimal,
+    receipts: Vec<DuplicateReceipt>,
+}
+
+#[derive(Serialize)]
+struct DuplicateReceipt {
+    id: Uuid,
+    filename: String,
+    ocr_merchant: Option<String>,
+    ocr_date: Option<NaiveDate>,
+    ocr_total: Option<Decimal>,
+    transaction_id: Option<Uuid>,
+}
+
+async fn receipts_duplicates(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(params): Query<DuplicatesParams>,
+) -> Result<Json<Vec<DuplicateGroup>>, ApiError> {
+    let within_days = params.within_days.unwrap_or(3).min(30) as i64;
+    let tol_cents = (params.total_tolerance.unwrap_or(0.50) * 100.0).round() as i64;
+    let tol_dollars = Decimal::new(tol_cents, 2);
+
+    let rows: Vec<(
+        Uuid, String, Option<String>, Option<NaiveDate>,
+        Option<Decimal>, Option<Uuid>,
+    )> = sqlx::query_as(
+        "SELECT id, filename, ocr_merchant, ocr_date, ocr_total, transaction_id
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_total IS NOT NULL
+            AND ocr_merchant IS NOT NULL
+            AND ocr_date IS NOT NULL",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+        .await
+        .unwrap_or_default();
+
+    // Two-stage grouping: canonical_merchant → buckets keyed by
+    // rounded total. Within each bucket, walk pairwise and emit
+    // connected components where date diff ≤ within_days.
+    use std::collections::HashMap;
+    struct R {
+        id: Uuid,
+        filename: String,
+        merchant: Option<String>,
+        date: NaiveDate,
+        total: Decimal,
+        transaction_id: Option<Uuid>,
+        canonical: String,
+    }
+    let mut all: Vec<R> = Vec::with_capacity(rows.len());
+    for (id, filename, merchant, date, total, txn) in rows {
+        let date = match date { Some(d) => d, None => continue };
+        let total = match total { Some(t) => t, None => continue };
+        let raw = merchant.clone().unwrap_or_default();
+        let canonical = if raw.is_empty() {
+            continue;
+        } else {
+            crate::merchant::canonicalize(&raw, &aliases)
+        };
+        if canonical.is_empty() {
+            continue;
+        }
+        all.push(R {
+            id, filename, merchant, date, total,
+            transaction_id: txn, canonical,
+        });
+    }
+
+    // Group by canonical first.
+    let mut by_canon: HashMap<String, Vec<usize>> = HashMap::new();
+    for (i, r) in all.iter().enumerate() {
+        by_canon.entry(r.canonical.clone()).or_default().push(i);
+    }
+
+    let mut groups: Vec<DuplicateGroup> = Vec::new();
+    for (canon, idxs) in by_canon {
+        if idxs.len() < 2 { continue; }
+        // Naive O(n²) — fine for ≤200 receipts per merchant; the
+        // user-corpus shape rarely concentrates that hard.
+        let mut consumed = vec![false; idxs.len()];
+        for i in 0..idxs.len() {
+            if consumed[i] { continue; }
+            let mut hits: Vec<usize> = vec![idxs[i]];
+            consumed[i] = true;
+            for j in (i + 1)..idxs.len() {
+                if consumed[j] { continue; }
+                let a = &all[idxs[i]];
+                let b = &all[idxs[j]];
+                let date_ok = (a.date - b.date).num_days().abs() <= within_days;
+                let total_ok = (a.total - b.total).abs() <= tol_dollars;
+                if date_ok && total_ok {
+                    hits.push(idxs[j]);
+                    consumed[j] = true;
+                }
+            }
+            if hits.len() >= 2 {
+                let receipts = hits.iter().map(|&k| {
+                    let r = &all[k];
+                    DuplicateReceipt {
+                        id: r.id,
+                        filename: r.filename.clone(),
+                        ocr_merchant: r.merchant.clone(),
+                        ocr_date: Some(r.date),
+                        ocr_total: Some(r.total),
+                        transaction_id: r.transaction_id,
+                    }
+                }).collect::<Vec<_>>();
+                let total_anchor = all[hits[0]].total;
+                groups.push(DuplicateGroup {
+                    canonical_merchant: canon.clone(),
+                    total: total_anchor,
+                    receipts,
+                });
+            }
+        }
+    }
+
+    // Largest duplicate groups first so the user attacks the highest-leverage cleanup.
+    groups.sort_by(|a, b| b.receipts.len().cmp(&a.receipts.len()));
+    Ok(Json(groups))
 }
 
 // --- bulk patch items ---------------------------------------------------

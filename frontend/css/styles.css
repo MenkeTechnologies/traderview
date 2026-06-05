@@ -1620,6 +1620,118 @@ button.rule-del {
 .ocr-engine-tesseract_multi { color: #ffd060; }
 .ocr-engine-pdf             { color: #6090ff; }
 .ocr-engine-unknown         { color: var(--text-dim); }
+
+/* ── Categorize-by-merchant view (Track B4) ──────────────────────── */
+.cz-toolbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 8px 0; border-bottom: 1px dashed var(--border);
+}
+.cz-toggle { display: inline-flex; align-items: center; gap: 6px; }
+.cz-list { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.cz-row {
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 8px 10px; background: var(--bg-card);
+}
+.cz-row-head {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.cz-merchant { font-family: 'Share Tech Mono', monospace; }
+.cz-total { font-variant-numeric: tabular-nums; color: var(--cyan); }
+.cz-learned {
+    font-size: 10px; padding: 1px 6px; border-radius: 8px;
+    border: 1px solid var(--cyan-dim); color: var(--cyan-dim);
+    margin-left: auto;
+}
+.cz-row-sample { margin-top: 4px; }
+.cz-row-actions {
+    display: flex; gap: 8px; margin-top: 6px; align-items: center;
+}
+.cz-cat { min-width: 220px; }
+.ra-reocr-wrap { display: inline-flex; gap: 4px; align-items: center; }
+.rs-reocr-select { padding: 2px 4px; }
+
+/* ── Top Merchants table (Track C1) ──────────────────────────────── */
+.tax-top-merchants-mount { padding-top: 4px; }
+.tax-merchants-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+.tax-merchants-table th,
+.tax-merchants-table td {
+    padding: 4px 8px; border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+.tax-merchants-table th.num,
+.tax-merchants-table td.num { text-align: right; }
+.tax-merchants-row { cursor: pointer; }
+.tax-merchants-row:hover { background: var(--bg-secondary); }
+.tax-merchant-name { position: relative; min-width: 240px; }
+.tax-merchant-name > span { position: relative; z-index: 1; }
+.tax-merchant-bar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(0, 229, 232, 0.10);
+    border-right: 1px solid rgba(0, 229, 232, 0.4);
+    z-index: 0;
+}
+
+/* ── Receipt search bar + result table (Track C3) ───────────────── */
+.receipts-search-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0;
+}
+.rs-search-input {
+    flex: 0 1 420px; max-width: 100%;
+    padding: 4px 8px;
+}
+.rs-search-table .rs-search-snippet { max-width: 480px; }
+.rs-search-table mark {
+    background: rgba(255, 215, 0, 0.25);
+    color: inherit;
+    padding: 0 2px; border-radius: 2px;
+}
+
+/* ── Duplicates modal (Track C2) ────────────────────────────────── */
+.dupes-modal-host {
+    position: fixed; inset: 0; z-index: 5000;
+    display: flex; align-items: center; justify-content: center;
+}
+.dupes-modal-bg {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.6);
+}
+.dupes-modal-panel {
+    position: relative; z-index: 1;
+    background: var(--bg-card); color: var(--text);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 4px;
+    width: min(960px, 92vw); max-height: 80vh;
+    display: flex; flex-direction: column;
+}
+.dupes-modal-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.dupes-modal-head h2 { margin: 0; font-size: 14px; }
+.dupes-modal-head .btn { margin-left: auto; }
+.dupes-modal-body {
+    overflow-y: auto; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 12px;
+}
+.dupes-group {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 3px;
+}
+.dupes-group-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 6px;
+}
+.dupes-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.dupes-table th,
+.dupes-table td { padding: 3px 6px; border-bottom: 1px solid var(--border); text-align: left; }
 table.receipt-items th.num,
 table.receipt-items td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .cat-tag {

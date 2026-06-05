@@ -314,6 +314,28 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(body),
         }),
+    bulkReocr: (filter = 'non_vision') =>
+        request('/expense/receipts/bulk-reocr', {
+            method: 'POST',
+            body: JSON.stringify({ filter }),
+        }),
+    reocrProgress: () => request('/expense/receipts/bulk-reocr/progress'),
+    receiptsByMerchant: (params = {}) => {
+        const s = qs(params);
+        return request(`/expense/receipts/by-merchant${s ? '?' + s : ''}`);
+    },
+    topMerchants: (params = {}) => {
+        const s = qs(params);
+        return request(`/tax/merchants${s ? '?' + s : ''}`);
+    },
+    searchReceipts: (q, limit = 50) => {
+        const s = qs({ q, limit });
+        return request(`/expense/receipts/search?${s}`);
+    },
+    receiptDuplicates: (params = {}) => {
+        const s = qs(params);
+        return request(`/expense/receipts/duplicates${s ? '?' + s : ''}`);
+    },
     uploadReceipt: (file) => {
         const fd = new FormData();
         fd.append('file', file, file.name);

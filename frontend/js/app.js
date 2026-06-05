@@ -659,6 +659,7 @@ import { installHotkeyEngine } from './hotkey_engine.js';
 import { renderExpensesView } from './views/expenses.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
+import { renderCategorize } from './views/categorize.js';
 
 export const state = {
     mode: 'web',
@@ -2488,6 +2489,7 @@ export async function dispatch() {
             case 'expenses':       await renderExpensesView(mount); break;
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
+            case 'categorize':     await renderCategorize(mount, state); break;
             case 'compare':        await renderCompare(mount, state); break;
             case 'exports':        await renderExports(mount, state); break;
             case 'ai':             await renderAiSettings(mount, state); break;
