@@ -554,7 +554,7 @@ function renderDownload(pane, mount, tok) {
         <a href="${esc(api.taxReturnPdfUrl(STATE.year))}" target="_blank" rel="noopener" class="btn btn-primary">
             ${esc(t('view.taxwiz.download.pdf_btn'))}
         </a>
-        <p class="muted small" style="margin-top:18px">${esc(t('view.taxwiz.download.next_step'))}</p>
+        <p class="muted small tw-download-next">${esc(t('view.taxwiz.download.next_step'))}</p>
         <a href="https://www.irs.gov/e-file-providers/free-file-fillable-forms" target="_blank" rel="noopener" class="btn btn-secondary btn-compact">
             ${esc(t('view.taxwiz.download.irs_link'))}
         </a>

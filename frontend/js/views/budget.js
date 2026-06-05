@@ -12,7 +12,7 @@
 
 import { api } from '../api.js';
 import { t } from '../i18n.js';
-import { esc, fmtMoney } from '../util.js';
+import { esc, fmtMoney, applyBarWidths } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 
@@ -199,8 +199,8 @@ function renderCategories(mount, tok) {
                         </td>
                         <td>
                             <div class="bg-bar-wrap" title="${(+c.pct || 0).toFixed(1)}%">
-                                <div class="bg-bar ${barCls}" style="width:${pct}%"></div>
-                                ${overPct > 0 ? `<div class="bg-bar-over-extra" style="width:${Math.min(overPct, 100)}%"></div>` : ''}
+                                <div class="bg-bar ${barCls}" data-bar-pct="${pct}"></div>
+                                ${overPct > 0 ? `<div class="bg-bar-over-extra" data-bar-pct="${Math.min(overPct, 100)}"></div>` : ''}
                             </div>
                         </td>
                         <td>
@@ -214,6 +214,11 @@ function renderCategories(mount, tok) {
             </tbody>
         </table>
     `;
+    // Bar widths via rAF — Tauri release WebKit strips inline
+    // `style="width:..."` from innerHTML-inserted nodes; the JS DOM
+    // assignment survives. `applyBarWidths` walks every
+    // `[data-bar-pct]` descendant of `wrap`.
+    applyBarWidths(wrap);
 
     // Wire limit edits — debounced PUT on blur.
     wrap.querySelectorAll('input.bg-lim-input').forEach(inp => {

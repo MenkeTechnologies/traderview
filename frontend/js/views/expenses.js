@@ -14,6 +14,7 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { applyBarWidths } from '../util.js';
 
 const state = {
     accounts: [],
@@ -632,12 +633,14 @@ async function renderQuarterlyStrip(mount, year, netTaxable) {
                 return `<div class="quarterly-cell${paid > 0 ? ' has-payment' : ''}">
                     <div class="qc-label">${q.label} <span class="muted small">${esc(t('view.expenses.tax.quarterly.due'))} ${q.due}</span></div>
                     <div class="qc-amount">${fmtUsd(paid)} / <span class="muted">${fmtUsd(estPerQ)}</span></div>
-                    <div class="qc-bar"><div class="qc-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+                    <div class="qc-bar"><div class="qc-bar-fill" data-bar-pct="${pct.toFixed(1)}"></div></div>
                     ${remaining > 0 ? `<div class="muted small">${esc(t('view.expenses.tax.quarterly.remaining', { amt: fmtUsd(remaining) }))}</div>` : ''}
                 </div>`;
             }).join('')}
         </div>
     `;
+    // Tauri-release-safe bar widths — applied via rAF, see util.applyBarWidths.
+    applyBarWidths(wrap);
     const addBtn = wrap.querySelector('#quarterly-add');
     if (addBtn) {
         addBtn.addEventListener('click', async () => {
@@ -961,7 +964,7 @@ async function renderTopMerchants(mount, year) {
                     const pct = Math.round((Number(r.total) / max) * 100);
                     return `<tr class="tax-merchants-row" data-merchant="${esc(r.canonical_merchant)}">
                         <td class="tax-merchant-name">
-                            <div class="tax-merchant-bar" style="width:${pct}%"></div>
+                            <div class="tax-merchant-bar" data-bar-pct="${pct}"></div>
                             <span>${esc(r.canonical_merchant)}</span>
                         </td>
                         <td class="num">${esc(fmt(r.total))}</td>
@@ -976,6 +979,8 @@ async function renderTopMerchants(mount, year) {
             </tbody>
         </table>
     `;
+    // Tauri-release-safe bar widths — see util.applyBarWidths.
+    applyBarWidths(el);
     el.querySelectorAll('tr.tax-merchants-row').forEach(tr => {
         tr.addEventListener('click', () => {
             const m = tr.dataset.merchant || '';
