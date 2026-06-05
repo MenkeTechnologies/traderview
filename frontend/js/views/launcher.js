@@ -627,6 +627,8 @@ export const TILES = [
     ['rebalance',       'Rebalance',       '⚖️',  'Portfolio rebalance helper',       null],
     ['tax-lots',        'Tax Lots',        '💸',  'Lot-by-lot cost basis',            null],
     ['expenses',        'Expenses',        '🧾',  'Trading expenses tracking',        null],
+    ['receipts',        'Receipts',        '📂',  'Paginated, filterable receipts library — bulk auto-attach to transactions', 'NEW'],
+    ['purchases',       'Purchases',       '🛒',  'Unified line-item ledger — every receipt item ∪ every CSV transaction, one row each, click back to source', 'NEW'],
     ['tax-workshop',    'Tax Workshop',    '💰',  'SE tax · home office · mileage · 1040-ES · subscriptions', null],
     ['tax-loss-harvest', 'Tax-Loss Harvest', '🧾', 'Year-end harvest suggester — ranks losers, flags wash-sale + $3k cap', 'NEW'],
     ['wash-sale',       'Wash Sale',       '🚨',  '§1091 detector — losing close + ±30-day replacement buy → disallowed-loss estimate', 'NEW'],
@@ -704,7 +706,10 @@ export async function renderLauncher(mount, _state) {
                    data-i18n-placeholder="view.launcher.search_placeholder"
                    data-tip="view.launcher.search_tip"
                    data-shortcut="focus_search"
-                   autocomplete="off">
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false">
         </h1>
         <div id="launcher-grid"></div>
     `;

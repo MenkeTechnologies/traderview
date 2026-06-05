@@ -48,10 +48,12 @@ axum = { workspace = true }
 tempfile = "3"
 
 [features]
-# Propagate the OCR engine flip to traderview-web/traderview-ocr.
-# Build with `cargo tauri dev --features ocr-engine` to enable receipt OCR
-# in the desktop app. Heavy first-time compile (~5 min) — leave off until needed.
-default = []
+# Receipt OCR ships ON in the desktop app. tract-onnx + ndarray add ~5 min
+# to the first compile but are cached afterward, and shipping it off-by-
+# default left users hitting "OCR engine not built with --features engine"
+# the first time they tried a receipt. Opt OUT with
+# `--no-default-features` if you need a faster CI/clean build.
+default = ["ocr-engine"]
 ocr-engine = ["traderview-web/ocr-engine"]
 
 [lints]

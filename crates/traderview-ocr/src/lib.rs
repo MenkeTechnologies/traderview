@@ -17,7 +17,7 @@ pub mod matcher;
 pub mod parse;
 pub mod pdf;
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveTime};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
@@ -25,9 +25,70 @@ use serde::{Deserialize, Serialize};
 pub struct OcrResult {
     pub text: String,
     pub merchant: Option<String>,
-    pub total: Option<Decimal>,
+    /// Street + city/state/zip — joined with a comma if both lines parsed.
+    #[serde(default)]
+    pub address: Option<String>,
     pub date: Option<NaiveDate>,
+    /// Time-of-day from the receipt (e.g., `06:07PM` → `18:07:00`).
+    #[serde(default)]
+    pub time: Option<NaiveTime>,
+    /// Pre-tax subtotal when separately printed.
+    #[serde(default)]
+    pub subtotal: Option<Decimal>,
+    /// Tax amount when separately printed.
+    #[serde(default)]
+    pub tax: Option<Decimal>,
+    /// Charged amount (post-tax). Equals `subtotal + tax` if all three parse.
+    pub total: Option<Decimal>,
+    /// Itemized line items with a best-guess category per item.
+    #[serde(default)]
+    pub items: Vec<OcrLineItem>,
     pub confidence: f32,
+    /// Which backend produced this result: `"apple_vision"` /
+    /// `"tesseract"` / `"pdf"` / `"unknown"`. Surfaced in the receipt
+    /// modal so the user can see at a glance which engine ran, and
+    /// targeted by bulk re-OCR jobs.
+    #[serde(default = "default_engine")]
+    pub engine: String,
+}
+
+fn default_engine() -> String {
+    // Pre-engine-tracking JSONB rows deserialize with this default so
+    // upgrades don't crash. Bulk re-OCR will overwrite as receipts get
+    // re-processed.
+    "unknown".into()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OcrLineItem {
+    pub name: String,
+    /// `None` when the receipt only shows the line total.
+    #[serde(default)]
+    pub qty: Option<Decimal>,
+    #[serde(default)]
+    pub unit_price: Option<Decimal>,
+    pub line_total: Decimal,
+    /// Best-guess Schedule C category id — see `parse::guess_category`
+    /// for the canonical 20-bucket taxonomy.
+    pub category: String,
+    /// Tax bucket the item rolls up into. Auto-suggested from the
+    /// category (`groceries → personal`, most others → `business`); the
+    /// user can override per-item via the match modal. JSONB column on
+    /// `receipts` stores the override so totals stay correct.
+    ///
+    /// Domain: `business` (Schedule C) | `rental` (Schedule E) |
+    /// `personal` (non-deductible) | `unclassified` (no auto-default).
+    #[serde(default = "default_unclassified_bucket")]
+    pub tax_bucket: String,
+    /// When `tax_bucket == "rental"`, links the item to the specific
+    /// rental property the expense is allocated to (Schedule E
+    /// allocates per-property). `None` for business / personal items.
+    #[serde(default)]
+    pub rental_property_id: Option<uuid::Uuid>,
+}
+
+fn default_unclassified_bucket() -> String {
+    "unclassified".into()
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -66,14 +127,18 @@ pub fn extract(
         if text.trim().is_empty() {
             return Err(OcrError::NeedsImage);
         }
-        return Ok(parse::structure(&text, 0.9));
+        let mut result = parse::structure(&text, 0.9);
+        result.engine = "pdf".into();
+        return Ok(result);
     }
     if mime_lower.starts_with("image/") {
         let dir = model_dir.ok_or_else(|| OcrError::ModelsMissing {
             expected_dir: "<no model_dir provided>".into(),
         })?;
         let raw = engine::run(bytes, dir)?;
-        return Ok(parse::structure(&raw.text, raw.confidence));
+        let mut result = parse::structure(&raw.text, raw.confidence);
+        result.engine = raw.engine;
+        return Ok(result);
     }
     Err(OcrError::UnsupportedMime(mime.into()))
 }
@@ -120,14 +185,23 @@ mod tests {
         let r = OcrResult {
             text: "subtotal $42.99".into(),
             merchant: Some("CHIPOTLE".into()),
-            total: Some(rust_decimal::Decimal::new(4299, 2)),
+            address: None,
             date: chrono::NaiveDate::from_ymd_opt(2026, 5, 27),
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: Some(rust_decimal::Decimal::new(4299, 2)),
+            items: Vec::new(),
             confidence: 0.87,
+            engine: "apple_vision".into(),
         };
         let s = serde_json::to_string(&r).unwrap();
         assert!(s.contains("CHIPOTLE"));
         assert!(s.contains("42.99"));
         assert!(s.contains("2026-05-27"));
+        // Engine tag is part of the wire contract so the UI can label
+        // which backend produced this result.
+        assert!(s.contains("apple_vision"));
     }
 
     #[test]

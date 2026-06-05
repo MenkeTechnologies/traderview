@@ -65,6 +65,7 @@ pub fn decode_token(secret: &[u8], token: &str) -> Result<Claims, ApiError> {
 /// * In `Desktop` mode, falls back to the unique `is_local = true` user so the
 ///   WebView never has to deal with auth.
 /// * In `Web` mode, requires a valid `Authorization: Bearer <jwt>` header.
+#[derive(Clone, Copy)]
 pub struct AuthUser {
     pub id: Uuid,
 }

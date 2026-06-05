@@ -295,7 +295,25 @@ export const api = {
     seedExpenseRules: () => request('/expense/rules/seed', { method: 'POST' }),
 
     // --- receipts -------------------------------------------------------
-    receipts: () => request('/expense/receipts'),
+    receipts: (filters = {}) => {
+        const s = qs(filters);
+        return request(`/expense/receipts${s ? '?' + s : ''}`);
+    },
+    bulkAttachReceipts: (body = {}) =>
+        request('/expense/receipts/bulk-attach', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        }),
+    bulkDeleteReceipts: (ids) =>
+        request('/expense/receipts/bulk-delete', {
+            method: 'POST',
+            body: JSON.stringify({ ids }),
+        }),
+    bulkPatchReceiptItems: (body) =>
+        request('/expense/receipts/bulk-patch-items', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        }),
     uploadReceipt: (file) => {
         const fd = new FormData();
         fd.append('file', file, file.name);
@@ -308,6 +326,68 @@ export const api = {
             method: 'POST',
             body: JSON.stringify({ transaction_id }),
         }),
+    ocrModelsStatus: () => request('/expense/receipts/ocr-models/status'),
+    ocrModelsDownload: (opts = {}) => {
+        const path = opts.force
+            ? '/expense/receipts/ocr-models/download?force=1'
+            : '/expense/receipts/ocr-models/download';
+        return request(path, { method: 'POST' });
+    },
+    retryReceiptOcr: (id) => request(`/expense/receipts/${id}/retry-ocr`, { method: 'POST' }),
+    patchReceiptMeta: (id, patch) =>
+        request(`/expense/receipts/${id}/meta`, {
+            method: 'PATCH',
+            body: JSON.stringify(patch),
+        }),
+    patchReceiptItem: (id, idx, patch) =>
+        request(`/expense/receipts/${id}/items/${idx}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patch),
+        }),
+    addReceiptItem: (id, item) =>
+        request(`/expense/receipts/${id}/items`, {
+            method: 'POST',
+            body: JSON.stringify(item),
+        }),
+    deleteReceiptItem: (id, idx) =>
+        request(`/expense/receipts/${id}/items/${idx}`, { method: 'DELETE' }),
+    taxRollup: (params = {}) => {
+        const s = qs(params);
+        return request(`/expense/receipts/tax-rollup${s ? '?' + s : ''}`);
+    },
+    taxRollupCsvUrl: (params = {}) => {
+        const s = qs(params);
+        return `${baseUrl}/api/expense/receipts/tax-rollup.csv${s ? '?' + s : ''}`;
+    },
+    taxRollupPdfUrl: (params = {}) => {
+        const s = qs(params);
+        return `${baseUrl}/api/expense/receipts/tax-rollup.pdf${s ? '?' + s : ''}`;
+    },
+    listEstimatedPayments: (params = {}) => {
+        const s = qs(params);
+        return request(`/tax/estimated-payments${s ? '?' + s : ''}`);
+    },
+    createEstimatedPayment: (body) =>
+        request('/tax/estimated-payments', {
+            method: 'POST', body: JSON.stringify(body),
+        }),
+    updateEstimatedPayment: (id, body) =>
+        request(`/tax/estimated-payments/${id}`, {
+            method: 'PATCH', body: JSON.stringify(body),
+        }),
+    deleteEstimatedPayment: (id) =>
+        request(`/tax/estimated-payments/${id}`, { method: 'DELETE' }),
+    setCategoryKind: (id, kind) =>
+        request(`/tax/categories/${id}/kind`, {
+            method: 'PATCH', body: JSON.stringify({ kind }),
+        }),
+    listPurchases: (filters = {}) => {
+        const s = qs(filters);
+        return request(`/tax/purchases${s ? '?' + s : ''}`);
+    },
+    monthlyTotals: (year) => request(`/tax/monthly-totals?year=${year}`),
+    yoyTrend: (years = 5) => request(`/tax/yoy?years=${years}`),
+    rentalProperties: () => request('/rental/properties'),
     receiptBlobUrl: (id) => `${baseUrl}/api/expense/receipts/${id}`,
 
     // --- schedule C report ---------------------------------------------

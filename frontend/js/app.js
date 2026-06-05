@@ -657,6 +657,8 @@ import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine } from './hotkey_engine.js';
 import { renderExpensesView } from './views/expenses.js';
+import { renderReceipts } from './views/receipts.js';
+import { renderPurchases } from './views/purchases.js';
 
 export const state = {
     mode: 'web',
@@ -694,7 +696,57 @@ export async function mountApp({ cfg, me, accounts }) {
     wireKillSwitchIndicator();
 }
 
+// Strip WebKit's autocorrect / autocapitalize / spell-check from every
+// filter or search input in the app — the suggestion overlay flags valid
+// domain terms (vpin, kagi, tlb, renko, …) as misspellings, and silent
+// autocorrect substitutes a typed token mid-filter ("vpin" → "pin"). We
+// scope to: explicit `type="search"` inputs, anything carrying the
+// opt-in `data-filter` attribute, and inputs whose placeholder starts
+// with "filter" / "search" (case-insensitive). Real text-entry fields
+// (journal, notes, names) keep spell-check on.
+const FILTER_INPUT_SELECTOR =
+    'input[type="search"], input[data-filter], textarea[data-filter]';
+function isPlaceholderFilter(el) {
+    const p = (el.placeholder || '').toLowerCase().trim();
+    return p.startsWith('filter') || p.startsWith('search') || p.startsWith('find');
+}
+function disableAutocorrectOn(el) {
+    if (el.dataset && el.dataset.tvNoAutocorrect === '1') return;
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('autocapitalize', 'off');
+    el.setAttribute('spellcheck', 'false');
+    if (!el.hasAttribute('autocomplete')) el.setAttribute('autocomplete', 'off');
+    if (el.dataset) el.dataset.tvNoAutocorrect = '1';
+}
+function applyFilterNoAutocorrect(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll(FILTER_INPUT_SELECTOR).forEach(disableAutocorrectOn);
+    // Placeholder heuristic — catches the inputs not explicitly tagged
+    // (e.g. dashboards.js's `placeholder="filter views…"`).
+    root.querySelectorAll('input:not([type="search"]), textarea').forEach(el => {
+        if (isPlaceholderFilter(el)) disableAutocorrectOn(el);
+    });
+}
+function installFilterNoAutocorrectObserver() {
+    applyFilterNoAutocorrect(document);
+    const obs = new MutationObserver((muts) => {
+        for (const m of muts) {
+            for (const n of m.addedNodes) {
+                if (n.nodeType !== 1) continue; // only Element nodes
+                // The added node itself might be a filter input…
+                if (n.matches && n.matches(FILTER_INPUT_SELECTOR)) disableAutocorrectOn(n);
+                else if (n.matches && (n.tagName === 'INPUT' || n.tagName === 'TEXTAREA')
+                         && isPlaceholderFilter(n)) disableAutocorrectOn(n);
+                // …or a subtree containing one.
+                if (n.querySelectorAll) applyFilterNoAutocorrect(n);
+            }
+        }
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+}
+
 async function boot() {
+    installFilterNoAutocorrectObserver();
     try {
         await initApi();
     } catch (e) {
@@ -704,15 +756,16 @@ async function boot() {
         }
         return;
     }
+    // The HTML literal in #tv-version is the source of truth at boot —
+    // /config refreshes it ONLY on success with a populated `version`
+    // field. That way a 401 / missing field / stale binary never wipes
+    // the chip to blank or "v?".
+    const verEl = document.getElementById('tv-version');
     try {
         const cfg = await api.config();
         state.mode = cfg.mode;
-        // Surface the running backend version in the topbar — the value
-        // comes from `env!("CARGO_PKG_VERSION")` on the server side so it
-        // always matches the deployed binary, not a stale frontend constant.
-        const verEl = document.getElementById('tv-version');
         if (verEl && cfg.version) verEl.textContent = `v${cfg.version}`;
-    } catch (_) { /* server may not be reachable yet */ }
+    } catch (_) { /* keep HTML literal */ }
     try {
         const me = await api.me();
         const accounts = await api.accounts();
@@ -761,11 +814,43 @@ function renderAccountStrip() {
 
 function bindTabs() {
     document.querySelectorAll('.tab').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            // The "More ▾" button is a `.tab` for styling parity but
+            // its click should toggle the dropdown, not navigate.
+            if (btn.classList.contains('tab-more')) {
+                e.stopPropagation();
+                const menu = document.getElementById('nav-more-menu');
+                if (!menu) return;
+                const open = menu.classList.toggle('hidden');
+                btn.setAttribute('aria-expanded', String(!open));
+                return;
+            }
+            if (!btn.dataset.view) return;
             window.location.hash = btn.dataset.view;
-            // Auto-close mobile drawer after picking a tab.
             closeNavDrawer();
         });
+    });
+    // Dropdown items navigate + close the menu.
+    document.querySelectorAll('.tab-more-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (btn.dataset.view) window.location.hash = btn.dataset.view;
+            const menu = document.getElementById('nav-more-menu');
+            const trigger = document.getElementById('nav-more-btn');
+            if (menu) menu.classList.add('hidden');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            closeNavDrawer();
+        });
+    });
+    // Outside click closes the menu.
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('nav-more-menu');
+        const wrap = document.querySelector('.tab-more-wrap');
+        if (!menu || menu.classList.contains('hidden')) return;
+        if (!wrap || wrap.contains(e.target)) return;
+        menu.classList.add('hidden');
+        const trigger = document.getElementById('nav-more-btn');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
     });
     window.addEventListener('hashchange', dispatch);
     bindNavToggle();
@@ -776,7 +861,13 @@ function bindTabs() {
     const nav = document.getElementById('primary-nav');
     if (nav) {
         import('./drag_reorder.js').then(({ initDragReorder }) => {
-            initDragReorder(nav, '.tab', 'primary_nav_order', {
+            // Exclude `.tab-more` from the reorderable set — it has no
+            // data-view, so it sorts by textContent and was landing at the
+            // start of the strip when an old saved order replayed against
+            // the new tab roster. Bumping the prefs key to `_v2` also
+            // invalidates the stale 19-tab layout from before the
+            // restructure.
+            initDragReorder(nav, '.tab:not(.tab-more)', 'primary_nav_order_v2', {
                 direction: 'horizontal',
                 getKey: (el) => el.dataset.view || el.textContent.trim(),
                 toastMessage: 'Nav reordered',
@@ -2151,6 +2242,15 @@ export async function dispatch() {
     document.querySelectorAll('.tab').forEach(b =>
         b.classList.toggle('active', b.dataset.view === view)
     );
+    // "More ▾" trigger lights up when the active view lives inside its
+    // dropdown — same visual signal the user gets on a primary tab.
+    const moreTrigger = document.getElementById('nav-more-btn');
+    if (moreTrigger) {
+        const inMenu = !!document.querySelector(
+            `.tab-more-item[data-view="${view}"]`
+        );
+        moreTrigger.classList.toggle('active', inMenu);
+    }
     const mount = document.getElementById('app');
     // View-wide context-menu scope: every right-click inside #app now
     // resolves to the current view's slug via nearestScope() walk-up.
@@ -2386,6 +2486,8 @@ export async function dispatch() {
             case 'walk-forward':   await renderWalkForward(mount, state); break;
             case 'tax-lots':       await renderTaxLots(mount, state); break;
             case 'expenses':       await renderExpensesView(mount); break;
+            case 'receipts':       await renderReceipts(mount, state); break;
+            case 'purchases':      await renderPurchases(mount, state); break;
             case 'compare':        await renderCompare(mount, state); break;
             case 'exports':        await renderExports(mount, state); break;
             case 'ai':             await renderAiSettings(mount, state); break;

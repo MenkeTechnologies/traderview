@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 use crate::realtime::Hub;
 
@@ -22,16 +23,26 @@ pub struct AppState {
     /// env var, defaulting to `./data`.
     pub data_dir: Arc<PathBuf>,
     pub hub: Hub,
+    /// Bounded permit pool for OCR background jobs. Without this,
+    /// uploading 10k photos via the folder scanner would spawn 10k
+    /// tesseract child processes racing for CPU + RAM. Permits = min(4,
+    /// num_cpus) — small enough to leave the WebView and Postgres room
+    /// to breathe on a laptop, large enough to keep the queue draining.
+    pub ocr_sem: Arc<Semaphore>,
 }
 
 impl AppState {
     pub fn new(pool: PgPool, mode: AppMode, jwt_secret: Vec<u8>, data_dir: PathBuf) -> Self {
+        let permits = std::thread::available_parallelism()
+            .map(|n| n.get().min(4).max(1))
+            .unwrap_or(2);
         Self {
             pool,
             mode,
             jwt_secret: Arc::new(jwt_secret),
             data_dir: Arc::new(data_dir),
             hub: Hub::new(),
+            ocr_sem: Arc::new(Semaphore::new(permits)),
         }
     }
 

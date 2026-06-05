@@ -91,6 +91,7 @@ bytes = "1"
 regex = "1"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "bmp"] }
 lopdf = "0.34"
+printpdf = { version = "0.7", default-features = false }
 calamine = "0.26"
 
 # HTTP client (price-data fetcher)

@@ -49,12 +49,17 @@ bytes = { workspace = true }
 sha2 = { workspace = true }
 regex = { workspace = true }
 futures-util = { workspace = true }
+reqwest = { workspace = true }
+printpdf = { workspace = true }
 
 [features]
-# Default OFF: pure-onnx-ocr-sync pulls tract-onnx + ndarray (~5 min cold
-# compile). Receipt OCR returns OcrError::EngineDisabled until this is set.
-# PDF text-layer extraction works regardless.
-default = []
+# Receipt OCR ships ON. pure-onnx-ocr-sync pulls tract-onnx + ndarray
+# (~5 min cold compile), but shipping OCR off-by-default left both the
+# desktop binary AND the standalone `server` binary hitting
+# OcrError::EngineDisabled on the first receipt upload. Opt OUT with
+# `cargo build -p traderview-web --no-default-features` if you need a
+# faster CI build that doesn't exercise the OCR path.
+default = ["ocr-engine"]
 ocr-engine = ["traderview-ocr/engine"]
 
 [lints]

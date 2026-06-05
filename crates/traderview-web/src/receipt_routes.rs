@@ -22,7 +22,7 @@ use axum::http::{header, StatusCode};
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -40,9 +40,24 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_receipts).post(upload_receipt))
         .route("/:id", get(get_receipt_blob))
-        .route("/:id/meta", get(get_receipt_meta))
+        .route("/:id/meta", get(get_receipt_meta).patch(patch_receipt_meta))
         .route("/:id/matches", get(receipt_matches))
         .route("/:id/attach", post(attach_receipt))
+        .route("/:id/retry-ocr", post(retry_receipt_ocr))
+        .route(
+            "/:id/items/:idx",
+            axum::routing::patch(patch_receipt_item)
+                .delete(delete_receipt_item),
+        )
+        .route("/:id/items", post(add_receipt_item))
+        .route("/tax-rollup", get(tax_rollup))
+        .route("/bulk-attach", post(bulk_attach))
+        .route("/bulk-delete", post(bulk_delete))
+        .route("/bulk-patch-items", post(bulk_patch_items))
+        .route("/tax-rollup.csv", get(tax_rollup_csv))
+        .route("/tax-rollup.pdf", get(tax_rollup_pdf))
+        .route("/ocr-models/status", get(ocr_models_status))
+        .route("/ocr-models/download", post(ocr_models_download))
         .layer(DefaultBodyLimit::max(RECEIPT_UPLOAD_MAX_BYTES))
 }
 
@@ -63,6 +78,11 @@ struct Receipt {
     ocr_total: Option<Decimal>,
     ocr_date: Option<NaiveDate>,
     ocr_confidence: Option<f32>,
+    /// Structured slice — itemized list, address, time, subtotal, tax,
+    /// per-item category. JSONB blob from migration 0041; shape matches
+    /// `traderview_ocr::OcrResult` (minus the duplicated top-level
+    /// fields). `null` when OCR hasn't run yet.
+    ocr_extracted: Option<serde_json::Value>,
     match_score: Option<f32>,
     error_message: Option<String>,
     created_at: DateTime<Utc>,
@@ -83,6 +103,7 @@ struct ReceiptRow {
     ocr_total: Option<Decimal>,
     ocr_date: Option<NaiveDate>,
     ocr_confidence: Option<f32>,
+    ocr_extracted: Option<serde_json::Value>,
     match_score: Option<f32>,
     error_message: Option<String>,
     created_at: DateTime<Utc>,
@@ -104,6 +125,7 @@ impl From<ReceiptRow> for Receipt {
             ocr_total: r.ocr_total,
             ocr_date: r.ocr_date,
             ocr_confidence: r.ocr_confidence,
+            ocr_extracted: r.ocr_extracted,
             match_score: r.match_score,
             error_message: r.error_message,
             created_at: r.created_at,
@@ -112,22 +134,133 @@ impl From<ReceiptRow> for Receipt {
 }
 
 // --- list ---------------------------------------------------------------
+//
+// Paginated + filterable receipts list. At 10k+ receipts the old
+// `LIMIT 200` was a UX dead-end. Filters cover the actual workflow:
+// find unattached `done` receipts in a date window matching a
+// merchant substring within a total range.
+
+#[derive(Deserialize)]
+struct ListQ {
+    /// Filter by ocr_status. `all` (default) skips the filter; any
+    /// other value must be one of the ocr_status_t enum members.
+    #[serde(default)]
+    status: Option<String>,
+    /// Substring match on ocr_merchant (case-insensitive).
+    #[serde(default)]
+    merchant: Option<String>,
+    /// Date range over ocr_date (inclusive, ISO).
+    #[serde(default)]
+    from: Option<NaiveDate>,
+    #[serde(default)]
+    to: Option<NaiveDate>,
+    /// Total range (inclusive).
+    #[serde(default)]
+    min_total: Option<Decimal>,
+    #[serde(default)]
+    max_total: Option<Decimal>,
+    /// When `true`, hide receipts that already have a transaction_id.
+    #[serde(default)]
+    unattached: Option<bool>,
+    /// Pagination. `offset` default 0, `limit` default 50 (max 500).
+    #[serde(default)]
+    offset: Option<i64>,
+    #[serde(default)]
+    limit: Option<i64>,
+}
+
+#[derive(Serialize)]
+struct ListResponse {
+    rows: Vec<Receipt>,
+    total: i64,
+    offset: i64,
+    limit: i64,
+}
 
 async fn list_receipts(
     State(s): State<AppState>,
     user: AuthUser,
-) -> Result<Json<Vec<Receipt>>, ApiError> {
+    axum::extract::Query(q): axum::extract::Query<ListQ>,
+) -> Result<Json<ListResponse>, ApiError> {
+    let limit = q.limit.unwrap_or(50).clamp(1, 500);
+    let offset = q.offset.unwrap_or(0).max(0);
+    let merchant_pat = q.merchant.as_ref().map(|m| format!("%{}%", m));
+
+    // Build the WHERE clauses dynamically. Use $N positional binds and
+    // a tracker so the row count + the data query share the same args.
+    // status validation: only the known enum members pass through.
+    let status_valid = q.status.as_deref().map(|s| {
+        matches!(s, "pending" | "matching" | "done" | "failed" | "needs_image")
+    });
+    if let Some(false) = status_valid {
+        return Err(ApiError::BadRequest(format!(
+            "invalid status: {}",
+            q.status.as_deref().unwrap_or("")
+        )));
+    }
+    let want_status = q.status.as_deref().filter(|_| status_valid == Some(true));
+
     let rows: Vec<ReceiptRow> = sqlx::query_as(
         "SELECT id, user_id, transaction_id, filename, sha256, mime, bytes_len,
                 ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
-                ocr_confidence, match_score, error_message, created_at
-           FROM receipts WHERE user_id = $1
-          ORDER BY created_at DESC LIMIT 200",
+                ocr_confidence, ocr_extracted, match_score, error_message, created_at
+           FROM receipts
+          WHERE user_id = $1
+            AND ($2::text IS NULL OR ocr_status::text = $2)
+            AND ($3::text IS NULL OR ocr_merchant ILIKE $3)
+            AND ($4::date IS NULL OR ocr_date >= $4)
+            AND ($5::date IS NULL OR ocr_date <= $5)
+            AND ($6::numeric IS NULL OR ocr_total >= $6)
+            AND ($7::numeric IS NULL OR ocr_total <= $7)
+            AND ($8::bool IS NULL OR ($8 = TRUE AND transaction_id IS NULL)
+                                  OR ($8 = FALSE AND transaction_id IS NOT NULL))
+          ORDER BY created_at DESC
+          LIMIT $9 OFFSET $10",
     )
     .bind(user.id)
+    .bind(want_status)
+    .bind(&merchant_pat)
+    .bind(q.from)
+    .bind(q.to)
+    .bind(q.min_total)
+    .bind(q.max_total)
+    .bind(q.unattached)
+    .bind(limit)
+    .bind(offset)
     .fetch_all(&s.pool)
     .await?;
-    Ok(Json(rows.into_iter().map(Into::into).collect()))
+
+    let total: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*)::bigint
+           FROM receipts
+          WHERE user_id = $1
+            AND ($2::text IS NULL OR ocr_status::text = $2)
+            AND ($3::text IS NULL OR ocr_merchant ILIKE $3)
+            AND ($4::date IS NULL OR ocr_date >= $4)
+            AND ($5::date IS NULL OR ocr_date <= $5)
+            AND ($6::numeric IS NULL OR ocr_total >= $6)
+            AND ($7::numeric IS NULL OR ocr_total <= $7)
+            AND ($8::bool IS NULL OR ($8 = TRUE AND transaction_id IS NULL)
+                                  OR ($8 = FALSE AND transaction_id IS NOT NULL))",
+    )
+    .bind(user.id)
+    .bind(want_status)
+    .bind(&merchant_pat)
+    .bind(q.from)
+    .bind(q.to)
+    .bind(q.min_total)
+    .bind(q.max_total)
+    .bind(q.unattached)
+    .fetch_one(&s.pool)
+    .await
+    .unwrap_or(0);
+
+    Ok(Json(ListResponse {
+        rows: rows.into_iter().map(Into::into).collect(),
+        total,
+        offset,
+        limit,
+    }))
 }
 
 // --- upload -------------------------------------------------------------
@@ -172,11 +305,19 @@ async fn upload_receipt(
     h.update(&bytes);
     let sha = hex::encode(h.finalize());
 
-    // De-dupe per user + sha. If it exists, return the existing row.
+    // De-dupe per user + sha. If a row already exists, two outcomes:
+    //   * Row's OCR succeeded (`done`) or is in flight (`pending` /
+    //     `matching`): return the cached row, no work to do.
+    //   * Row previously FAILED (`failed` / `needs_image`): the OCR engine
+    //     state may have changed since (e.g. user just enabled
+    //     `--features ocr-engine` or shipped paddleocr models), so reset
+    //     the row to `pending` and re-queue OCR with the existing bytes
+    //     on disk. The frontend's polling loop will pick the new run up
+    //     transparently.
     let existing: Option<ReceiptRow> = sqlx::query_as(
         "SELECT id, user_id, transaction_id, filename, sha256, mime, bytes_len,
                 ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
-                ocr_confidence, match_score, error_message, created_at
+                ocr_confidence, ocr_extracted, match_score, error_message, created_at
            FROM receipts WHERE user_id = $1 AND sha256 = $2",
     )
     .bind(user.id)
@@ -184,7 +325,66 @@ async fn upload_receipt(
     .fetch_optional(&s.pool)
     .await?;
     if let Some(r) = existing {
-        return Ok(Json(r.into()));
+        let status_is_failed = matches!(r.ocr_status.as_str(), "failed" | "needs_image");
+        if !status_is_failed {
+            return Ok(Json(r.into()));
+        }
+        // Reset + re-queue. The on-disk blob is unchanged so we hand it
+        // straight to `run_ocr` without re-reading from disk.
+        sqlx::query(
+            "UPDATE receipts SET ocr_status = 'pending'::ocr_status_t,
+                                  error_message = NULL
+              WHERE id = $1",
+        )
+        .bind(r.id)
+        .execute(&s.pool)
+        .await?;
+        let bg_state = s.clone();
+        let receipt_id = r.id;
+        let mime_owned = r.mime.clone();
+        tokio::spawn(async move {
+            // Bound concurrent OCR jobs. At 10k uploads via the folder
+            // scanner this prevents tesseract from fork-bombing the
+            // host. Permit dropped automatically when the spawn ends.
+            let _permit = bg_state.ocr_sem.clone().acquire_owned().await.ok();
+            let result = std::panic::AssertUnwindSafe(run_ocr(
+                bg_state.clone(),
+                receipt_id,
+                bytes,
+                mime_owned,
+            ));
+            match futures_util::FutureExt::catch_unwind(result).await {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => {
+                    tracing::error!(receipt = %receipt_id, error = %e, "ocr re-queue failed");
+                    mark_ocr_failed(&bg_state, receipt_id, &e.to_string()).await;
+                }
+                Err(panic) => {
+                    let msg = if let Some(s) = panic.downcast_ref::<&str>() {
+                        (*s).to_string()
+                    } else if let Some(s) = panic.downcast_ref::<String>() {
+                        s.clone()
+                    } else {
+                        "OCR engine panicked".into()
+                    };
+                    tracing::error!(receipt = %receipt_id, panic = %msg, "ocr re-queue panicked");
+                    mark_ocr_failed(&bg_state, receipt_id, &format!("OCR panic: {msg}")).await;
+                }
+            }
+        });
+        // Return the row with the reset status so the frontend's polling
+        // loop sees `pending` and waits for the new result instead of
+        // immediately rendering the stale failure.
+        let refreshed: ReceiptRow = sqlx::query_as(
+            "SELECT id, user_id, transaction_id, filename, sha256, mime, bytes_len,
+                    ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
+                    ocr_confidence, ocr_extracted, match_score, error_message, created_at
+               FROM receipts WHERE id = $1",
+        )
+        .bind(r.id)
+        .fetch_one(&s.pool)
+        .await?;
+        return Ok(Json(refreshed.into()));
     }
 
     let ext = ext_from_mime(&mime).unwrap_or_else(|| extension_of(&filename));
@@ -201,7 +401,7 @@ async fn upload_receipt(
           VALUES ($1, $2, $3, $4, $5, $6, 'pending'::ocr_status_t)
          RETURNING id, user_id, transaction_id, filename, sha256, mime, bytes_len,
                    ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
-                   ocr_confidence, match_score, error_message, created_at",
+                   ocr_confidence, ocr_extracted, match_score, error_message, created_at",
     )
     .bind(user.id)
     .bind(&filename)
@@ -224,6 +424,8 @@ async fn upload_receipt(
     let receipt_id = row.id;
     let mime_owned = mime.clone();
     tokio::spawn(async move {
+        // Bound concurrent OCR jobs — see semaphore docs on AppState.
+        let _permit = bg_state.ocr_sem.clone().acquire_owned().await.ok();
         let result =
             std::panic::AssertUnwindSafe(run_ocr(bg_state.clone(), receipt_id, bytes, mime_owned));
         match futures_util::FutureExt::catch_unwind(result).await {
@@ -279,6 +481,13 @@ async fn run_ocr(
 
     match result {
         Ok(ocr) => {
+            // Persist the structured slice (address, time, subtotal, tax,
+            // itemized lines + categories) into the JSONB column from
+            // migration 0041. Falls back to `{}` on serialize failure so
+            // a malformed item never blocks the receipt row from
+            // landing.
+            let extracted = serde_json::to_value(&ocr)
+                .unwrap_or_else(|_| serde_json::json!({}));
             sqlx::query(
                 "UPDATE receipts SET
                     ocr_status = 'done'::ocr_status_t,
@@ -287,6 +496,7 @@ async fn run_ocr(
                     ocr_total = $4,
                     ocr_date = $5,
                     ocr_confidence = $6,
+                    ocr_extracted = $7,
                     error_message = NULL
                   WHERE id = $1",
             )
@@ -296,6 +506,7 @@ async fn run_ocr(
             .bind(ocr.total)
             .bind(ocr.date)
             .bind(ocr.confidence)
+            .bind(&extracted)
             .execute(&s.pool)
             .await?;
         }
@@ -352,6 +563,78 @@ async fn get_receipt_blob(
         .map_err(|e| ApiError::Internal(anyhow::anyhow!("response build: {e}")))
 }
 
+/// Re-run OCR on an existing receipt using the blob already on disk.
+/// Used by the "Retry OCR" affordance the frontend renders next to a
+/// failed receipt — particularly after the user just downloaded missing
+/// OCR models. Owner check + reset to `pending` + spawn the same
+/// `run_ocr` path the upload flow uses.
+async fn retry_receipt_ocr(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Receipt>, ApiError> {
+    let row: Option<(Uuid, String, String)> = sqlx::query_as(
+        "SELECT user_id, storage_path, mime FROM receipts WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(&s.pool)
+    .await?;
+    let (owner, rel_path, mime) = row.ok_or(ApiError::NotFound)?;
+    if owner != user.id {
+        return Err(ApiError::Forbidden);
+    }
+    let abs = s.receipts_dir().join(&rel_path);
+    let bytes = tokio::fs::read(&abs).await?;
+
+    sqlx::query(
+        "UPDATE receipts SET ocr_status = 'pending'::ocr_status_t,
+                              error_message = NULL
+          WHERE id = $1",
+    )
+    .bind(id)
+    .execute(&s.pool)
+    .await?;
+
+    let bg_state = s.clone();
+    let receipt_id = id;
+    let mime_owned = mime.clone();
+    tokio::spawn(async move {
+        // Bound concurrent OCR jobs — see semaphore docs on AppState.
+        let _permit = bg_state.ocr_sem.clone().acquire_owned().await.ok();
+        let result =
+            std::panic::AssertUnwindSafe(run_ocr(bg_state.clone(), receipt_id, bytes, mime_owned));
+        match futures_util::FutureExt::catch_unwind(result).await {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => {
+                tracing::error!(receipt = %receipt_id, error = %e, "ocr retry failed");
+                mark_ocr_failed(&bg_state, receipt_id, &e.to_string()).await;
+            }
+            Err(panic) => {
+                let msg = if let Some(s) = panic.downcast_ref::<&str>() {
+                    (*s).to_string()
+                } else if let Some(s) = panic.downcast_ref::<String>() {
+                    s.clone()
+                } else {
+                    "OCR engine panicked".into()
+                };
+                tracing::error!(receipt = %receipt_id, panic = %msg, "ocr retry panicked");
+                mark_ocr_failed(&bg_state, receipt_id, &format!("OCR panic: {msg}")).await;
+            }
+        }
+    });
+
+    let refreshed: ReceiptRow = sqlx::query_as(
+        "SELECT id, user_id, transaction_id, filename, sha256, mime, bytes_len,
+                ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
+                ocr_confidence, ocr_extracted, match_score, error_message, created_at
+           FROM receipts WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_one(&s.pool)
+    .await?;
+    Ok(Json(refreshed.into()))
+}
+
 /// Make a filename safe to interpolate into a Content-Disposition header.
 /// A raw filename from multipart can contain CR/LF (header injection),
 /// embedded quotes (breaks the header parse), or non-ASCII control bytes.
@@ -375,7 +658,7 @@ async fn get_receipt_meta(
     let row: Option<ReceiptRow> = sqlx::query_as(
         "SELECT id, user_id, transaction_id, filename, sha256, mime, bytes_len,
                 ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
-                ocr_confidence, match_score, error_message, created_at
+                ocr_confidence, ocr_extracted, match_score, error_message, created_at
            FROM receipts WHERE id = $1",
     )
     .bind(id)
@@ -537,7 +820,7 @@ async fn attach_receipt(
         "UPDATE receipts SET transaction_id = $2 WHERE id = $1
          RETURNING id, user_id, transaction_id, filename, sha256, mime, bytes_len,
                    ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
-                   ocr_confidence, match_score, error_message, created_at",
+                   ocr_confidence, ocr_extracted, match_score, error_message, created_at",
     )
     .bind(id)
     .bind(body.transaction_id)
@@ -595,6 +878,1444 @@ fn extension_of(filename: &str) -> String {
         Some((_, ext)) if !ext.is_empty() => ext.to_ascii_lowercase(),
         _ => "bin".into(),
     }
+}
+
+// --- receipt-meta PATCH ------------------------------------------------
+//
+// Lets the frontend hand-correct the OCR's top-level fields — date,
+// merchant, total — without forcing the user to re-upload the receipt.
+// Particularly important for dates: the parser refuses to commit a
+// date when every candidate had a reject tag (return policy / rebate
+// expiry), but the user can read the receipt and know the right answer.
+
+#[derive(Deserialize)]
+struct PatchMeta {
+    merchant: Option<String>,
+    total: Option<Decimal>,
+    date: Option<NaiveDate>,
+}
+
+async fn patch_receipt_meta(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<PatchMeta>,
+) -> Result<Json<Receipt>, ApiError> {
+    if body.merchant.is_none() && body.total.is_none() && body.date.is_none() {
+        return Err(ApiError::BadRequest("no fields to update".into()));
+    }
+    let owner: Option<Uuid> =
+        sqlx::query_scalar("SELECT user_id FROM receipts WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&s.pool)
+            .await?;
+    let owner = owner.ok_or(ApiError::NotFound)?;
+    if owner != user.id {
+        return Err(ApiError::Forbidden);
+    }
+    // COALESCE($n, col) — when the patch supplies a field, override;
+    // otherwise leave the column alone. Three independent updates in
+    // one statement keep the round-trip small.
+    sqlx::query(
+        "UPDATE receipts SET
+            ocr_merchant = COALESCE($2, ocr_merchant),
+            ocr_total    = COALESCE($3, ocr_total),
+            ocr_date     = COALESCE($4, ocr_date)
+          WHERE id = $1",
+    )
+    .bind(id)
+    .bind(&body.merchant)
+    .bind(body.total)
+    .bind(body.date)
+    .execute(&s.pool)
+    .await?;
+
+    let row: ReceiptRow = sqlx::query_as(
+        "SELECT id, user_id, transaction_id, filename, sha256, mime, bytes_len,
+                ocr_status::text, ocr_text, ocr_merchant, ocr_total, ocr_date,
+                ocr_confidence, ocr_extracted, match_score, error_message, created_at
+           FROM receipts WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_one(&s.pool)
+    .await?;
+    Ok(Json(row.into()))
+}
+
+// --- per-item PATCH ----------------------------------------------------
+//
+// JSONB column is `receipts.ocr_extracted`. We deserialize the full
+// `OcrResult`, mutate the indexed item, serialize back, write back.
+// `Option`s on the body fields let the frontend update one attribute at
+// a time (e.g., flip `tax_bucket` from `business` to `personal` without
+// touching `category` or `rental_property_id`).
+
+#[derive(Deserialize)]
+struct PatchItem {
+    /// Item display name. Omitted → unchanged.
+    name: Option<String>,
+    /// Line total. Omitted → unchanged. (Cannot clear; required field.)
+    line_total: Option<Decimal>,
+    /// Quantity. Use `null` to clear (`Some(None)`), omit to leave
+    /// alone, send a value to set.
+    #[serde(default, deserialize_with = "deserialize_optional_decimal")]
+    qty: Option<Option<Decimal>>,
+    /// Unit price. Same Some/None/absent semantics as `qty`.
+    #[serde(default, deserialize_with = "deserialize_optional_decimal")]
+    unit_price: Option<Option<Decimal>>,
+    category: Option<String>,
+    tax_bucket: Option<String>,
+    /// Use `Some(None)` semantics via the inner Option to clear: send
+    /// `{"rental_property_id": null}` to detach the property; omit the
+    /// field entirely to leave it as-is.
+    #[serde(default, deserialize_with = "deserialize_optional_uuid")]
+    rental_property_id: Option<Option<Uuid>>,
+}
+
+fn deserialize_optional_decimal<'de, D>(de: D) -> Result<Option<Option<Decimal>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let v: Option<Decimal> = Option::deserialize(de)?;
+    Ok(Some(v))
+}
+
+// Distinguishes "field absent" from "field present and null" so a PATCH
+// can explicitly clear the property linkage. `#[serde(default)]` on
+// `rental_property_id` makes the field optional; this custom
+// deserializer turns `null` into `Some(None)` and a real UUID into
+// `Some(Some(uuid))`.
+fn deserialize_optional_uuid<'de, D>(de: D) -> Result<Option<Option<Uuid>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let v: Option<Uuid> = Option::deserialize(de)?;
+    Ok(Some(v))
+}
+
+async fn patch_receipt_item(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path((receipt_id, idx)): Path<(Uuid, usize)>,
+    Json(body): Json<PatchItem>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    if body.name.is_none()
+        && body.line_total.is_none()
+        && body.qty.is_none()
+        && body.unit_price.is_none()
+        && body.category.is_none()
+        && body.tax_bucket.is_none()
+        && body.rental_property_id.is_none()
+    {
+        return Err(ApiError::BadRequest("no fields to update".into()));
+    }
+    // Validate tax_bucket against the known set so a typo can't poison
+    // the rollup (e.g., "buisness" silently dropping the item out of
+    // the business bucket).
+    if let Some(b) = body.tax_bucket.as_deref() {
+        if !matches!(b, "business" | "rental" | "personal" | "unclassified") {
+            return Err(ApiError::BadRequest(format!(
+                "invalid tax_bucket: {b} (must be business|rental|personal|unclassified)"
+            )));
+        }
+    }
+
+    let row: Option<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT user_id, ocr_extracted FROM receipts WHERE id = $1",
+    )
+    .bind(receipt_id)
+    .fetch_optional(&s.pool)
+    .await?;
+    let (owner, extracted) = row.ok_or(ApiError::NotFound)?;
+    if owner != user.id {
+        return Err(ApiError::Forbidden);
+    }
+    let mut extracted = extracted.unwrap_or_else(|| serde_json::json!({}));
+    let items = extracted
+        .get_mut("items")
+        .and_then(|v| v.as_array_mut())
+        .ok_or_else(|| ApiError::BadRequest("receipt has no extracted items".into()))?;
+    if idx >= items.len() {
+        return Err(ApiError::BadRequest(format!(
+            "item index {idx} out of range (have {})",
+            items.len()
+        )));
+    }
+    let item = &mut items[idx];
+    let item_obj = item
+        .as_object_mut()
+        .ok_or_else(|| ApiError::Internal(anyhow::anyhow!("item is not an object")))?;
+    if let Some(name) = body.name {
+        item_obj.insert("name".into(), serde_json::Value::String(name));
+    }
+    if let Some(t) = body.line_total {
+        item_obj.insert(
+            "line_total".into(),
+            serde_json::Value::String(t.to_string()),
+        );
+    }
+    if let Some(q) = body.qty {
+        match q {
+            Some(v) => {
+                item_obj.insert("qty".into(), serde_json::Value::String(v.to_string()));
+            }
+            None => {
+                item_obj.insert("qty".into(), serde_json::Value::Null);
+            }
+        }
+    }
+    if let Some(u) = body.unit_price {
+        match u {
+            Some(v) => {
+                item_obj.insert(
+                    "unit_price".into(),
+                    serde_json::Value::String(v.to_string()),
+                );
+            }
+            None => {
+                item_obj.insert("unit_price".into(), serde_json::Value::Null);
+            }
+        }
+    }
+    if let Some(c) = body.category {
+        item_obj.insert("category".into(), serde_json::Value::String(c));
+    }
+    if let Some(b) = body.tax_bucket {
+        item_obj.insert("tax_bucket".into(), serde_json::Value::String(b));
+    }
+    if let Some(prop) = body.rental_property_id {
+        match prop {
+            Some(uuid) => {
+                item_obj.insert(
+                    "rental_property_id".into(),
+                    serde_json::Value::String(uuid.to_string()),
+                );
+            }
+            None => {
+                item_obj.insert("rental_property_id".into(), serde_json::Value::Null);
+            }
+        }
+    }
+
+    sqlx::query("UPDATE receipts SET ocr_extracted = $2 WHERE id = $1")
+        .bind(receipt_id)
+        .bind(&extracted)
+        .execute(&s.pool)
+        .await?;
+
+    Ok(Json(extracted))
+}
+
+// --- per-item POST / DELETE -------------------------------------------
+//
+// Lets the user fill in items the OCR missed (typical: 2 of 6 items
+// extracted, 4 entered manually) and remove items the parser
+// hallucinated. The POST shape matches `OcrLineItem` minus the
+// auto-derived `category` / `tax_bucket` (server fills those in when
+// absent, but the client can override either).
+
+#[derive(Deserialize)]
+struct NewItem {
+    name: String,
+    line_total: Decimal,
+    #[serde(default)]
+    qty: Option<Decimal>,
+    #[serde(default)]
+    unit_price: Option<Decimal>,
+    /// Optional — derived from `name` when absent (same heuristic the
+    /// parser uses on fresh OCR output).
+    #[serde(default)]
+    category: Option<String>,
+    /// Optional — derived from `category` when absent.
+    #[serde(default)]
+    tax_bucket: Option<String>,
+    #[serde(default)]
+    rental_property_id: Option<Uuid>,
+}
+
+async fn add_receipt_item(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(receipt_id): Path<Uuid>,
+    Json(body): Json<NewItem>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    if body.name.trim().is_empty() {
+        return Err(ApiError::BadRequest("name is required".into()));
+    }
+    // Derive category + bucket if the client didn't pin them.
+    let category = body
+        .category
+        .clone()
+        .unwrap_or_else(|| traderview_ocr::parse::guess_category(&body.name));
+    let tax_bucket = body.tax_bucket.clone().unwrap_or_else(|| {
+        traderview_ocr::parse::default_bucket_for_category(&category).to_string()
+    });
+    if !matches!(
+        tax_bucket.as_str(),
+        "business" | "rental" | "personal" | "unclassified"
+    ) {
+        return Err(ApiError::BadRequest(format!(
+            "invalid tax_bucket: {tax_bucket}"
+        )));
+    }
+
+    let row: Option<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT user_id, ocr_extracted FROM receipts WHERE id = $1",
+    )
+    .bind(receipt_id)
+    .fetch_optional(&s.pool)
+    .await?;
+    let (owner, extracted) = row.ok_or(ApiError::NotFound)?;
+    if owner != user.id {
+        return Err(ApiError::Forbidden);
+    }
+    let mut extracted = extracted.unwrap_or_else(|| serde_json::json!({}));
+    // Ensure the items array exists — older rows (pre-migration 0041)
+    // may have a `{}` blob without `items`.
+    let ext_obj = extracted
+        .as_object_mut()
+        .ok_or_else(|| ApiError::Internal(anyhow::anyhow!("extracted is not an object")))?;
+    let items = ext_obj
+        .entry("items")
+        .or_insert_with(|| serde_json::Value::Array(Vec::new()))
+        .as_array_mut()
+        .ok_or_else(|| ApiError::Internal(anyhow::anyhow!("items is not an array")))?;
+
+    let mut new_obj = serde_json::Map::new();
+    new_obj.insert("name".into(), serde_json::Value::String(body.name));
+    new_obj.insert(
+        "line_total".into(),
+        serde_json::Value::String(body.line_total.to_string()),
+    );
+    new_obj.insert(
+        "qty".into(),
+        body.qty
+            .map(|v| serde_json::Value::String(v.to_string()))
+            .unwrap_or(serde_json::Value::Null),
+    );
+    new_obj.insert(
+        "unit_price".into(),
+        body.unit_price
+            .map(|v| serde_json::Value::String(v.to_string()))
+            .unwrap_or(serde_json::Value::Null),
+    );
+    new_obj.insert("category".into(), serde_json::Value::String(category));
+    new_obj.insert("tax_bucket".into(), serde_json::Value::String(tax_bucket));
+    new_obj.insert(
+        "rental_property_id".into(),
+        body.rental_property_id
+            .map(|u| serde_json::Value::String(u.to_string()))
+            .unwrap_or(serde_json::Value::Null),
+    );
+    items.push(serde_json::Value::Object(new_obj));
+
+    sqlx::query("UPDATE receipts SET ocr_extracted = $2 WHERE id = $1")
+        .bind(receipt_id)
+        .bind(&extracted)
+        .execute(&s.pool)
+        .await?;
+    Ok(Json(extracted))
+}
+
+async fn delete_receipt_item(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path((receipt_id, idx)): Path<(Uuid, usize)>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let row: Option<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT user_id, ocr_extracted FROM receipts WHERE id = $1",
+    )
+    .bind(receipt_id)
+    .fetch_optional(&s.pool)
+    .await?;
+    let (owner, extracted) = row.ok_or(ApiError::NotFound)?;
+    if owner != user.id {
+        return Err(ApiError::Forbidden);
+    }
+    let mut extracted = extracted.unwrap_or_else(|| serde_json::json!({}));
+    let items = extracted
+        .get_mut("items")
+        .and_then(|v| v.as_array_mut())
+        .ok_or_else(|| ApiError::BadRequest("receipt has no items".into()))?;
+    if idx >= items.len() {
+        return Err(ApiError::BadRequest(format!(
+            "item index {idx} out of range (have {})",
+            items.len()
+        )));
+    }
+    items.remove(idx);
+
+    sqlx::query("UPDATE receipts SET ocr_extracted = $2 WHERE id = $1")
+        .bind(receipt_id)
+        .bind(&extracted)
+        .execute(&s.pool)
+        .await?;
+    Ok(Json(extracted))
+}
+
+// --- bulk auto-attach --------------------------------------------------
+//
+// Pass over every `done` receipt that's not yet attached, score it
+// against transactions within ±7 days, and attach the top candidate IF
+// its score meets the `threshold`. Used after a 10k-receipt import to
+// auto-link the easy ones in one operation. Receipts whose best score
+// falls below the threshold are left untouched for manual review.
+
+#[derive(Deserialize)]
+struct BulkAttachBody {
+    /// Minimum match score (0.0..=1.0). Default 0.85 — empirically the
+    /// boundary between "near-certain right answer" and "needs eyes".
+    #[serde(default)]
+    threshold: Option<f32>,
+    /// Optional date range — same shape as the list endpoint.
+    #[serde(default)]
+    from: Option<NaiveDate>,
+    #[serde(default)]
+    to: Option<NaiveDate>,
+}
+
+#[derive(Serialize)]
+struct BulkAttachResult {
+    examined: u32,
+    attached: u32,
+    skipped_no_candidates: u32,
+    skipped_low_score: u32,
+}
+
+async fn bulk_attach(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(body): Json<BulkAttachBody>,
+) -> Result<Json<BulkAttachResult>, ApiError> {
+    let threshold = body.threshold.unwrap_or(0.85).clamp(0.0, 1.0);
+
+    // Pull every unattached `done` receipt in scope. Streaming would be
+    // nicer for 10k+ but `fetch_all` is simpler and a Receipt row is
+    // small (~hundred bytes once we trim ocr_text out below).
+    let receipts: Vec<(Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>)> =
+        sqlx::query_as(
+            "SELECT id, ocr_merchant, ocr_total, ocr_date
+               FROM receipts
+              WHERE user_id = $1
+                AND ocr_status = 'done'::ocr_status_t
+                AND transaction_id IS NULL
+                AND ($2::date IS NULL OR ocr_date >= $2)
+                AND ($3::date IS NULL OR ocr_date <= $3)",
+        )
+        .bind(user.id)
+        .bind(body.from)
+        .bind(body.to)
+        .fetch_all(&s.pool)
+        .await?;
+
+    let mut result = BulkAttachResult {
+        examined: receipts.len() as u32,
+        attached: 0,
+        skipped_no_candidates: 0,
+        skipped_low_score: 0,
+    };
+
+    for (rid, merchant, total, date) in receipts {
+        // Date is the strongest filter; if missing, widen to last 30 days.
+        let candidates: Vec<TxBrief> = if let Some(d) = date {
+            sqlx::query_as(
+                "SELECT t.id, t.account_id, t.posted_at, t.amount,
+                        t.merchant_raw, t.merchant_normalized
+                   FROM transactions t
+                   JOIN financial_accounts a ON a.id = t.account_id
+                  WHERE a.user_id = $1
+                    AND t.posted_at >= ($2::date - INTERVAL '7 days')
+                    AND t.posted_at <  ($2::date + INTERVAL '8 days')
+                    AND t.is_transfer = FALSE
+                  LIMIT 500",
+            )
+            .bind(user.id)
+            .bind(d)
+            .fetch_all(&s.pool)
+            .await?
+        } else {
+            sqlx::query_as(
+                "SELECT t.id, t.account_id, t.posted_at, t.amount,
+                        t.merchant_raw, t.merchant_normalized
+                   FROM transactions t
+                   JOIN financial_accounts a ON a.id = t.account_id
+                  WHERE a.user_id = $1
+                    AND t.posted_at >= now() - INTERVAL '30 days'
+                    AND t.is_transfer = FALSE
+                  LIMIT 500",
+            )
+            .bind(user.id)
+            .fetch_all(&s.pool)
+            .await?
+        };
+
+        if candidates.is_empty() {
+            result.skipped_no_candidates += 1;
+            continue;
+        }
+
+        let receipt_fields = matcher::ReceiptFields {
+            merchant,
+            total,
+            date,
+        };
+        let tx_cands: Vec<matcher::TxCandidate> = candidates
+            .iter()
+            .map(|c| matcher::TxCandidate {
+                id: c.id,
+                posted_date: c.posted_at.date_naive(),
+                amount: c.amount,
+                merchant_normalized: c.merchant_normalized.clone(),
+            })
+            .collect();
+        let scored = matcher::score(&receipt_fields, &tx_cands, threshold);
+        let best = scored.into_iter().next();
+        match best {
+            Some(m) if m.score >= threshold => {
+                sqlx::query(
+                    "UPDATE receipts
+                        SET transaction_id = $2, match_score = $3
+                      WHERE id = $1",
+                )
+                .bind(rid)
+                .bind(m.id)
+                .bind(m.score)
+                .execute(&s.pool)
+                .await?;
+                result.attached += 1;
+            }
+            _ => result.skipped_low_score += 1,
+        }
+    }
+
+    Ok(Json(result))
+}
+
+// --- bulk delete --------------------------------------------------------
+
+#[derive(Deserialize)]
+struct BulkIdsBody {
+    ids: Vec<Uuid>,
+}
+
+#[derive(Serialize)]
+struct BulkResult {
+    affected: u32,
+}
+
+async fn bulk_delete(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(body): Json<BulkIdsBody>,
+) -> Result<Json<BulkResult>, ApiError> {
+    if body.ids.is_empty() {
+        return Ok(Json(BulkResult { affected: 0 }));
+    }
+    // Cap the batch so a runaway client can't issue a 10M-row DELETE in
+    // one call. 500 is the same cap the list endpoint uses for read.
+    if body.ids.len() > 500 {
+        return Err(ApiError::BadRequest(
+            "ids exceeds 500 — split into multiple requests".into(),
+        ));
+    }
+    // ON DELETE CASCADE on the blob path doesn't exist (file lives on
+    // disk). We delete the DB rows first so the cascade-safety stays
+    // intact; orphan blobs are GC'd by a background sweeper. For now
+    // the orphan-cleanup is intentional dead weight — the
+    // dedup-by-sha layer means re-upload reclaims them anyway.
+    let r = sqlx::query(
+        "DELETE FROM receipts WHERE user_id = $1 AND id = ANY($2)",
+    )
+    .bind(user.id)
+    .bind(&body.ids)
+    .execute(&s.pool)
+    .await?;
+    Ok(Json(BulkResult {
+        affected: r.rows_affected() as u32,
+    }))
+}
+
+// --- bulk patch items ---------------------------------------------------
+//
+// Applies a single category / tax_bucket / rental_property_id update
+// to EVERY item across a set of receipts. Used when you've imported
+// 200 Lowe's receipts and want to bulk-set every item on every one to
+// rental → "Maple St duplex".
+
+#[derive(Deserialize)]
+struct BulkPatchItemsBody {
+    ids: Vec<Uuid>,
+    #[serde(default)]
+    category: Option<String>,
+    #[serde(default)]
+    tax_bucket: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_uuid")]
+    rental_property_id: Option<Option<Uuid>>,
+}
+
+async fn bulk_patch_items(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(body): Json<BulkPatchItemsBody>,
+) -> Result<Json<BulkResult>, ApiError> {
+    if body.ids.is_empty() {
+        return Ok(Json(BulkResult { affected: 0 }));
+    }
+    if body.ids.len() > 500 {
+        return Err(ApiError::BadRequest(
+            "ids exceeds 500 — split into multiple requests".into(),
+        ));
+    }
+    if body.category.is_none() && body.tax_bucket.is_none() && body.rental_property_id.is_none() {
+        return Err(ApiError::BadRequest("no fields to update".into()));
+    }
+    if let Some(b) = body.tax_bucket.as_deref() {
+        if !matches!(b, "business" | "rental" | "personal" | "unclassified") {
+            return Err(ApiError::BadRequest(format!(
+                "invalid tax_bucket: {b}"
+            )));
+        }
+    }
+
+    // Fetch then update each receipt's JSONB. A single `jsonb_set` over
+    // 500 rows would be elegant but iterating in Rust keeps the type-
+    // checked update consistent with the per-item PATCH handler.
+    let rows: Vec<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT id, ocr_extracted FROM receipts
+          WHERE user_id = $1 AND id = ANY($2)",
+    )
+    .bind(user.id)
+    .bind(&body.ids)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let mut affected: u32 = 0;
+    for (rid, extracted) in rows {
+        let mut ex = extracted.unwrap_or_else(|| serde_json::json!({}));
+        let items = ex
+            .get_mut("items")
+            .and_then(|v| v.as_array_mut());
+        let Some(items) = items else { continue };
+        let mut changed = false;
+        for it in items.iter_mut() {
+            let Some(obj) = it.as_object_mut() else { continue };
+            if let Some(c) = body.category.as_ref() {
+                obj.insert("category".into(), serde_json::Value::String(c.clone()));
+                changed = true;
+            }
+            if let Some(b) = body.tax_bucket.as_ref() {
+                obj.insert("tax_bucket".into(), serde_json::Value::String(b.clone()));
+                changed = true;
+            }
+            if let Some(prop) = body.rental_property_id.as_ref() {
+                match prop {
+                    Some(uuid) => {
+                        obj.insert(
+                            "rental_property_id".into(),
+                            serde_json::Value::String(uuid.to_string()),
+                        );
+                    }
+                    None => {
+                        obj.insert("rental_property_id".into(), serde_json::Value::Null);
+                    }
+                }
+                changed = true;
+            }
+        }
+        if changed {
+            sqlx::query("UPDATE receipts SET ocr_extracted = $2 WHERE id = $1")
+                .bind(rid)
+                .bind(&ex)
+                .execute(&s.pool)
+                .await?;
+            affected += 1;
+        }
+    }
+    Ok(Json(BulkResult { affected }))
+}
+
+// --- tax rollup --------------------------------------------------------
+
+#[derive(Deserialize)]
+struct RollupQ {
+    /// Inclusive ISO date.
+    from: Option<NaiveDate>,
+    /// Inclusive ISO date.
+    to: Option<NaiveDate>,
+}
+
+#[derive(Serialize)]
+struct TaxRollupResponse {
+    from: NaiveDate,
+    to: NaiveDate,
+    receipts_counted: u32,
+    items_counted: u32,
+    /// `business` (Schedule C) → categories → total.
+    business: BucketRollup,
+    /// `rental` (Schedule E) → per-property → categories → total.
+    rental: RentalRollup,
+    personal: BucketRollup,
+    unclassified: BucketRollup,
+}
+
+#[derive(Serialize, Default)]
+struct BucketRollup {
+    grand_total: Decimal,
+    categories: Vec<CategoryTotal>,
+}
+
+#[derive(Serialize, Default)]
+struct RentalRollup {
+    grand_total: Decimal,
+    properties: Vec<PropertyRollup>,
+}
+
+#[derive(Serialize)]
+struct PropertyRollup {
+    property_id: Option<Uuid>,
+    property_name: Option<String>,
+    grand_total: Decimal,
+    categories: Vec<CategoryTotal>,
+}
+
+#[derive(Serialize)]
+struct CategoryTotal {
+    category: String,
+    total: Decimal,
+    /// IRS Schedule C line number — present when the category maps to
+    /// a Schedule C line (Business bucket). `None` for groceries / other.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schedule_c_line: Option<&'static str>,
+    /// IRS Schedule E line number — present for rental-bucket
+    /// categories that map to a specific Schedule E line.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schedule_e_line: Option<&'static str>,
+}
+
+/// Category id → IRS Schedule C line (sole-prop). Strings rather than
+/// `u8` because some lines are `24a` / `24b` / `20a` / `20b` with letter
+/// sublines. Returns `None` for groceries / other (non-deductible).
+fn schedule_c_line(category: &str) -> Option<&'static str> {
+    Some(match category {
+        "advertising" => "8",
+        "vehicle_fuel" | "vehicle_maintenance" => "9",
+        "contract_labor" => "11",
+        "office_equipment_software" => "13",   // depreciable; line 13
+        "insurance" => "15",
+        "professional_services" => "17",
+        "office_supplies" => "18",
+        "rent_lease" => "20",                  // 20a vehicles / 20b other; collapsed
+        "repairs_maintenance" => "21",
+        "supplies_cogs" => "22",
+        "taxes_licenses_dues" => "23",
+        "travel_transport" | "travel_lodging" => "24a",
+        "meals" => "24b",                      // 50% deductible — line 24b
+        "utilities" => "25",
+        "wages_benefits" => "26",
+        "bank_fees" | "education_training" => "27a",   // Other Expenses
+        _ => return None,
+    })
+}
+
+/// Category id → IRS Schedule E line (rental). Schedule E has fewer
+/// dedicated lines than C; some categories collapse into line 19
+/// (Other) when no exact match exists.
+fn schedule_e_line(category: &str) -> Option<&'static str> {
+    Some(match category {
+        "advertising" => "5",
+        "vehicle_fuel" | "vehicle_maintenance" |
+        "travel_transport" | "travel_lodging" => "6",        // Auto and travel
+        "repairs_maintenance" => "14",                       // Repairs (or 7 Cleaning)
+        "insurance" => "9",
+        "professional_services" => "10",
+        "rent_lease" => "11",                                // Management fees
+        "supplies_cogs" | "office_supplies" => "15",         // Supplies
+        "taxes_licenses_dues" => "16",
+        "utilities" => "17",
+        "office_equipment_software" => "18",                 // Depreciation
+        "meals" | "contract_labor" | "wages_benefits" |
+        "bank_fees" | "education_training" => "19",          // Other
+        _ => return None,
+    })
+}
+
+async fn tax_rollup(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<RollupQ>,
+) -> Result<Json<TaxRollupResponse>, ApiError> {
+    // Default window: current calendar year.
+    let now = Utc::now().date_naive();
+    let year = now.year();
+    let from = q.from.unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
+    let to = q.to.unwrap_or(now);
+
+    // Pull receipts in window with their extracted JSONB blob.
+    let rows: Vec<(Uuid, Option<NaiveDate>, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT id, ocr_date, ocr_extracted
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND (ocr_date IS NULL OR (ocr_date >= $2 AND ocr_date <= $3))",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    // Side-load property names so the rental rollup labels read clean.
+    let props: Vec<(Uuid, String)> =
+        sqlx::query_as("SELECT id, nickname FROM rental_properties WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_all(&s.pool)
+            .await
+            .unwrap_or_default();
+    let prop_name: std::collections::HashMap<Uuid, String> = props.into_iter().collect();
+
+    // (bucket, category) → total
+    let mut business: std::collections::BTreeMap<String, Decimal> = Default::default();
+    let mut personal: std::collections::BTreeMap<String, Decimal> = Default::default();
+    let mut unclassified: std::collections::BTreeMap<String, Decimal> = Default::default();
+    // property_id → category → total
+    let mut rental: std::collections::BTreeMap<Option<Uuid>,
+        std::collections::BTreeMap<String, Decimal>> = Default::default();
+
+    let mut receipts_counted: u32 = 0;
+    let mut items_counted: u32 = 0;
+
+    for (_id, _date, extracted) in rows {
+        let Some(ext) = extracted else { continue };
+        let Some(items) = ext.get("items").and_then(|v| v.as_array()) else { continue };
+        if items.is_empty() {
+            continue;
+        }
+        receipts_counted += 1;
+        for it in items {
+            let cat = it
+                .get("category")
+                .and_then(|v| v.as_str())
+                .unwrap_or("other")
+                .to_string();
+            let bucket = it
+                .get("tax_bucket")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unclassified");
+            // line_total is serialized as a numeric string by serde-decimal.
+            let total = it
+                .get("line_total")
+                .and_then(|v| match v {
+                    serde_json::Value::String(s) => Decimal::from_str_exact(s).ok(),
+                    serde_json::Value::Number(n) => {
+                        n.as_f64().and_then(|f| Decimal::try_from(f).ok())
+                    }
+                    _ => None,
+                })
+                .unwrap_or(Decimal::ZERO);
+            items_counted += 1;
+            match bucket {
+                "business" => *business.entry(cat).or_default() += total,
+                "personal" => *personal.entry(cat).or_default() += total,
+                "rental" => {
+                    let prop_id = it
+                        .get("rental_property_id")
+                        .and_then(|v| v.as_str())
+                        .and_then(|s| Uuid::parse_str(s).ok());
+                    *rental
+                        .entry(prop_id)
+                        .or_default()
+                        .entry(cat)
+                        .or_default() += total;
+                }
+                _ => *unclassified.entry(cat).or_default() += total,
+            }
+        }
+    }
+
+    /// Build the per-bucket rollup. `with_c` controls Schedule C line
+    /// annotation (true for `business`); `with_e` controls Schedule E
+    /// (true for `rental`). Personal / unclassified get neither.
+    fn flatten(
+        map: std::collections::BTreeMap<String, Decimal>,
+        with_c: bool,
+        with_e: bool,
+    ) -> BucketRollup {
+        let mut categories: Vec<CategoryTotal> = map
+            .into_iter()
+            .map(|(category, total)| CategoryTotal {
+                schedule_c_line: if with_c { schedule_c_line(&category) } else { None },
+                schedule_e_line: if with_e { schedule_e_line(&category) } else { None },
+                category,
+                total,
+            })
+            .collect();
+        categories.sort_by(|a, b| b.total.cmp(&a.total));
+        let grand_total = categories.iter().map(|c| c.total).sum();
+        BucketRollup { grand_total, categories }
+    }
+
+    let rental_properties: Vec<PropertyRollup> = rental
+        .into_iter()
+        .map(|(prop_id, cat_map)| {
+            let mut categories: Vec<CategoryTotal> = cat_map
+                .into_iter()
+                .map(|(category, total)| CategoryTotal {
+                    schedule_c_line: None,
+                    schedule_e_line: schedule_e_line(&category),
+                    category,
+                    total,
+                })
+                .collect();
+            categories.sort_by(|a, b| b.total.cmp(&a.total));
+            let grand_total = categories.iter().map(|c| c.total).sum();
+            PropertyRollup {
+                property_name: prop_id.and_then(|id| prop_name.get(&id).cloned()),
+                property_id: prop_id,
+                grand_total,
+                categories,
+            }
+        })
+        .collect();
+    let rental_grand: Decimal = rental_properties.iter().map(|p| p.grand_total).sum();
+
+    Ok(Json(TaxRollupResponse {
+        from,
+        to,
+        receipts_counted,
+        items_counted,
+        business: flatten(business, true, false),
+        rental: RentalRollup {
+            grand_total: rental_grand,
+            properties: rental_properties,
+        },
+        personal: flatten(personal, false, false),
+        unclassified: flatten(unclassified, false, false),
+    }))
+}
+
+/// CSV export of the same rollup the JSON endpoint returns, in a flat
+/// shape suitable for pasting into a Schedule C / Schedule E worksheet.
+///
+/// Columns:
+///   bucket, schedule, line, category, property, total
+///
+/// Where `schedule` is `C` for the business bucket, `E` for rental,
+/// blank for personal / unclassified. Property name is filled only for
+/// rental rows; line is blank when no schedule maps the category.
+async fn tax_rollup_csv(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<RollupQ>,
+) -> Result<Response, ApiError> {
+    // Re-use the JSON handler's body — saves duplicating the aggregation
+    // loop. We rebuild the response with `tax_rollup`'s logic by calling
+    // it via direct fn invocation.
+    let rollup = match tax_rollup(State(s.clone()), user.clone(), axum::extract::Query(q)).await? {
+        Json(v) => v,
+    };
+
+    let mut csv = String::new();
+    csv.push_str("bucket,schedule,line,category,property,total\n");
+
+    fn write_cat(csv: &mut String, bucket: &str, schedule: &str, ct: &CategoryTotal, property: &str) {
+        let line = match (schedule, ct.schedule_c_line, ct.schedule_e_line) {
+            ("C", Some(l), _) => l,
+            ("E", _, Some(l)) => l,
+            _ => "",
+        };
+        let property = csv_escape(property);
+        let cat = csv_escape(&ct.category);
+        // Decimal Display does not quote — direct push is fine.
+        csv.push_str(&format!(
+            "{bucket},{schedule},{line},{cat},{property},{total}\n",
+            total = ct.total,
+        ));
+    }
+
+    for ct in &rollup.business.categories {
+        write_cat(&mut csv, "business", "C", ct, "");
+    }
+    csv.push_str(&format!(
+        "business,C,,GRAND TOTAL,,{}\n",
+        rollup.business.grand_total
+    ));
+
+    for prop in &rollup.rental.properties {
+        let pname = prop
+            .property_name
+            .clone()
+            .unwrap_or_else(|| "(unassigned)".into());
+        for ct in &prop.categories {
+            write_cat(&mut csv, "rental", "E", ct, &pname);
+        }
+        csv.push_str(&format!(
+            "rental,E,,GRAND TOTAL,{pname},{total}\n",
+            pname = csv_escape(&pname),
+            total = prop.grand_total,
+        ));
+    }
+    csv.push_str(&format!(
+        "rental,E,,GRAND TOTAL,ALL PROPERTIES,{}\n",
+        rollup.rental.grand_total
+    ));
+
+    for ct in &rollup.personal.categories {
+        write_cat(&mut csv, "personal", "", ct, "");
+    }
+    csv.push_str(&format!(
+        "personal,,,GRAND TOTAL,,{}\n",
+        rollup.personal.grand_total
+    ));
+
+    for ct in &rollup.unclassified.categories {
+        write_cat(&mut csv, "unclassified", "", ct, "");
+    }
+    csv.push_str(&format!(
+        "unclassified,,,GRAND TOTAL,,{}\n",
+        rollup.unclassified.grand_total
+    ));
+
+    let filename = format!("tax-rollup-{}-to-{}.csv", rollup.from, rollup.to);
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "text/csv; charset=utf-8")
+        .header(
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{filename}\""),
+        )
+        .body(Body::from(csv))
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("response build: {e}")))
+}
+
+/// CSV-escape a cell — wrap in quotes when it contains a comma, quote,
+/// or newline; double-up any embedded quotes (RFC 4180).
+fn csv_escape(s: &str) -> String {
+    if s.contains(',') || s.contains('"') || s.contains('\n') {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
+// --- tax rollup PDF ----------------------------------------------------
+//
+// Server-rendered PDF via `printpdf`. Produces a Letter-size document
+// with: header (year + period), 4-stat strip (Income / Sched C /
+// Sched E / Net), Schedule C category breakdown, Schedule E per-
+// property breakdown. Multi-page; tables continue with running headers.
+//
+// We delegate JSON aggregation to the existing `tax_rollup` handler
+// and just render its output here — keeps the math single-sourced.
+
+#[derive(Deserialize)]
+struct PdfRollupQ {
+    from: Option<NaiveDate>,
+    to: Option<NaiveDate>,
+    /// When `?detail=1`, append the full transaction listing. Default 0.
+    #[serde(default)]
+    detail: Option<u8>,
+}
+
+async fn tax_rollup_pdf(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<PdfRollupQ>,
+) -> Result<Response, ApiError> {
+    let rollup_query = RollupQ { from: q.from, to: q.to };
+    let Json(rollup) = tax_rollup(
+        State(s.clone()),
+        user,
+        axum::extract::Query(rollup_query),
+    )
+    .await?;
+    let want_detail = q.detail.unwrap_or(0) != 0;
+    let detail = if want_detail {
+        // Pull transactions for the same window. Capped at 5000 rows
+        // for the PDF detail listing — anyone needing the full audit
+        // trail beyond that can grab the CSV.
+        sqlx::query_as::<_, (DateTime<Utc>, String, Decimal, Option<String>)>(
+            "SELECT t.posted_at,
+                    COALESCE(t.merchant_raw, '') AS merchant,
+                    t.amount,
+                    c.name AS category
+               FROM transactions t
+               JOIN financial_accounts a ON a.id = t.account_id
+               LEFT JOIN expense_categories c ON c.id = t.category_id
+              WHERE a.user_id = $1
+                AND (t.posted_at >= $2::date OR $2 IS NULL)
+                AND (t.posted_at <  ($3::date + INTERVAL '1 day') OR $3 IS NULL)
+              ORDER BY t.posted_at
+              LIMIT 5000",
+        )
+        .bind(user.id)
+        .bind(q.from)
+        .bind(q.to)
+        .fetch_all(&s.pool)
+        .await
+        .unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+
+    let bytes = render_tax_pdf(&rollup, want_detail.then_some(&detail));
+    let filename = format!(
+        "tax-rollup-{}-to-{}{}.pdf",
+        rollup.from,
+        rollup.to,
+        if want_detail { "-detail" } else { "" },
+    );
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "application/pdf")
+        .header(
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{filename}\""),
+        )
+        .body(Body::from(bytes))
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("pdf response: {e}")))
+}
+
+fn render_tax_pdf(
+    rollup: &TaxRollupResponse,
+    detail: Option<&Vec<(DateTime<Utc>, String, Decimal, Option<String>)>>,
+) -> Vec<u8> {
+    use printpdf::*;
+    let (doc, page1, layer1) = PdfDocument::new(
+        "TraderView Tax Rollup",
+        Mm(215.9),
+        Mm(279.4),
+        "Layer 1",
+    );
+    let font = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
+    let font_b = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
+    let mono = doc.add_builtin_font(BuiltinFont::Courier).unwrap();
+
+    let mut layer = doc.get_page(page1).get_layer(layer1);
+    let mut y = 260.0_f32;
+    let left = 15.0_f32;
+    let _ = &mut y; // silence "value never read" — overwritten on add_page paths
+
+    // ── Header ───────────────────────────────────────────────────────
+    layer.use_text(
+        format!("TraderView Tax Rollup — {} → {}", rollup.from, rollup.to),
+        16.0,
+        Mm(left),
+        Mm(y),
+        &font_b,
+    );
+    y -= 6.0;
+    layer.use_text(
+        format!(
+            "{} receipts · {} items examined",
+            rollup.receipts_counted, rollup.items_counted
+        ),
+        9.0,
+        Mm(left),
+        Mm(y),
+        &font,
+    );
+    y -= 10.0;
+
+    // ── 4-stat strip ──────────────────────────────────────────────────
+    let stats = [
+        ("Schedule C (Business)", rollup.business.grand_total),
+        ("Schedule E (Rental)", rollup.rental.grand_total),
+        ("Personal", rollup.personal.grand_total),
+        ("Unclassified", rollup.unclassified.grand_total),
+    ];
+    for (i, (label, total)) in stats.iter().enumerate() {
+        let x = left + (i as f32) * 46.0;
+        layer.use_text(*label, 8.0, Mm(x), Mm(y), &font);
+        layer.use_text(
+            format!("${total:.2}"),
+            12.0,
+            Mm(x),
+            Mm(y - 5.0),
+            &mono,
+        );
+    }
+    y -= 14.0;
+
+    // ── Schedule C section ───────────────────────────────────────────
+    layer.use_text("SCHEDULE C — BUSINESS BREAKDOWN", 10.0, Mm(left), Mm(y), &font_b);
+    y -= 6.0;
+    if rollup.business.categories.is_empty() {
+        layer.use_text("(none in range)", 9.0, Mm(left), Mm(y), &font);
+        y -= 6.0;
+    } else {
+        // Column headers
+        layer.use_text("Line", 8.0, Mm(left), Mm(y), &font_b);
+        layer.use_text("Category", 8.0, Mm(left + 16.0), Mm(y), &font_b);
+        layer.use_text("Total", 8.0, Mm(left + 130.0), Mm(y), &font_b);
+        y -= 4.0;
+        for c in &rollup.business.categories {
+            if y < 25.0 {
+                let (next_page, next_layer) =
+                    doc.add_page(Mm(215.9), Mm(279.4), "next");
+                layer = doc.get_page(next_page).get_layer(next_layer);
+                y = 265.0;
+            }
+            let line = c.schedule_c_line.map(|l| format!("C{l}")).unwrap_or_default();
+            layer.use_text(line, 9.0, Mm(left), Mm(y), &mono);
+            layer.use_text(&c.category, 9.0, Mm(left + 16.0), Mm(y), &font);
+            layer.use_text(
+                format!("${:.2}", c.total),
+                9.0,
+                Mm(left + 130.0),
+                Mm(y),
+                &mono,
+            );
+            y -= 5.0;
+        }
+    }
+    y -= 6.0;
+
+    // ── Schedule E section ───────────────────────────────────────────
+    if y < 60.0 {
+        let (np, nl) = doc.add_page(Mm(215.9), Mm(279.4), "next");
+        layer = doc.get_page(np).get_layer(nl);
+        y = 265.0;
+    }
+    layer.use_text("SCHEDULE E — RENTAL BREAKDOWN", 10.0, Mm(left), Mm(y), &font_b);
+    y -= 6.0;
+    if rollup.rental.properties.is_empty() {
+        layer.use_text("(none in range)", 9.0, Mm(left), Mm(y), &font);
+    } else {
+        for prop in &rollup.rental.properties {
+            if y < 25.0 {
+                let (np, nl) = doc.add_page(Mm(215.9), Mm(279.4), "next");
+                layer = doc.get_page(np).get_layer(nl);
+                y = 265.0;
+            }
+            let pname = prop
+                .property_name
+                .clone()
+                .unwrap_or_else(|| "(unassigned)".into());
+            layer.use_text(
+                format!("{pname} — ${:.2}", prop.grand_total),
+                9.5,
+                Mm(left),
+                Mm(y),
+                &font_b,
+            );
+            y -= 5.0;
+            for c in &prop.categories {
+                if y < 25.0 {
+                    let (np, nl) = doc.add_page(Mm(215.9), Mm(279.4), "next");
+                    layer = doc.get_page(np).get_layer(nl);
+                    y = 265.0;
+                }
+                let line = c.schedule_e_line.map(|l| format!("E{l}")).unwrap_or_default();
+                layer.use_text(line, 9.0, Mm(left + 4.0), Mm(y), &mono);
+                layer.use_text(&c.category, 9.0, Mm(left + 20.0), Mm(y), &font);
+                layer.use_text(
+                    format!("${:.2}", c.total),
+                    9.0,
+                    Mm(left + 130.0),
+                    Mm(y),
+                    &mono,
+                );
+                y -= 5.0;
+            }
+            y -= 3.0;
+        }
+    }
+
+    // ── Detail listing (optional) ────────────────────────────────────
+    if let Some(rows) = detail {
+        let (np, nl) = doc.add_page(Mm(215.9), Mm(279.4), "detail");
+        layer = doc.get_page(np).get_layer(nl);
+        y = 265.0;
+        layer.use_text("TRANSACTION DETAIL", 10.0, Mm(left), Mm(y), &font_b);
+        y -= 6.0;
+        layer.use_text("Date", 8.0, Mm(left), Mm(y), &font_b);
+        layer.use_text("Merchant", 8.0, Mm(left + 24.0), Mm(y), &font_b);
+        layer.use_text("Category", 8.0, Mm(left + 110.0), Mm(y), &font_b);
+        layer.use_text("Amount", 8.0, Mm(left + 165.0), Mm(y), &font_b);
+        y -= 4.0;
+        for (posted, merchant, amount, category) in rows {
+            if y < 18.0 {
+                let (np, nl) = doc.add_page(Mm(215.9), Mm(279.4), "detail");
+                layer = doc.get_page(np).get_layer(nl);
+                y = 265.0;
+            }
+            let date_str = posted.date_naive().to_string();
+            let mname: String = merchant.chars().take(40).collect();
+            let cname: String = category
+                .clone()
+                .unwrap_or_default()
+                .chars()
+                .take(22)
+                .collect();
+            layer.use_text(date_str, 8.0, Mm(left), Mm(y), &mono);
+            layer.use_text(mname, 8.0, Mm(left + 24.0), Mm(y), &font);
+            layer.use_text(cname, 8.0, Mm(left + 110.0), Mm(y), &font);
+            layer.use_text(
+                format!("${:.2}", amount),
+                8.0,
+                Mm(left + 165.0),
+                Mm(y),
+                &mono,
+            );
+            y -= 4.0;
+        }
+    }
+
+    let mut buf = Vec::with_capacity(64 * 1024);
+    doc.save(&mut std::io::BufWriter::new(&mut buf))
+        .unwrap_or_else(|_| {
+            // Save failure → return an empty PDF rather than a 500. The
+            // browser will render nothing; the rollup JSON endpoint
+            // remains the source of truth.
+        });
+    buf
+}
+
+// --- OCR engine status -------------------------------------------------
+//
+// OCR delegates to the system `tesseract` CLI binary (see
+// `engine.rs`). No model files need downloading — `brew install
+// tesseract` (macOS) / `apt install tesseract-ocr` (Linux) ships
+// both the binary and `eng.traineddata`.
+//
+// `status` reports whether tesseract is on PATH, its version, and
+// where its tessdata lives.
+// `download` is preserved for API back-compat with the previous
+// PaddleOCR pipeline — it now just probes tesseract and returns a
+// readiness report.
+
+// `monkt/paddleocr-onnx` doesn't ship a "multilingual" recognition
+// bundle — verified the actual `languages/` directory contents on
+// the HuggingFace repo: only `english`, `arabic`, `chinese`, `eslav`,
+// `greek`, `hindi`, `korean`, `latin`, `tamil`, `telugu`, `thai` exist.
+// Sticking with English. The `[UNK]` artefacts on thermal-printer
+// receipts come from the recognition model's CTC decoder, not from
+// dictionary gaps — switching to a different language model wouldn't
+// help. The parse layer compensates with `[UNK]` → space
+// preprocessing in `traderview_ocr::parse::structure`.
+#[derive(Serialize)]
+struct OcrModelsStatus {
+    /// Reported as `model_dir` for back-compat with the legacy
+    /// frontend; with tesseract this is the path where a user-supplied
+    /// override `eng.traineddata` would be picked up.
+    model_dir: String,
+    /// Always true when `tesseract` is on PATH. The frontend uses this
+    /// to decide whether to surface the "install tesseract" affordance.
+    ready: bool,
+    /// `tesseract --version` first line (e.g. `tesseract 5.5.2`), or
+    /// `"not installed"` when the binary isn't found.
+    tesseract_version: String,
+    /// Whether `eng.traineddata` is reachable. Tesseract uses
+    /// `TESSDATA_PREFIX` if set, otherwise the compile-time default.
+    eng_traineddata_present: bool,
+}
+
+async fn ocr_models_status(
+    State(s): State<AppState>,
+    _user: AuthUser,
+) -> Result<Json<OcrModelsStatus>, ApiError> {
+    let dir = s.ocr_model_dir();
+
+    let version = tokio::process::Command::new("tesseract")
+        .arg("--version")
+        .output()
+        .await
+        .ok()
+        .and_then(|o| {
+            if o.status.success() {
+                // `tesseract --version` writes the version line to
+                // stderr on some builds, stdout on others — take
+                // whichever's non-empty.
+                let s1 = String::from_utf8_lossy(&o.stdout);
+                let s2 = String::from_utf8_lossy(&o.stderr);
+                let first = s1.lines().next().or_else(|| s2.lines().next())
+                    .map(|s| s.trim().to_string())
+                    .unwrap_or_default();
+                if !first.is_empty() { Some(first) } else { None }
+            } else { None }
+        })
+        .unwrap_or_else(|| "not installed".to_string());
+    let ready = version != "not installed";
+
+    // `eng.traineddata` lookup: honour user-supplied override in
+    // the receipts model dir, then try common system paths.
+    let candidates: Vec<std::path::PathBuf> = vec![
+        dir.join("eng.traineddata"),
+        std::path::PathBuf::from("/opt/homebrew/share/tessdata/eng.traineddata"),
+        std::path::PathBuf::from("/usr/local/share/tessdata/eng.traineddata"),
+        std::path::PathBuf::from("/usr/share/tessdata/eng.traineddata"),
+        std::path::PathBuf::from("/usr/share/tesseract-ocr/5/tessdata/eng.traineddata"),
+        std::path::PathBuf::from("/usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata"),
+    ];
+    let mut eng_present = false;
+    for c in candidates {
+        if tokio::fs::metadata(&c).await.is_ok() {
+            eng_present = true;
+            break;
+        }
+    }
+
+    Ok(Json(OcrModelsStatus {
+        model_dir: dir.display().to_string(),
+        ready: ready && eng_present,
+        tesseract_version: version,
+        eng_traineddata_present: eng_present,
+    }))
+}
+
+#[derive(Serialize)]
+struct OcrModelsDownloadResult {
+    /// Always 0 — tesseract uses the system install, nothing to fetch.
+    bytes_total: u64,
+    /// Legacy: empty for tesseract.
+    downloaded: Vec<String>,
+    /// Legacy: empty for tesseract.
+    skipped: Vec<String>,
+    /// Human-readable status message — points the user at `brew
+    /// install tesseract` when the binary is missing, otherwise a
+    /// "ready" string.
+    message: String,
+    model_dir: String,
+}
+
+#[derive(Deserialize)]
+struct OcrModelsDownloadQ {
+    /// Preserved for API back-compat with the previous PaddleOCR
+    /// pipeline. Has no effect with the tesseract backend (nothing to
+    /// re-download); kept so older frontend builds continue parsing.
+    #[serde(default)]
+    #[allow(dead_code)]
+    force: Option<u8>,
+}
+
+async fn ocr_models_download(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    axum::extract::Query(_q): axum::extract::Query<OcrModelsDownloadQ>,
+) -> Result<Json<OcrModelsDownloadResult>, ApiError> {
+    let dir = s.ocr_model_dir();
+    tokio::fs::create_dir_all(&dir).await.ok();
+    let tess_present = tokio::process::Command::new("tesseract")
+        .arg("--version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .await
+        .map(|s| s.success())
+        .unwrap_or(false);
+    let message = if tess_present {
+        "tesseract is installed and ready — no download required".to_string()
+    } else {
+        "tesseract not on PATH — install with `brew install tesseract` (macOS) or \
+         `apt install tesseract-ocr tesseract-ocr-eng` (Linux)".to_string()
+    };
+    Ok(Json(OcrModelsDownloadResult {
+        bytes_total: 0,
+        downloaded: Vec::new(),
+        skipped: Vec::new(),
+        message,
+        model_dir: dir.display().to_string(),
+    }))
 }
 
 #[cfg(test)]

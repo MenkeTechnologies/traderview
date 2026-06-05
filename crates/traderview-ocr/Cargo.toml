@@ -20,19 +20,17 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 
-# Pure-Rust OCR engine — wraps PaddleOCR DBNet (text detection) + SVTR (text
-# recognition) ONNX models via tract-onnx. Zero C/C++ dependencies.
-# Model files are NOT bundled — they're downloaded into the app data dir on
-# first OCR call. See `engine.rs` for the expected layout.
-pure-onnx-ocr-sync = { version = "0.1", optional = true }
+# OCR delegates to the system `tesseract` CLI via stdin/stdout pipes
+# (`engine.rs`). No native Rust binding — `brew install tesseract` (macOS)
+# or `apt install tesseract-ocr tesseract-ocr-eng` (Linux) ships both the
+# binary and the eng.traineddata trained model. We pin tesseract 5.x+ at
+# runtime (the `--oem 1` LSTM-only mode requires 4.0+; we use 5 features).
+# The `engine` feature stays for back-compat — empty now, so `--features
+# ocr-engine` upstream is a no-op.
 
 [features]
-# OFF by default: the crate builds without the PaddleOCR runtime so workspace
-# `cargo build` doesn't pull tract + ndarray for users who don't care about
-# receipt OCR. Enable with `--features engine` to wire the real engine.
-# The PDF text-layer fast path works regardless of this feature.
 default = []
-engine = ["dep:pure-onnx-ocr-sync"]
+engine = []
 
 [lints]
 workspace = true

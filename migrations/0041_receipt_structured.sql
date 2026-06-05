@@ -1,0 +1,28 @@
+-- 0041 — Structured OCR payload on receipts.
+--
+-- The flat `ocr_merchant / ocr_total / ocr_date` columns on `receipts`
+-- (migration 0029) only capture three of the seven fields the receipt
+-- parser now extracts. Itemized lines (name, qty, unit price, line
+-- total, category), pre-tax subtotal, tax amount, time-of-day, and the
+-- merchant address all live in this JSONB blob so the schema can grow
+-- with the parser without further migrations.
+--
+-- Shape (matches `traderview_ocr::OcrResult` serde output):
+--   {
+--     "address": "123 Main St, Anytown, ST 12345" | null,
+--     "time":    "18:07:00" | null,
+--     "subtotal": "94.19" | null,         -- numeric string, post-decimal
+--     "tax":      "5.17" | null,
+--     "items": [
+--       { "name": "PRO TRUCK BED SPRAY",
+--         "qty": "2", "unit_price": "14.97", "line_total": "29.94",
+--         "category": "auto" },
+--       ...
+--     ]
+--   }
+--
+-- The legacy `ocr_merchant / ocr_total / ocr_date` columns stay so
+-- existing queries / indexes / SQL reports keep working — the JSONB
+-- column is additive.
+ALTER TABLE receipts
+    ADD COLUMN ocr_extracted JSONB NOT NULL DEFAULT '{}'::jsonb;
