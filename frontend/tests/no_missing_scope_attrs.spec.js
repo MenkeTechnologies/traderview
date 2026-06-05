@@ -49,6 +49,15 @@ const SCOPE_REQUIRED_ATTRS = {
     'backtest-preset-row':   ['data-id', 'data-slug'],
     'board-row':             ['data-id'],
     'dashboard-sidebar-item': ['data-id'],
+    // Budget-view category row carries data-code (the expense_categories.code).
+    // The handlers click the row's existing button/input by selector keyed
+    // on data-code, so this is the only required attr.
+    'budget-row':            ['data-code'],
+    // Tax wizard root pane — actions target the autopopulate / PDF
+    // controls by ID, no per-row data needed.
+    'tax-wiz-section':       [],
+    // Categorize merchant group — data-i is the group index in STATE.groups.
+    'categorize-group':      ['data-i'],
 };
 
 test('SCOPE_REQUIRED_ATTRS covers every scope in ALL_SCOPED_ITEMS', () => {

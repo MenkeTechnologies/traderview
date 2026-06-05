@@ -290,6 +290,14 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'nav_live',        keys: { key: 'l', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_live',        actionKey: 'tv:nav-live' },
     { id: 'nav_reports',     keys: { key: 'r', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_reports',     actionKey: 'tv:nav-reports' },
     { id: 'nav_scanner',     keys: { key: 'm', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_scanner',     actionKey: 'tv:nav-scanner' },
+    // Expense / tax-wizard / budget nav shortcuts. Same modifier
+    // policy as the trade-side nav block above.
+    { id: 'nav_expenses',    keys: { key: 'e', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_expenses',    actionKey: 'tv:nav-expenses' },
+    { id: 'nav_receipts',    keys: { key: 'i', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_receipts',    actionKey: 'tv:nav-receipts' },
+    { id: 'nav_purchases',   keys: { key: 'p', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_purchases',   actionKey: 'tv:nav-purchases' },
+    { id: 'nav_categorize',  keys: { key: 'g', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_categorize',  actionKey: 'tv:nav-categorize' },
+    { id: 'nav_file_taxes',  keys: { key: 'x', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_file_taxes',  actionKey: 'tv:nav-file-taxes' },
+    { id: 'nav_budget',      keys: { key: 'b', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_budget',      actionKey: 'tv:nav-budget' },
 ];
 
 // Whether a DOM-style keydown event satisfies a shortcut keys spec.

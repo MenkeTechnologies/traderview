@@ -45,16 +45,36 @@ export async function renderCalendar(mount, state) {
     }
 
     const byDay = new Map(cells.map(c => [c.day, c]));
-    const yearsSet = new Set(cells.map(c => Number(c.day.slice(0, 4))));
-    const years = [...yearsSet].sort();
+    const dataYears = [...new Set(cells.map(c => Number(c.day.slice(0, 4))))];
     const { y: activeY, m: activeM } = getActiveYearMonth(cells);
-    const renderYear = years.includes(activeY) ? activeY : years[years.length - 1];
+    // Year navigation — user can go to ANY year. Three controls:
+    //   * ‹ / › arrows: step by one year, no bounds.
+    //   * Quick-pick buttons: show a 5-year window centered on activeY
+    //     (or the latest data year), plus current year. Data-bearing
+    //     years get a subtle dot indicator.
+    //   * Year input box: type any year directly (e.g., 2018, 1999).
+    const nowY = new Date().getFullYear();
+    const center = activeY || (dataYears.length ? Math.max(...dataYears) : nowY);
+    const windowStart = center - 2;
+    const windowYears = [];
+    for (let y = windowStart; y <= windowStart + 4; y++) windowYears.push(y);
+    if (!windowYears.includes(nowY)) windowYears.push(nowY);
+    const renderYear = activeY;
 
+    const uniqueWindow = [...new Set(windowYears)].sort((a, b) => a - b);
     mount.innerHTML = `
         <div class="cal-tv-header">
             <h1 class="view-title" style="margin:0"><span data-i18n="view.calendar.h1.calendar">// CALENDAR</span></h1>
             <div class="cal-tv-year" role="tablist">
-                ${years.map(y => `<button type="button" data-year="${y}" class="${y === renderYear ? 'active' : ''}">${y}</button>`).join('')}
+                <button type="button" class="cal-tv-year-step" data-step="-1" title="previous year">‹</button>
+                ${uniqueWindow.map(y => {
+                    const hasData = dataYears.includes(y);
+                    const cls = `${y === renderYear ? 'active' : ''}${hasData ? ' has-data' : ''}`.trim();
+                    return `<button type="button" data-year="${y}" class="${cls}">${y}</button>`;
+                }).join('')}
+                <button type="button" class="cal-tv-year-step" data-step="1" title="next year">›</button>
+                <input type="number" class="cal-tv-year-input" min="1900" max="2200"
+                       value="${renderYear}" title="type any year">
             </div>
         </div>
         ${activeMonthHtml(byDay, activeY, activeM)}
@@ -70,6 +90,25 @@ export async function renderCalendar(mount, state) {
             renderCalendar(mount, state);
         });
     });
+    mount.querySelectorAll('.cal-tv-year-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const step = Number(btn.dataset.step);
+            setActive(activeY + step, 1);
+            renderCalendar(mount, state);
+        });
+    });
+    const yearInput = mount.querySelector('.cal-tv-year-input');
+    if (yearInput) {
+        const apply = () => {
+            const y = parseInt(yearInput.value, 10);
+            if (!Number.isFinite(y) || y < 1900 || y > 2200) return;
+            if (y === activeY) return;
+            setActive(y, 1);
+            renderCalendar(mount, state);
+        };
+        yearInput.addEventListener('change', apply);
+        yearInput.addEventListener('keydown', e => { if (e.key === 'Enter') apply(); });
+    }
     mount.querySelectorAll('.cal-tv-thumb-open[data-y][data-m]').forEach(btn => {
         btn.addEventListener('click', () => {
             setActive(Number(btn.dataset.y), Number(btn.dataset.m));

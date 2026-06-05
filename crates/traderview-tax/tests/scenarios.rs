@@ -521,6 +521,58 @@ fn ctc_at_mfj_phaseout_threshold_no_reduction() {
     assert_eq!(res.ctc.total, d(6_000));
 }
 
+/// CTC refundable + EITC both flow into total_payments. The
+/// taxpayer's total payments must sum:
+///   W-2 withholding + estimated payments + CTC refundable + EITC.
+/// Pin a hand-computed scenario where ALL FOUR are non-zero.
+#[test]
+fn ctc_refundable_and_eitc_both_increase_total_payments() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Mfj,
+        w2s: vec![W2 {
+            box_1_wages: d(40_000),
+            box_2_federal_income_tax_withheld: d(2_000),  // withholding
+            ..Default::default()
+        }],
+        qualifying_children_under_17: 2,                  // CTC: 2 × $2k = $4k total
+        estimated_tax_payments: d(500),                   // estimated
+        eitc_claim: d(1_800),                             // EITC entered manually
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // CTC $4k total → refundable = min(2 × $1,700, $4k) = $3,400.
+    assert_eq!(res.ctc.total, d(4_000));
+    assert_eq!(res.ctc.refundable_portion, d(3_400));
+    // Total payments = 2,000 + 500 + 3,400 + 1,800 = $7,700.
+    assert_eq!(res.total_payments, d(7_700),
+        "all four refundable/withholding components must sum into total_payments");
+}
+
+/// EITC increases payments DOLLAR FOR DOLLAR — verify with a delta
+/// across two otherwise-identical returns differing only in EITC.
+#[test]
+fn eitc_delta_propagates_dollar_for_dollar_to_payments() {
+    let base = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        w2s: vec![W2 {
+            box_1_wages: d(20_000),
+            box_2_federal_income_tax_withheld: d(800),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let with_eitc = TaxReturn {
+        eitc_claim: d(550),
+        ..base.clone()
+    };
+    let base_payments    = compute(&base).total_payments;
+    let with_eitc_payments = compute(&with_eitc).total_payments;
+    assert_eq!(with_eitc_payments - base_payments, d(550),
+        "EITC delta must move total_payments by exactly the EITC amount");
+}
+
 /// Scenario 9: Head of household freelancer with one kid.
 /// $55k Schedule C, no W-2, 1 qualifying child, HoH status.
 ///

@@ -239,6 +239,48 @@ mod tests {
     }
 
     #[test]
+    fn same_income_diverges_correctly_across_all_four_statuses() {
+        // At $80,000 taxable income, brackets bind differently:
+        //
+        // Single: 11,925 @ 10% + 36,550 @ 12% + 31,525 @ 22%
+        //       = 1,192.50 + 4,386.00 + 6,935.50 = 12,514.00
+        // MFJ:    23,850 @ 10% + 56,150 @ 12% = 2,385.00 + 6,738.00 = 9,123.00
+        // MFS:    11,925 @ 10% + 36,550 @ 12% + 31,525 @ 22% = 12,514.00
+        //         (MFS uses single brackets until $250,525)
+        // HoH:    17,000 @ 10% + 47,850 @ 12% + 15,150 @ 22%
+        //       = 1,700.00 + 5,742.00 + 3,333.00 = 10,775.00
+        let income = Decimal::from(80_000);
+        let single = ordinary_income_tax(income, FilingStatus::Single);
+        let mfj    = ordinary_income_tax(income, FilingStatus::Mfj);
+        let mfs    = ordinary_income_tax(income, FilingStatus::Mfs);
+        let hoh    = ordinary_income_tax(income, FilingStatus::Hoh);
+
+        assert_eq!(single, Decimal::from(12_514));
+        assert_eq!(mfj,    Decimal::from(9_123));
+        assert_eq!(mfs,    Decimal::from(12_514));
+        assert_eq!(hoh,    Decimal::from(10_775));
+
+        // Ordering invariant — pins the rule that MFJ < HoH < Single = MFS
+        // (at this income level). A bracket-table swap would catch here.
+        assert!(mfj < hoh,    "MFJ ({mfj}) must be cheaper than HoH ({hoh})");
+        assert!(hoh < single, "HoH ({hoh}) must be cheaper than Single ({single})");
+        assert_eq!(single, mfs,
+            "Single and MFS bracket math diverges only above $250,525");
+    }
+
+    #[test]
+    fn mfs_diverges_from_single_above_375800() {
+        // MFS top-of-35% boundary is $375,800 (different from single's
+        // $626,350). At $400,000, MFS already pays 37% on the top
+        // $24,200 while Single is still in 35%.
+        let income = Decimal::from(400_000);
+        let single = ordinary_income_tax(income, FilingStatus::Single);
+        let mfs    = ordinary_income_tax(income, FilingStatus::Mfs);
+        assert!(mfs > single,
+            "MFS ({mfs}) must owe more than Single ({single}) above 375,800");
+    }
+
+    #[test]
     fn negative_income_yields_zero_tax() {
         // Defensive: net loss → no negative tax. Refundable credits
         // come later in the pipeline.

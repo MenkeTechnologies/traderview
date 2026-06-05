@@ -100,7 +100,7 @@ async function loadAndRender(mount, tok) {
             ? `<span class="cz-learned">${esc(t('view.categorize.learned', { cat: g.learned_category }))}</span>`
             : '';
         return `
-        <div class="cz-row" data-i="${i}">
+        <div class="cz-row" data-i="${i}" data-context-scope="categorize-group">
             <div class="cz-row-head">
                 <strong class="cz-merchant">${esc(g.canonical_merchant)}</strong>
                 <span class="muted small">${g.item_count} ${esc(t('view.categorize.unit.items'))} · ${g.receipt_count} ${esc(t('view.categorize.unit.receipts'))}</span>

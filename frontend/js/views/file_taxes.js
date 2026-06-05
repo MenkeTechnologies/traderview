@@ -46,7 +46,7 @@ export async function renderTaxWizard(mount) {
     } catch (_) {}
 
     mount.innerHTML = `
-        <div class="tw-shell">
+        <div class="tw-shell" data-context-scope="tax-wiz-section">
             <header class="tw-head">
                 <h2>${esc(t('view.taxwiz.title'))} —
                     <select id="tw-year">

@@ -667,6 +667,54 @@ export function installContextMenu() {
             }
         })();
     });
+    // ── Budget view scope ────────────────────────────────────────────
+    // Row's <tr> carries data-code="<category_code>" so handlers can
+    // address the right category. Actions delegate to the view layer
+    // by clicking the existing action button (avoids re-implementing
+    // the API call + re-render logic).
+    window.addEventListener('tv:budget-pause-row', (e) => {
+        const code = dataFromTarget(e.detail, 'code');
+        if (!code) return;
+        const btn = document.querySelector(`button.bg-pause[data-code="${CSS.escape(code)}"]`);
+        if (btn) btn.click();
+    });
+    window.addEventListener('tv:budget-edit-limit', (e) => {
+        const code = dataFromTarget(e.detail, 'code');
+        if (!code) return;
+        const inp = document.querySelector(`input.bg-lim-input[data-code="${CSS.escape(code)}"]`);
+        if (inp) { inp.focus(); inp.select(); }
+    });
+    window.addEventListener('tv:budget-delete-row', (e) => {
+        const code = dataFromTarget(e.detail, 'code');
+        if (!code) return;
+        const btn = document.querySelector(`button.bg-del[data-code="${CSS.escape(code)}"]`);
+        if (btn) btn.click();
+    });
+
+    // ── Tax wizard scope ─────────────────────────────────────────────
+    window.addEventListener('tv:taxwiz-autopopulate', () => {
+        const btn = document.querySelector('#tw-autopop');
+        if (btn) btn.click();
+    });
+    window.addEventListener('tv:taxwiz-download-pdf', () => {
+        // The download anchor's URL is computed from STATE.year at
+        // render-time; clicking the anchor preserves that.
+        const a = document.querySelector('.tw-pane a[href*="/tax-filing/returns/"]');
+        if (a) a.click();
+    });
+
+    // ── Categorize view scope ────────────────────────────────────────
+    window.addEventListener('tv:categorize-apply-row', (e) => {
+        const i = dataFromTarget(e.detail, 'i');
+        if (i == null) return;
+        const btn = document.querySelector(`button.cz-apply[data-i="${CSS.escape(String(i))}"]`);
+        if (btn) btn.click();
+    });
+    window.addEventListener('tv:categorize-reload', () => {
+        const btn = document.querySelector('#cz-reload');
+        if (btn) btn.click();
+    });
+
     window.addEventListener('tv:toggle-favorite', () => {
         const vid = currentViewId();
         if (!vid) {

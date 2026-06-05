@@ -191,7 +191,7 @@ function renderCategories(mount, tok) {
                     const pct = Math.min(+c.pct || 0, 100);
                     const overPct = Math.max(0, (+c.pct || 0) - 100);
                     const barCls = c.over ? 'bg-bar-over' : (c.paused ? 'bg-bar-paused' : 'bg-bar-ok');
-                    return `<tr data-code="${esc(c.category_code)}" class="${c.over ? 'bg-row-over' : ''}">
+                    return `<tr data-code="${esc(c.category_code)}" data-context-scope="budget-row" class="${c.over ? 'bg-row-over' : ''}">
                         <td>${esc(c.label || c.category_code)} ${c.paused ? '<span class="bg-paused">paused</span>' : ''}</td>
                         <td class="num">${esc(fmtMoney(+c.spent || 0))}</td>
                         <td class="num">

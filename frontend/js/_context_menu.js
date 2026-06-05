@@ -398,6 +398,36 @@ export const EDITING_ITEMS = [
       actionKey: 'tv:edit-select-all', section: 'edit' },
 ];
 
+// Budget-view category row — right-click on a row in the #budget table
+// gives pause/resume, edit limit (jumps focus to the inline input),
+// delete budget. The data-code attribute on the <tr> identifies the
+// category; handlers in budget.js (added separately) read it.
+export const BUDGET_ROW_ITEMS = [
+    { id: 'budget_pause_row',    labelKey: 'ctxmenu.budget.pause_row',
+      actionKey: 'tv:budget-pause-row', section: 'view' },
+    { id: 'budget_edit_limit',   labelKey: 'ctxmenu.budget.edit_limit',
+      actionKey: 'tv:budget-edit-limit', section: 'edit' },
+    { id: 'budget_delete_row',   labelKey: 'ctxmenu.budget.delete_row',
+      actionKey: 'tv:budget-delete-row', section: 'destructive' },
+];
+
+// Tax-wizard section — right-click anywhere in the #file-taxes pane
+// gives quick access to autopopulate + PDF download.
+export const TAX_WIZ_ITEMS = [
+    { id: 'taxwiz_autopopulate', labelKey: 'ctxmenu.taxwiz.autopopulate',
+      actionKey: 'tv:taxwiz-autopopulate', section: 'view' },
+    { id: 'taxwiz_download_pdf', labelKey: 'ctxmenu.taxwiz.download_pdf',
+      actionKey: 'tv:taxwiz-download-pdf', section: 'view' },
+];
+
+// Categorize-view group row — right-click on a merchant group.
+export const CATEGORIZE_GROUP_ITEMS = [
+    { id: 'categorize_apply_row', labelKey: 'ctxmenu.categorize.apply',
+      actionKey: 'tv:categorize-apply-row', section: 'edit' },
+    { id: 'categorize_reload',    labelKey: 'ctxmenu.categorize.reload',
+      actionKey: 'tv:categorize-reload', section: 'view' },
+];
+
 // Aggregated registry of every scope-specific item set. Each entry is
 // `[scope, items]` so callers can iterate registrations or audit-tests
 // can validate the whole catalog without naming every constant. Order
@@ -421,6 +451,9 @@ export const ALL_SCOPED_ITEMS = [
     ['webhook-row',            WEBHOOK_ROW_ITEMS],
     ['strategy-alert-row',     STRATEGY_ALERT_ROW_ITEMS],
     ['trade-row',              TRADE_ROW_ITEMS],
+    ['budget-row',             BUDGET_ROW_ITEMS],
+    ['tax-wiz-section',        TAX_WIZ_ITEMS],
+    ['categorize-group',       CATEGORIZE_GROUP_ITEMS],
 ];
 
 // Same as `mergeMenu`, but additionally prepends `editingItems` (followed

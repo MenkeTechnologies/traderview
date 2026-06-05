@@ -183,6 +183,26 @@ pub fn extract(
 ///     backends contributed and the bulk-reocr endpoint can filter on
 ///     `non_ensemble` to re-process old single-engine extractions.
 fn combine_results(mut rs: Vec<OcrResult>) -> OcrResult {
+    // Defense-in-depth: the caller in `extract()` already returns
+    // `OcrError::Engine` before reaching here when every backend
+    // failed. Guard the merger anyway so a future caller that
+    // forgets the `is_empty` check doesn't get a panic from
+    // `Vec::remove(0)`.
+    if rs.is_empty() {
+        return OcrResult {
+            text: String::new(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
+            items: Vec::new(),
+            confidence: 0.0,
+            engine: "unknown".into(),
+        };
+    }
     if rs.len() == 1 {
         return rs.pop().unwrap();
     }
@@ -277,6 +297,91 @@ mod tests {
     fn extract_unknown_mime_is_unsupported() {
         let r = extract(b"data", "video/mp4", None);
         assert!(matches!(r, Err(OcrError::UnsupportedMime(s)) if s == "video/mp4"));
+    }
+
+    #[test]
+    fn ocr_line_item_defaults_tax_bucket_to_unclassified() {
+        // Old JSONB rows from before migration 0042 added `tax_bucket`
+        // lack the field. Deserializing one of those rows MUST default
+        // tax_bucket to "unclassified" so the receipt match modal
+        // renders the right pill instead of crashing.
+        let raw = r#"{
+            "name": "Burrito",
+            "line_total": "12.50",
+            "category": "meals"
+        }"#;
+        let item: OcrLineItem = serde_json::from_str(raw).expect("legacy item must parse");
+        assert_eq!(item.tax_bucket, "unclassified",
+            "missing tax_bucket must default to 'unclassified'");
+        assert_eq!(item.rental_property_id, None,
+            "missing rental_property_id must default to None");
+        assert_eq!(item.qty, None);
+        assert_eq!(item.unit_price, None);
+    }
+
+    #[test]
+    fn ocr_result_defaults_engine_to_unknown() {
+        // Old JSONB rows from before the engine-tag rollout lack the
+        // `engine` field. Deserialize must default it to "unknown" so
+        // the UI shows the muted "—" pill rather than crashing.
+        let raw = r#"{
+            "text": "TOTAL $50",
+            "merchant": "ACME",
+            "total": "50.00",
+            "confidence": 0.85,
+            "items": [],
+            "date": null
+        }"#;
+        let res: OcrResult = serde_json::from_str(raw).expect("legacy receipt must parse");
+        assert_eq!(res.engine, "unknown");
+    }
+
+    #[test]
+    fn ocr_result_round_trips_through_json_preserving_fields() {
+        // The wire contract — the receipt match modal in the frontend
+        // reads these exact fields. Any rename here breaks the UI
+        // silently (JS would render undefined). Round-trip pins the
+        // names AND values.
+        let original = OcrResult {
+            text: "raw OCR text".into(),
+            merchant: Some("Chipotle".into()),
+            address: Some("123 Mission St".into()),
+            date: chrono::NaiveDate::from_ymd_opt(2026, 5, 27),
+            time: chrono::NaiveTime::from_hms_opt(18, 30, 0),
+            subtotal: Some(rust_decimal::Decimal::new(4299, 2)),
+            tax: Some(rust_decimal::Decimal::new(395, 2)),
+            total: Some(rust_decimal::Decimal::new(4694, 2)),
+            items: vec![OcrLineItem {
+                name: "Burrito".into(),
+                qty: Some(rust_decimal::Decimal::ONE),
+                unit_price: Some(rust_decimal::Decimal::new(1099, 2)),
+                line_total: rust_decimal::Decimal::new(1099, 2),
+                category: "meals".into(),
+                tax_bucket: "business".into(),
+                rental_property_id: None,
+            }],
+            confidence: 0.94,
+            engine: "apple_vision".into(),
+        };
+        let json = serde_json::to_string(&original).expect("serialize");
+        // Every field name must appear in the wire format — pins the
+        // JSON keys the JS reads. (snake_case Rust field names map
+        // verbatim by default; serde rename_all isn't configured here.)
+        for key in [
+            "\"text\":", "\"merchant\":", "\"address\":", "\"date\":",
+            "\"time\":", "\"subtotal\":", "\"tax\":", "\"total\":",
+            "\"items\":", "\"confidence\":", "\"engine\":",
+            "\"name\":", "\"qty\":", "\"unit_price\":", "\"line_total\":",
+            "\"category\":", "\"tax_bucket\":", "\"rental_property_id\":",
+        ] {
+            assert!(json.contains(key), "wire field {key} missing from: {json}");
+        }
+        // And round-trip back to the same struct.
+        let back: OcrResult = serde_json::from_str(&json).expect("roundtrip");
+        assert_eq!(back.merchant, original.merchant);
+        assert_eq!(back.engine, original.engine);
+        assert_eq!(back.items.len(), 1);
+        assert_eq!(back.items[0].tax_bucket, "business");
     }
 
     #[test]
@@ -467,6 +572,19 @@ mod tests {
         let m = super::combine_results(vec![r.clone()]);
         assert_eq!(m.engine, r.engine);  // NOT prefixed with "ensemble:" when single
         assert_eq!(m.merchant, r.merchant);
+    }
+
+    #[test]
+    fn combine_results_empty_vec_returns_zero_default_no_panic() {
+        // Caller in extract() catches this earlier, but defense-in-depth:
+        // calling combine_results(vec![]) must NOT panic. Used to crash
+        // on Vec::remove(0) before the guard landed.
+        let m = super::combine_results(Vec::new());
+        assert_eq!(m.engine, "unknown");
+        assert_eq!(m.confidence, 0.0);
+        assert!(m.items.is_empty());
+        assert!(m.merchant.is_none());
+        assert_eq!(m.text, "");
     }
 
     #[test]

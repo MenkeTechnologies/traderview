@@ -133,6 +133,99 @@ mod tests {
         }
     }
 
+    /// Receipt with ALL fields None — no merchant, no total, no date.
+    /// score_one returns 0.0 for each component → total 0.0. With a
+    /// non-zero threshold, the candidate gets filtered out → empty
+    /// result. Critical: no panic, no NaN, no Inf.
+    #[test]
+    fn all_none_receipt_returns_empty_matches() {
+        let receipt = ReceiptFields {
+            merchant: None,
+            total: None,
+            date: None,
+        };
+        let cands = vec![cand(1, 15, -450, "blue bottle coffee")];
+        let matches = score(&receipt, &cands, 0.5);
+        assert!(matches.is_empty(),
+            "all-None receipt with threshold 0.5 must produce no matches");
+    }
+
+    /// Receipt with only merchant set (no total, no date) — partial
+    /// credit on merchant overlap only. Should produce a low score
+    /// but a non-panic, well-defined result.
+    #[test]
+    fn merchant_only_receipt_gives_partial_credit() {
+        let receipt = ReceiptFields {
+            merchant: Some("Blue Bottle Coffee".into()),
+            total: None,
+            date: None,
+        };
+        let cands = vec![cand(1, 15, -450, "blue bottle coffee")];
+        // amount_match = 0, date_proximity = 0, merchant_overlap = 1.0
+        // Total = 0.50*0 + 0.30*0 + 0.20*1.0 = 0.20.
+        // Below default threshold 0.6 → filtered out.
+        let none = score(&receipt, &cands, 0.5);
+        assert!(none.is_empty(), "score 0.20 < threshold 0.5 → filtered");
+        // Lower threshold 0.1 → included.
+        let some = score(&receipt, &cands, 0.1);
+        assert_eq!(some.len(), 1);
+        assert!((some[0].score - 0.20).abs() < 0.01,
+            "merchant-only match should score ~0.20, got {}", some[0].score);
+    }
+
+    /// Empty candidates Vec → empty results, no panic.
+    #[test]
+    fn empty_candidates_yields_empty_matches() {
+        let receipt = ReceiptFields {
+            merchant: Some("Anything".into()),
+            total: Some(Decimal::new(100, 2)),
+            date: Some(NaiveDate::from_ymd_opt(2026, 5, 15).unwrap()),
+        };
+        let matches = score(&receipt, &[], 0.0);
+        assert!(matches.is_empty());
+    }
+
+    /// Threshold of 1.0 only accepts a PERFECT match. With anything
+    /// less than perfect on any axis, score < 1.0 → filtered.
+    #[test]
+    fn threshold_1_0_only_accepts_perfect_match() {
+        let receipt = ReceiptFields {
+            merchant: Some("Uber".into()),
+            total: Some(Decimal::new(2500, 2)),
+            date: Some(NaiveDate::from_ymd_opt(2026, 5, 15).unwrap()),
+        };
+        // Same merchant + exact amount + exact date → score should
+        // approach 1.0. But not quite — Jaccard of "Uber" vs "Uber" is
+        // 1.0 ONLY if tokens match exactly. Let's pick a case where
+        // it's definitively below 1.0: date off by 1.
+        let cands = vec![cand(1, 16, -2500, "uber")];
+        let matches = score(&receipt, &cands, 1.0);
+        assert!(matches.is_empty(),
+            "threshold 1.0 must reject day-off-by-1 (score < 1.0)");
+    }
+
+    /// Threshold of 0.0 accepts everything — even zero-scoring
+    /// candidates. Defensive against `>= 0.0` vs `> 0.0` comparisons.
+    #[test]
+    fn threshold_0_accepts_all_candidates() {
+        let receipt = ReceiptFields {
+            merchant: None,
+            total: None,
+            date: None,
+        };
+        let cands = vec![
+            cand(1, 15, -450, "anything"),
+            cand(2, 16, -100, "else"),
+        ];
+        let matches = score(&receipt, &cands, 0.0);
+        assert_eq!(matches.len(), 2,
+            "threshold 0.0 must include every candidate");
+        // All should score exactly 0.0 (all None receipt fields).
+        for m in &matches {
+            assert_eq!(m.score, 0.0);
+        }
+    }
+
     #[test]
     fn exact_match_scores_high() {
         let receipt = ReceiptFields {

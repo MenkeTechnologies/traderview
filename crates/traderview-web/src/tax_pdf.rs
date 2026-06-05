@@ -325,6 +325,65 @@ mod tests {
         assert_valid_pdf(&bytes);
     }
 
+    /// End-to-end: render the PDF, parse it back with our own
+    /// `traderview_ocr::pdf::extract_text` (the PDF text-layer
+    /// extractor we use for receipts), confirm specific user-supplied
+    /// numbers actually landed in the content stream. Catches the
+    /// "printpdf reports success but the text was never written"
+    /// failure mode that the smoke tests can't detect.
+    #[test]
+    fn render_pdf_text_actually_contains_user_data() {
+        let draft = TaxReturn {
+            tax_year: 2025,
+            status: traderview_tax::FilingStatus::Single,
+            w2s: vec![W2 {
+                employer_name: "VERIFIABLE-EMPLOYER-XYZ".into(),
+                box_1_wages: Decimal::from(73_456),  // distinctive value
+                box_2_federal_income_tax_withheld: Decimal::from(8_500),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let result = compute_tax(&draft);
+        let bytes = render_pdf(2025, &draft, &result).expect("render");
+
+        let text = traderview_ocr::pdf::extract_text(&bytes)
+            .expect("the PDF we just made must be parseable by our extractor");
+
+        // Wages value must appear (we render as $73456.00 — check the
+        // bare number which is the most stable token across formatters).
+        // NOTE: employer name is NOT currently rendered in the PDF
+        // body — only aggregated totals are. If we ever add a W-2
+        // breakdown table to the PDF, add an employer-name assertion
+        // back here.
+        assert!(text.contains("73456"),
+            "wages amount $73,456 missing from PDF — printpdf may have \
+             dropped the dynamic value. Extract:\n{}", text);
+        // Withholding also flows through to the 1040 line 25.
+        assert!(text.contains("8500"),
+            "withholding $8,500 missing from PDF. Extract:\n{}", text);
+        // Form labels — pin that the section headers reach the text layer.
+        assert!(text.contains("1040") || text.contains("Form 1040"),
+            "Form 1040 header missing from PDF");
+    }
+
+    /// Empty return — verify the SUMMARY page still shows the "$0.00"
+    /// values explicitly (so the user knows the engine ran, not that
+    /// the page is blank).
+    #[test]
+    fn render_pdf_empty_return_still_shows_zero_values() {
+        let draft = TaxReturn::default();
+        let result = compute_tax(&draft);
+        let bytes = render_pdf(2025, &draft, &result).expect("render");
+        let text = traderview_ocr::pdf::extract_text(&bytes)
+            .expect("PDF must parse");
+        // The cover page must show the year + at least one labeled
+        // value. The exact format may evolve, so just check key labels.
+        assert!(text.contains("2025"), "tax year header missing from PDF");
+        assert!(text.contains("AGI") || text.contains("income"),
+            "expected income/AGI label, got:\n{}", text);
+    }
+
     #[test]
     fn render_pdf_handles_many_w2s() {
         // Filer with 10 W-2s (gig economy, multi-employer year). PDF

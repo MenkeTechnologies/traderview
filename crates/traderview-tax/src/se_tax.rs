@@ -161,6 +161,81 @@ mod tests {
     }
 
     #[test]
+    fn additional_medicare_single_at_threshold_via_w2_no_surtax() {
+        // Use the W-2 medicare wages dimension to land EXACTLY at the
+        // single threshold of $200k (combined = base + w2 medicare).
+        // net SE = $1 → base = 0.9235.
+        // W-2 medicare = 199,999.08 → combined ≈ 200,000.00.
+        // Over ≈ 0.0035 → surtax rounds to $0.00.
+        let r = compute(
+            Decimal::ONE,
+            Decimal::ZERO,
+            "199999.08".parse::<Decimal>().unwrap(),
+            FilingStatus::Single,
+        );
+        assert!(r.additional_medicare_tax <= "0.01".parse::<Decimal>().unwrap(),
+            "at threshold (combined ≈ $200k), surtax ≈ 0, got {}",
+            r.additional_medicare_tax);
+    }
+
+    #[test]
+    fn additional_medicare_single_clearly_above_threshold() {
+        // net SE = $1, W-2 medicare = $200,500. Combined ≈ $200,500.92.
+        // Over single threshold by ~$500.92.
+        // Surtax = 500.92 × 0.009 = 4.50828 → round_dp(2) = $4.51.
+        let r = compute(
+            Decimal::ONE,
+            Decimal::ZERO,
+            Decimal::from(200_500),
+            FilingStatus::Single,
+        );
+        assert_eq!(r.additional_medicare_tax, "4.51".parse::<Decimal>().unwrap());
+    }
+
+    #[test]
+    fn additional_medicare_mfj_threshold_is_250k() {
+        // MFJ threshold is $250k. Same $200,500 W-2 medicare that pushed
+        // single over → MFJ stays under, no surtax.
+        let r = compute(
+            Decimal::ONE,
+            Decimal::ZERO,
+            Decimal::from(200_500),
+            FilingStatus::Mfj,
+        );
+        assert_eq!(r.additional_medicare_tax, Decimal::ZERO,
+            "MFJ $200,500 combined < $250k threshold → 0 surtax");
+    }
+
+    #[test]
+    fn additional_medicare_mfs_lowest_threshold_125k() {
+        // MFS is the toughest — $125k threshold (half of MFJ).
+        // net SE = $1, W-2 medicare = $125,500 → combined ≈ $125,500.92.
+        // Over ≈ $500.92 → surtax = $4.51.
+        let r = compute(
+            Decimal::ONE,
+            Decimal::ZERO,
+            Decimal::from(125_500),
+            FilingStatus::Mfs,
+        );
+        assert_eq!(r.additional_medicare_tax, "4.51".parse::<Decimal>().unwrap());
+    }
+
+    #[test]
+    fn additional_medicare_w2_wages_combine_with_se_base_for_threshold() {
+        // Single with $150k W-2 Medicare wages + $80k net SE. SE base =
+        // $73,880. Combined = $223,880. Over threshold by $23,880.
+        // Surtax = 23,880 × 0.009 = 214.92.
+        let r = compute(
+            Decimal::from(80_000),
+            Decimal::from(150_000),
+            Decimal::from(150_000),
+            FilingStatus::Single,
+        );
+        assert_eq!(r.additional_medicare_tax, "214.92".parse::<Decimal>().unwrap(),
+            "W-2 Medicare wages must combine with SE base for threshold test");
+    }
+
+    #[test]
     fn mfj_threshold_is_higher() {
         // Same $250k net SE, MFJ threshold $250k. base $230,875 alone
         // doesn't cross MFJ threshold → no additional Medicare.

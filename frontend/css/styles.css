@@ -39,7 +39,14 @@ body.popout-mode #app { padding-top: 0 }
 
 /* ---- top bar ----------------------------------------------------- */
 .topbar {
-    position: relative; z-index: 10;
+    /* z-index 1000 — sits above dashboard tiles + chart containers
+       so that the `.tab-more-menu` dropdown, which is absolutely
+       positioned BELOW the topbar (top: calc(100% + 4px)), can render
+       above main-app content. At z-index: 10 the topbar's stacking
+       context was below dashboard widgets, and only the menu's cyan
+       border peeked through. Stays below toasts (10000), command
+       palette (9999), and dialogs (10001). */
+    position: relative; z-index: 1000;
     display: flex; align-items: center; gap: 12px;
     padding: 6px 14px;
     background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
@@ -113,8 +120,17 @@ body.popout-mode #app { padding-top: 0 }
 .tab-more-wrap { position: relative; display: inline-block; }
 .tab.tab-more { font-family: 'Share Tech Mono', monospace; }
 .tab-more-menu {
-    position: absolute; top: calc(100% + 4px); right: 0;
-    min-width: 180px; z-index: 250;
+    /* `position: fixed` (NOT absolute) — the topbar parent has
+       `overflow-x: auto`, which CLIPS any absolutely-positioned
+       descendant that extends outside its box. The menu hangs BELOW
+       the topbar's bottom edge, so it was being clipped to just the
+       border (the cyan U-shape the user reported). Fixed positioning
+       removes the menu from the topbar's containing block — JS sets
+       the top/right offsets at open-time based on the More button's
+       getBoundingClientRect(). z-index 5000 sits above main content,
+       below modals/toasts/dialogs. */
+    position: fixed;
+    min-width: 180px; z-index: 5000;
     background: var(--bg-card); border: 1px solid var(--cyan);
     border-radius: 2px; padding: 4px; display: flex; flex-direction: column;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px var(--cyan-glow);
@@ -791,6 +807,22 @@ label {
 .cal-tv-year { margin-left:auto; display:inline-flex; gap:0; border:1px solid var(--cyan); border-radius:2px; overflow:hidden }
 .cal-tv-year button { background:transparent; color:var(--text-muted); border:0; padding:6px 14px; font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:1.5px; cursor:pointer }
 .cal-tv-year button.active { background:var(--cyan); color:#000 }
+.cal-tv-year button:hover:not(.active) { color: var(--cyan); background: var(--cyan-dim); }
+.cal-tv-year button.has-data:not(.active)::after {
+    content: ' •'; color: var(--cyan); font-weight: bold;
+}
+.cal-tv-year-step {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 14px !important; padding: 4px 10px !important;
+}
+.cal-tv-year-input {
+    width: 70px; padding: 4px 6px;
+    background: transparent; color: var(--text); border: 0;
+    border-left: 1px solid var(--cyan);
+    font-family: 'Orbitron', sans-serif; font-size: 11px;
+    text-align: center; letter-spacing: 1px;
+}
+.cal-tv-year-input:focus { outline: none; background: var(--cyan-dim); }
 
 .cal-tv-active { background:var(--bg-card); border:1px solid var(--cyan); border-radius:2px; padding:14px; margin-bottom:18px }
 .cal-tv-active-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px }

@@ -826,6 +826,16 @@ function bindTabs() {
                 if (!menu) return;
                 const open = menu.classList.toggle('hidden');
                 btn.setAttribute('aria-expanded', String(!open));
+                // Menu is `position: fixed` to escape the topbar's
+                // `overflow-x: auto` clip. Compute viewport-relative
+                // coordinates from the More button's bounding rect on
+                // every open so window-resize between opens doesn't
+                // strand the menu.
+                if (!open) {
+                    const r = btn.getBoundingClientRect();
+                    menu.style.top = `${r.bottom + 4}px`;
+                    menu.style.right = `${Math.max(0, window.innerWidth - r.right)}px`;
+                }
                 return;
             }
             if (!btn.dataset.view) return;
@@ -2056,6 +2066,13 @@ function bindTabs() {
     window.addEventListener('tv:nav-live',        () => { window.location.hash = 'live'; });
     window.addEventListener('tv:nav-reports',     () => { window.location.hash = 'reports'; });
     window.addEventListener('tv:nav-scanner',     () => { window.location.hash = 'live-scanner'; });
+    // Session-added expense/tax/budget nav.
+    window.addEventListener('tv:nav-expenses',    () => { window.location.hash = 'expenses'; });
+    window.addEventListener('tv:nav-receipts',    () => { window.location.hash = 'receipts'; });
+    window.addEventListener('tv:nav-purchases',   () => { window.location.hash = 'purchases'; });
+    window.addEventListener('tv:nav-categorize',  () => { window.location.hash = 'categorize'; });
+    window.addEventListener('tv:nav-file-taxes',  () => { window.location.hash = 'file-taxes'; });
+    window.addEventListener('tv:nav-budget',      () => { window.location.hash = 'budget'; });
     // Toast on HUD toggles so keyboard-only users see feedback (the
     // visible change can be subtle in some scheme combos).
     window.addEventListener('tv:hud-toggled', (e) => {
