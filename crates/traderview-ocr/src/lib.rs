@@ -384,6 +384,149 @@ mod tests {
     }
 
     #[test]
+    fn combine_results_three_backend_ensemble_aggregates_engines() {
+        // 3 backends representing the Vision+Tesseract×2 production
+        // ensemble. Each gets a different field right; merger should
+        // pull the best from each and tag all three engines in the
+        // result label.
+        let vision = OcrResult {
+            text: "vision".into(),
+            merchant: Some("CHIPOTLE".into()),  // vision wins (highest conf)
+            address: None,
+            date: None,                          // missing
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: Some(rust_decimal::Decimal::new(4299, 2)),
+            items: Vec::new(),
+            confidence: 0.95,
+            engine: "apple_vision".into(),
+        };
+        let tess4 = OcrResult {
+            text: "tess4".into(),
+            merchant: None,
+            address: Some("123 Main St".into()), // tess4 contributes address
+            date: chrono::NaiveDate::from_ymd_opt(2026, 5, 27),
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
+            items: Vec::new(),
+            confidence: 0.85,
+            engine: "tesseract_psm4".into(),
+        };
+        let tess6 = OcrResult {
+            text: "tess6".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: chrono::NaiveTime::from_hms_opt(18, 30, 0),  // tess6 contributes time
+            subtotal: None,
+            tax: None,
+            total: None,
+            items: Vec::new(),
+            confidence: 0.75,
+            engine: "tesseract_psm6".into(),
+        };
+        let m = super::combine_results(vec![vision, tess4, tess6]);
+        // High-conf vision wins merchant + total.
+        assert_eq!(m.merchant.as_deref(), Some("CHIPOTLE"));
+        assert_eq!(m.total, Some(rust_decimal::Decimal::new(4299, 2)));
+        // Lower-conf backends contribute fields the higher-conf missed.
+        assert_eq!(m.address.as_deref(), Some("123 Main St"));
+        assert!(m.date.is_some());
+        assert!(m.time.is_some());
+        // Engine label carries all three backends in confidence-sorted order.
+        assert_eq!(m.engine, "ensemble:apple_vision+tesseract_psm4+tesseract_psm6");
+        // Confidence = max.
+        assert_eq!(m.confidence, 0.95);
+    }
+
+    #[test]
+    fn combine_results_handles_two_empty_backends() {
+        // Both backends returned nothing useful (very low quality
+        // image). Merger should not panic and should produce a result
+        // whose engine label still tags both.
+        let mk = |engine: &str, conf: f32| OcrResult {
+            text: String::new(),
+            merchant: None, address: None,
+            date: None, time: None,
+            subtotal: None, tax: None, total: None,
+            items: Vec::new(),
+            confidence: conf,
+            engine: engine.to_string(),
+        };
+        let m = super::combine_results(vec![mk("apple_vision", 0.5), mk("tesseract_psm4", 0.4)]);
+        assert!(m.engine.starts_with("ensemble:"));
+        assert!(m.merchant.is_none());
+        assert!(m.items.is_empty());
+    }
+
+    #[test]
+    fn combine_results_items_partial_overlap_unions_correctly() {
+        // Vision finds 3 items; Tesseract finds 2 (one overlap, one
+        // unique). Final items = 4 (union).
+        let mk_item = |name: &str, total: i64| OcrLineItem {
+            name: name.into(), qty: None, unit_price: None,
+            line_total: rust_decimal::Decimal::from(total),
+            category: "meals".into(), tax_bucket: "business".into(),
+            rental_property_id: None,
+        };
+        let vision = OcrResult {
+            text: "v".into(), merchant: None, address: None,
+            date: None, time: None, subtotal: None, tax: None, total: None,
+            items: vec![mk_item("Burrito", 12), mk_item("Chips", 4), mk_item("Drink", 3)],
+            confidence: 0.9, engine: "apple_vision".into(),
+        };
+        let tess = OcrResult {
+            text: "t".into(), merchant: None, address: None,
+            date: None, time: None, subtotal: None, tax: None, total: None,
+            // "Burrito" duplicates Vision's; "Tip" is unique to Tesseract.
+            items: vec![mk_item("Burrito", 12), mk_item("Tip", 2)],
+            confidence: 0.8, engine: "tesseract_psm4".into(),
+        };
+        let m = super::combine_results(vec![vision, tess]);
+        assert_eq!(m.items.len(), 4,
+            "expected 4 unique items, got: {:?}",
+            m.items.iter().map(|i| &i.name).collect::<Vec<_>>());
+        // Ordering preserved: vision items first (highest conf), then
+        // unique-to-tesseract entries appended.
+        assert_eq!(m.items[0].name, "Burrito");
+        assert!(m.items.iter().any(|i| i.name == "Tip"),
+            "tess-unique 'Tip' must survive the union");
+    }
+
+    #[test]
+    fn combine_results_items_same_name_different_total_kept_separately() {
+        // Two backends saw the same merchant but caught DIFFERENT
+        // totals on a same-named row (OCR ambiguity on a smudged
+        // digit). The merger keys on (name, total) — so both rows
+        // survive, which is the safe behavior: the user reviews
+        // both, deletes the wrong one.
+        let mk_item = |name: &str, total: i64| OcrLineItem {
+            name: name.into(), qty: None, unit_price: None,
+            line_total: rust_decimal::Decimal::from(total),
+            category: "meals".into(), tax_bucket: "business".into(),
+            rental_property_id: None,
+        };
+        let a = OcrResult {
+            text: "a".into(), merchant: None, address: None,
+            date: None, time: None, subtotal: None, tax: None, total: None,
+            items: vec![mk_item("Burrito", 12)],
+            confidence: 0.9, engine: "apple_vision".into(),
+        };
+        let b = OcrResult {
+            text: "b".into(), merchant: None, address: None,
+            date: None, time: None, subtotal: None, tax: None, total: None,
+            items: vec![mk_item("Burrito", 13)],  // smudged 2 → 3
+            confidence: 0.8, engine: "tesseract_psm4".into(),
+        };
+        let m = super::combine_results(vec![a, b]);
+        assert_eq!(m.items.len(), 2,
+            "different totals must NOT be deduped — user reviews both");
+    }
+
+    #[test]
     fn error_display_is_user_actionable() {
         // The frontend surfaces these messages directly. Each must hint at
         // the corrective action (no opaque "internal error"-style strings).

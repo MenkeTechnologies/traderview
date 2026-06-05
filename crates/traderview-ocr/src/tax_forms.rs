@@ -480,6 +480,96 @@ Nonemployee compensation $12,345.67
     }
 
     #[test]
+    fn detect_takes_first_match_when_multiple_markers_present() {
+        // A W-2 transmittal cover sheet that mentions "1099-INT" in
+        // the body (e.g., "see related 1099-INT") must still be
+        // classified as W-2 since the W-2 title comes first.
+        let text = "Form W-2 Wage and Tax Statement\nNote: see related 1099-INT statement";
+        assert_eq!(detect(text), Some(TaxFormKind::W2));
+    }
+
+    #[test]
+    fn extract_w2_employer_name_skips_address_label_line() {
+        // Real W-2 forms put "Employer's name, address, and ZIP" as a
+        // header, then the actual name on the next line. The parser
+        // must not return the label text itself as the employer name.
+        let text = "\
+Form W-2 Wage and Tax Statement
+Employer's name, address, and ZIP
+Acme Corp
+9000 Industrial Way
+Wages, tips, other compensation 50000.00
+";
+        let r = extract(text).expect("w2");
+        assert_eq!(r.party_name.as_deref(), Some("Acme Corp"),
+            "must skip the labeled-section header, not return it as the name");
+    }
+
+    #[test]
+    fn extract_long_garbled_text_does_not_panic() {
+        // OCR engines sometimes emit massive line concatenations
+        // without spacing on smudged images. Pin that parse_amount
+        // doesn't go quadratic + doesn't panic on >10kb single lines.
+        let mut text = String::from("Form W-2 Wage and Tax Statement\nWages, tips, other compensation ");
+        text.push_str(&"x".repeat(5_000));
+        text.push_str(" 12345.67");
+        let r = extract(&text);
+        // Either it found the number (if no x's in between threw it
+        // off — depends on parse_amount's scanning) OR it didn't,
+        // but it MUST NOT panic.
+        assert!(r.is_some(), "should still detect W-2 by title");
+    }
+
+    #[test]
+    fn extract_unicode_in_employer_name_preserved() {
+        // Real-world employer names include accents (Café Latté Co.),
+        // CJK (株式会社), and emoji. Parser must round-trip them.
+        let text = "\
+Form W-2 Wage and Tax Statement
+Employer's name
+Café Latté Co. 株式会社
+Wages, tips, other compensation 75000.00
+";
+        let r = extract(text).expect("w2");
+        assert_eq!(r.party_name.as_deref(), Some("Café Latté Co. 株式会社"));
+        assert_eq!(r.payload.get("box_1"), Some(&"75000.00".parse().unwrap()));
+    }
+
+    #[test]
+    fn extract_missing_all_amounts_returns_zero_confidence() {
+        // A W-2 title with NO box content (extreme OCR failure on a
+        // dark image) should produce a TaxFormExtract with zero
+        // confidence — not a None.
+        let r = extract("Form W-2 Wage and Tax Statement").expect("title-only still detects W-2");
+        assert_eq!(r.confidence, 0.0);
+        assert!(r.payload.is_empty());
+    }
+
+    #[test]
+    fn extract_w2_does_not_pick_up_following_box_value_for_zero_box() {
+        // When a box's value is "0.00" and the next box's label
+        // immediately follows, the parser must not skip past the 0
+        // and accidentally claim the next box's value.
+        let text = "\
+Form W-2 Wage and Tax Statement
+Wages, tips, other compensation 0.00
+Federal income tax withheld 1500.00
+";
+        let r = extract(text).expect("w2");
+        assert_eq!(r.payload.get("box_1"), Some(&"0.00".parse().unwrap()));
+        assert_eq!(r.payload.get("box_2"), Some(&"1500.00".parse().unwrap()),
+            "box 2 should be 1500, not 0 (the parser must not collapse adjacent zeros)");
+    }
+
+    #[test]
+    fn extract_random_text_with_form_word_does_not_misclassify() {
+        // A receipt or email that happens to contain the word "form"
+        // and a dollar sign should NOT be detected as a tax form.
+        assert_eq!(detect("Form completion required: please submit $100"), None);
+        assert!(extract("Form completion required: please submit $100").is_none());
+    }
+
+    #[test]
     fn confidence_proportional_to_boxes_recovered() {
         // 1099-INT has 5 known box labels. A complete extraction →
         // confidence ≈ 1.0. A 1-of-5 extraction → ~0.2.
