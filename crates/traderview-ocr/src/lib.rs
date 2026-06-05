@@ -390,7 +390,11 @@ mod tests {
         // structs accept — using a clone of the same shape here as a
         // public contract test. If the Swift sidecar changes its JSON
         // output, this catches the divergence.
+        // `confidence` is part of the wire contract being pinned even
+        // though the assertions in this test only read `text`. Without
+        // the allow, the dead-code lint fires on the test struct field.
         #[derive(serde::Deserialize)]
+        #[allow(dead_code)]
         struct VL { text: String, #[serde(default)] confidence: f32 }
         #[derive(serde::Deserialize)]
         struct VO {

@@ -1758,6 +1758,25 @@ button.rule-del {
     display: flex; flex-direction: column; align-items: center;
 }
 .tw-refund-block strong, .tw-owed-block strong { font-size: 20px; }
+.tw-sh-grid, .tw-wi-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+    margin: 8px 0;
+}
+.tw-sh-grid > div, .tw-wi-grid > div {
+    display: flex; flex-direction: column;
+    padding: 6px 8px; background: var(--bg-secondary); border-radius: 2px;
+}
+.tw-sh-grid span, .tw-wi-grid span {
+    font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+}
+.tw-sh-grid strong, .tw-wi-grid strong { font-size: 14px; }
+.tw-wi-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 3px;
+}
+.tw-wi-bottom strong { font-size: 18px; }
+.tw-card .err { color: #ff5577; padding: 6px 0; }
 .tw-warn {
     margin: 10px 0; padding: 8px 12px;
     border: 1px solid #ffb050; border-radius: 2px;

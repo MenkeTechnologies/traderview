@@ -12,7 +12,7 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
-use axum::extract::{Multipart, Path, State};
+use axum::extract::{Multipart, Path, Query, State};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use chrono::{Datelike, Utc};
@@ -21,6 +21,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use traderview_tax::{compute as compute_tax, TaxReturn, TaxResult};
+use traderview_tax::safe_harbor::{self, SafeHarborInput, SafeHarborResult, BindingHarbor};
+use traderview_tax::what_if::{self, Scenario, WhatIfResult};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -28,6 +30,8 @@ pub fn router() -> Router<AppState> {
         .route("/returns/:year/autopopulate", post(autopopulate))
         .route("/returns/:year/compute", get(compute_endpoint))
         .route("/returns/:year/pdf", get(crate::tax_pdf::generate_pdf))
+        .route("/returns/:year/safe-harbor", get(safe_harbor_endpoint))
+        .route("/returns/:year/what-if", post(what_if_endpoint))
         .route("/forms/upload", post(upload_form))
         .route("/forms/:year", get(list_forms))
 }
@@ -293,6 +297,108 @@ async fn autopopulate(
 }
 
 // ── W-2 / 1099 OCR upload ──────────────────────────────────────────────
+
+// ── Quarterly safe-harbor calculator ─────────────────────────────────
+
+#[derive(Deserialize)]
+struct SafeHarborParams {
+    /// Quarter to compute through. 1 = Q1 (Apr 15), 2 = Q2 (Jun 15),
+    /// 3 = Q3 (Sep 15), 4 = Q4 (Jan 15 of next year).
+    #[serde(default = "default_quarter")]
+    quarter: u32,
+    /// Optional override for prior-year tax — when the caller didn't
+    /// file the prior year through this app and can't auto-pull. When
+    /// absent, we read tax_returns for `tax_year - 1` and use that
+    /// row's computed tax_owed + total_payments as the liability.
+    #[serde(default)]
+    prior_year_tax: Option<Decimal>,
+    /// Same for prior-year AGI (determines 100% vs 110% rule).
+    #[serde(default)]
+    prior_year_agi: Option<Decimal>,
+}
+
+fn default_quarter() -> u32 {
+    // Use the current calendar quarter so first-load lands on the
+    // user's "next due date" rather than always Q1.
+    let now = Utc::now();
+    let month = now.month();
+    match month {
+        1..=3   => 1,
+        4..=5   => 2,   // Q2 covers Jun 15 deadline
+        6..=8   => 3,
+        _       => 4,
+    }
+}
+
+async fn safe_harbor_endpoint(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(year): Path<i32>,
+    Query(params): Query<SafeHarborParams>,
+) -> Result<Json<SafeHarborResult>, ApiError> {
+    // Current-year draft — used for projected tax + estimated YTD.
+    let (_, draft) = load_or_create(&s, user.id, year).await?;
+    let current_result = compute_tax(&draft);
+
+    // Pull prior-year tax + AGI either from the override params or
+    // from the user's prior-year return.
+    let (prior_year_tax, prior_year_agi) = match (params.prior_year_tax, params.prior_year_agi) {
+        (Some(t), Some(a)) => (t, a),
+        _ => {
+            let row: Option<(Decimal, Decimal)> = sqlx::query_as(
+                "SELECT COALESCE(tax_owed, 0) + COALESCE(refund_due, 0), COALESCE(agi, 0)
+                   FROM tax_returns WHERE user_id = $1 AND tax_year = $2",
+            )
+            .bind(user.id)
+            .bind(year - 1)
+            .fetch_optional(&s.pool)
+            .await?;
+            row.unwrap_or((Decimal::ZERO, Decimal::ZERO))
+        }
+    };
+
+    let w2_wh: Decimal = draft.w2s.iter().map(|w| w.box_2_federal_income_tax_withheld).sum();
+
+    let input = SafeHarborInput {
+        prior_year_tax,
+        prior_year_agi,
+        filing_status: draft.status,
+        current_year_projected_tax: current_result.tax_after_credits,
+        w2_withholding_ytd: w2_wh,
+        estimated_paid_ytd: draft.estimated_tax_payments,
+        current_quarter: params.quarter,
+    };
+    Ok(Json(safe_harbor::compute(input)))
+}
+
+// ── "What-if" delta endpoint ──────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct WhatIfBody {
+    scenario: Scenario,
+}
+
+async fn what_if_endpoint(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(year): Path<i32>,
+    Json(body): Json<WhatIfBody>,
+) -> Result<Json<WhatIfResult>, ApiError> {
+    let (_, draft) = load_or_create(&s, user.id, year).await?;
+    let result = what_if::compute_what_if(&draft, body.scenario)
+        .ok_or_else(|| ApiError::BadRequest(
+            "scenario.path not recognized — see what_if::Scenario doc for valid field slugs"
+                .into(),
+        ))?;
+    Ok(Json(result))
+}
+
+// Silence "BindingHarbor unused" — we re-export it from the route file's
+// crate-level imports so the OpenAPI / client-side type generators can
+// see the variant names. Touch via a noop assertion to anchor the
+// dependency.
+#[allow(dead_code)]
+fn _anchor_binding_harbor() -> BindingHarbor { BindingHarbor::default() }
 
 #[derive(Serialize)]
 struct FormUploadResult {

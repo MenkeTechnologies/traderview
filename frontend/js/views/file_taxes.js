@@ -544,9 +544,119 @@ function renderReview(pane, mount, tok) {
             </div>
         </div>
         ${r.qbi_needs_manual_review ? `<div class="tw-warn">${esc(t('view.taxwiz.review.qbi_warn'))}</div>` : ''}
+
+        <section class="tw-card">
+            <header><strong>${esc(t('view.taxwiz.safe_harbor.h'))}</strong>
+                <select id="tw-sh-quarter">
+                    <option value="1">${esc(t('view.taxwiz.safe_harbor.q1'))}</option>
+                    <option value="2">${esc(t('view.taxwiz.safe_harbor.q2'))}</option>
+                    <option value="3">${esc(t('view.taxwiz.safe_harbor.q3'))}</option>
+                    <option value="4">${esc(t('view.taxwiz.safe_harbor.q4'))}</option>
+                </select>
+                <button type="button" id="tw-sh-run" class="btn btn-secondary btn-compact">
+                    ${esc(t('view.taxwiz.safe_harbor.run'))}
+                </button>
+            </header>
+            <p class="muted small">${esc(t('view.taxwiz.safe_harbor.hint'))}</p>
+            <div id="tw-sh-out"></div>
+        </section>
+
+        <section class="tw-card">
+            <header><strong>${esc(t('view.taxwiz.what_if.h'))}</strong>
+                <select id="tw-wi-path">
+                    <option value="ira_deduction">${esc(t('view.taxwiz.what_if.ira'))}</option>
+                    <option value="hsa_deduction">${esc(t('view.taxwiz.what_if.hsa'))}</option>
+                    <option value="qualifying_children_under_17">${esc(t('view.taxwiz.what_if.kids'))}</option>
+                    <option value="estimated_tax_payments">${esc(t('view.taxwiz.what_if.estimated'))}</option>
+                    <option value="schedule_c_net_profit">${esc(t('view.taxwiz.what_if.sched_c'))}</option>
+                    <option value="w2_box_1_wages_total">${esc(t('view.taxwiz.what_if.wages'))}</option>
+                </select>
+                <input type="number" id="tw-wi-value" step="0.01" placeholder="${esc(t('view.taxwiz.what_if.placeholder'))}" />
+                <button type="button" id="tw-wi-run" class="btn btn-secondary btn-compact">
+                    ${esc(t('view.taxwiz.what_if.run'))}
+                </button>
+            </header>
+            <p class="muted small">${esc(t('view.taxwiz.what_if.hint'))}</p>
+            <div id="tw-wi-out"></div>
+        </section>
+
         ${navButtons('download', 'other_taxes')}
     `;
     wireNav(pane, mount, tok);
+    wireSafeHarbor(pane, tok);
+    wireWhatIf(pane, tok);
+}
+
+async function wireSafeHarbor(pane, tok) {
+    pane.querySelector('#tw-sh-run').addEventListener('click', async () => {
+        const q = pane.querySelector('#tw-sh-quarter').value;
+        const out = pane.querySelector('#tw-sh-out');
+        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        try {
+            const r = await api.taxSafeHarbor(STATE.year, { quarter: q });
+            if (!viewIsCurrent(tok)) return;
+            const cls = +r.additional_due_this_quarter > 0 ? 'tw-owed' : 'tw-refund';
+            out.innerHTML = `
+                <div class="tw-sh-grid">
+                    <div><span>${esc(t('view.taxwiz.safe_harbor.binding'))}</span>
+                        <strong>${esc(r.binding_harbor === 'prior_year'
+                            ? t('view.taxwiz.safe_harbor.binding_prior')
+                            : t('view.taxwiz.safe_harbor.binding_current'))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.safe_harbor.annual_floor'))}</span>
+                        <strong>${esc(fmtMoney(+r.annual_floor))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.safe_harbor.cumulative_target'))}</span>
+                        <strong>${esc(fmtMoney(+r.cumulative_target))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.safe_harbor.paid_to_date'))}</span>
+                        <strong>${esc(fmtMoney(+r.paid_to_date))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.safe_harbor.due'))}</span>
+                        <strong class="${cls}">${esc(fmtMoney(+r.additional_due_this_quarter))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.safe_harbor.surplus'))}</span>
+                        <strong class="tw-refund">${esc(fmtMoney(+r.surplus))}</strong></div>
+                </div>
+                ${r.prior_year_high_income ? `<p class="muted small">${esc(t('view.taxwiz.safe_harbor.high_income_note'))}</p>` : ''}
+            `;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `<div class="err">${esc(t('view.taxwiz.safe_harbor.err', { err: e.message }))}</div>`;
+        }
+    });
+}
+
+async function wireWhatIf(pane, tok) {
+    pane.querySelector('#tw-wi-run').addEventListener('click', async () => {
+        const path = pane.querySelector('#tw-wi-path').value;
+        const value = Number(pane.querySelector('#tw-wi-value').value);
+        if (!Number.isFinite(value)) return;
+        const out = pane.querySelector('#tw-wi-out');
+        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        try {
+            const r = await api.taxWhatIf(STATE.year, { path, value: String(value) });
+            if (!viewIsCurrent(tok)) return;
+            const netCls = +r.net_dollar_change_in_pocket >= 0 ? 'tw-refund' : 'tw-owed';
+            const sign = +r.net_dollar_change_in_pocket >= 0 ? '+' : '';
+            out.innerHTML = `
+                <div class="tw-wi-grid">
+                    <div><span>${esc(t('view.taxwiz.what_if.delta_agi'))}</span>
+                        <strong>${esc(fmtMoney(+r.delta_agi))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.what_if.delta_taxable'))}</span>
+                        <strong>${esc(fmtMoney(+r.delta_taxable_income))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.what_if.delta_tax'))}</span>
+                        <strong>${esc(fmtMoney(+r.delta_total_tax))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.what_if.delta_refund'))}</span>
+                        <strong class="tw-refund">${esc(fmtMoney(+r.delta_refund_due))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.what_if.delta_owed'))}</span>
+                        <strong class="tw-owed">${esc(fmtMoney(+r.delta_tax_owed))}</strong></div>
+                </div>
+                <div class="tw-wi-bottom">
+                    <span>${esc(t('view.taxwiz.what_if.net'))}</span>
+                    <strong class="${netCls}">${sign}${esc(fmtMoney(+r.net_dollar_change_in_pocket))}</strong>
+                </div>
+            `;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `<div class="err">${esc(t('view.taxwiz.what_if.err', { err: e.message }))}</div>`;
+        }
+    });
 }
 
 function renderDownload(pane, mount, tok) {

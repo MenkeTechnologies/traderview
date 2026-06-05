@@ -353,6 +353,14 @@ export const api = {
         return request('/tax-filing/forms/upload', { method: 'POST', body: fd });
     },
     listTaxForms: (year) => request(`/tax-filing/forms/${year}`),
+    taxSafeHarbor: (year, params = {}) => {
+        const s = qs(params);
+        return request(`/tax-filing/returns/${year}/safe-harbor${s ? '?' + s : ''}`);
+    },
+    taxWhatIf: (year, scenario) => request(`/tax-filing/returns/${year}/what-if`, {
+        method: 'POST',
+        body: JSON.stringify({ scenario }),
+    }),
 
     // --- budgeting ------------------------------------------------------
     listBudgets: () => request('/budget/'),

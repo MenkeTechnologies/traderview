@@ -16,7 +16,7 @@ use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::extract::{Path, Query, State};
-use axum::routing::{delete, get, put};
+use axum::routing::{get, put};
 use axum::{Json, Router};
 use chrono::{Datelike, Utc};
 use rust_decimal::Decimal;
@@ -400,8 +400,12 @@ mod logic {
 
     /// Reusable shape mirroring `CategoryProgress` — same fields the
     /// snapshot handler computes. The sort + count helpers below take
-    /// this so the test fixtures stay readable.
+    /// this so the test fixtures stay readable. `limit` and `paused`
+    /// are populated by the test cases (kept to match the production
+    /// shape) but the helpers being tested only read `code`, `spent`,
+    /// and `over` — hence the dead-code allow.
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     struct CP {
         code: &'static str,
         spent: Decimal,

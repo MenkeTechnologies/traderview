@@ -20,5 +20,9 @@ pub mod se_tax;
 pub mod qbi;
 pub mod credits;
 pub mod engine;
+pub mod safe_harbor;
+pub mod what_if;
 
 pub use engine::{TaxReturn, TaxResult, FilingStatus, compute};
+pub use safe_harbor::{SafeHarborInput, SafeHarborResult, compute as compute_safe_harbor};
+pub use what_if::{Scenario, WhatIfResult, compute_what_if};
