@@ -14,7 +14,7 @@ import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
-import { tConfirm } from '../dialog.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 import { openReceiptMatchModal } from './expenses.js';
 
 // View-local state. Survives re-renders but resets on route change.
@@ -393,9 +393,10 @@ async function bulkReclassify(mount, tok) {
     // bulk path (the full 21-category list is overkill for batch
     // re-classification).
     const BUCKETS = ['business', 'rental', 'personal', 'unclassified'];
-    const bucket = window.prompt(
-        t('view.receipts.bulk_reclassify.bucket_prompt', { buckets: BUCKETS.join(' / ') }),
-        'business',
+    const bucket = await tPrompt(
+        'view.receipts.bulk_reclassify.bucket_prompt',
+        { buckets: BUCKETS.join(' / ') },
+        { defaultValue: 'business' },
     );
     if (!bucket) return;
     if (!BUCKETS.includes(bucket)) {
@@ -411,9 +412,10 @@ async function bulkReclassify(mount, tok) {
                 return;
             }
             const label = props.map((p, i) => `${i + 1}. ${p.nickname || p.id}`).join('\n');
-            const choice = window.prompt(
-                t('view.receipts.bulk_reclassify.property_prompt', { list: label }),
-                '1',
+            const choice = await tPrompt(
+                'view.receipts.bulk_reclassify.property_prompt',
+                { list: label },
+                { defaultValue: '1' },
             );
             const n = parseInt(choice, 10);
             if (!Number.isFinite(n) || n < 1 || n > props.length) {

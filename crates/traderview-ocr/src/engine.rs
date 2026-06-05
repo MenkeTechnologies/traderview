@@ -614,41 +614,55 @@ mod tests {
     /// Use the test binary itself as the "real file" so we know it
     /// exists. Restore the env var afterward.
     ///
-    /// SAFETY: env::set_var is racy across threads. Use a Mutex-style
-    /// guard via a serial-only filter so multiple env-var tests don't
-    /// stomp each other. (Single test here — no contention.)
+    /// Combined env-var test — `env::set_var` is process-global, so
+    /// splitting the override-honors-real-path and override-rejects-bad-path
+    /// cases into separate `#[test]` fns lets cargo's parallel runner
+    /// race them and flake. One serialized test covers both code paths.
+    ///
+    /// SAFETY: We acquire a process-local mutex to fence against ANY other
+    /// test in this crate that touches `TV_OCR_VISION_BIN`. Restoring the
+    /// prior value before asserting prevents a panic from poisoning the
+    /// env for subsequent tests.
     #[test]
-    fn find_vision_binary_respects_env_var_when_file_exists() {
-        let real_file = std::env::current_exe().expect("test binary path");
-        let prior = std::env::var("TV_OCR_VISION_BIN").ok();
-        unsafe { std::env::set_var("TV_OCR_VISION_BIN", &real_file); }
-        let got = find_vision_binary();
-        // Restore before asserting (don't poison the env on assertion failure).
-        match prior {
-            Some(v) => unsafe { std::env::set_var("TV_OCR_VISION_BIN", v); },
-            None    => unsafe { std::env::remove_var("TV_OCR_VISION_BIN"); },
-        }
-        assert_eq!(got, Some(real_file),
-            "explicit env override pointing at a real file must win");
-    }
+    fn find_vision_binary_env_var_override() {
+        use std::sync::Mutex;
+        // Process-local lock. `static` Mutex is initialized lazily; no
+        // global state escapes the test binary.
+        static ENV_LOCK: Mutex<()> = Mutex::new(());
+        // PoisonError just means a previous test panicked while holding
+        // the lock — recover and proceed (the env was already restored
+        // by THAT test's own cleanup, so we're not poisoning state).
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
 
-    /// TV_OCR_VISION_BIN points to a NON-existent file → fall through to
-    /// the next discovery step (don't return the bad path).
-    #[test]
-    fn find_vision_binary_falls_through_when_env_path_missing() {
         let prior = std::env::var("TV_OCR_VISION_BIN").ok();
+        let restore = |prior: &Option<String>| {
+            match prior {
+                Some(v) => unsafe { std::env::set_var("TV_OCR_VISION_BIN", v); },
+                None    => unsafe { std::env::remove_var("TV_OCR_VISION_BIN"); },
+            }
+        };
+
+        // ── Case 1: env points at a REAL file → return it verbatim ──
+        let real_file = std::env::current_exe().expect("test binary path");
+        unsafe { std::env::set_var("TV_OCR_VISION_BIN", &real_file); }
+        let got_real = find_vision_binary();
+
+        // ── Case 2: env points at a non-existent file → fall through ──
         let bogus = "/no/such/path/tv-ocr-vision-does-not-exist";
         unsafe { std::env::set_var("TV_OCR_VISION_BIN", bogus); }
-        let got = find_vision_binary();
-        match prior {
-            Some(v) => unsafe { std::env::set_var("TV_OCR_VISION_BIN", v); },
-            None    => unsafe { std::env::remove_var("TV_OCR_VISION_BIN"); },
-        }
-        // Must NOT have returned the bogus path. (Might return a real
-        // sidecar found at one of the other steps — that's fine.)
-        assert_ne!(got.as_deref().map(|p| p.to_string_lossy().into_owned()),
-                   Some(bogus.to_string()),
-                   "bogus env-var path must not be returned");
+        let got_bogus = find_vision_binary();
+
+        // Restore BEFORE asserting so a failure here doesn't leave the
+        // env in a polluted state for later tests.
+        restore(&prior);
+
+        assert_eq!(got_real, Some(real_file),
+            "explicit env override pointing at a real file must win");
+        assert_ne!(
+            got_bogus.as_deref().map(|p| p.to_string_lossy().into_owned()),
+            Some(bogus.to_string()),
+            "bogus env-var path must not be returned"
+        );
     }
 
     /// Sauvola sanity — a half-black/half-white test image binarizes

@@ -644,10 +644,10 @@ async function renderQuarterlyStrip(mount, year, netTaxable) {
     const addBtn = wrap.querySelector('#quarterly-add');
     if (addBtn) {
         addBtn.addEventListener('click', async () => {
-            const qStr = window.prompt(t('view.expenses.tax.quarterly.prompt_q'), '1');
+            const qStr = await tPrompt('view.expenses.tax.quarterly.prompt_q', {}, { defaultValue: '1' });
             const q = parseInt(qStr, 10);
             if (!(q >= 1 && q <= 4)) return;
-            const amtStr = window.prompt(t('view.expenses.tax.quarterly.prompt_amount'), '0');
+            const amtStr = await tPrompt('view.expenses.tax.quarterly.prompt_amount', {}, { defaultValue: '0' });
             const amount = Number(amtStr);
             if (!Number.isFinite(amount) || amount <= 0) return;
             const today = new Date().toISOString().slice(0, 10);
