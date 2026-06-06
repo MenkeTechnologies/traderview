@@ -139,6 +139,8 @@ pub struct TaxResult {
     pub tax_after_credits: Decimal,
     /// Net investment income tax (IRC § 1411, 3.8%).
     pub niit: crate::niit::NiitResult,
+    /// Alternative Minimum Tax (IRC §§ 55-59, Form 6251).
+    pub amt: crate::amt::AmtResult,
     pub total_payments: Decimal,
     pub refund_due: Decimal,
     pub tax_owed: Decimal,
@@ -262,8 +264,28 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
     });
     result.niit = niit;
 
+    // ── 6.6) AMT (IRC §§ 55-59) ────────────────────────────────────────
+    // SALT addback only applies when itemized was used. Standard
+    // deduction is NOT added back under TCJA (2018-2025).
+    let salt_addback = if result.deduction_label == "itemized" {
+        r.itemized
+            .state_and_local_taxes_capped_at_10k
+            .min(Decimal::from(10_000))
+    } else {
+        Decimal::ZERO
+    };
+    let amt = crate::amt::compute(crate::amt::AmtInput {
+        taxable_income: result.taxable_income,
+        regular_tax: result.ordinary_tax,
+        salt_deduction_used: salt_addback,
+        additional_preferences: Decimal::ZERO,
+        status: r.status,
+    });
+    result.amt = amt;
+
     result.tax_after_credits =
-        (result.ordinary_tax - nonref_credit + se.total + niit.tax).max(Decimal::ZERO);
+        (result.ordinary_tax - nonref_credit + se.total + niit.tax + amt.amt_owed)
+            .max(Decimal::ZERO);
     result.additional_medicare = se.additional_medicare_tax;
 
     // ── 7) Payments + withholding ─────────────────────────────────────

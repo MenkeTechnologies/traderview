@@ -261,14 +261,18 @@ pub mod term_structure_scanner;
 pub mod vidya;
 pub mod wolfe_wave;
 
+pub mod alert_engine;
+pub mod borrow_rate_alert;
 pub mod breadth_lines;
 pub mod cmo;
 pub mod dark_pool_index;
 pub mod ehlers_decycler;
 pub mod post_earnings_drift;
+pub mod reg_sho_threshold;
 pub mod relative_strength;
 pub mod relative_vigor_index;
 pub mod short_interest_scanner;
+pub mod squeeze_score;
 
 pub mod anchored_obv;
 pub mod coppock_rsi;

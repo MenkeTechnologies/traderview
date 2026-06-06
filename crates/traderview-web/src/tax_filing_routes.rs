@@ -20,7 +20,17 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use traderview_tax::education_credits::{self, AotcInput, AotcResult, LlcInput, LlcResult};
+use traderview_tax::home_office::{self, HomeOfficeInput, HomeOfficeResult};
+use traderview_tax::late_penalty::{self, LatePenaltyInput, LatePenaltyResult};
+use traderview_tax::mileage::{
+    self, MethodComparisonInput, MethodComparisonResult, MileageInput, MileageResult,
+};
+use traderview_tax::retirement_limits::{
+    self, HsaInput, HsaResult, IraInput, IraResult, RothIraInput, RothIraResult,
+};
 use traderview_tax::safe_harbor::{self, BindingHarbor, SafeHarborInput, SafeHarborResult};
+use traderview_tax::section_179::{self, Section179Input, Section179Result};
 use traderview_tax::what_if::{self, Scenario, WhatIfResult};
 use traderview_tax::{compute as compute_tax, TaxResult, TaxReturn};
 
@@ -32,6 +42,16 @@ pub fn router() -> Router<AppState> {
         .route("/returns/:year/pdf", get(crate::tax_pdf::generate_pdf))
         .route("/returns/:year/safe-harbor", get(safe_harbor_endpoint))
         .route("/returns/:year/what-if", post(what_if_endpoint))
+        .route("/returns/:year/late-penalty", post(late_penalty_endpoint))
+        .route("/planner/aotc", post(aotc_endpoint))
+        .route("/planner/llc", post(llc_endpoint))
+        .route("/planner/ira", post(ira_endpoint))
+        .route("/planner/roth-ira", post(roth_ira_endpoint))
+        .route("/planner/hsa", post(hsa_endpoint))
+        .route("/planner/mileage", post(mileage_endpoint))
+        .route("/planner/mileage-compare", post(mileage_compare_endpoint))
+        .route("/planner/home-office", post(home_office_endpoint))
+        .route("/planner/section-179", post(section_179_endpoint))
         .route("/forms/upload", post(upload_form))
         .route("/forms/:year", get(list_forms))
 }
@@ -399,6 +419,91 @@ async fn what_if_endpoint(
         )
     })?;
     Ok(Json(result))
+}
+
+// ── IRC § 6651 late-file / late-pay penalty + § 6601 interest ──────────
+//
+// Stateless: client posts the inputs, server returns the breakdown. No
+// authentication / draft load needed beyond the auth check, but we keep
+// the same `Path(year)` shape so the URL is uniform with the rest of the
+// tax-wizard surface.
+
+async fn late_penalty_endpoint(
+    _state: State<AppState>,
+    _user: AuthUser,
+    Path(_year): Path<i32>,
+    Json(body): Json<LatePenaltyInput>,
+) -> Result<Json<LatePenaltyResult>, ApiError> {
+    Ok(Json(late_penalty::compute(body)))
+}
+
+// ── Planner endpoints (stateless compute) ──────────────────────────────
+//
+// Each one takes a self-contained input struct and returns the matching
+// result. No draft / database access — these are on-demand planning
+// tools that don't persist anything.
+
+async fn aotc_endpoint(
+    _user: AuthUser,
+    Json(body): Json<AotcInput>,
+) -> Result<Json<AotcResult>, ApiError> {
+    Ok(Json(education_credits::aotc(body)))
+}
+
+async fn llc_endpoint(
+    _user: AuthUser,
+    Json(body): Json<LlcInput>,
+) -> Result<Json<LlcResult>, ApiError> {
+    Ok(Json(education_credits::llc(body)))
+}
+
+async fn ira_endpoint(
+    _user: AuthUser,
+    Json(body): Json<IraInput>,
+) -> Result<Json<IraResult>, ApiError> {
+    Ok(Json(retirement_limits::ira(body)))
+}
+
+async fn roth_ira_endpoint(
+    _user: AuthUser,
+    Json(body): Json<RothIraInput>,
+) -> Result<Json<RothIraResult>, ApiError> {
+    Ok(Json(retirement_limits::roth_ira(body)))
+}
+
+async fn hsa_endpoint(
+    _user: AuthUser,
+    Json(body): Json<HsaInput>,
+) -> Result<Json<HsaResult>, ApiError> {
+    Ok(Json(retirement_limits::hsa(body)))
+}
+
+async fn mileage_endpoint(
+    _user: AuthUser,
+    Json(body): Json<MileageInput>,
+) -> Result<Json<MileageResult>, ApiError> {
+    Ok(Json(mileage::compute(body)))
+}
+
+async fn mileage_compare_endpoint(
+    _user: AuthUser,
+    Json(body): Json<MethodComparisonInput>,
+) -> Result<Json<MethodComparisonResult>, ApiError> {
+    Ok(Json(mileage::compare_methods(body)))
+}
+
+async fn home_office_endpoint(
+    _user: AuthUser,
+    Json(body): Json<HomeOfficeInput>,
+) -> Result<Json<HomeOfficeResult>, ApiError> {
+    Ok(Json(home_office::compute(body)))
+}
+
+async fn section_179_endpoint(
+    _user: AuthUser,
+    Json(body): Json<Section179Input>,
+) -> Result<Json<Section179Result>, ApiError> {
+    Ok(Json(section_179::compute(body)))
 }
 
 // Silence "BindingHarbor unused" — we re-export it from the route file's

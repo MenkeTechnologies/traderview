@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/by-merchant", get(receipts_by_merchant))
         .route("/search", get(receipts_search))
         .route("/duplicates", get(receipts_duplicates))
+        .route("/recurring", get(receipts_recurring))
         .route("/tax-rollup.csv", get(tax_rollup_csv))
         .route("/tax-rollup.pdf", get(tax_rollup_pdf))
         .route("/ocr-models/status", get(ocr_models_status))
@@ -2168,6 +2169,155 @@ async fn receipts_duplicates(
     // Largest duplicate groups first so the user attacks the highest-leverage cleanup.
     groups.sort_by_key(|g| std::cmp::Reverse(g.receipts.len()));
     Ok(Json(groups))
+}
+
+// --- recurring expense detection ---------------------------------------
+//
+// Finds merchants where the user has a regular cadence of receipts —
+// the classic "find your subscriptions" problem. A recurring vendor is
+// one with ≥ MIN_OCCURRENCES receipts whose median gap between
+// consecutive receipt dates falls within a target cadence window
+// (monthly ± a tolerance). Returns the merchant, predicted next charge
+// date, monthly average amount, and a confidence score.
+//
+// This is purely on the receipts table — no LLM, no external API.
+
+#[derive(Deserialize)]
+struct RecurringParams {
+    /// Minimum number of receipts per merchant to consider. Default 3.
+    min_occurrences: Option<u32>,
+    /// Cadence target in days. Default 30 (monthly). Common values: 7
+    /// (weekly), 30 (monthly), 90 (quarterly), 365 (annual).
+    cadence_days: Option<u32>,
+    /// Tolerance (± days) around `cadence_days`. Default 5.
+    tolerance_days: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct RecurringMerchant {
+    canonical_merchant: String,
+    receipt_count: u32,
+    average_amount: Decimal,
+    median_gap_days: i64,
+    first_seen: NaiveDate,
+    last_seen: NaiveDate,
+    /// `last_seen + median_gap_days`, telling the user when the next
+    /// charge is expected.
+    predicted_next_date: NaiveDate,
+    /// 0.0–1.0, derived from gap consistency. Low standard deviation of
+    /// gaps → higher confidence.
+    confidence: f32,
+    annualized_cost: Decimal,
+}
+
+async fn receipts_recurring(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(params): Query<RecurringParams>,
+) -> Result<Json<Vec<RecurringMerchant>>, ApiError> {
+    let min_occ = params.min_occurrences.unwrap_or(3).max(2) as usize;
+    let cadence = params.cadence_days.unwrap_or(30) as i64;
+    let tolerance = params.tolerance_days.unwrap_or(5) as i64;
+
+    let rows: Vec<(Option<String>, Option<NaiveDate>, Option<Decimal>)> = sqlx::query_as(
+        "SELECT ocr_merchant, ocr_date, ocr_total
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_merchant IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_total IS NOT NULL",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+        .await
+        .unwrap_or_default();
+
+    use std::collections::HashMap;
+    let mut by_canon: HashMap<String, Vec<(NaiveDate, Decimal)>> = HashMap::new();
+    for (m, d, t) in rows {
+        let (Some(m), Some(d), Some(t)) = (m, d, t) else {
+            continue;
+        };
+        let canonical = crate::merchant::canonicalize(&m, &aliases);
+        if canonical.is_empty() {
+            continue;
+        }
+        by_canon.entry(canonical).or_default().push((d, t));
+    }
+
+    let mut out = Vec::new();
+    for (canonical, mut entries) in by_canon {
+        if entries.len() < min_occ {
+            continue;
+        }
+        entries.sort_by_key(|e| e.0);
+
+        let gaps: Vec<i64> = entries
+            .windows(2)
+            .map(|pair| (pair[1].0 - pair[0].0).num_days())
+            .filter(|d| *d > 0)
+            .collect();
+
+        if gaps.len() < min_occ - 1 {
+            continue;
+        }
+
+        let median_gap = {
+            let mut g = gaps.clone();
+            g.sort_unstable();
+            g[g.len() / 2]
+        };
+
+        if (median_gap - cadence).abs() > tolerance {
+            continue;
+        }
+
+        // Confidence: lower stddev around median → higher score. Map
+        // mean-absolute-deviation to [0, 1] using a soft cliff at
+        // tolerance_days.
+        let mad: f32 = if gaps.is_empty() {
+            0.0
+        } else {
+            let sum: i64 = gaps.iter().map(|g| (*g - median_gap).abs()).sum();
+            sum as f32 / gaps.len() as f32
+        };
+        let confidence = (1.0 - (mad / tolerance.max(1) as f32)).clamp(0.0, 1.0);
+
+        let total: Decimal = entries.iter().map(|e| e.1).sum();
+        let n = Decimal::from(entries.len() as i64);
+        let average_amount = (total / n).round_dp(2);
+
+        let first_seen = entries.first().unwrap().0;
+        let last_seen = entries.last().unwrap().0;
+        let predicted_next_date = last_seen + chrono::Duration::days(median_gap);
+
+        // Annualized cost = average × (365 / median_gap), rounded.
+        let annualized_cost = if median_gap > 0 {
+            (average_amount * Decimal::from(365) / Decimal::from(median_gap)).round_dp(2)
+        } else {
+            Decimal::ZERO
+        };
+
+        out.push(RecurringMerchant {
+            canonical_merchant: canonical,
+            receipt_count: entries.len() as u32,
+            average_amount,
+            median_gap_days: median_gap,
+            first_seen,
+            last_seen,
+            predicted_next_date,
+            confidence,
+            annualized_cost,
+        });
+    }
+
+    // Highest annualized cost first — most impactful subscriptions surface at the top.
+    out.sort_by_key(|m| std::cmp::Reverse(m.annualized_cost));
+    Ok(Json(out))
 }
 
 // --- bulk patch items ---------------------------------------------------

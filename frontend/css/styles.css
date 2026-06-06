@@ -1776,6 +1776,42 @@ button.rule-del {
     border: 1px solid var(--border); border-radius: 3px;
 }
 .tw-wi-bottom strong { font-size: 18px; }
+.tw-lp-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    align-items: end; margin: 8px 0;
+}
+.tw-lp-grid label { display: flex; flex-direction: column; gap: 2px; }
+.tw-lp-grid label > span { font-size: 11px; color: var(--text-dim); }
+.tw-lp-grid input[type=number] { padding: 4px 8px; }
+.tw-lp-grid .tw-lp-check { flex-direction: row; align-items: center; gap: 6px; }
+.tw-lp-result {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    margin: 8px 0;
+}
+.tw-lp-result > div {
+    display: flex; flex-direction: column;
+    padding: 6px 8px; background: var(--bg-secondary); border-radius: 2px;
+}
+.tw-lp-result span { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+.tw-lp-result strong { font-size: 14px; }
+.tw-plan-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    align-items: end; margin: 8px 0;
+}
+.tw-plan-grid label { display: flex; flex-direction: column; gap: 2px; }
+.tw-plan-grid label > span { font-size: 11px; color: var(--text-dim); }
+.tw-plan-grid input[type=number], .tw-plan-grid select { padding: 4px 8px; }
+.tw-plan-grid .tw-lp-check { flex-direction: row; align-items: center; gap: 6px; }
+.tw-plan-out {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    margin: 8px 0;
+}
+.tw-plan-out > div {
+    display: flex; flex-direction: column;
+    padding: 6px 8px; background: var(--bg-secondary); border-radius: 2px;
+}
+.tw-plan-out span { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+.tw-plan-out strong { font-size: 14px; }
 .tw-card .err { color: #ff5577; padding: 6px 0; }
 .tw-warn {
     margin: 10px 0; padding: 8px 12px;

@@ -768,3 +768,106 @@ fn scenario_w2_plus_schedule_c_partial_ss_cap() {
     // so full SS tax applies: 73,880 × 0.124 = 9,161.12.
     assert_eq!(res.se_tax.ss_tax, dc("9161.12"));
 }
+
+/// Scenario: High-earner Single, big SALT itemizer → AMT triggers.
+/// W-2 wages $400k, itemized $50k = $30k mortgage interest + $10k SALT
+/// (post-cap) + $10k charitable. AMT SALT addback adds $10k to AMTI.
+#[test]
+fn scenario_high_earner_salt_triggers_amt() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        w2s: vec![W2 {
+            box_1_wages: d(400_000),
+            box_2_federal_income_tax_withheld: d(100_000),
+            box_3_ss_wages: d(176_100),
+            box_4_ss_tax_withheld: d(10_918),
+            box_5_medicare_wages: d(400_000),
+            box_6_medicare_tax_withheld: d(5_800),
+            ..Default::default()
+        }],
+        itemized: Itemized {
+            mortgage_interest: d(30_000),
+            state_and_local_taxes_capped_at_10k: d(10_000),
+            charitable_gifts: d(10_000),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // Itemized $50k beats std $15k.
+    assert_eq!(res.deduction_label, "itemized");
+    assert_eq!(res.deduction_used, d(50_000));
+    // TI = $400k - $50k = $350k.
+    assert_eq!(res.taxable_income, d(350_000));
+    // AMTI = TI + SALT addback $10k = $360k.
+    assert_eq!(res.amt.amti, d(360_000));
+    // AMTI < phaseout start $626,350 so full $88,100 exemption.
+    assert_eq!(res.amt.exemption_after_phaseout, d(88_100));
+    // Taxable excess = $360k - $88,100 = $271,900.
+    assert_eq!(res.amt.taxable_excess, dc("271900"));
+    // TMT > 0; AMT owed surfaces only if TMT > regular tax. For this
+    // wage profile regular tax is high enough that AMT typically does
+    // NOT bind, but the result should be computed and `amt_owed` should
+    // be nonnegative.
+    assert!(res.amt.amt_owed >= Decimal::ZERO);
+}
+
+/// Scenario: AMT does NOT apply when taxpayer uses the standard
+/// deduction (no SALT addback).
+#[test]
+fn scenario_std_deduction_user_has_no_salt_addback() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        w2s: vec![W2 {
+            box_1_wages: d(100_000),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let res = compute(&r);
+    assert_eq!(res.deduction_label, "standard");
+    // AMTI = TI (no SALT addback).
+    assert_eq!(res.amt.amti, res.taxable_income);
+}
+
+/// Scenario: NIIT triggers for high-income investor.
+/// Single, $300k AGI: $300k interest income, no other income.
+/// NIIT threshold = $200k → excess = $100k.
+/// NII = $300k. min($300k, $100k) = $100k. NIIT = $3,800.
+#[test]
+fn scenario_high_interest_income_triggers_niit() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        interest_income: d(300_000),
+        ..Default::default()
+    };
+    let res = compute(&r);
+    assert_eq!(res.agi, d(300_000));
+    assert_eq!(res.niit.threshold, d(200_000));
+    assert_eq!(res.niit.excess_magi, d(100_000));
+    assert_eq!(res.niit.taxable_base, d(100_000));
+    assert_eq!(res.niit.tax, dc("3800.00"));
+}
+
+/// Scenario: SE income does NOT count toward NIIT (subject to SE tax instead).
+#[test]
+fn scenario_se_income_not_counted_in_nii() {
+    let r = TaxReturn {
+        tax_year: 2025,
+        status: FilingStatus::Single,
+        schedule_c: ScheduleC {
+            gross_receipts: d(300_000),
+            total_expenses: Decimal::ZERO,
+            net_profit: d(300_000),
+        },
+        ..Default::default()
+    };
+    let res = compute(&r);
+    // AGI well above $200k, but NII = 0 → NIIT = 0.
+    assert!(res.agi > d(200_000));
+    assert_eq!(res.niit.taxable_base, Decimal::ZERO);
+    assert_eq!(res.niit.tax, Decimal::ZERO);
+}

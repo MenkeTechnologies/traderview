@@ -536,6 +536,9 @@ function renderReview(pane, mount, tok) {
             ${+((r.niit || {}).tax || 0) > 0
                 ? review(t('view.taxwiz.review.niit'), fmtMoney(+r.niit.tax))
                 : ''}
+            ${+((r.amt || {}).amt_owed || 0) > 0
+                ? review(t('view.taxwiz.review.amt'), fmtMoney(+r.amt.amt_owed))
+                : ''}
             ${review(t('view.taxwiz.review.ctc'), fmtMoney(+(r.ctc || {}).total || 0))}
             ${review(t('view.taxwiz.review.after_credits'), fmtMoney(+r.tax_after_credits || 0))}
             ${review(t('view.taxwiz.review.payments'), fmtMoney(+r.total_payments || 0))}
@@ -587,11 +590,253 @@ function renderReview(pane, mount, tok) {
             <div id="tw-wi-out"></div>
         </section>
 
+        <section class="tw-card">
+            <header><strong>${esc(t('view.taxwiz.late_penalty.h'))}</strong></header>
+            <p class="muted small">${esc(t('view.taxwiz.late_penalty.hint'))}</p>
+            <div class="tw-lp-grid">
+                <label><span>${esc(t('view.taxwiz.late_penalty.unpaid'))}</span>
+                    <input type="number" id="tw-lp-unpaid" step="0.01" /></label>
+                <label><span>${esc(t('view.taxwiz.late_penalty.months'))}</span>
+                    <input type="number" id="tw-lp-months" step="1" min="0" /></label>
+                <label><span>${esc(t('view.taxwiz.late_penalty.days'))}</span>
+                    <input type="number" id="tw-lp-days" step="1" min="0" /></label>
+                <label><span>${esc(t('view.taxwiz.late_penalty.apr'))}</span>
+                    <input type="number" id="tw-lp-apr" step="0.001" value="0.08" /></label>
+                <label class="tw-lp-check"><input type="checkbox" id="tw-lp-over60" />
+                    <span>${esc(t('view.taxwiz.late_penalty.over_60d'))}</span></label>
+                <button type="button" id="tw-lp-run" class="btn btn-secondary btn-compact">
+                    ${esc(t('view.taxwiz.late_penalty.run'))}
+                </button>
+            </div>
+            <div id="tw-lp-out"></div>
+        </section>
+
+        <section class="tw-card">
+            <header><strong>${esc(t('view.taxwiz.edu.h'))}</strong></header>
+            <p class="muted small">${esc(t('view.taxwiz.edu.hint'))}</p>
+            <div class="tw-plan-grid">
+                <label><span>${esc(t('view.taxwiz.edu.expenses'))}</span>
+                    <input type="number" id="tw-edu-expenses" step="0.01" min="0" /></label>
+                <label><span>${esc(t('view.taxwiz.edu.students'))}</span>
+                    <input type="number" id="tw-edu-students" step="1" min="0" value="1" /></label>
+                <label><span>${esc(t('view.taxwiz.edu.magi'))}</span>
+                    <input type="number" id="tw-edu-magi" step="0.01" min="0" /></label>
+                <label><span>${esc(t('view.taxwiz.edu.status'))}</span>
+                    <select id="tw-edu-status">
+                        <option value="single">${esc(t('view.taxwiz.fs.single'))}</option>
+                        <option value="mfj">${esc(t('view.taxwiz.fs.mfj'))}</option>
+                        <option value="hoh">${esc(t('view.taxwiz.fs.hoh'))}</option>
+                        <option value="mfs">${esc(t('view.taxwiz.fs.mfs'))}</option>
+                    </select></label>
+                <button type="button" id="tw-edu-run" class="btn btn-secondary btn-compact">
+                    ${esc(t('view.taxwiz.edu.run'))}
+                </button>
+            </div>
+            <div id="tw-edu-out"></div>
+        </section>
+
+        <section class="tw-card">
+            <header><strong>${esc(t('view.taxwiz.ira.h'))}</strong></header>
+            <p class="muted small">${esc(t('view.taxwiz.ira.hint'))}</p>
+            <div class="tw-plan-grid">
+                <label><span>${esc(t('view.taxwiz.ira.magi'))}</span>
+                    <input type="number" id="tw-ira-magi" step="0.01" min="0" /></label>
+                <label><span>${esc(t('view.taxwiz.ira.status'))}</span>
+                    <select id="tw-ira-status">
+                        <option value="single">${esc(t('view.taxwiz.fs.single'))}</option>
+                        <option value="mfj">${esc(t('view.taxwiz.fs.mfj'))}</option>
+                        <option value="hoh">${esc(t('view.taxwiz.fs.hoh'))}</option>
+                        <option value="mfs">${esc(t('view.taxwiz.fs.mfs'))}</option>
+                    </select></label>
+                <label class="tw-lp-check"><input type="checkbox" id="tw-ira-age50" />
+                    <span>${esc(t('view.taxwiz.ira.age_50'))}</span></label>
+                <label class="tw-lp-check"><input type="checkbox" id="tw-ira-covered" />
+                    <span>${esc(t('view.taxwiz.ira.covered'))}</span></label>
+                <label class="tw-lp-check"><input type="checkbox" id="tw-ira-spouse-covered" />
+                    <span>${esc(t('view.taxwiz.ira.spouse_covered'))}</span></label>
+                <button type="button" id="tw-ira-run" class="btn btn-secondary btn-compact">
+                    ${esc(t('view.taxwiz.ira.run'))}
+                </button>
+            </div>
+            <div id="tw-ira-out"></div>
+        </section>
+
+        <section class="tw-card">
+            <header><strong>${esc(t('view.taxwiz.hsa.h'))}</strong></header>
+            <p class="muted small">${esc(t('view.taxwiz.hsa.hint'))}</p>
+            <div class="tw-plan-grid">
+                <label><span>${esc(t('view.taxwiz.hsa.coverage'))}</span>
+                    <select id="tw-hsa-coverage">
+                        <option value="SelfOnly">${esc(t('view.taxwiz.hsa.self'))}</option>
+                        <option value="Family">${esc(t('view.taxwiz.hsa.family'))}</option>
+                    </select></label>
+                <label><span>${esc(t('view.taxwiz.hsa.months'))}</span>
+                    <input type="number" id="tw-hsa-months" step="1" min="0" max="12" value="12" /></label>
+                <label class="tw-lp-check"><input type="checkbox" id="tw-hsa-age55" />
+                    <span>${esc(t('view.taxwiz.hsa.age_55'))}</span></label>
+                <button type="button" id="tw-hsa-run" class="btn btn-secondary btn-compact">
+                    ${esc(t('view.taxwiz.hsa.run'))}
+                </button>
+            </div>
+            <div id="tw-hsa-out"></div>
+        </section>
+
         ${navButtons('download', 'other_taxes')}
     `;
     wireNav(pane, mount, tok);
     wireSafeHarbor(pane, tok);
     wireWhatIf(pane, tok);
+    wireLatePenalty(pane, tok);
+    wireEducation(pane, tok);
+    wireIra(pane, tok);
+    wireHsa(pane, tok);
+}
+
+async function wireEducation(pane, tok) {
+    pane.querySelector('#tw-edu-run').addEventListener('click', async () => {
+        const expenses = String(Number(pane.querySelector('#tw-edu-expenses').value) || 0);
+        const students = Number(pane.querySelector('#tw-edu-students').value) || 0;
+        const magi = String(Number(pane.querySelector('#tw-edu-magi').value) || 0);
+        const status = pane.querySelector('#tw-edu-status').value;
+        const out = pane.querySelector('#tw-edu-out');
+        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        try {
+            const [aotc, llc] = await Promise.all([
+                api.taxPlannerAotc({
+                    qualifying_expenses: expenses,
+                    eligible_students: students,
+                    magi, status,
+                }),
+                api.taxPlannerLlc({
+                    qualifying_expenses: expenses,
+                    magi, status,
+                }),
+            ]);
+            if (!viewIsCurrent(tok)) return;
+            const ineligible = aotc.status_ineligible || llc.status_ineligible;
+            out.innerHTML = `
+                ${ineligible ? `<p class="muted small">${esc(t('view.taxwiz.edu.mfs_ineligible'))}</p>` : ''}
+                <div class="tw-plan-out">
+                    <div><span>${esc(t('view.taxwiz.edu.aotc_total'))}</span>
+                        <strong>${esc(fmtMoney(+aotc.total))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.edu.aotc_refundable'))}</span>
+                        <strong class="tw-refund">${esc(fmtMoney(+aotc.refundable_portion))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.edu.llc_total'))}</span>
+                        <strong>${esc(fmtMoney(+llc.total))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.edu.better'))}</span>
+                        <strong>${esc(+aotc.total >= +llc.total ? 'AOTC' : 'LLC')}</strong></div>
+                </div>
+            `;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `<div class="err">${esc(t('view.taxwiz.edu.err', { err: e.message }))}</div>`;
+        }
+    });
+}
+
+async function wireIra(pane, tok) {
+    pane.querySelector('#tw-ira-run').addEventListener('click', async () => {
+        const body = {
+            magi: String(Number(pane.querySelector('#tw-ira-magi').value) || 0),
+            status: pane.querySelector('#tw-ira-status').value,
+            age_50_or_older: pane.querySelector('#tw-ira-age50').checked,
+            taxpayer_covered_by_workplace_plan: pane.querySelector('#tw-ira-covered').checked,
+            spouse_covered_by_workplace_plan: pane.querySelector('#tw-ira-spouse-covered').checked,
+        };
+        const rothBody = {
+            magi: body.magi,
+            status: body.status,
+            age_50_or_older: body.age_50_or_older,
+        };
+        const out = pane.querySelector('#tw-ira-out');
+        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        try {
+            const [trad, roth] = await Promise.all([
+                api.taxPlannerIra(body),
+                api.taxPlannerRothIra(rothBody),
+            ]);
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `
+                <div class="tw-plan-out">
+                    <div><span>${esc(t('view.taxwiz.ira.trad_limit'))}</span>
+                        <strong>${esc(fmtMoney(+trad.contribution_limit))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.ira.trad_deductible'))}</span>
+                        <strong>${esc(fmtMoney(+trad.max_deductible))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.ira.roth_max'))}</span>
+                        <strong>${esc(fmtMoney(+roth.max_contribution))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.ira.roth_cap'))}</span>
+                        <strong>${esc(fmtMoney(+roth.contribution_cap_if_no_phaseout))}</strong></div>
+                </div>
+                ${trad.no_phaseout_applies ? `<p class="muted small">${esc(t('view.taxwiz.ira.no_phaseout'))}</p>` : ''}
+            `;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `<div class="err">${esc(t('view.taxwiz.ira.err', { err: e.message }))}</div>`;
+        }
+    });
+}
+
+async function wireHsa(pane, tok) {
+    pane.querySelector('#tw-hsa-run').addEventListener('click', async () => {
+        const body = {
+            coverage: pane.querySelector('#tw-hsa-coverage').value,
+            age_55_or_older: pane.querySelector('#tw-hsa-age55').checked,
+            hdhp_months: Number(pane.querySelector('#tw-hsa-months').value) || 0,
+        };
+        const out = pane.querySelector('#tw-hsa-out');
+        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        try {
+            const r = await api.taxPlannerHsa(body);
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `
+                <div class="tw-plan-out">
+                    <div><span>${esc(t('view.taxwiz.hsa.tier'))}</span>
+                        <strong>${esc(fmtMoney(+r.tier_annual_limit))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.hsa.catch_up'))}</span>
+                        <strong>${esc(fmtMoney(+r.catch_up))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.hsa.max'))}</span>
+                        <strong class="tw-refund">${esc(fmtMoney(+r.max_contribution))}</strong></div>
+                </div>
+            `;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `<div class="err">${esc(t('view.taxwiz.hsa.err', { err: e.message }))}</div>`;
+        }
+    });
+}
+
+async function wireLatePenalty(pane, tok) {
+    pane.querySelector('#tw-lp-run').addEventListener('click', async () => {
+        const input = {
+            unpaid_tax: String(Number(pane.querySelector('#tw-lp-unpaid').value) || 0),
+            months_late: Number(pane.querySelector('#tw-lp-months').value) || 0,
+            days_late: Number(pane.querySelector('#tw-lp-days').value) || 0,
+            interest_apr: String(Number(pane.querySelector('#tw-lp-apr').value) || 0),
+            filed_more_than_60_days_late: pane.querySelector('#tw-lp-over60').checked,
+        };
+        const out = pane.querySelector('#tw-lp-out');
+        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        try {
+            const r = await api.taxLatePenalty(STATE.year, input);
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `
+                <div class="tw-lp-result">
+                    <div><span>${esc(t('view.taxwiz.late_penalty.ftf'))}</span>
+                        <strong class="tw-owed">${esc(fmtMoney(+r.ftf_net))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.late_penalty.ftp'))}</span>
+                        <strong class="tw-owed">${esc(fmtMoney(+r.ftp))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.late_penalty.interest'))}</span>
+                        <strong class="tw-owed">${esc(fmtMoney(+r.interest))}</strong></div>
+                    <div><span>${esc(t('view.taxwiz.late_penalty.total'))}</span>
+                        <strong class="tw-owed">${esc(fmtMoney(+r.total_owed))}</strong></div>
+                </div>
+                ${r.min_penalty_floor_applied ? `<p class="muted small">${esc(t('view.taxwiz.late_penalty.floor'))}</p>` : ''}
+            `;
+        } catch (e) {
+            if (!viewIsCurrent(tok)) return;
+            out.innerHTML = `<div class="err">${esc(t('view.taxwiz.late_penalty.err', { err: e.message }))}</div>`;
+        }
+    });
 }
 
 async function wireSafeHarbor(pane, tok) {

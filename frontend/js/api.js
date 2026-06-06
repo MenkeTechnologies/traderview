@@ -361,6 +361,50 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ scenario }),
     }),
+    taxLatePenalty: (year, input) => request(`/tax-filing/returns/${year}/late-penalty`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerAotc: (input) => request('/tax-filing/planner/aotc', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerLlc: (input) => request('/tax-filing/planner/llc', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerIra: (input) => request('/tax-filing/planner/ira', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerRothIra: (input) => request('/tax-filing/planner/roth-ira', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerHsa: (input) => request('/tax-filing/planner/hsa', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerMileage: (input) => request('/tax-filing/planner/mileage', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerMileageCompare: (input) => request('/tax-filing/planner/mileage-compare', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerHomeOffice: (input) => request('/tax-filing/planner/home-office', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    taxPlannerSection179: (input) => request('/tax-filing/planner/section-179', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    }),
+    receiptsRecurring: (params = {}) => {
+        const s = qs(params);
+        return request(`/receipts/recurring${s ? '?' + s : ''}`);
+    },
 
     // --- budgeting ------------------------------------------------------
     listBudgets: () => request('/budget/'),
