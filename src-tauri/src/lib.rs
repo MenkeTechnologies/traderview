@@ -101,6 +101,9 @@ pub fn run() {
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        // Persists window position, size, and maximize state per label
+        // to <app-data>/window-state.json. Auto-restores on launch.
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .setup(|app| {
             tracing::info!("setup: resolving paths");
             let data_dir = match app.path().app_data_dir() {
