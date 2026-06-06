@@ -10,8 +10,10 @@
     "test:vitest":    "pnpm --filter traderview-frontend test:vitest",
     "test:node":      "pnpm --filter traderview-frontend test:node",
     "test:watch":     "pnpm --filter traderview-frontend test:watch",
-    "i18n:server":    "docker run -d --name libretranslate -p 5050:5000 -e LT_THREADS=16 -e LT_BATCH_LIMIT=400 -e LT_REQ_TIME_LIMIT=600 libretranslate/libretranslate",
+    "i18n:server":    "docker run -d --name libretranslate -p 5050:5000 -e LT_THREADS=8 -e LT_BATCH_LIMIT=400 -e LT_REQ_TIME_LIMIT=600 libretranslate/libretranslate",
     "i18n:server:stop": "docker rm -f libretranslate",
-    "i18n:translate": "node frontend/scripts/i18n_translate.mjs"
+    "i18n:translate":  "node frontend/scripts/i18n_translate.mjs",
+    "i18n:revert-dnt": "node frontend/scripts/i18n_revert_dnt.mjs",
+    "i18n:nouns":      "node frontend/scripts/i18n_extract_proper_nouns.mjs"
   }
 }

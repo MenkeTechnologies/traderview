@@ -27,6 +27,7 @@
 import { readFile, writeFile, rename } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDnt, maskProperNouns } from './i18n_dnt.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -112,16 +113,23 @@ function parseArgs(argv) {
 const TOKEN_RE = /\{[A-Za-z0-9_]+\}/g;
 
 function protect(value) {
+    // 1) Mask `{token}` interpolation placeholders.
     const map = new Map();
     const back = new Map();
     let next = 0;
-    const masked = value.replace(TOKEN_RE, (m) => {
+    let masked = value.replace(TOKEN_RE, (m) => {
         if (map.has(m)) return map.get(m);
         const sentinel = `__TVI${next++}__`;
         map.set(m, sentinel);
         back.set(sentinel, m);
         return sentinel;
     });
+    // 2) Mask proper nouns from the curated blacklist
+    // (Fidelity, E*TRADE, Tesseract, FINRA, …). Different sentinel
+    // prefix (`__PN…__`) so the two namespaces don't collide.
+    const pn = maskProperNouns(masked);
+    masked = pn.masked;
+    for (const [sentinel, term] of pn.back) back.set(sentinel, term);
     return { masked, back };
 }
 
@@ -217,6 +225,11 @@ async function pumpLocale(localeCode, ltLang, en, opts) {
     for (const key of Object.keys(en)) {
         const enVal = en[key];
         if (!shouldTranslate(enVal)) continue;
+        // Proper-noun gate: brand names, product names, broker dropdowns,
+        // CLI flags — never translate these (they're identical across
+        // every locale and machine translation actively corrupts them,
+        // e.g. "Fidelity" → "Treue", "E*TRADE" → "E*HANDEL").
+        if (isDnt(key, enVal)) continue;
         const cur = locale[key];
         const missing = cur === undefined || cur === null || cur === '';
         const leaking = !missing && cur === enVal;
